@@ -1,0 +1,13 @@
+Source: maemo-mapper
+Section: gnome
+Priority: optional
+Maintainer: John Costigan <gnuite@gmail.com>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.6.0
+
+Package: maemo-mapper
+Architecture: any
+Depends: maemo
+Description: A mapping package for the maemo platform.
+ It contains a complete application for displaying maps and annotating them
+ with information from a GPS receiver.
