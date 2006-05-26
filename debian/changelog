@@ -1,3 +1,24 @@
+maemo-mapper (0.2) unstable; urgency=low
+
+  * Force creation of the map cache directory (including parents).
+  * Fixed some locale-related bugs.
+  * Added support for satellite map data.
+  * Added support to save last center location.
+  * Added support to specify announcement advance notice in Settings.
+  * Made the flite call safer, and the path is specifiable in Settings.
+  * Changed the look of the HildonControlbars in Settings a tad.
+  * Added estimate for number of maps to download with Download By Area.
+  * Changed the way routes are followed to better support single-point,
+    "point-of-interest"-style routes.
+  * Fixed bug in route-drawing.
+  * Fixed some bugs in download-by-route functionality.
+  * Trying some fixes for when the bluetooth connection mysteriously drops.
+  * Added some error-handling to NMEA parsing.
+  * Fixed some other minor, workaround-able bugs.
+  * Added some more comment documentation to the code.
+
+ -- John Costigan <gnuite@gmail.com>  Wed, 10 May 2006 21:16:00 -0400
+
 maemo-mapper (0.1) unstable; urgency=low
 
   * Initial release.
