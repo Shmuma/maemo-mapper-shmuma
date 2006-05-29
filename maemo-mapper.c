@@ -447,6 +447,7 @@ static ConnState _conn_state = RCVR_OFF;
  * Each pixel in the current view is exactly (1 << _zoom) "units" wide. */
 static guint _zoom = 3; /* zoom level, from 0 to MAX_ZOOM. */
 static TrackPoint _center = {-1, -1}; /* current center location, X. */
+static TrackPoint _prev_center = {-1, -1}; /* previous center location, X */
 
 /** The "base tile" is the upper-left tile in the pixmap. */
 static guint _base_tilex = -5;
@@ -2675,6 +2676,8 @@ map_center_unit(guint new_center_unitx, guint new_center_unity)
     BOUND(new_center_unitx, _min_center.unitx, _max_center.unitx);
     BOUND(new_center_unity, _min_center.unity, _max_center.unity);
 
+    _prev_center.unitx  = _center.unitx;
+    _prev_center.unity  = _center.unity;
     _center.unitx = new_center_unitx;
     _center.unity = new_center_unity;
 
@@ -3893,8 +3896,8 @@ channel_cb_error(GIOChannel *src, GIOCondition condition, gpointer data)
 
     if(_fd != -1)
         /* Attempt to reset the radio if user has sudo access. */
-        system("/usr/bin/sudo -l | grep -q '/usr/sbin/hciconfig  *reset'"
-                " && sudo /usr/sbin/hciconfig");
+        system("/usr/bin/sudo -l | grep -q '/usr/sbin/hciconfig  *hci0  *reset'"
+                " && sudo /usr/sbin/hciconfig hci0 reset");
 
     if(_conn_state > RCVR_OFF)
     {
@@ -4804,7 +4807,7 @@ menu_cb_maps_dlarea(GtkAction *action)
     GtkWidget *txt_botright_lat;
     GtkWidget *txt_botright_lon;
     gchar buffer[32];
-    gfloat lat, lon;
+    gfloat lat, lon, prev_lat, prev_lon;
     GtkWidget *chk_zoom_levels[MAX_ZOOM];
     guint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -4856,6 +4859,7 @@ menu_cb_maps_dlarea(GtkAction *action)
             0, 1, 2, 3, GTK_FILL, 0, 4, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     unit2latlon(_center.unitx, _center.unity, lat, lon);
+    unit2latlon(_prev_center.unitx, _prev_center.unity, prev_lat, prev_lon);
     sprintf(buffer, "%f", lat);
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(buffer),
@@ -4869,6 +4873,9 @@ menu_cb_maps_dlarea(GtkAction *action)
     gtk_label_set_selectable(GTK_LABEL(label), TRUE);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
 
+    /* default values for Top Left and Bottom Right are defined by the
+     * rectangle of the current and the previous Center */
+
     /* Top Left. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new("Top-Left"),
@@ -4877,10 +4884,14 @@ menu_cb_maps_dlarea(GtkAction *action)
     gtk_table_attach(GTK_TABLE(table),
             txt_topleft_lat = gtk_entry_new(),
             1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+    sprintf(buffer, "%2.6f", MAX(lat, prev_lat));
+    gtk_entry_set_text(GTK_ENTRY(txt_topleft_lat), buffer);
     gtk_entry_set_alignment(GTK_ENTRY(txt_topleft_lat), 1.f);
     gtk_table_attach(GTK_TABLE(table),
             txt_topleft_lon = gtk_entry_new(),
             2, 3, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+    sprintf(buffer, "%2.6f", MIN(lon, prev_lon));
+    gtk_entry_set_text(GTK_ENTRY(txt_topleft_lon), buffer);
     gtk_entry_set_alignment(GTK_ENTRY(txt_topleft_lon), 1.f);
 
     /* Bottom Right. */
@@ -4891,10 +4902,14 @@ menu_cb_maps_dlarea(GtkAction *action)
     gtk_table_attach(GTK_TABLE(table),
             txt_botright_lat = gtk_entry_new(),
             1, 2, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+    sprintf(buffer, "%2.6f", MIN(lat, prev_lat));
+    gtk_entry_set_text(GTK_ENTRY(txt_botright_lat), buffer);
     gtk_entry_set_alignment(GTK_ENTRY(txt_botright_lat), 1.f);
     gtk_table_attach(GTK_TABLE(table),
             txt_botright_lon = gtk_entry_new(),
             2, 3, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+    sprintf(buffer, "%2.6f", MAX(lon, prev_lon));
+    gtk_entry_set_text(GTK_ENTRY(txt_botright_lon), buffer);
     gtk_entry_set_alignment(GTK_ENTRY(txt_botright_lon), 1.f);
 
 

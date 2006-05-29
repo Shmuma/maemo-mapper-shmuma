@@ -1,8 +1,16 @@
+maemo-mapper (0.2.2) unstable; urgency=low
+
+  * Fixed erroneous hciconfig reset call.
+  * Added Armin Warda's "previous two center points define the default
+    top-left/bottom-right points in Download-By-Area" patch.
+
+ -- John Costigan <gnuite@gmail.com>  Sun, 28 May 2006 22:01:00 -0400
+
 maemo-mapper (0.2.1) unstable; urgency=low
 
   * Changed error-handling of NMEA messages to better support missing values.
 
- -- John Costigan <gnuite@gmail.com>  Fri, 12 May 2006 19:12:00 -0400
+ -- John Costigan <gnuite@gmail.com>  Fri, 26 May 2006 19:12:00 -0400
 
 maemo-mapper (0.2) unstable; urgency=low
 
@@ -23,7 +31,7 @@ maemo-mapper (0.2) unstable; urgency=low
   * Fixed some other minor, workaround-able bugs.
   * Added some more comment documentation to the code.
 
- -- John Costigan <gnuite@gmail.com>  Wed, 10 May 2006 21:16:00 -0400
+ -- John Costigan <gnuite@gmail.com>  Wed, 24 May 2006 21:16:00 -0400
 
 maemo-mapper (0.1) unstable; urgency=low
 
