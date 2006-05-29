@@ -4795,20 +4795,46 @@ menu_cb_maps_dlroute(GtkAction *action)
     return TRUE;
 }
 
-static gboolean
-menu_cb_maps_dlarea(GtkAction *action)
-{
-    GtkWidget *dialog;
+typedef struct _DlAreaInfo DlAreaInfo;
+struct _DlAreaInfo {
     GtkWidget *notebook;
-    GtkWidget *table;
-    GtkWidget *label;
     GtkWidget *txt_topleft_lat;
     GtkWidget *txt_topleft_lon;
     GtkWidget *txt_botright_lat;
     GtkWidget *txt_botright_lon;
+    GtkWidget *chk_zoom_levels[MAX_ZOOM];
+};
+
+static void dlarea_clear(GtkWidget *widget, DlAreaInfo *dlarea_info)
+{
+    guint i;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    if(gtk_notebook_get_current_page(GTK_NOTEBOOK(dlarea_info->notebook)))
+        /* This is the second page (the "Zoom" page) - clear the checks. */
+        for(i = 0; i < MAX_ZOOM; i++)
+            gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(dlarea_info->chk_zoom_levels[i]), FALSE);
+    else
+    {
+        /* This is the first page (the "Area" page) - clear the text fields. */
+        gtk_entry_set_text(GTK_ENTRY(dlarea_info->txt_topleft_lat), "");
+        gtk_entry_set_text(GTK_ENTRY(dlarea_info->txt_topleft_lon), "");
+        gtk_entry_set_text(GTK_ENTRY(dlarea_info->txt_botright_lat), "");
+        gtk_entry_set_text(GTK_ENTRY(dlarea_info->txt_botright_lon), "");
+    }
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static gboolean
+menu_cb_maps_dlarea(GtkAction *action)
+{
+    GtkWidget *dialog;
+    GtkWidget *table;
+    GtkWidget *label;
+    GtkWidget *button;
+    DlAreaInfo dlarea_info;
     gchar buffer[32];
     gfloat lat, lon, prev_lat, prev_lon;
-    GtkWidget *chk_zoom_levels[MAX_ZOOM];
     guint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -4818,14 +4844,20 @@ menu_cb_maps_dlarea(GtkAction *action)
             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
             NULL);
 
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
+            button = gtk_button_new_with_label("Clear"));
+
+    g_signal_connect(G_OBJECT(button), "clicked",
+                      G_CALLBACK(dlarea_clear), &dlarea_info);
+
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-            notebook = gtk_notebook_new(), TRUE, TRUE, 0);
+            dlarea_info.notebook = gtk_notebook_new(), TRUE, TRUE, 0);
     
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+    gtk_notebook_append_page(GTK_NOTEBOOK(dlarea_info.notebook),
             table = gtk_table_new(2, 3, FALSE),
             label = gtk_label_new("Area"));
 
-    /* Label Columns. */
+    /* Clear button and Label Columns. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new("Latitude"),
             1, 2, 0, 1, GTK_FILL, 0, 4, 0);
@@ -4882,17 +4914,17 @@ menu_cb_maps_dlarea(GtkAction *action)
             0, 1, 3, 4, GTK_FILL, 0, 4, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
-            txt_topleft_lat = gtk_entry_new(),
+            dlarea_info.txt_topleft_lat = gtk_entry_new(),
             1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     sprintf(buffer, "%2.6f", MAX(lat, prev_lat));
-    gtk_entry_set_text(GTK_ENTRY(txt_topleft_lat), buffer);
-    gtk_entry_set_alignment(GTK_ENTRY(txt_topleft_lat), 1.f);
+    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_topleft_lat), buffer);
+    gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_topleft_lat), 1.f);
     gtk_table_attach(GTK_TABLE(table),
-            txt_topleft_lon = gtk_entry_new(),
+            dlarea_info.txt_topleft_lon = gtk_entry_new(),
             2, 3, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     sprintf(buffer, "%2.6f", MIN(lon, prev_lon));
-    gtk_entry_set_text(GTK_ENTRY(txt_topleft_lon), buffer);
-    gtk_entry_set_alignment(GTK_ENTRY(txt_topleft_lon), 1.f);
+    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_topleft_lon), buffer);
+    gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_topleft_lon), 1.f);
 
     /* Bottom Right. */
     gtk_table_attach(GTK_TABLE(table),
@@ -4900,20 +4932,20 @@ menu_cb_maps_dlarea(GtkAction *action)
             0, 1, 4, 5, GTK_FILL, 0, 4, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
-            txt_botright_lat = gtk_entry_new(),
+            dlarea_info.txt_botright_lat = gtk_entry_new(),
             1, 2, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     sprintf(buffer, "%2.6f", MIN(lat, prev_lat));
-    gtk_entry_set_text(GTK_ENTRY(txt_botright_lat), buffer);
-    gtk_entry_set_alignment(GTK_ENTRY(txt_botright_lat), 1.f);
+    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_botright_lat), buffer);
+    gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_botright_lat), 1.f);
     gtk_table_attach(GTK_TABLE(table),
-            txt_botright_lon = gtk_entry_new(),
+            dlarea_info.txt_botright_lon = gtk_entry_new(),
             2, 3, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     sprintf(buffer, "%2.6f", MAX(lon, prev_lon));
-    gtk_entry_set_text(GTK_ENTRY(txt_botright_lon), buffer);
-    gtk_entry_set_alignment(GTK_ENTRY(txt_botright_lon), 1.f);
+    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_botright_lon), buffer);
+    gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_botright_lon), 1.f);
 
 
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+    gtk_notebook_append_page(GTK_NOTEBOOK(dlarea_info.notebook),
             table = gtk_table_new(5, 5, FALSE),
             label = gtk_label_new("Zoom"));
     gtk_table_attach(GTK_TABLE(table),
@@ -4924,12 +4956,13 @@ menu_cb_maps_dlarea(GtkAction *action)
     {
         sprintf(buffer, "%d", i);
         gtk_table_attach(GTK_TABLE(table),
-                chk_zoom_levels[i] = gtk_check_button_new_with_label(buffer),
+                dlarea_info.chk_zoom_levels[i]
+                        = gtk_check_button_new_with_label(buffer),
                 i % 5, i % 5 + 1, i / 5 + 1, i / 5 + 2,
                 GTK_EXPAND | GTK_FILL, 0, 4, 0);
     }
     gtk_toggle_button_set_active(
-            GTK_TOGGLE_BUTTON(chk_zoom_levels[_zoom - 1]), TRUE);
+            GTK_TOGGLE_BUTTON(dlarea_info.chk_zoom_levels[_zoom - 1]), TRUE);
 
     gtk_widget_show_all(dialog);
 
@@ -4942,28 +4975,28 @@ menu_cb_maps_dlarea(GtkAction *action)
         guint num_maps = 0;
         GtkWidget *confirm;
 
-        text = gtk_entry_get_text(GTK_ENTRY(txt_topleft_lat));
+        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_topleft_lat));
         start_lat = strtof(text, &error_check);
         if(text == error_check) {
             popup_error("Invalid Top-Left Latitude");
             continue;
         }
 
-        text = gtk_entry_get_text(GTK_ENTRY(txt_topleft_lon));
+        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_topleft_lon));
         start_lon = strtof(text, &error_check);
         if(text == error_check) {
             popup_error("Invalid Top-Left Longitude");
             continue;
         }
 
-        text = gtk_entry_get_text(GTK_ENTRY(txt_botright_lat));
+        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_botright_lat));
         end_lat = strtof(text, &error_check);
         if(text == error_check) {
             popup_error("Invalid Bottom-Right Latitude");
             continue;
         }
 
-        text = gtk_entry_get_text(GTK_ENTRY(txt_botright_lon));
+        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_botright_lon));
         end_lon = strtof(text, &error_check);
         if(text == error_check) {
             popup_error("Invalid Bottom-Right Longitude");
@@ -4991,7 +5024,7 @@ menu_cb_maps_dlarea(GtkAction *action)
         for(i = 0; i < MAX_ZOOM; i++)
         {
             if(gtk_toggle_button_get_active(
-                        GTK_TOGGLE_BUTTON(chk_zoom_levels[i])))
+                        GTK_TOGGLE_BUTTON(dlarea_info.chk_zoom_levels[i])))
             {
                 guint start_tilex, start_tiley, end_tilex, end_tiley;
                 start_tilex = unit2ztile(start_unitx, i + 1);
@@ -5008,12 +5041,12 @@ menu_cb_maps_dlarea(GtkAction *action)
                 num_maps * (strstr(_map_uri_format, "%s") ? 18e-3 : 6e-3));
         confirm = hildon_note_new_confirmation(_window, buffer);
 
-        if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(confirm)))
+        if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
         {
             for(i = 0; i < MAX_ZOOM; i++)
             {
                 if(gtk_toggle_button_get_active(
-                            GTK_TOGGLE_BUTTON(chk_zoom_levels[i])))
+                            GTK_TOGGLE_BUTTON(dlarea_info.chk_zoom_levels[i])))
                 {
                     guint start_tilex, start_tiley, end_tilex, end_tiley;
                     guint tilex, tiley;
