@@ -1,5 +1,5 @@
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 0.2.3)
+AM_INIT_AUTOMAKE(maemo-mapper, 0.2.4)
 
 AC_PROG_CPP
 AC_PROG_INSTALL

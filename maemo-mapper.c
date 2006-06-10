@@ -33,6 +33,7 @@
 #include <errno.h>
 #include <sys/wait.h>
 #include <gtk/gtk.h>
+#include <fcntl.h>
 #include <gdk/gdkkeysyms.h>
 #include <libosso.h>
 #include <hildon-widgets/hildon-app.h>
@@ -541,7 +542,7 @@ static GHashTable *_downloads_hash = NULL;
 
 /** CONFIGURATION INFORMATION. */
 static struct sockaddr_rc _rcvr_addr = { 0 };
-static gchar _rcvr_mac[18] = "";
+static gchar *_rcvr_mac = NULL;
 static gchar *_map_dir_name = NULL;
 static gchar *_map_uri_format = NULL;
 static gchar *_route_dir_uri = NULL;
@@ -649,7 +650,7 @@ menu_cb_settings(GtkAction *action);
 
 static gint
 map_download_cb_async(GnomeVFSAsyncHandle *handle,
-        GnomeVFSXferProgressInfo *info, ProgressUpdateInfo*pui);
+        GnomeVFSXferProgressInfo *info, ProgressUpdateInfo *pui);
 
 static gboolean
 auto_route_dl_idle_refresh();
@@ -772,7 +773,7 @@ route_update_nears(gboolean quick)
                 || (wcurr->point == near && quick
                     && (_next_point
                      && (DISTANCE_ROUGH(*near) > _next_way_dist_rough
-                      && DISTANCE_ROUGH(*_next_point) < _next_point_dist_rough))))
+                      && DISTANCE_ROUGH(*_next_point)<_next_point_dist_rough))))
                 wnext = wcurr + 1;
             else
                 break;
@@ -782,7 +783,7 @@ route_update_nears(gboolean quick)
                 || (wnext->point == near && quick
                     && (!_next_point
                      || (DISTANCE_ROUGH(*near) > _next_way_dist_rough
-                      && DISTANCE_ROUGH(*_next_point) < _next_point_dist_rough)))))
+                      &&DISTANCE_ROUGH(*_next_point)<_next_point_dist_rough)))))
         {
             printf("Setting _next_way to NULL\n");
             _next_way = NULL;
@@ -1187,36 +1188,56 @@ static void rcvr_connect_later(); /* Forward declaration. */
  * Connect to the receiver.
  * This method assumes that _fd is -1 and _channel is NULL.  If unsure, call
  * rcvr_disconnect() first.
+ * Since this is an idle function, this function returns whether or not it
+ * should be called again, which is always FALSE.
  */
 static gboolean
 rcvr_connect_now()
 {
     printf("%s(%d)\n", __PRETTY_FUNCTION__, _conn_state);
 
-    if(_conn_state == RCVR_DOWN) {
+    if(_conn_state == RCVR_DOWN && _rcvr_mac) {
 #ifndef DEBUG
         /* Create the file descriptor. */
-        _fd = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
-        _channel = g_io_channel_unix_new(_fd);
-        g_io_channel_set_flags(_channel, G_IO_FLAG_NONBLOCK, NULL);
-        _error_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
-                G_IO_ERR | G_IO_HUP, channel_cb_error, NULL, NULL);
-        _connect_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
-                G_IO_OUT, channel_cb_connect, NULL, NULL);
-        if(connect(_fd, (struct sockaddr*)&_rcvr_addr, sizeof(_rcvr_addr))
-                && errno != EAGAIN)
-        {
-            rcvr_disconnect();
+        if(*_rcvr_mac == '/')
+            _fd = open(_rcvr_mac, O_RDONLY);
+        else
+            _fd = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
+
+        /* If file descriptor creation failed, try again later.  Note that
+         * there is no need to call rcvr_disconnect() because the file
+         * descriptor creation is the first step, so if it fails, there's
+         * nothing to clean up. */
+        if(_fd == -1)
             rcvr_connect_later();
+        else
+        {
+            _channel = g_io_channel_unix_new(_fd);
+            g_io_channel_set_flags(_channel, G_IO_FLAG_NONBLOCK, NULL);
+            _error_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
+                    G_IO_ERR | G_IO_HUP, channel_cb_error, NULL, NULL);
+            _connect_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
+                    G_IO_OUT, channel_cb_connect, NULL, NULL);
+
+            if(*_rcvr_mac != '/'
+                    && connect(_fd, (struct sockaddr*)&_rcvr_addr,
+                        sizeof(_rcvr_addr))
+                    && errno != EAGAIN)
+            {
+                /* Connection failed.  Disconnect and try again later. */
+                rcvr_disconnect();
+                rcvr_connect_later();
+            }
         }
 #else
+        /* We're in DEBUG mode, so instead of connecting, skip to FIXED. */
         set_conn_state(RCVR_FIXED);
 #endif
     }
 
     _clater_sid = 0;
 
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
     return FALSE;
 }
 
@@ -1249,34 +1270,6 @@ integerize_data()
     _vel_offsety = -(gint)(floorf(_speed * cosf(tmp) + 0.5f));
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-}
-
-/**
- * Scan for all bluetooth devices.  This method can take a few seconds,
- * during which the UI will freeze.
- */
-static gboolean
-scan_bluetooth(GtkWidget *txt_rcvr_mac)
-{
-    /* Do an hci_inquiry for our boy. */
-    char buffer[18];
-    inquiry_info ii;
-    inquiry_info *pii = &ii;
-    gint devid = hci_get_route(NULL);
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(hci_inquiry(devid, 4, 1, NULL, &pii, IREQ_CACHE_FLUSH) > 0)
-    {
-        ba2str(&ii.bdaddr, buffer);
-        gtk_banner_close(_window);
-        gtk_entry_set_text(GTK_ENTRY(txt_rcvr_mac), buffer);
-
-        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-        return FALSE;
-    }
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
 }
 
 /**
@@ -1348,6 +1341,144 @@ config_set_map_dir_name(gchar *new_map_dir_name)
     return retval;
 }
 
+/**
+ * Save all configuration data to GCONF.
+ */
+static void
+config_save()
+{
+    GConfClient *gconf_client = gconf_client_get_default();
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(!gconf_client)
+    {
+        fprintf(stderr, "Failed to initialize GConf.  Aborting.\n");
+        return;
+    }
+
+    /* Save Receiver MAC from GConf. */
+    if(_rcvr_mac)
+        gconf_client_set_string(gconf_client,
+                GCONF_KEY_RCVR_MAC, _rcvr_mac, NULL);
+    else
+        gconf_client_unset(gconf_client,
+                GCONF_KEY_RCVR_MAC, NULL);
+
+    /* Save Receiver Channel to GConf. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_RCVR_CHAN, _rcvr_addr.rc_channel, NULL);
+
+    /* Save Map Download URI Format. */
+    if(_map_uri_format)
+        gconf_client_set_string(gconf_client,
+                GCONF_KEY_MAP_URI_FORMAT, _map_uri_format, NULL);
+
+    /* Save Map Download Zoom Steps. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_MAP_ZOOM_STEPS, _zoom_steps, NULL);
+
+    /* Save Map Cache Directory. */
+    if(_map_dir_name)
+        gconf_client_set_string(gconf_client,
+            GCONF_KEY_MAP_DIR_NAME, _map_dir_name, NULL);
+
+    /* Save Auto-Download. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_AUTO_DOWNLOAD, _auto_download, NULL);
+
+    /* Save Auto-Center Sensitivity. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_CENTER_SENSITIVITY, _center_ratio, NULL);
+
+    /* Save Auto-Center Lead Amount. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_LEAD_AMOUNT, _lead_ratio, NULL);
+
+    /* Save Draw Line Width. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_DRAW_LINE_WIDTH, _draw_line_width, NULL);
+
+    /* Save Announce Advance Notice Ratio. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_ANNOUNCE_NOTICE, _announce_notice_ratio, NULL);
+
+    /* Save Enable Voice flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_ENABLE_VOICE, _enable_voice, NULL);
+
+    /* Save Voice Synthesis Path flag. */
+    gconf_client_set_string(gconf_client,
+            GCONF_KEY_VOICE_SYNTH_PATH, _voice_synth_path, NULL);
+
+    /* Save Keep On When Fullscreen flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_ALWAYS_KEEP_ON, _always_keep_on, NULL);
+
+    /* Save last saved latitude. */
+    gconf_client_set_float(gconf_client,
+            GCONF_KEY_LAT, _pos_lat, NULL);
+
+    /* Save last saved longitude. */
+    gconf_client_set_float(gconf_client,
+            GCONF_KEY_LON, _pos_lon, NULL);
+
+    /* Save last center point. */
+    {
+        gfloat center_lat, center_lon;
+        unit2latlon(_center.unitx, _center.unity, center_lat, center_lon);
+
+        /* Save last center latitude. */
+        gconf_client_set_float(gconf_client,
+                GCONF_KEY_CENTER_LAT, center_lat, NULL);
+
+        /* Save last center longitude. */
+        gconf_client_set_float(gconf_client,
+                GCONF_KEY_CENTER_LON, center_lon, NULL);
+    }
+
+    /* Save last Zoom Level. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_ZOOM, _zoom, NULL);
+
+    /* Save Route Directory. */
+    if(_route_dir_uri)
+        gconf_client_set_string(gconf_client,
+                GCONF_KEY_ROUTEDIR, _route_dir_uri, NULL);
+
+    /* Save Last Track File. */
+    if(_track_file_uri)
+        gconf_client_set_string(gconf_client,
+                GCONF_KEY_TRACKFILE, _track_file_uri, NULL);
+
+    /* Save Auto-Center Mode. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_AUTOCENTER_MODE, _center_mode, NULL);
+
+    /* Save Show Tracks flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_SHOWTRACKS, _show_tracks & TRACKS_MASK, NULL);
+
+    /* Save Show Routes flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_SHOWROUTES, _show_tracks & ROUTES_MASK, NULL);
+
+    /* Save Show Velocity Vector flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_SHOWVELVEC, _show_velvec, NULL);
+
+    /* Save Enable GPS flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_ENABLE_GPS, _enable_gps, NULL);
+
+    /* Save Route Locations. */
+    gconf_client_set_list(gconf_client,
+            GCONF_KEY_ROUTE_LOCATIONS, GCONF_VALUE_STRING, _loc_list, NULL);
+
+    g_object_unref(gconf_client);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
 static void
 force_min_visible_bars(HildonControlbar *control_bar, gint num_bars)
 {
@@ -1356,6 +1487,34 @@ force_min_visible_bars(HildonControlbar *control_bar, gint num_bars)
     g_value_init(&val, G_TYPE_INT);
     g_value_set_int(&val, num_bars);
     g_object_set_property(G_OBJECT(control_bar), "minimum-visible-bars", &val);
+}
+
+/**
+ * Scan for all bluetooth devices.  This method can take a few seconds,
+ * during which the UI will freeze.
+ */
+static gboolean
+scan_bluetooth(GtkWidget *txt_rcvr_mac)
+{
+    /* Do an hci_inquiry for our boy. */
+    gchar buffer[18];
+    inquiry_info ii;
+    inquiry_info *pii = &ii;
+    gint devid = hci_get_route(NULL);
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(hci_inquiry(devid, 4, 1, NULL, &pii, IREQ_CACHE_FLUSH) > 0)
+    {
+        ba2str(&ii.bdaddr, buffer);
+        gtk_banner_close(_window);
+        gtk_entry_set_text(GTK_ENTRY(txt_rcvr_mac), buffer);
+
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
 }
 
 /**
@@ -1407,7 +1566,7 @@ settings_dialog()
     gtk_table_attach(GTK_TABLE(table),
             txt_rcvr_mac = gtk_entry_new_with_max_length(17),
             1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-    if(*_rcvr_mac)
+    if(_rcvr_mac)
         gtk_entry_set_text(GTK_ENTRY(txt_rcvr_mac), _rcvr_mac);
     else
     {
@@ -1544,8 +1703,7 @@ settings_dialog()
             txt_voice_synth_path = gtk_entry_new(),
             1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     gtk_entry_set_width_chars(GTK_ENTRY(txt_voice_synth_path), 30);
-    if(_voice_synth_path)
-        gtk_entry_set_text(GTK_ENTRY(txt_voice_synth_path), _voice_synth_path);
+    gtk_entry_set_text(GTK_ENTRY(txt_voice_synth_path), _voice_synth_path);
 
     /* Misc. page. */
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
@@ -1578,11 +1736,39 @@ settings_dialog()
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
-        if(!*_rcvr_mac || strcmp(
-                    _rcvr_mac, gtk_entry_get_text(GTK_ENTRY(txt_rcvr_mac))))
+        if(!config_set_map_dir_name(gnome_vfs_expand_initial_tilde(
+                gtk_entry_get_text(GTK_ENTRY(txt_map_dir_name)))))
         {
-            g_strlcpy(_rcvr_mac, gtk_entry_get_text(GTK_ENTRY(txt_rcvr_mac)),
-                    sizeof(_rcvr_mac));
+            popup_error("Could not create Map Cache directory.");
+            continue;
+        }
+
+        /* Set _rcvr_mac if necessary. */
+        if(!*gtk_entry_get_text(GTK_ENTRY(txt_rcvr_mac)))
+        {
+            /* User specified no rcvr mac - set _rcvr_mac to NULL. */
+            if(_rcvr_mac)
+            {
+                g_free(_rcvr_mac);
+                _rcvr_mac = NULL;
+                rcvr_changed = TRUE;
+            }
+            if(_enable_gps)
+            {
+                gtk_check_menu_item_set_active(
+                        GTK_CHECK_MENU_ITEM(_menu_enable_gps_item), FALSE);
+                popup_error("No GPS Receiver MAC Provided.\n"
+                        "GPS Disabled.");
+                rcvr_changed = TRUE;
+            }
+        }
+        else if(!_rcvr_mac || strcmp(_rcvr_mac,
+                      gtk_entry_get_text(GTK_ENTRY(txt_rcvr_mac))))
+        {
+            /* User specified a new rcvr mac. */
+            if(_rcvr_mac)
+                g_free(_rcvr_mac);
+            _rcvr_mac = g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_rcvr_mac)));
             str2ba(_rcvr_mac, &_rcvr_addr.rc_bdaddr);
             rcvr_changed = TRUE;
         }
@@ -1624,22 +1810,13 @@ settings_dialog()
         _enable_voice = gtk_toggle_button_get_active(
                 GTK_TOGGLE_BUTTON(chk_enable_voice));
 
-        if(_voice_synth_path)
-            g_free(_voice_synth_path);
-        if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_voice_synth_path))))
-            _voice_synth_path = g_strdup(gtk_entry_get_text(
-                        GTK_ENTRY(txt_voice_synth_path)));
-        else
-            _voice_synth_path = NULL;
+        g_free(_voice_synth_path);
+        _voice_synth_path = g_strdup(gtk_entry_get_text(
+                    GTK_ENTRY(txt_voice_synth_path)));
 
         update_gcs();
 
-        if(!config_set_map_dir_name(gnome_vfs_expand_initial_tilde(
-                gtk_entry_get_text(GTK_ENTRY(txt_map_dir_name)))))
-        {
-            popup_error("Could not create Map Cache directory.");
-            continue;
-        }
+        config_save();
         break;
     }
     gtk_widget_destroy(dialog);
@@ -1650,141 +1827,6 @@ settings_dialog()
 
     vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, rcvr_changed);
     return rcvr_changed;
-}
-
-/**
- * Save all configuration data to GCONF.
- */
-static void
-config_save()
-{
-    GConfClient *gconf_client = gconf_client_get_default();
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(!gconf_client)
-    {
-        fprintf(stderr, "Failed to initialize GConf.  Aborting.\n");
-        return;
-    }
-
-    /* Save Receiver MAC from GConf. */
-    if(_rcvr_mac)
-        gconf_client_set_string(gconf_client,
-                GCONF_KEY_RCVR_MAC, _rcvr_mac, NULL);
-
-    /* Save Receiver Channel to GConf. */
-    gconf_client_set_int(gconf_client,
-            GCONF_KEY_RCVR_CHAN, _rcvr_addr.rc_channel, NULL);
-
-    /* Save Map Download URI Format. */
-    if(_map_uri_format)
-        gconf_client_set_string(gconf_client,
-                GCONF_KEY_MAP_URI_FORMAT, _map_uri_format, NULL);
-
-    /* Save Map Download Zoom Steps. */
-    gconf_client_set_int(gconf_client,
-            GCONF_KEY_MAP_ZOOM_STEPS, _zoom_steps, NULL);
-
-    /* Save Map Cache Directory. */
-    if(_map_dir_name)
-        gconf_client_set_string(gconf_client,
-            GCONF_KEY_MAP_DIR_NAME, _map_dir_name, NULL);
-
-    /* Save Auto-Download. */
-    gconf_client_set_bool(gconf_client,
-            GCONF_KEY_AUTO_DOWNLOAD, _auto_download, NULL);
-
-    /* Save Auto-Center Sensitivity. */
-    gconf_client_set_int(gconf_client,
-            GCONF_KEY_CENTER_SENSITIVITY, _center_ratio, NULL);
-
-    /* Save Auto-Center Lead Amount. */
-    gconf_client_set_int(gconf_client,
-            GCONF_KEY_LEAD_AMOUNT, _lead_ratio, NULL);
-
-    /* Save Draw Line Width. */
-    gconf_client_set_int(gconf_client,
-            GCONF_KEY_DRAW_LINE_WIDTH, _draw_line_width, NULL);
-
-    /* Save Announce Advance Notice Ratio. */
-    gconf_client_set_int(gconf_client,
-            GCONF_KEY_ANNOUNCE_NOTICE, _announce_notice_ratio, NULL);
-
-    /* Save Enable Voice flag. */
-    gconf_client_set_bool(gconf_client,
-            GCONF_KEY_ENABLE_VOICE, _enable_voice, NULL);
-
-    /* Save Voice Synthesis Path flag. */
-    gconf_client_set_string(gconf_client,
-            GCONF_KEY_VOICE_SYNTH_PATH, _voice_synth_path, NULL);
-
-    /* Save Keep On When Fullscreen flag. */
-    gconf_client_set_bool(gconf_client,
-            GCONF_KEY_ALWAYS_KEEP_ON, _always_keep_on, NULL);
-
-    /* Save last saved latitude. */
-    gconf_client_set_float(gconf_client,
-            GCONF_KEY_LAT, _pos_lat, NULL);
-
-    /* Save last saved longitude. */
-    gconf_client_set_float(gconf_client,
-            GCONF_KEY_LON, _pos_lon, NULL);
-
-    /* Save last center point. */
-    {
-        gfloat center_lat, center_lon;
-        unit2latlon(_center.unitx, _center.unity, center_lat, center_lon);
-
-        /* Save last center latitude. */
-        gconf_client_set_float(gconf_client,
-                GCONF_KEY_CENTER_LAT, center_lat, NULL);
-
-        /* Save last center longitude. */
-        gconf_client_set_float(gconf_client,
-                GCONF_KEY_CENTER_LON, center_lon, NULL);
-    }
-
-    /* Save last Zoom Level. */
-    gconf_client_set_int(gconf_client,
-            GCONF_KEY_ZOOM, _zoom, NULL);
-
-    /* Save Route Directory. */
-    if(_route_dir_uri)
-        gconf_client_set_string(gconf_client,
-                GCONF_KEY_ROUTEDIR, _route_dir_uri, NULL);
-
-    /* Save Last Track File. */
-    if(_track_file_uri)
-        gconf_client_set_string(gconf_client,
-                GCONF_KEY_TRACKFILE, _track_file_uri, NULL);
-
-    /* Save Auto-Center Mode. */
-    gconf_client_set_int(gconf_client,
-            GCONF_KEY_AUTOCENTER_MODE, _center_mode, NULL);
-
-    /* Save Show Tracks flag. */
-    gconf_client_set_bool(gconf_client,
-            GCONF_KEY_SHOWTRACKS, _show_tracks & TRACKS_MASK, NULL);
-
-    /* Save Show Routes flag. */
-    gconf_client_set_bool(gconf_client,
-            GCONF_KEY_SHOWROUTES, _show_tracks & ROUTES_MASK, NULL);
-
-    /* Save Show Velocity Vector flag. */
-    gconf_client_set_bool(gconf_client,
-            GCONF_KEY_SHOWVELVEC, _show_velvec, NULL);
-
-    /* Save Enable GPS flag. */
-    gconf_client_set_bool(gconf_client,
-            GCONF_KEY_ENABLE_GPS, _enable_gps, NULL);
-
-    /* Save Route Locations. */
-    gconf_client_set_list(gconf_client,
-            GCONF_KEY_ROUTE_LOCATIONS, GCONF_VALUE_STRING, _loc_list, NULL);
-
-    g_object_unref(gconf_client);
-
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 /**
@@ -1806,14 +1848,10 @@ config_init()
 
     /* Get Receiver MAC from GConf.  Default is scanned via hci_inquiry. */
     {
-        gchar *rcvr_mac = gconf_client_get_string(
+        _rcvr_mac = gconf_client_get_string(
                 gconf_client, GCONF_KEY_RCVR_MAC, NULL);
-        if(rcvr_mac)
-        {
-            g_strlcpy(_rcvr_mac, rcvr_mac, sizeof(_rcvr_mac));
-            g_free(rcvr_mac);
+        if(_rcvr_mac)
             str2ba(_rcvr_mac, &_rcvr_addr.rc_bdaddr);
-        }
     }
 
     /* Get Receiver Channel from GConf.  Default is 1. */
@@ -2219,15 +2257,12 @@ window_present()
     if(!been_here++)
     {
         /* Set connection state first, to avoid going into this if twice. */
-        if(*_rcvr_mac || !_enable_gps || settings_dialog())
+        if(_rcvr_mac || !_enable_gps || settings_dialog())
         {
             gtk_widget_show_all(GTK_WIDGET(_main_view));
 
             /* Connect to receiver. */
-            if(!*_rcvr_mac)
-                gtk_check_menu_item_set_active(
-                        GTK_CHECK_MENU_ITEM(_menu_enable_gps_item), FALSE);
-            else if(_enable_gps)
+            if(_enable_gps)
                 rcvr_connect_now();
         }
         else
@@ -2393,10 +2428,10 @@ progress_update_info_free(ProgressUpdateInfo *pui)
  * quadtree coordinates to buffer.
  */
 static void
-map_convert_coords_to_quadtree_string(int x, int y, int zoomlevel, char *buffer)
+map_convert_coords_to_quadtree_string(int x, int y, int zoomlevel,gchar *buffer)
 {
-    static const char *const quadrant = "qrts";
-    char *ptr = buffer;
+    static const gchar *const quadrant = "qrts";
+    gchar *ptr = buffer;
     int n;
     *ptr++ = 't';
     for (n = 16 - zoomlevel; n >= 0; n--)
@@ -2420,7 +2455,7 @@ map_construct_url(gchar *buffer, guint tilex, guint tiley, guint zoom)
     if(strstr(_map_uri_format, "%s"))
     {
         /* This is a satellite-map URI. */
-        char location[MAX_ZOOM + 2];
+        gchar location[MAX_ZOOM + 2];
         map_convert_coords_to_quadtree_string(tilex, tiley, zoom - 1, location);
         sprintf(buffer, _map_uri_format, location);
     }
@@ -2478,6 +2513,14 @@ map_initiate_download(gchar *buffer, guint tilex, guint tiley, guint zoom)
     src_list = g_list_prepend(src_list, src);
     dest_list = g_list_prepend(dest_list, dest);
 
+    /* Make sure directory exists. */
+    sprintf(buffer, "%s/%u", _map_dir_name, (pui->zoom - 1));
+    gnome_vfs_make_directory(buffer, 0775);
+    sprintf(buffer, "%s/%u/%u", _map_dir_name,
+            (pui->zoom - 1), pui->tilex);
+    gnome_vfs_make_directory(buffer, 0775);
+
+    /* Initiate asynchronous download. */
     if(GNOME_VFS_OK != gnome_vfs_async_xfer(
                 &pui->handle,
                 src_list, dest_list,
@@ -3049,7 +3092,7 @@ gpx_get_entity(SaxData *data, const xmlChar *name)
  * Handle an error in the parsing of a GPX file.
  */
 static void
-gpx_error(SaxData *data, const char *msg, ...)
+gpx_error(SaxData *data, const gchar *msg, ...)
 {
     vprintf("%s()\n", __PRETTY_FUNCTION__);
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -3227,7 +3270,7 @@ open_file(gchar **bytes_out, GnomeVFSHandle **handle_out, gint *size_out,
                             handle_out, file_uri_str,
                             GNOME_VFS_OPEN_WRITE, FALSE, 0664))))
         {
-            char buffer[1024];
+            gchar buffer[1024];
             sprintf(buffer, "Failed to open file for %s.\n%s",
                     chooser_action == GTK_FILE_CHOOSER_ACTION_OPEN
                     ? "reading" : "writing",
@@ -3586,7 +3629,7 @@ maemo_mapper_init(gint argc, gchar **argv)
         if(GNOME_VFS_OK != (vfs_result = gnome_vfs_read_entire_file(
                         file_uri, &size, &buffer)))
         {
-            char buffer[1024];
+            gchar buffer[1024];
             sprintf(buffer, "Failed to open file for reading.\n%s",
                     gnome_vfs_result_to_string(vfs_result));
             popup_error(buffer);
@@ -3915,7 +3958,8 @@ channel_cb_connect(GIOChannel *src, GIOCondition condition, gpointer data)
     int error, size = sizeof(error);
     printf("%s(%d)\n", __PRETTY_FUNCTION__, condition);
 
-    if(getsockopt(_fd, SOL_SOCKET, SO_ERROR, &error, &size) || error)
+    if(*_rcvr_mac != '/'
+            && (getsockopt(_fd, SOL_SOCKET, SO_ERROR, &error, &size) || error))
     {
         printf("%s(): Error connecting to receiver; retrying...\n",
                 __PRETTY_FUNCTION__);
@@ -4317,7 +4361,7 @@ menu_cb_route_download(GtkAction *action)
         if(GNOME_VFS_OK != (vfs_result = gnome_vfs_read_entire_file(
                         buffer, &size, &bytes)))
         {
-            char buffer[1024];
+            gchar buffer[1024];
             sprintf(buffer, "Failed to connect to GPX Directions server.\n%s",
                     gnome_vfs_result_to_string(vfs_result));
             popup_error(buffer);
@@ -4475,7 +4519,7 @@ menu_cb_track_open(GtkAction *action)
     if(GNOME_VFS_OK != (vfs_result = gnome_vfs_write( \
                     handle, (string), strlen((string)), &size))) \
     { \
-        char buffer[1024]; \
+        gchar buffer[1024]; \
         sprintf(buffer, "Error while writing to file:\n%s\n" \
                         "File is incomplete.", \
                 gnome_vfs_result_to_string(vfs_result)); \
@@ -4516,7 +4560,8 @@ write_gpx(GnomeVFSHandle *handle, Track *track)
             gfloat lat, lon;
             if(curr->unity != 0)
             {
-                char buffer[80];
+                gchar buffer[80];
+                gchar strlat[80], strlon[80];
                 if(trkseg_break)
                 {
                     /* First trkpt of the segment - write trkseg header. */
@@ -4526,7 +4571,10 @@ write_gpx(GnomeVFSHandle *handle, Track *track)
                     trkseg_break = FALSE;
                 }
                 unit2latlon(curr->unitx, curr->unity, lat, lon);
-                sprintf(buffer, "      <trkpt lat=\"%f\" lon=\"%f\"", lat, lon);
+                g_ascii_formatd(strlat, 80, "%.6f", lat);
+                g_ascii_formatd(strlon, 80, "%.6f", lon);
+                sprintf(buffer, "      <trkpt lat=\"%s\" lon=\"%s\"",
+                        strlat, strlon);
                 if(curr == wcurr->point)
                 {
                     sprintf(buffer + strlen(buffer),
@@ -4833,7 +4881,7 @@ menu_cb_maps_dlarea(GtkAction *action)
     GtkWidget *label;
     GtkWidget *button;
     DlAreaInfo dlarea_info;
-    gchar buffer[32];
+    gchar buffer[80];
     gfloat lat, lon, prev_lat, prev_lon;
     guint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -4949,7 +4997,8 @@ menu_cb_maps_dlarea(GtkAction *action)
             table = gtk_table_new(5, 5, FALSE),
             label = gtk_label_new("Zoom"));
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new("Zoom Levels to Download: (0 -> most detail)"),
+            label = gtk_label_new(
+                "Zoom Levels to Download: (0 -> most detail)"),
             0, 5, 0, 1, GTK_FILL, 0, 4, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
     for(i = 0; i < MAX_ZOOM; i++)
@@ -5039,7 +5088,7 @@ menu_cb_maps_dlarea(GtkAction *action)
         sprintf(buffer, "Confirm download of %d maps\n(up to about %.2f MB)\n",
                 num_maps,
                 num_maps * (strstr(_map_uri_format, "%s") ? 18e-3 : 6e-3));
-        confirm = hildon_note_new_confirmation(_window, buffer);
+        confirm = hildon_note_new_confirmation(GTK_WINDOW(dialog), buffer);
 
         if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
         {
@@ -5098,8 +5147,18 @@ menu_cb_enable_gps(GtkAction *action)
     if((_enable_gps = gtk_check_menu_item_get_active(
                 GTK_CHECK_MENU_ITEM(_menu_enable_gps_item))))
     {
-        set_conn_state(RCVR_DOWN);
-        rcvr_connect_now();
+        if(_rcvr_mac)
+        {
+            set_conn_state(RCVR_DOWN);
+            rcvr_connect_now();
+        }
+        else
+        {
+            popup_error("Cannot enable GPS until a GPS Receiver MAC "
+                    "is set in the Settings dialog box.");
+            gtk_check_menu_item_set_active(
+                    GTK_CHECK_MENU_ITEM(_menu_enable_gps_item), FALSE);
+        }
     }
     else
     {
@@ -5134,11 +5193,7 @@ menu_cb_settings(GtkAction *action)
 
     if(settings_dialog())
     {
-        if(!*_rcvr_mac)
-            gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_enable_gps_item), FALSE);
-        /* Settings have changed - reconnect to receiver. */
-        else if(_conn_state > RCVR_OFF)
+        if(_enable_gps)
         {
             set_conn_state(RCVR_DOWN);
             rcvr_disconnect();
@@ -5212,46 +5267,12 @@ map_download_cb_async(GnomeVFSAsyncHandle *handle,
             info->target_name ? info->target_name + 7 : info->target_name);
 
     if(info->phase == GNOME_VFS_XFER_PHASE_COMPLETED)
-    {
-        /* Transfer is complete, successful or not - pui must be freed. */
-        if(info->status == GNOME_VFS_XFER_PROGRESS_STATUS_OK
-                && info->vfs_status == GNOME_VFS_OK
-        /* Only refresh at same or "lower" (more detailed) zoom level. */
-                && _zoom <= pui->zoom)
-            g_idle_add_full(G_PRIORITY_HIGH_IDLE,
-                    (GSourceFunc)map_download_idle_refresh, pui, NULL);
-        else
-        {
-            /* Didn't download a map, but we should still update
-             * _curr_download. */
-            g_idle_add_full(G_PRIORITY_HIGH_IDLE,
-                    (GSourceFunc)map_download_idle_refresh, NULL, NULL);
-            progress_update_info_free(pui);
-        }
-    }
-    else if(info->status != GNOME_VFS_XFER_PROGRESS_STATUS_OK)
-    {
-        /* Something failed - if dir is not found, we can fix that. */
-        if(info->vfs_status == GNOME_VFS_ERROR_NOT_FOUND)
-        {
-            /* Directory doesn't exist yet - create it, then we'll retry. */
-            gchar buffer[1024];
-            sprintf(buffer, "%s/%u", _map_dir_name, (pui->zoom - 1));
-            gnome_vfs_make_directory(buffer, 0775);
-            sprintf(buffer, "%s/%u/%u", _map_dir_name,
-                    (pui->zoom - 1), pui->tilex);
-            gnome_vfs_make_directory(buffer, 0775);
-        }
-        else
-        {
-            /* Nothing we can do. Abort. */
-            return FALSE;
-            vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-        }
-    }
+        g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                (GSourceFunc)map_download_idle_refresh, pui, NULL);
 
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
+    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__,
+            info->status == GNOME_VFS_XFER_PROGRESS_STATUS_OK);
+    return (info->status == GNOME_VFS_XFER_PROGRESS_STATUS_OK);
 }
 
 /****************************************************************************

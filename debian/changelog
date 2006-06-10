@@ -1,3 +1,13 @@
+maemo-mapper (0.2.4) unstable; urgency=low
+
+  * Added support for rfcomm-based input.
+  * Settings dialog now saves settings to GCONF on dismissal.
+  * Fixed map downloading to be more Gnome-VFS-friendly.
+  * Fixed localization bug in output GPX files.
+  * Fixed crash in "Download Area"/confirmation dialog box.
+
+ -- John Costigan <gnuite@gmail.com>  Sat, 10 Jun 2006 16:52:00 -0400
+
 maemo-mapper (0.2.3) unstable; urgency=low
 
   * Fixed bug in Download-by-Area confirmation dialog box.
