@@ -1,7 +1,8 @@
 #!/bin/sh
 
 set -x
-aclocal-1.7
+aclocal
 autoconf
-libtoolize
-automake-1.7 --add-missing --foreign
+autoheader
+automake --add-missing --foreign
+./configure

@@ -23,6 +23,7 @@
 
 #define _GNU_SOURCE
 
+#include <config.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,12 +37,12 @@
 #include <fcntl.h>
 #include <gdk/gdkkeysyms.h>
 #include <libosso.h>
-#include <hildon-widgets/hildon-app.h>
+#include <hildon-widgets/hildon-program.h>
 #include <hildon-widgets/hildon-controlbar.h>
 #include <hildon-widgets/hildon-note.h>
 #include <hildon-widgets/hildon-file-chooser-dialog.h>
 #include <hildon-widgets/hildon-number-editor.h>
-#include <hildon-widgets/gtk-infoprint.h>
+#include <hildon-widgets/hildon-banner.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <gconf/gconf-client.h>
 #include <libxml/parser.h>
@@ -395,10 +396,10 @@ struct _AutoRouteDownloadData {
  ****************************************************************************/
 
 /** The main GtkWindow of the application. */
-static GtkWindow *_window = NULL;
+static HildonProgram *_program = NULL;
 
 /** The main GtkContainer of the application. */
-static HildonAppView *_main_view = NULL;
+static GtkWidget *_window = NULL;
 
 /** The main OSSO context of the application. */
 static osso_context_t *_osso = NULL;
@@ -534,6 +535,11 @@ static GtkWidget *_menu_fullscreen_item = NULL;
 static GtkWidget *_menu_enable_gps_item = NULL;
 static GtkWidget *_menu_settings_item = NULL;
 static GtkWidget *_menu_close_item = NULL;
+
+/** BANNERS. */
+GtkWidget *_connect_banner = NULL;
+GtkWidget *_fix_banner = NULL;
+GtkWidget *_download_banner = NULL;
 
 /** DOWNLOAD PROGRESS. */
 static guint _num_downloads = 0;
@@ -676,7 +682,7 @@ popup_error(const gchar *error)
     GtkWidget *dialog;
     printf("%s(\"%s\")\n", __PRETTY_FUNCTION__, error);
 
-    dialog = hildon_note_new_information(_window, error);
+    dialog = hildon_note_new_information(GTK_WINDOW(_window), error);
 
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
@@ -693,20 +699,40 @@ set_conn_state(ConnState new_conn_state)
 {
     printf("%s(%d)\n", __PRETTY_FUNCTION__, new_conn_state);
 
-    switch(_conn_state)
-    {
-        case RCVR_DOWN:
-        case RCVR_UP:
-            gtk_banner_close(_window);
-        default: ; /* to quell warning. */
-    }
     switch(_conn_state = new_conn_state)
     {
+        case RCVR_OFF:
+        case RCVR_FIXED:
+            if(_connect_banner)
+            {
+                gtk_widget_destroy(_connect_banner);
+                _connect_banner = NULL;
+            }
+            if(_fix_banner)
+            {
+                gtk_widget_destroy(_fix_banner);
+                _fix_banner = NULL;
+            }
+            break;
         case RCVR_DOWN:
-            gtk_banner_show_animation(_window, "Searching for GPS receiver");
+            if(_fix_banner)
+            {
+                gtk_widget_destroy(_fix_banner);
+                _fix_banner = NULL;
+            }
+            if(!_connect_banner)
+                _connect_banner = hildon_banner_show_animation(
+                        _window, NULL, "Searching for GPS receiver");
             break;
         case RCVR_UP:
-            gtk_banner_show_bar(_window, "Establishing GPS fix");
+            if(_connect_banner)
+            {
+                gtk_widget_destroy(_connect_banner);
+                _connect_banner = NULL;
+            }
+            if(!_fix_banner)
+                _fix_banner = hildon_banner_show_progress(
+                        _window, NULL, "Establishing GPS fix");
             break;
         default: ; /* to quell warning. */
     }
@@ -1127,7 +1153,7 @@ track_add(guint unitx, guint unity, gboolean newly_fixed)
                 exit(0);
             }
         }
-        gtk_infoprint(_window, _next_way->desc);
+        hildon_banner_show_information(_window, NULL, _next_way->desc);
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -1218,7 +1244,6 @@ rcvr_connect_now()
                     G_IO_ERR | G_IO_HUP, channel_cb_error, NULL, NULL);
             _connect_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
                     G_IO_OUT, channel_cb_connect, NULL, NULL);
-
             if(*_rcvr_mac != '/'
                     && connect(_fd, (struct sockaddr*)&_rcvr_addr,
                         sizeof(_rcvr_addr))
@@ -1489,12 +1514,18 @@ force_min_visible_bars(HildonControlbar *control_bar, gint num_bars)
     g_object_set_property(G_OBJECT(control_bar), "minimum-visible-bars", &val);
 }
 
+typedef struct _ScanInfo ScanInfo;
+struct _ScanInfo {
+    GtkWidget *txt_rcvr_mac;
+    GtkWidget *scan_banner;
+};
+
 /**
  * Scan for all bluetooth devices.  This method can take a few seconds,
  * during which the UI will freeze.
  */
 static gboolean
-scan_bluetooth(GtkWidget *txt_rcvr_mac)
+scan_bluetooth(ScanInfo *scan_info)
 {
     /* Do an hci_inquiry for our boy. */
     gchar buffer[18];
@@ -1506,8 +1537,10 @@ scan_bluetooth(GtkWidget *txt_rcvr_mac)
     if(hci_inquiry(devid, 4, 1, NULL, &pii, IREQ_CACHE_FLUSH) > 0)
     {
         ba2str(&ii.bdaddr, buffer);
-        gtk_banner_close(_window);
-        gtk_entry_set_text(GTK_ENTRY(txt_rcvr_mac), buffer);
+        gtk_widget_destroy(scan_info->scan_banner);
+        scan_info->scan_banner = NULL;
+
+        gtk_entry_set_text(GTK_ENTRY(scan_info->txt_rcvr_mac), buffer);
 
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
@@ -1540,12 +1573,13 @@ settings_dialog()
     GtkWidget *txt_voice_synth_path;
     GtkWidget *num_draw_line_width;
     GtkWidget *chk_always_keep_on;
+    ScanInfo scan_info = {0, 0};
     gboolean rcvr_changed = FALSE;
     gint scan_sid = 0;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     dialog = gtk_dialog_new_with_buttons("Maemo Mapper Settings",
-            _window, GTK_DIALOG_MODAL,
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
             NULL);
@@ -1566,14 +1600,6 @@ settings_dialog()
     gtk_table_attach(GTK_TABLE(table),
             txt_rcvr_mac = gtk_entry_new_with_max_length(17),
             1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-    if(_rcvr_mac)
-        gtk_entry_set_text(GTK_ENTRY(txt_rcvr_mac), _rcvr_mac);
-    else
-    {
-        gtk_banner_show_animation(_window,
-                "Scanning for bluetooth devices");
-        scan_sid = gtk_idle_add((GSourceFunc)scan_bluetooth, txt_rcvr_mac);
-    }
 
     /* Receiver Channel. */
     gtk_table_attach(GTK_TABLE(table),
@@ -1583,8 +1609,6 @@ settings_dialog()
     gtk_table_attach(GTK_TABLE(table),
             num_rcvr_chan = hildon_number_editor_new(0, 255),
             1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-    hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_rcvr_chan),
-            _rcvr_addr.rc_channel);
 
     /* Note!. */
     gtk_table_attach(GTK_TABLE(table),
@@ -1609,8 +1633,6 @@ settings_dialog()
             txt_map_uri_format = gtk_entry_new(),
             1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     gtk_entry_set_width_chars(GTK_ENTRY(txt_map_uri_format), 30);
-    if(_map_uri_format)
-        gtk_entry_set_text(GTK_ENTRY(txt_map_uri_format), _map_uri_format);
 
     /* Zoom Steps. */
     gtk_table_attach(GTK_TABLE(table),
@@ -1621,7 +1643,6 @@ settings_dialog()
             num_zoom_steps = hildon_controlbar_new(),
             1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     hildon_controlbar_set_range(HILDON_CONTROLBAR(num_zoom_steps), 1, 4);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_zoom_steps), _zoom_steps);
     force_min_visible_bars(HILDON_CONTROLBAR(num_zoom_steps), 1);
 
     /* Map Directory. */
@@ -1633,8 +1654,6 @@ settings_dialog()
             txt_map_dir_name = gtk_entry_new(),
             1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     gtk_entry_set_width_chars(GTK_ENTRY(txt_map_dir_name), 30);
-    if(_map_dir_name)
-        gtk_entry_set_text(GTK_ENTRY(txt_map_dir_name), _map_dir_name);
 
 
     /* Auto-Center page. */
@@ -1651,8 +1670,6 @@ settings_dialog()
             num_center_ratio = hildon_controlbar_new(),
             1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     hildon_controlbar_set_range(HILDON_CONTROLBAR(num_center_ratio), 1, 10);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_center_ratio),
-            _center_ratio);
     force_min_visible_bars(HILDON_CONTROLBAR(num_center_ratio), 1);
 
     /* Lead Amount. */
@@ -1664,8 +1681,6 @@ settings_dialog()
             num_lead_ratio = hildon_controlbar_new(),
             1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     hildon_controlbar_set_range(HILDON_CONTROLBAR(num_lead_ratio), 1, 10);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_lead_ratio),
-            _lead_ratio);
     force_min_visible_bars(HILDON_CONTROLBAR(num_lead_ratio), 1);
 
     /* Announcement. */
@@ -1682,8 +1697,6 @@ settings_dialog()
             num_announce_notice = hildon_controlbar_new(),
             1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     hildon_controlbar_set_range(HILDON_CONTROLBAR(num_announce_notice), 1, 20);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_announce_notice),
-            _announce_notice_ratio);
     force_min_visible_bars(HILDON_CONTROLBAR(num_announce_notice), 1);
 
     /* Enable Voice. */
@@ -1703,7 +1716,6 @@ settings_dialog()
             txt_voice_synth_path = gtk_entry_new(),
             1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     gtk_entry_set_width_chars(GTK_ENTRY(txt_voice_synth_path), 30);
-    gtk_entry_set_text(GTK_ENTRY(txt_voice_synth_path), _voice_synth_path);
 
     /* Misc. page. */
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
@@ -1719,8 +1731,6 @@ settings_dialog()
             num_draw_line_width = hildon_controlbar_new(),
             1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     hildon_controlbar_set_range(HILDON_CONTROLBAR(num_draw_line_width), 1, 20);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_draw_line_width),
-            _draw_line_width);
     force_min_visible_bars(HILDON_CONTROLBAR(num_draw_line_width), 1);
 
     /* Keep Display On Only When Fullscreen. */
@@ -1728,9 +1738,36 @@ settings_dialog()
             chk_always_keep_on = gtk_check_button_new_with_label(
                 "Keep Display On Only in Fullscreen Mode"),
             0, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+
+    /* Initialize fields. */
+    if(_rcvr_mac)
+        gtk_entry_set_text(GTK_ENTRY(txt_rcvr_mac), _rcvr_mac);
+    else
+    {
+        scan_info.txt_rcvr_mac = txt_rcvr_mac;
+        scan_info.scan_banner
+            = hildon_banner_show_animation(dialog, NULL,
+                "Scanning for bluetooth devices");
+        scan_sid = gtk_idle_add((GSourceFunc)scan_bluetooth, &scan_info);
+    }
+    hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_rcvr_chan),
+            _rcvr_addr.rc_channel);
+    if(_map_uri_format)
+        gtk_entry_set_text(GTK_ENTRY(txt_map_uri_format), _map_uri_format);
+    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_zoom_steps), _zoom_steps);
+    if(_map_dir_name)
+        gtk_entry_set_text(GTK_ENTRY(txt_map_dir_name), _map_dir_name);
+    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_center_ratio),
+            _center_ratio);
+    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_lead_ratio),
+            _lead_ratio);
+    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_announce_notice),
+            _announce_notice_ratio);
+    gtk_entry_set_text(GTK_ENTRY(txt_voice_synth_path), _voice_synth_path);
+    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_draw_line_width),
+            _draw_line_width);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_always_keep_on),
             !_always_keep_on);
-
 
     gtk_widget_show_all(dialog);
 
@@ -1819,11 +1856,13 @@ settings_dialog()
         config_save();
         break;
     }
-    gtk_widget_destroy(dialog);
 
     if(scan_sid)
         g_source_remove(scan_sid);
-    gtk_banner_close(_window);
+    if(scan_info.scan_banner)
+        gtk_widget_destroy(scan_info.scan_banner);
+
+    gtk_widget_hide(dialog); /* Destroying causes a crash (!?!?!??!) */
 
     vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, rcvr_changed);
     return rcvr_changed;
@@ -1928,11 +1967,11 @@ config_init()
     else
         _enable_voice = TRUE;
 
-    /* Get Voice Synthesis Path.  Default is /var/lib/install/usr/bin/flite. */
+    /* Get Voice Synthesis Path.  Default is /usr/bin/flite. */
     _voice_synth_path = gconf_client_get_string(gconf_client,
             GCONF_KEY_VOICE_SYNTH_PATH, NULL);
     if(!_voice_synth_path)
-        _voice_synth_path = g_strdup("/var/lib/install/usr/bin/flite");
+        _voice_synth_path = g_strdup("/usr/bin/flite");
 
     /* Get Always Keep On flag.  Default is FALSE. */
     _always_keep_on = gconf_client_get_bool(gconf_client,
@@ -2081,7 +2120,7 @@ menu_init()
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     /* Get the menu of our view. */
-    main_menu = hildon_appview_get_menu(_main_view);
+    main_menu = GTK_MENU(gtk_menu_new());
 
     /* Create the menu items. */
 
@@ -2194,6 +2233,8 @@ menu_init()
     /* We need to show menu items. */
     gtk_widget_show_all(GTK_WIDGET(main_menu));
 
+    hildon_window_set_menu(HILDON_WINDOW(_window), main_menu);
+
     /* Connect the signals. */
     g_signal_connect(G_OBJECT(_menu_route_open_item), "activate",
                       G_CALLBACK(menu_cb_route_open), NULL);
@@ -2259,7 +2300,7 @@ window_present()
         /* Set connection state first, to avoid going into this if twice. */
         if(_rcvr_mac || !_enable_gps || settings_dialog())
         {
-            gtk_widget_show_all(GTK_WIDGET(_main_view));
+            gtk_widget_show_all(_window);
 
             /* Connect to receiver. */
             if(_enable_gps)
@@ -2268,7 +2309,7 @@ window_present()
         else
             gtk_main_quit();
     }
-    gtk_window_present(_window);
+    gtk_window_present(GTK_WINDOW(_window));
 
     /* Re-enable any banners that might have been up. */
     set_conn_state(_conn_state);
@@ -2477,7 +2518,8 @@ map_initiate_download(gchar *buffer, guint tilex, guint tiley, guint zoom)
     GList *src_list = NULL, *dest_list = NULL;
     gint priority;
     ProgressUpdateInfo *pui;
-    vprintf("%s(%u, %u, %u)\n", __PRETTY_FUNCTION__, tilex, tiley, zoom);
+    vprintf("%s(%s, %u, %u, %u)\n", __PRETTY_FUNCTION__,
+            buffer, tilex, tiley, zoom);
 
     pui = g_new(ProgressUpdateInfo, 1);
     pui->hash = tilex + (tiley << 12) + (zoom << 24);
@@ -2536,9 +2578,11 @@ map_initiate_download(gchar *buffer, guint tilex, guint tiley, guint zoom)
         progress_update_info_free(pui);
         return FALSE;
     }
+
     g_hash_table_insert(_downloads_hash, pui, pui);
-    if(!_num_downloads++)
-        gtk_banner_show_bar(_window, "Downloading maps");
+    if(!_num_downloads++ && !_download_banner)
+        _download_banner = hildon_banner_show_progress(
+                _window, NULL, "Downloading maps");
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -3230,7 +3274,7 @@ open_file(gchar **bytes_out, GnomeVFSHandle **handle_out, gint *size_out,
     gboolean success = FALSE;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    dialog = hildon_file_chooser_dialog_new(_window, chooser_action);
+    dialog = hildon_file_chooser_dialog_new(GTK_WINDOW(_window),chooser_action);
 
     if(dir && *dir)
         gtk_file_chooser_set_current_folder_uri(
@@ -3463,7 +3507,7 @@ maemo_mapper_destroy(void)
 
     config_save();
     rcvr_disconnect();
-    /* _window and widgets have already been destroyed. */
+    /* _program and widgets have already been destroyed. */
 
     MACRO_CLEAR_TRACK(_track);
     if(_route.head)
@@ -3482,23 +3526,17 @@ maemo_mapper_init(gint argc, gchar **argv)
 
     config_init();
 
-    /* Block for HildonApp, HildonAppView variables. */
-    {
-        HildonApp *window;
-        /* Initialize _window. */
-        window = HILDON_APP(hildon_app_new());
-        hildon_app_set_title(window, "Maemo Mapper");
+    /* Initialize _program. */
+    _program = HILDON_PROGRAM(hildon_program_get_instance());
+    g_set_application_name("Maemo Mapper");
 
-        /* Initialize _main_view. */
-        _main_view = HILDON_APPVIEW(hildon_appview_new("Maemo Mapper"));
-        hildon_app_set_appview(window, _main_view);
-
-        _window = GTK_WINDOW(window);
-    }
+    /* Initialize _window. */
+    _window = GTK_WIDGET(hildon_window_new());
+    hildon_program_add_window(_program, HILDON_WINDOW(_window));
 
     /* Create and add widgets and supporting data. */
     _map_widget = gtk_drawing_area_new();
-    gtk_container_add(GTK_CONTAINER(_main_view), _map_widget);
+    gtk_container_add(GTK_CONTAINER(_window), _map_widget);
 
     gtk_widget_realize(_map_widget);
 
@@ -3638,7 +3676,7 @@ maemo_mapper_init(gint argc, gchar **argv)
         {
             /* If auto is enabled, append the route, otherwise replace it. */
             if(parse_gpx(buffer, size, &_route, 0, 0))
-                gtk_infoprint(_window, "Route Opened");
+                hildon_banner_show_information(_window, NULL, "Route Opened");
             else
                 popup_error("Error parsing GPX file.");
             g_free(buffer);
@@ -3931,9 +3969,6 @@ channel_cb_error(GIOChannel *src, GIOCondition condition, gpointer data)
     printf("%s(%d)\n", __PRETTY_FUNCTION__, condition);
 
     /* An error has occurred - re-connect(). */
-    if(_conn_state != RCVR_FIXED)
-        gtk_banner_close(_window);
-
     rcvr_disconnect();
     track_add(0, 0, FALSE);
 
@@ -3987,7 +4022,8 @@ channel_cb_connect(GIOChannel *src, GIOCondition condition, gpointer data)
     if(error_check == (str)) \
     { \
         fprintf(stderr, "Failed to parse string as int: %s\n", str); \
-        gtk_infoprint(_window, "Invalid NMEA input from receiver!"); \
+        hildon_banner_show_information(_window, NULL, \
+                "Invalid NMEA input from receiver!"); \
         return; \
     } \
 }
@@ -3997,7 +4033,8 @@ channel_cb_connect(GIOChannel *src, GIOCondition condition, gpointer data)
     if(error_check == (str)) \
     { \
         fprintf(stderr, "Failed to parse string as float: %s\n", str); \
-        gtk_infoprint(_window, "Invalid NMEA input from receiver!"); \
+        hildon_banner_show_information(_window, NULL, \
+                "Invalid NMEA input from receiver!"); \
         return; \
     } \
 }
@@ -4178,7 +4215,7 @@ channel_parse_gsv(gchar *sentence)
             BOUND(fraction, 0.0, 1.0);
             running_total = 0;
             num_sats_used = 0;
-            gtk_banner_set_fraction(_window, fraction);
+            hildon_banner_set_fraction(HILDON_BANNER(_fix_banner), fraction);
         }
 
         /* Keep awake while they watch the progress bar. */
@@ -4272,7 +4309,7 @@ menu_cb_route_download(GtkAction *action)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     dialog = gtk_dialog_new_with_buttons("Download Route",
-            _window, GTK_DIALOG_MODAL,
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
             NULL);
@@ -4327,9 +4364,15 @@ menu_cb_route_download(GtkAction *action)
                       G_CALLBACK(gps_toggled_from), txt_from);
     g_signal_connect(G_OBJECT(chk_gps), "toggled",
                       G_CALLBACK(gps_toggled_auto), chk_auto);
+
+    /* Initialize fields. */
+    gtk_entry_set_text(GTK_ENTRY(txt_from), "");
+    gtk_entry_set_text(GTK_ENTRY(txt_to), "");
+
     gtk_widget_show_all(dialog);
 
-    while(!bytes && GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    while(!bytes
+            && GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
         GnomeVFSResult vfs_result;
         gchar buffer[1024];
@@ -4419,13 +4462,15 @@ menu_cb_route_download(GtkAction *action)
                             INT_MAX, 0, to, -1);
                 }
 
-                gtk_infoprint(_window, "Route Downloaded");
+                hildon_banner_show_information(_window, NULL,
+                        "Route Downloaded");
             }
             else
                 popup_error("Error parsing GPX file.");
             g_free(bytes);
         }
     }
+
     gtk_widget_destroy(dialog);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -4451,7 +4496,8 @@ menu_cb_route_open(GtkAction *action)
             route_find_nearest_point();
 
             map_force_redraw();
-            gtk_infoprint(_window, "Route Opened");
+            hildon_banner_show_information(_window, NULL,
+                    "Route Opened");
         }
         else
             popup_error("Error parsing GPX file.");
@@ -4502,7 +4548,7 @@ menu_cb_track_open(GtkAction *action)
         if(parse_gpx(buffer, size, &_track, -1, ARRAY_CHUNK_SIZE))
         {
             map_force_redraw();
-            gtk_infoprint(_window, "Track Opened");
+            hildon_banner_show_information(_window, NULL, "Track Opened");
         }
         else
             popup_error("Error parsing GPX file.");
@@ -4610,7 +4656,7 @@ menu_cb_track_save(GtkAction *action)
                     GTK_FILE_CHOOSER_ACTION_SAVE))
     {
         if(write_gpx(handle, &_track))
-            gtk_infoprint(_window, "Track Saved");
+            hildon_banner_show_information(_window, NULL, "Track Saved");
         else
             popup_error("Error writing GPX file.");
         gnome_vfs_close(handle);
@@ -4663,7 +4709,7 @@ menu_cb_route_save(GtkAction *action)
                     GTK_FILE_CHOOSER_ACTION_SAVE))
     {
         if(write_gpx(handle, &_route))
-            gtk_infoprint(_window, "Route Saved");
+            hildon_banner_show_information(_window, NULL, "Route Saved");
         else
             popup_error("Error writing GPX file.");
         gnome_vfs_close(handle);
@@ -4698,13 +4744,13 @@ menu_cb_show_tracks(GtkAction *action)
         _show_tracks |= TRACKS_MASK;
         map_render_tracks();
         MACRO_QUEUE_DRAW_AREA();
-        gtk_infoprint(_window, "Tracks are now shown");
+        hildon_banner_show_information(_window, NULL, "Tracks are now shown");
     }
     else
     {
         _show_tracks &= ~TRACKS_MASK;
         map_force_redraw();
-        gtk_infoprint(_window, "Tracks are now hidden");
+        hildon_banner_show_information(_window, NULL, "Tracks are now hidden");
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -4722,13 +4768,13 @@ menu_cb_show_routes(GtkAction *action)
         _show_tracks |= ROUTES_MASK;
         map_render_tracks();
         MACRO_QUEUE_DRAW_AREA();
-        gtk_infoprint(_window, "Routes are now shown");
+        hildon_banner_show_information(_window, NULL, "Routes are now shown");
     }
     else
     {
         _show_tracks &= ~ROUTES_MASK;
         map_force_redraw();
-        gtk_infoprint(_window, "Routes are now hidden");
+        hildon_banner_show_information(_window, NULL, "Routes are now hidden");
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -4755,7 +4801,7 @@ menu_cb_ac_lead(GtkAction *action)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     _center_mode = CENTER_LEAD;
-    gtk_infoprint(_window, "Auto-Center Mode: Lead");
+    hildon_banner_show_information(_window, NULL, "Auto-Center Mode: Lead");
     MACRO_RECALC_CENTER(new_center_unitx, new_center_unity);
     map_center_unit(new_center_unitx, new_center_unity);
 
@@ -4770,7 +4816,7 @@ menu_cb_ac_latlon(GtkAction *action)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     _center_mode = CENTER_LATLON;
-    gtk_infoprint(_window, "Auto-Center Mode: Lat/Lon");
+    hildon_banner_show_information(_window, NULL, "Auto-Center Mode: Lat/Lon");
     MACRO_RECALC_CENTER(new_center_unitx, new_center_unity);
     map_center_unit(new_center_unitx, new_center_unity);
 
@@ -4784,7 +4830,7 @@ menu_cb_ac_none(GtkAction *action)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     _center_mode = -_center_mode;
-    gtk_infoprint(_window, "Auto-Center Off");
+    hildon_banner_show_information(_window, NULL, "Auto-Center Off");
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -4880,6 +4926,10 @@ menu_cb_maps_dlarea(GtkAction *action)
     GtkWidget *table;
     GtkWidget *label;
     GtkWidget *button;
+    GtkWidget *lbl_gps_lat;
+    GtkWidget *lbl_gps_lon;
+    GtkWidget *lbl_center_lat;
+    GtkWidget *lbl_center_lon;
     DlAreaInfo dlarea_info;
     gchar buffer[80];
     gfloat lat, lon, prev_lat, prev_lon;
@@ -4887,7 +4937,7 @@ menu_cb_maps_dlarea(GtkAction *action)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     dialog = gtk_dialog_new_with_buttons("Download Maps by Area",
-            _window, GTK_DIALOG_MODAL,
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
             NULL);
@@ -4920,18 +4970,16 @@ menu_cb_maps_dlarea(GtkAction *action)
             label = gtk_label_new("GPS Location"),
             0, 1, 1, 2, GTK_FILL, 0, 4, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    sprintf(buffer, "%f", _pos_lat);
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(buffer),
+            lbl_gps_lat = gtk_label_new(""),
             1, 2, 1, 2, GTK_FILL, 0, 4, 0);
-    gtk_label_set_selectable(GTK_LABEL(label), TRUE);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    sprintf(buffer, "%f", _pos_lon);
+    gtk_label_set_selectable(GTK_LABEL(lbl_gps_lat), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(lbl_gps_lat), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(buffer),
+            lbl_gps_lon = gtk_label_new(""),
             2, 3, 1, 2, GTK_FILL, 0, 4, 0);
-    gtk_label_set_selectable(GTK_LABEL(label), TRUE);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_label_set_selectable(GTK_LABEL(lbl_gps_lon), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(lbl_gps_lon), 1.f, 0.5f);
 
     /* Center. */
     gtk_table_attach(GTK_TABLE(table),
@@ -4940,18 +4988,16 @@ menu_cb_maps_dlarea(GtkAction *action)
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     unit2latlon(_center.unitx, _center.unity, lat, lon);
     unit2latlon(_prev_center.unitx, _prev_center.unity, prev_lat, prev_lon);
-    sprintf(buffer, "%f", lat);
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(buffer),
+            lbl_center_lat = gtk_label_new(""),
             1, 2, 2, 3, GTK_FILL, 0, 4, 0);
-    gtk_label_set_selectable(GTK_LABEL(label), TRUE);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    sprintf(buffer, "%f", lon);
+    gtk_label_set_selectable(GTK_LABEL(lbl_center_lat), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(lbl_center_lat), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(buffer),
+            lbl_center_lon = gtk_label_new(""),
             2, 3, 2, 3, GTK_FILL, 0, 4, 0);
-    gtk_label_set_selectable(GTK_LABEL(label), TRUE);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_label_set_selectable(GTK_LABEL(lbl_center_lon), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(lbl_center_lon), 1.f, 0.5f);
 
     /* default values for Top Left and Bottom Right are defined by the
      * rectangle of the current and the previous Center */
@@ -4965,13 +5011,11 @@ menu_cb_maps_dlarea(GtkAction *action)
             dlarea_info.txt_topleft_lat = gtk_entry_new(),
             1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     sprintf(buffer, "%2.6f", MAX(lat, prev_lat));
-    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_topleft_lat), buffer);
     gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_topleft_lat), 1.f);
     gtk_table_attach(GTK_TABLE(table),
             dlarea_info.txt_topleft_lon = gtk_entry_new(),
             2, 3, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     sprintf(buffer, "%2.6f", MIN(lon, prev_lon));
-    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_topleft_lon), buffer);
     gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_topleft_lon), 1.f);
 
     /* Bottom Right. */
@@ -4983,13 +5027,11 @@ menu_cb_maps_dlarea(GtkAction *action)
             dlarea_info.txt_botright_lat = gtk_entry_new(),
             1, 2, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     sprintf(buffer, "%2.6f", MIN(lat, prev_lat));
-    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_botright_lat), buffer);
     gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_botright_lat), 1.f);
     gtk_table_attach(GTK_TABLE(table),
             dlarea_info.txt_botright_lon = gtk_entry_new(),
             2, 3, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     sprintf(buffer, "%2.6f", MAX(lon, prev_lon));
-    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_botright_lon), buffer);
     gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_botright_lon), 1.f);
 
 
@@ -5010,6 +5052,25 @@ menu_cb_maps_dlarea(GtkAction *action)
                 i % 5, i % 5 + 1, i / 5 + 1, i / 5 + 2,
                 GTK_EXPAND | GTK_FILL, 0, 4, 0);
     }
+
+    /* Initialize fields. */
+    sprintf(buffer, "%f", _pos_lat);
+    gtk_label_set_text(GTK_LABEL(lbl_gps_lat), buffer);
+    sprintf(buffer, "%f", _pos_lon);
+    gtk_label_set_text(GTK_LABEL(lbl_gps_lon), buffer);
+    sprintf(buffer, "%f", lat);
+    gtk_label_set_text(GTK_LABEL(lbl_center_lat), buffer);
+    sprintf(buffer, "%f", lon);
+    gtk_label_set_text(GTK_LABEL(lbl_center_lon), buffer);
+
+    /* Zoom check boxes. */
+    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_topleft_lat), buffer);
+    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_topleft_lon), buffer);
+    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_botright_lat), buffer);
+    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_botright_lon), buffer);
+    for(i = 0; i < MAX_ZOOM; i++)
+        gtk_toggle_button_set_active(
+            GTK_TOGGLE_BUTTON(dlarea_info.chk_zoom_levels[_zoom - 1]), FALSE);
     gtk_toggle_button_set_active(
             GTK_TOGGLE_BUTTON(dlarea_info.chk_zoom_levels[_zoom - 1]), TRUE);
 
@@ -5084,11 +5145,14 @@ menu_cb_maps_dlarea(GtkAction *action)
                     * (end_tiley - start_tiley + 1);
             }
         }
+        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_topleft_lat));
 
         sprintf(buffer, "Confirm download of %d maps\n(up to about %.2f MB)\n",
                 num_maps,
                 num_maps * (strstr(_map_uri_format, "%s") ? 18e-3 : 6e-3));
+        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_topleft_lat));
         confirm = hildon_note_new_confirmation(GTK_WINDOW(dialog), buffer);
+        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_topleft_lat));
 
         if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
         {
@@ -5118,7 +5182,8 @@ menu_cb_maps_dlarea(GtkAction *action)
         }
         gtk_widget_destroy(confirm);
     }
-    gtk_widget_destroy(dialog);
+
+    gtk_widget_hide(dialog); /* Destroying causes a crash (!?!?!??!) */
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -5129,9 +5194,11 @@ menu_cb_fullscreen(GtkAction *action)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    hildon_appview_set_fullscreen(_main_view,
-            _fullscreen = gtk_check_menu_item_get_active(
-                GTK_CHECK_MENU_ITEM(_menu_fullscreen_item)));
+    if((_fullscreen = gtk_check_menu_item_get_active(
+                GTK_CHECK_MENU_ITEM(_menu_fullscreen_item))))
+        gtk_window_fullscreen(GTK_WINDOW(_window));
+    else
+        gtk_window_unfullscreen(GTK_WINDOW(_window));
 
     gtk_idle_add((GSourceFunc)window_present, NULL);
 
@@ -5193,6 +5260,7 @@ menu_cb_settings(GtkAction *action)
 
     if(settings_dialog())
     {
+        /* Settings have changed - reconnect to receiver. */
         if(_enable_gps)
         {
             set_conn_state(RCVR_DOWN);
@@ -5211,7 +5279,7 @@ menu_cb_settings(GtkAction *action)
 static gboolean
 map_download_idle_refresh(ProgressUpdateInfo *pui)
 {
-    vprintf("%s()\n", __PRETTY_FUNCTION__);
+    vprintf("%s(%p)\n", __PRETTY_FUNCTION__, pui);
 
     if(pui)
     {
@@ -5228,6 +5296,7 @@ map_download_idle_refresh(ProgressUpdateInfo *pui)
                 for(tiley = pui->tiley<<zoom_diff,
                         tiley_end = tiley + (1 << zoom_diff);
                         tiley < tiley_end; tiley++)
+                {
                     if((tilex - _base_tilex) < 4 && (tiley - _base_tiley) < 3)
                     {
                         map_render_tile(
@@ -5242,16 +5311,18 @@ map_download_idle_refresh(ProgressUpdateInfo *pui)
                                 ((tiley-_base_tiley)<<TILE_SIZE_P2) - _offsety,
                                 TILE_SIZE_PIXELS, TILE_SIZE_PIXELS);
                     }
+                }
         }
         progress_update_info_free(pui);
     }
     if(++_curr_download == _num_downloads)
     {
-        gtk_banner_close(_window);
+        gtk_widget_destroy(_download_banner);
+        _download_banner = NULL;
         _num_downloads = _curr_download = 0;
     }
     else
-        gtk_banner_set_fraction(_window,
+        hildon_banner_set_fraction(HILDON_BANNER(_download_banner),
                 _curr_download / (double)_num_downloads);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);

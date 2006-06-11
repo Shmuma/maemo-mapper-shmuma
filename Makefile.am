@@ -28,22 +28,8 @@ maemo_mapper_LDADD = $(GTK_LIBS) $(OSSO_LIBS) $(HILDON_LIBS) $(GNOME_VFS_LIBS) $
 desktopdir = $(datadir)/applications/hildon
 desktop_DATA = maemo-mapper.desktop
 
-servicedir = $(libdir)/dbus-1.0/services
+servicedir = /usr/share/dbus-1/services
 service_DATA = com.nokia.maemo_mapper.service
-
-# The shared library
-
-# The control panel applet
-
-# The status bar plugin
-
-# The Home plugin
-
-# The locale
-
-# The gstreamer plugin
-
-# The backup/restore configuration
 
 EXTRA_DIST =					\
         autogen.sh				\

@@ -1,3 +1,11 @@
+maemo-mapper (1.0) unstable; urgency=low
+
+  * Functionally the same as 0.2.4.  The only difference is that the 1.x
+    codeline is 2006 OS-compatible, whereas the 0.x codeline will remain 2005
+    OS-compatible.
+
+ -- John Costigan <gnuite@gmail.com>  Sat, 10 Jun 2006 19:53:00 -0400
+
 maemo-mapper (0.2.4) unstable; urgency=low
 
   * Added support for rfcomm-based input.
