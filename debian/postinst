@@ -1,0 +1,27 @@
+#!/bin/sh -e
+
+# The clock might be wrong and we know that we need to update the icon
+# cache so we just force it.
+
+gtk-update-icon-cache -f /usr/share/icons/hicolor
+
+# Now that the icon cache is uptodate, we move the .desktop file into
+# place.  Doing this only now prevents the Task navigator from
+# reconstructing the menu before the icon is available.  This trick is
+# not really necessary when using maemo-select-menu-location (as we do
+# below), since maemo-select-menu-location will trigger the
+# reconstructing of the Taks navigator menu as well.
+
+( cd /usr/share/applications/hildon/ && mv maemo-mapper.inactive maemo-mapper.desktop )
+
+# Now we are ready to let the user move the entry around, but only if
+# this is a new install
+
+oldversion="$2"
+if [ -z "$oldversion" ]; then
+  maemo-select-menu-location maemo-mapper.desktop
+fi
+
+#DEBHELPER#
+
+exit 0

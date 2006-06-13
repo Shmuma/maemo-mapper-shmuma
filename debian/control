@@ -6,7 +6,44 @@ Build-Depends: debhelper (>= 4.0.0), intltool, hildon-base-lib-dev, hildon-libs-
 Standards-Version: 3.6.0
 
 Package: maemo-mapper
-Architecture: any
-Description: A mapping package for the maemo platform.
- It contains a complete application for displaying maps and annotating them
- with information from a GPS receiver.
+Architecture: armel
+Pre-Depends: maemo-select-menu-location
+Depends: ${shlibs:Depends}
+Description: Maemo Mapper is geographical mapping softare specifically designed
+ for the Maemo platform and the Nokia 770 form factor.  It includes support for
+ visualizing GPS input, but is functional and useful without GPS hardware.  It
+ also includes features for downloading and interacting with maps, GPX data
+ (including driving directions), and other geo-related information.  It focuses
+ in part on in-car navigation and usability.
+ Home page: http://www.gnuite.com/nokia770/maemo-mapper
+XB-Maemo-Icon-26:
+ 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
+ uOA/AyGmQAcU4EEAAAAASUVORK5CYII=

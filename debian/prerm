@@ -1,0 +1,11 @@
+#!/bin/sh -e
+
+# remove configuration
+
+if [ "$1" = "purge" ]; then
+    gconftool-2 --recursive-unset "/apps/maemo-mapper"
+fi
+
+#DEBHELPER#
+
+exit 0

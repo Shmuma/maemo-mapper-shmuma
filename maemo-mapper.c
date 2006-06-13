@@ -23,7 +23,6 @@
 
 #define _GNU_SOURCE
 
-#include <config.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -2312,7 +2311,11 @@ window_present()
     gtk_window_present(GTK_WINDOW(_window));
 
     /* Re-enable any banners that might have been up. */
-    set_conn_state(_conn_state);
+    {
+        ConnState old_state = _conn_state;
+        set_conn_state(RCVR_OFF);
+        set_conn_state(old_state);
+    }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return FALSE;
@@ -4986,8 +4989,6 @@ menu_cb_maps_dlarea(GtkAction *action)
             label = gtk_label_new("View Center"),
             0, 1, 2, 3, GTK_FILL, 0, 4, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    unit2latlon(_center.unitx, _center.unity, lat, lon);
-    unit2latlon(_prev_center.unitx, _prev_center.unity, prev_lat, prev_lon);
     gtk_table_attach(GTK_TABLE(table),
             lbl_center_lat = gtk_label_new(""),
             1, 2, 2, 3, GTK_FILL, 0, 4, 0);
@@ -5010,12 +5011,10 @@ menu_cb_maps_dlarea(GtkAction *action)
     gtk_table_attach(GTK_TABLE(table),
             dlarea_info.txt_topleft_lat = gtk_entry_new(),
             1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
-    sprintf(buffer, "%2.6f", MAX(lat, prev_lat));
     gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_topleft_lat), 1.f);
     gtk_table_attach(GTK_TABLE(table),
             dlarea_info.txt_topleft_lon = gtk_entry_new(),
             2, 3, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
-    sprintf(buffer, "%2.6f", MIN(lon, prev_lon));
     gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_topleft_lon), 1.f);
 
     /* Bottom Right. */
@@ -5026,12 +5025,10 @@ menu_cb_maps_dlarea(GtkAction *action)
     gtk_table_attach(GTK_TABLE(table),
             dlarea_info.txt_botright_lat = gtk_entry_new(),
             1, 2, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
-    sprintf(buffer, "%2.6f", MIN(lat, prev_lat));
     gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_botright_lat), 1.f);
     gtk_table_attach(GTK_TABLE(table),
             dlarea_info.txt_botright_lon = gtk_entry_new(),
             2, 3, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
-    sprintf(buffer, "%2.6f", MAX(lon, prev_lon));
     gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_botright_lon), 1.f);
 
 
@@ -5054,25 +5051,33 @@ menu_cb_maps_dlarea(GtkAction *action)
     }
 
     /* Initialize fields. */
-    sprintf(buffer, "%f", _pos_lat);
+    sprintf(buffer, "%2.6f", _pos_lat);
     gtk_label_set_text(GTK_LABEL(lbl_gps_lat), buffer);
-    sprintf(buffer, "%f", _pos_lon);
+    sprintf(buffer, "%2.6f", _pos_lon);
     gtk_label_set_text(GTK_LABEL(lbl_gps_lon), buffer);
-    sprintf(buffer, "%f", lat);
+
+    unit2latlon(_center.unitx, _center.unity, lat, lon);
+    sprintf(buffer, "%2.6f", lat);
     gtk_label_set_text(GTK_LABEL(lbl_center_lat), buffer);
-    sprintf(buffer, "%f", lon);
+    sprintf(buffer, "%2.6f", lon);
     gtk_label_set_text(GTK_LABEL(lbl_center_lon), buffer);
 
-    /* Zoom check boxes. */
+    unit2latlon(_prev_center.unitx, _prev_center.unity, prev_lat, prev_lon);
+    sprintf(buffer, "%2.6f", MAX(lat, prev_lat));
     gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_topleft_lat), buffer);
+    sprintf(buffer, "%2.6f", MIN(lon, prev_lon));
     gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_topleft_lon), buffer);
+    sprintf(buffer, "%2.6f", MIN(lat, prev_lat));
     gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_botright_lat), buffer);
+    sprintf(buffer, "%2.6f", MAX(lon, prev_lon));
     gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_botright_lon), buffer);
+
     for(i = 0; i < MAX_ZOOM; i++)
         gtk_toggle_button_set_active(
             GTK_TOGGLE_BUTTON(dlarea_info.chk_zoom_levels[_zoom - 1]), FALSE);
     gtk_toggle_button_set_active(
             GTK_TOGGLE_BUTTON(dlarea_info.chk_zoom_levels[_zoom - 1]), TRUE);
+
 
     gtk_widget_show_all(dialog);
 
