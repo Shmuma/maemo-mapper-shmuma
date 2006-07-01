@@ -17,17 +17,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
- 
-EXTRA_DIST = \
-        autogen.sh \
-        intltool-extract.in \
-        intltool-merge.in \
-        intltool-update.in \
-        debian/changelog \
-        debian/compat \
-        debian/copyright  \
-        debian/control \
-        debian/rules \
-        debian/maemo-mapper.links
 
-SUBDIRS = src data po
+bin_PROGRAMS = maemo-mapper
+
+maemo_mapper_CFLAGS = $(GTK_CFLAGS) $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(GNOME_VFS_CFLAGS) $(GCONF_CFLAGS) $(LIBXML2_CFLAGS)
+
+maemo_mapper_LDADD = $(GTK_LIBS) $(OSSO_LIBS) $(HILDON_LIBS) $(GNOME_VFS_LIBS) $(GCONF_LIBS) $(LIBXML2_LIBS) -lbluetooth
+
+maemo_mapper_SOURCES = maemo-mapper.c

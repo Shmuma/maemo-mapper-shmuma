@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ossohelpsource>
+  <folder>
+    <title>Maemo Mapper</title>
+    <topic>
+      <topictitle>Introduction</topictitle>
+      <context contextUID="help_maemomapper_intro" />
+      <para>Welcome to Maemo Mapper.</para>
+      <para>
+        This help file is obviously incomplete, but hopefully this will
+        change in future versions.  If you would like to contribute, feel
+        free to apply to be a documenter at the Maemo Mapper Garage site.
+    </topic>
+  </folder>
+</ossohelpsource>

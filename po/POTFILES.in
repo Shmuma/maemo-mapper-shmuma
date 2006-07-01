@@ -1,0 +1,3 @@
+# List of MaemoPad source files to be localized
+
+../src/maemo-mapper.c

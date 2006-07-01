@@ -1,12 +1,12 @@
 Source: maemo-mapper
-Section: user/gps
+Section: maemo/Applications
 Priority: optional
 Maintainer: John Costigan <gnuite@gmail.com>
 Build-Depends: debhelper (>= 4.0.0), intltool, hildon-base-lib-dev, hildon-libs-dev, hildon-fm-dev, libgtk2.0-dev, libosso-gnomevfs2-dev, libglib2.0-dev, libdbus-glib-1-dev, libosso-dev
 Standards-Version: 3.6.0
 
 Package: maemo-mapper
-Architecture: armel
+Architecture: armel arm i386
 Pre-Depends: maemo-select-menu-location
 Depends: ${shlibs:Depends}
 Description: Maemo Mapper is geographical mapping softare specifically designed

@@ -7,6 +7,6 @@ Exec=/usr/bin/maemo-mapper
 Icon=maemo-mapper
 X-Window-Icon=maemo-mapper
 X-HildonDesk-ShowInToolbar=true
-X-Osso-Service=maemo_mapper
+X-Osso-Service=com.gnuite.maemo_mapper
 X-Osso-Type=application/x-executable
 Terminal=false
