@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: maemo-mapper 1.0.2\n"
 "Report-Msgid-Bugs-To: gnuite@gmail.com\n"
 "POT-Creation-Date: 2006-07-01 05:57-0400\n"
-"PO-Revision-Date: 2006-07-03 18:24+0200\n"
+"PO-Revision-Date: 2006-07-04 09:56+0200\n"
 "Last-Translator: Mischa Molhoek <mischamolhoek@gmail.com>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
 "MIME-Version: 1.0\n"
@@ -21,11 +21,11 @@ msgstr ""
 
 #: ../src/maemo-mapper.c:1749
 msgid "Advance Notice"
-msgstr "Vooraf melding"
+msgstr "Aankondiging"
 
 #: ../src/maemo-mapper.c:1745
 msgid "Announce"
-msgstr "Aankondiging"
+msgstr "Aankondigen"
 
 #: ../src/maemo-mapper.c:5069
 msgid "Area"
@@ -37,7 +37,7 @@ msgstr "Automatisch-Centreren"
 
 #: ../src/maemo-mapper.c:4931
 msgid "Auto-Center Mode: Lat/Lon"
-msgstr "Automatisch-Centreren Mode: Lat/Lon"
+msgstr "Automatisch-Centreren Mode: Lengtegr/Breedtegr"
 
 #: ../src/maemo-mapper.c:4916
 msgid "Auto-Center Mode: Lead"
@@ -45,7 +45,7 @@ msgstr "Automatisch-Centreren Mode: Lead"
 
 #: ../src/maemo-mapper.c:4945
 msgid "Auto-Center Off"
-msgstr "Automatisch-Centreren Off"
+msgstr "Automatisch-Centreren Uit"
 
 #: ../src/maemo-mapper.c:2265
 msgid "Auto-Download"
@@ -57,7 +57,7 @@ msgstr "Automatisch-Updaten"
 
 #: ../src/maemo-mapper.c:5132
 msgid "Bottom-Right"
-msgstr "Rechts onder"
+msgstr "Rechts-onder"
 
 #: ../src/maemo-mapper.c:1711
 msgid "Browse..."
@@ -71,7 +71,7 @@ msgstr "Cache Dir."
 msgid ""
 "Cannot enable GPS until a GPS Receiver MAC is set in the Settings dialog box."
 msgstr ""
-"Kan GPS niet aanzetten totdat GPS mac adres is ingevoerd in het Configuratie scherm"
+"Kan GPS niet aanzetten totdat GPS MAC adres is ingevoerd in het Configuratie scherm"
 
 #: ../src/maemo-mapper.c:1657
 msgid "Channel"
@@ -80,7 +80,7 @@ msgstr "Kanaal"
 #: ../src/maemo-mapper.c:2240 ../src/maemo-mapper.c:2254
 #: ../src/maemo-mapper.c:5057
 msgid "Clear"
-msgstr "Legen"
+msgstr "Opschonen"
 
 #: ../src/maemo-mapper.c:2330
 msgid "Close"
@@ -97,15 +97,15 @@ msgstr ""
 
 #: ../src/maemo-mapper.c:1862
 msgid "Could not create Map Cache directory."
-msgstr "Kan de landkaarten cache folder niet creeren."
+msgstr "Kan de landkaarten cache folder niet aanmaken."
 
 #: ../src/maemo-mapper.c:2006
 msgid ""
 "Could not create Map Cache directory.\n"
 "Please set a valid Map Cache directory in the Settings dialog box."
 msgstr ""
-"Kan de landkaarten cache folder niet creeren\n"
-"Vul a.u.b. in het configuratie scherm een juist landkaarten cache folder in."
+"Kan de landkaarten cache folder niet aanmaken\n"
+"Vul a.u.b. in het configuratie scherm een geldige landkaarten cache folder in."
 
 #: ../src/maemo-mapper.c:4519
 msgid "Could not generate directions. Make sure your locations are valid."
@@ -166,7 +166,7 @@ msgid ""
 msgstr ""
 "Fout bij schrijven naar bestand:\n"
 "%s\n"
-"Bestand is niet correct."
+"Bestand is niet onvolledig."
 
 #: ../src/maemo-mapper.c:4769 ../src/maemo-mapper.c:4822
 msgid "Error writing GPX file."
@@ -243,23 +243,23 @@ msgstr "Help"
 
 #: ../src/maemo-mapper.c:5220
 msgid "Invalid Bottom-Right Latitude"
-msgstr "Ongeldige Recht-Onder Breedte"
+msgstr "Ongeldige Rechts-Onder Breedtegraad"
 
 #: ../src/maemo-mapper.c:5227
 msgid "Invalid Bottom-Right Longitude"
-msgstr "Ongeldige Rechts-Onder Lengte"
+msgstr "Ongeldige Rechts-Onder Lengtegraad"
 
 #: ../src/maemo-mapper.c:4130 ../src/maemo-mapper.c:4141
 msgid "Invalid NMEA input from receiver!"
-msgstr "Ongeldige NMEA input van ontvanger!"
+msgstr "Ongeldige NMEA invoer van ontvanger!"
 
 #: ../src/maemo-mapper.c:5206
 msgid "Invalid Top-Left Latitude"
-msgstr "Ongeldige Links-Boven Breedte"
+msgstr "Ongeldige Links-Boven Breedtegraad"
 
 #: ../src/maemo-mapper.c:5213
 msgid "Invalid Top-Left Longitude"
-msgstr "Ongeldige Links-Boven Lengte"
+msgstr "Ongeldige Links-Boven Lengtegraad"
 
 #: ../src/maemo-mapper.c:1813
 msgid "Keep Display On Only in Fullscreen Mode"
@@ -267,11 +267,11 @@ msgstr "Hou het display alleen aan in volledig scherm mode"
 
 #: ../src/maemo-mapper.c:2295
 msgid "Lat/Lon"
-msgstr "Breedte/Lengte"
+msgstr "Breedte/Lengtegraad"
 
 #: ../src/maemo-mapper.c:5073
 msgid "Latitude"
-msgstr "Breedte"
+msgstr "Breedtegraad"
 
 #: ../src/maemo-mapper.c:2301
 msgid "Lead"
@@ -287,7 +287,7 @@ msgstr "Lijn Breedte"
 
 #: ../src/maemo-mapper.c:5077
 msgid "Longitude"
-msgstr "Lengte"
+msgstr "Lengtegraad"
 
 #: ../src/maemo-mapper.c:1648
 msgid "MAC"
@@ -396,7 +396,7 @@ msgstr "Er wordt naar GPS ontvanger gezocht"
 #: ../src/maemo-mapper.c:1148
 #, c-format
 msgid "Sending to flite: %s\n"
-msgstr "Verzonden naar flite: %s\n"
+msgstr "Verzenden naar flite: %s\n"
 
 #: ../src/maemo-mapper.c:1722
 msgid "Sensitivity"
@@ -413,7 +413,7 @@ msgstr "Instellingen..."
 
 #: ../src/maemo-mapper.c:2272
 msgid "Show"
-msgstr "Laat zien"
+msgstr "Weergeven"
 
 #: ../src/maemo-mapper.c:1774
 msgid "Speed"
@@ -469,9 +469,9 @@ msgstr "Vergroot"
 
 #: ../src/maemo-mapper.c:5150
 msgid "Zoom Levels to Download: (0 -> most detail)"
-msgstr "Vergrootings nivos om te Download: (0 -> meeste detail)"
+msgstr "Vergrotings-niveaus om te Downloaden: (0 -> meeste detail)"
 
 #: ../src/maemo-mapper.c:1690
 msgid "Zoom Steps"
-msgstr "Vergrootings Stappen"
+msgstr "Vergrootings-Stappen"
 
