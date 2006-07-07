@@ -241,6 +241,10 @@ msgstr "GSV"
 msgid "Help"
 msgstr "Help"
 
+#: ../src/maemo-mapper.c:2252
+msgid "Insert Waypoint"
+msgstr "Insert Waypoint"
+
 #: ../src/maemo-mapper.c:5220
 msgid "Invalid Bottom-Right Latitude"
 msgstr "Invalid Bottom-Right Latitude"
@@ -304,10 +308,6 @@ msgstr "Maemo Mapper Settings"
 #: ../src/maemo-mapper.c:1676 ../src/maemo-mapper.c:2257
 msgid "Maps"
 msgstr "Maps"
-
-#: ../src/maemo-mapper.c:2252
-msgid "Mark a Waypoint"
-msgstr "Mark a Waypoint"
 
 #: ../src/maemo-mapper.c:1797
 msgid "Misc."

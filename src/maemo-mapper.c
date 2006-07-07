@@ -165,6 +165,21 @@
 #define GCONF_KEY_ENABLE_GPS GCONF_KEY_PREFIX"/enable_gps"
 #define GCONF_KEY_ROUTE_LOCATIONS GCONF_KEY_PREFIX"/route_locations"
 
+#define XML_DATE_FORMAT "%FT%T"
+
+#define XML_TRKSEG_HEADER ( \
+  "<?xml version=\"1.0\"?>\n" \
+  "<gpx version=\"1.0\" creator=\"Maemo Mapper\" " \
+      "xmlns=\"http://www.topografix.com/GPX/1/0\">\n" \
+  "  <trk>\n" \
+  "    <trkseg>\n" \
+)
+
+#define XML_TRKSEG_FOOTER ( \
+  "    </trkseg>\n" \
+  "  </trk>\n" \
+  "</gpx>\n" \
+)
 
 #define HELP_ID_PREFIX "help_maemomapper_"
 #define HELP_ID_INTRO HELP_ID_PREFIX"intro"
@@ -236,21 +251,32 @@
 
 #define MACRO_INIT_TRACK(track) { \
     (track).head = (track).tail = g_new(TrackPoint, ARRAY_CHUNK_SIZE); \
-    (track).tail->unitx = (track).tail->unity = 0;  \
+    *((track).tail) = _track_null; \
     (track).cap = (track).head + ARRAY_CHUNK_SIZE; \
-    (track).whead = g_new(WayPoint, ARRAY_CHUNK_SIZE); \
-    (track).wtail = (track).whead - 1; \
-    (track).wcap = (track).whead + ARRAY_CHUNK_SIZE; \
 }
 
 #define MACRO_CLEAR_TRACK(track) if((track).head) { \
-    WayPoint *curr; \
     g_free((track).head); \
     (track).head = (track).tail = (track).cap = NULL; \
-    for(curr = (track).whead - 1; curr++ != (track).wtail; ) \
+}
+
+#define MACRO_INIT_ROUTE(route) { \
+    (route).head = (route).tail = g_new(Point, ARRAY_CHUNK_SIZE); \
+    *((route).tail) = _pos_null; \
+    (route).cap = (route).head + ARRAY_CHUNK_SIZE; \
+    (route).whead = g_new(WayPoint, ARRAY_CHUNK_SIZE); \
+    (route).wtail = (route).whead - 1; \
+    (route).wcap = (route).whead + ARRAY_CHUNK_SIZE; \
+}
+
+#define MACRO_CLEAR_ROUTE(route) if((route).head) { \
+    WayPoint *curr; \
+    g_free((route).head); \
+    (route).head = (route).tail = (route).cap = NULL; \
+    for(curr = (route).whead - 1; curr++ != (route).wtail; ) \
         g_free(curr->desc); \
-    g_free((track).whead); \
-    (track).whead = (track).wtail = (track).wcap = NULL; \
+    g_free((route).whead); \
+    (route).whead = (route).wtail = (route).wcap = NULL; \
 }
 
 #define DISTANCE_ROUGH(point) \
@@ -323,44 +349,75 @@ typedef enum
 {
     START,
     INSIDE_GPX,
-    INSIDE_TRACK,
-    INSIDE_TRACK_SEGMENT,
-    INSIDE_TRACK_POINT,
-    INSIDE_TRACK_POINT_DESC,
+    INSIDE_PATH,
+    INSIDE_PATH_SEGMENT,
+    INSIDE_PATH_POINT,
+    INSIDE_PATH_POINT_TIME,
+    INSIDE_PATH_POINT_DESC,
     FINISH,
     UNKNOWN,
     ERROR,
 } SaxState;
 
 /** A general definition of a point in the Maemo Mapper unit system. */
-typedef struct _TrackPoint TrackPoint;
-struct _TrackPoint {
+typedef struct _Point Point;
+struct _Point {
     guint unitx;
     guint unity;
 };
 
-/** A WayPoint, which is a TrackPoint with a description. */
+/** A TrackPoint, which is a Point with a time. */
+typedef struct _TrackPoint TrackPoint;
+struct _TrackPoint {
+    Point point;
+    time_t time;
+};
+
+/** A WayPoint, which is a Point with a description. */
 typedef struct _WayPoint WayPoint;
 struct _WayPoint {
-    TrackPoint *point;
+    Point *point;
     gchar *desc;
 };
 
-/** A Track is a set of TrackPoints and WayPoints. */
+/** A Track is a set of timed TrackPoints. */
 typedef struct _Track Track;
 struct _Track {
     TrackPoint *head; /* points to first element in array; NULL if empty. */
     TrackPoint *tail; /* points to last element in array. */
     TrackPoint *cap; /* points after last slot in array. */
+};
+
+/** A Route is a set of untimed Points and WayPoints. */
+typedef struct _Route Route;
+struct _Route {
+    Point *head; /* points to first element in array; NULL if empty. */
+    Point *tail; /* points to last element in array. */
+    Point *cap; /* points after last slot in array. */
     WayPoint *whead; /* points to first element in array; NULL if empty. */
     WayPoint *wtail; /* points to last element in array. */
     WayPoint *wcap; /* points after last slot in array. */
 };
 
+typedef enum _PathType PathType;
+enum _PathType {
+    TRACK,
+    ROUTE,
+};
+
+typedef struct _Path Path;
+struct _Path {
+    union {
+        Track track;
+        Route route;
+    } path;
+    PathType path_type;
+};
+
 /** Data used during the SAX parsing operation. */
 typedef struct _SaxData SaxData;
 struct _SaxData {
-    Track track;
+    Path path;
     SaxState state;
     SaxState prev_state;
     guint unknown_depth;
@@ -439,7 +496,9 @@ static guint _clater_sid = 0;
 /** GPS data. */
 static gfloat _pos_lat = 0.f;
 static gfloat _pos_lon = 0.f;
-static TrackPoint _pos = {0, 0};
+static Point _pos = {0, 0};
+static const Point _pos_null = {0, 0};
+static const TrackPoint _track_null = { { 0, 0 }, 0};
 
 static gfloat _speed = 0;
 static gfloat _heading = 0;
@@ -456,8 +515,8 @@ static ConnState _conn_state = RCVR_OFF;
 /** The "zoom" level defines the resolution of a pixel, from 0 to MAX_ZOOM.
  * Each pixel in the current view is exactly (1 << _zoom) "units" wide. */
 static guint _zoom = 3; /* zoom level, from 0 to MAX_ZOOM. */
-static TrackPoint _center = {-1, -1}; /* current center location, X. */
-static TrackPoint _prev_center = {-1, -1}; /* previous center location, X */
+static Point _center = {-1, -1}; /* current center location, X. */
+static Point _prev_center = {-1, -1}; /* previous center location, X */
 
 /** The "base tile" is the upper-left tile in the pixmap. */
 static guint _base_tilex = -5;
@@ -474,11 +533,11 @@ static guint _screen_grids_halfwidth = 0;
 static guint _screen_grids_halfheight = 0;
 static guint _screen_width_pixels = 0;
 static guint _screen_height_pixels = 0;
-static TrackPoint _focus = {-1, -1};
+static Point _focus = {-1, -1};
 static guint _focus_unitwidth = 0;
 static guint _focus_unitheight = 0;
-static TrackPoint _min_center = {-1, -1};
-static TrackPoint _max_center = {-1, -1};
+static Point _min_center = {-1, -1};
+static Point _max_center = {-1, -1};
 static guint _world_size_tiles = -1;
 
 
@@ -494,18 +553,18 @@ static gint _mark_height = -1;
 
 /** The current track and route. */
 static Track _track;
-static Track _route;
+static Route _route;
 
 /** Data for tracking waypoints for the purpose of announcement. */
 /* _near_point is the route point to which we are closest. */
-static TrackPoint *_near_point = NULL;
+static Point *_near_point = NULL;
 static guint _near_point_dist_rough = -1;
 /* _next_way is what we currently interpret to be the next waypoint. */
 static WayPoint *_next_way = NULL;
 static guint _next_way_dist_rough = -1;
 static gchar *_last_spoken_phrase = NULL;
 /* _next_point is the route point immediately following _next_way. */
-static TrackPoint *_next_point = NULL;
+static Point *_next_point = NULL;
 static guint _next_point_dist_rough = -1;
 
 
@@ -515,7 +574,7 @@ static GdkGC *_mark_old_gc = NULL;
 static GdkGC *_vel_current_gc = NULL;
 static GdkGC *_vel_old_gc = NULL;
 static GdkGC *_track_gc = NULL;
-static GdkGC *_track_way_gc = NULL;
+static GdkGC *_track_break_gc = NULL;
 static GdkGC *_route_gc = NULL;
 static GdkGC *_route_way_gc = NULL;
 static GdkGC *_next_way_gc = NULL;
@@ -582,6 +641,8 @@ static GtkListStore *_loc_model;
 
 /** The singleton auto-route-download data. */
 static AutoRouteDownloadData _autoroute_data;
+
+static gchar XML_TZONE[7];
 
 /****************************************************************************
  * ABOVE: DATA **************************************************************
@@ -763,7 +824,7 @@ static gboolean
 route_update_nears(gboolean quick)
 {
     gboolean ret = FALSE;
-    TrackPoint *curr, *near;
+    Point *curr, *near;
     WayPoint *wcurr, *wnext;
     guint near_dist_rough;
     printf("%s(%d)\n", __PRETTY_FUNCTION__, quick);
@@ -782,6 +843,7 @@ route_update_nears(gboolean quick)
          * only search forward, only as long as we keep finding closer points.
          */
         for(curr = _near_point; curr++ != _route.tail; )
+        {
             if(curr->unity)
             {
                 guint dist_rough = DISTANCE_ROUGH(*curr);
@@ -793,6 +855,7 @@ route_update_nears(gboolean quick)
                 else if(quick)
                     break;
             }
+        }
 
         /* Update _near_point. */
         _near_point = near;
@@ -843,7 +906,7 @@ route_update_nears(gboolean quick)
                     _next_point = NULL;
                 else
                 {
-                    while((++_next_point)->unity == 0)
+                    while(!(++_next_point)->unity)
                     {
                         if(_next_point == _route.tail)
                         {
@@ -875,7 +938,7 @@ route_find_nearest_point()
 
     /* Initialize _near_point. */
     _near_point = _route.head;
-    while(_near_point->unity == 0 && _near_point != _route.tail)
+    while(!_near_point->unity && _near_point != _route.tail)
         _near_point++;
 
     /* Initialize _next_way. */
@@ -902,7 +965,7 @@ route_find_nearest_point()
  * IT IS AN ERROR FOR BOTH POINTS TO INDICATE A BREAK.
  */
 static void
-map_render_track_line(GdkGC *gc_norm, GdkGC *gc_way,
+map_render_segment(GdkGC *gc_norm, GdkGC *gc_alt,
         guint unitx1, guint unity1, guint unitx2, guint unity2)
 {
     vprintf("%s()\n", __PRETTY_FUNCTION__);
@@ -915,7 +978,7 @@ map_render_track_line(GdkGC *gc_norm, GdkGC *gc_way,
         /* Make sure this circle will be visible. */
         if((x2 < BUF_WIDTH_PIXELS)
                 && (y2 < BUF_HEIGHT_PIXELS))
-            gdk_draw_arc(_map_pixmap, gc_way,
+            gdk_draw_arc(_map_pixmap, gc_alt,
                     FALSE, /* FALSE: not filled. */
                     x2 - _draw_line_width,
                     y2 - _draw_line_width,
@@ -932,7 +995,7 @@ map_render_track_line(GdkGC *gc_norm, GdkGC *gc_way,
         /* Make sure this circle will be visible. */
         if((x1 < BUF_WIDTH_PIXELS)
                 && ((unsigned)y1 < BUF_HEIGHT_PIXELS))
-            gdk_draw_arc(_map_pixmap, gc_way,
+            gdk_draw_arc(_map_pixmap, gc_alt,
                     FALSE, /* FALSE: not filled. */
                     x1 - _draw_line_width,
                     y1 - _draw_line_width,
@@ -967,9 +1030,30 @@ map_render_track_line(GdkGC *gc_norm, GdkGC *gc_way,
  * redrawn.
  */
 static void
-map_render_track(Track *track, GdkGC *line_gc, GdkGC *way_gc)
+map_render_track(Track *track, GdkGC *line_gc, GdkGC *break_gc)
 {
     TrackPoint *curr;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    for(curr = track->head; curr != track->tail; curr++)
+        map_render_segment(line_gc, break_gc,
+                curr->point.unitx, curr->point.unity,
+                curr[1].point.unitx, curr[1].point.unity);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+/**
+ * Render all track data onto the _map_pixmap.  Note that this does not
+ * clear the pixmap of previous track data (use map_force_redraw() for
+ * that), and also note that this method does not queue any redraws, so it
+ * is up to the caller to decide which part of the track really needs to be
+ * redrawn.
+ */
+static void
+map_render_route(Route *track, GdkGC *line_gc, GdkGC *way_gc)
+{
+    Point *curr;
     WayPoint *wcurr;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -993,23 +1077,24 @@ map_render_track(Track *track, GdkGC *line_gc, GdkGC *way_gc)
                         360 * 64);
             }
             wcurr++;
-            if(curr[1].unity == 0)
+            if(!curr[1].unity)
                 continue;
         }
-        map_render_track_line(line_gc, way_gc,
+        map_render_segment(line_gc, way_gc,
                 curr->unitx, curr->unity, curr[1].unitx, curr[1].unity);
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
+
 static void
-map_render_tracks()
+map_render_paths()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if((_show_tracks & ROUTES_MASK) && _route.head)
     {
-        map_render_track(&_route, _route_gc, _route_way_gc);
+        map_render_route(&_route, _route_gc, _route_way_gc);
         if(_next_way == NULL)
         {
             guint x1 = unit2bufx(_route.tail[-1].unitx);
@@ -1030,7 +1115,7 @@ map_render_tracks()
         }
     }
     if(_show_tracks & TRACKS_MASK)
-        map_render_track(&_track, _track_gc, _track_way_gc);
+        map_render_track(&_track, _track_gc, _track_break_gc);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -1043,16 +1128,33 @@ track_resize(Track *track, guint size)
     if(track->head + size != track->cap)
     {
         TrackPoint *old_head = track->head;
-        WayPoint *curr;
         track->head = g_renew(TrackPoint, old_head, size);
         track->cap = track->head + size;
         if(track->head != old_head)
-        {
             track->tail = track->head + (track->tail - old_head);
+    }
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+route_resize(Route *route, guint size)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(route->head + size != route->cap)
+    {
+        Point *old_head = route->head;
+        WayPoint *curr;
+        route->head = g_renew(Point, old_head, size);
+        route->cap = route->head + size;
+        if(route->head != old_head)
+        {
+            route->tail = route->head + (route->tail - old_head);
 
             /* Adjust all of the waypoints. */
-            for(curr = track->whead - 1; curr++ != track->wtail; )
-                curr->point = track->head + (curr->point - old_head);
+            for(curr = route->whead - 1; curr++ != route->wtail; )
+                curr->point = route->head + (curr->point - old_head);
         }
     }
 
@@ -1060,16 +1162,16 @@ track_resize(Track *track, guint size)
 }
 
 static void
-track_wresize(Track *track, guint wsize)
+route_wresize(Route *route, guint wsize)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(track->whead + wsize != track->wcap)
+    if(route->whead + wsize != route->wcap)
     {
-        WayPoint *old_whead = track->whead;
-        track->whead = g_renew(WayPoint, old_whead, wsize);
-        track->wtail = track->whead + (track->wtail - old_whead);
-        track->wcap = track->whead + wsize;
+        WayPoint *old_whead = route->whead;
+        route->whead = g_renew(WayPoint, old_whead, wsize);
+        route->wtail = route->whead + (route->wtail - old_whead);
+        route->wcap = route->whead + wsize;
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -1080,10 +1182,15 @@ track_wresize(Track *track, guint wsize)
         track_resize(&(track), (track).cap - (track).head + ARRAY_CHUNK_SIZE); \
 }
 
-#define MACRO_TRACK_INCREMENT_WTAIL(track) { \
-    if(++(track).wtail == (track).wcap) \
-        track_wresize(&(track), \
-                (track).wcap - (track).whead + ARRAY_CHUNK_SIZE); \
+#define MACRO_ROUTE_INCREMENT_TAIL(route) { \
+    if(++(route).tail == (route).cap) \
+        route_resize(&(route), (route).cap - (route).head + ARRAY_CHUNK_SIZE); \
+}
+
+#define MACRO_ROUTE_INCREMENT_WTAIL(route) { \
+    if(++(route).wtail == (route).wcap) \
+        route_wresize(&(route), \
+                (route).wcap - (route).whead + ARRAY_CHUNK_SIZE); \
 }
 
 /**
@@ -1091,35 +1198,42 @@ track_wresize(Track *track, guint wsize)
  * since it is what houses the check for "have we moved
  * significantly": it also initiates the re-calculation of the _near_point
  * data, as well as calling osso_display_state_on() when we have the focus.
+ *
+ * If a non-zero time is given, then the current position (as taken from the
+ * _pos variable) is appended to _track with the given time.  If time is zero,
+ * then _pos_null is appended to _track with time zero (this produces a "break"
+ * in the track).
  */
 static void
-track_add(guint unitx, guint unity, gboolean newly_fixed)
+track_add(time_t time, gboolean newly_fixed)
 {
-    printf("%s(%u, %u)\n", __PRETTY_FUNCTION__, unitx, unity);
+    Point pos = (time == 0 ? _pos_null : _pos);
+    printf("%s(%u, %u)\n", __PRETTY_FUNCTION__, pos.unitx, pos.unity);
 
-    if(abs((gint)unitx - _track.tail->unitx) > _draw_line_width
-            || abs((gint)unity - _track.tail->unity) > _draw_line_width)
+    if(abs((gint)pos.unitx - _track.tail->point.unitx) > _draw_line_width
+    || abs((gint)pos.unity - _track.tail->point.unity) > _draw_line_width)
     {
-        if(unity != 0 && _route.head
+        if(time && _route.head
                 && (newly_fixed ? (route_find_nearest_point(), TRUE)
                                 : route_update_nears(TRUE)))
         {
-            map_render_tracks();
+            map_render_paths();
             MACRO_QUEUE_DRAW_AREA();
         }
         if(_show_tracks & TRACKS_MASK)
         {
-            /* Instead of calling map_render_tracks(), we'll draw the new line
+            /* Instead of calling map_render_paths(), we'll draw the new line
              * ourselves and call gtk_widget_queue_draw_area(). */
             gint tx1, ty1, tx2, ty2;
-            map_render_track_line(_track_gc, _track_way_gc,
-                    _track.tail->unitx, _track.tail->unity, unitx, unity);
-            if(unity != 0 && _track.tail->unity != 0)
+            map_render_segment(_track_gc, _track_break_gc,
+                    _track.tail->point.unitx, _track.tail->point.unity,
+                    pos.unitx, pos.unity);
+            if(time && _track.tail->point.unity)
             {
-                tx1 = unit2x(_track.tail->unitx);
-                ty1 = unit2y(_track.tail->unity);
-                tx2 = unit2x(unitx);
-                ty2 = unit2y(unity);
+                tx1 = unit2x(_track.tail->point.unitx);
+                ty1 = unit2y(_track.tail->point.unity);
+                tx2 = unit2x(pos.unitx);
+                ty2 = unit2y(pos.unity);
                 gtk_widget_queue_draw_area(_map_widget,
                         MIN(tx1, tx2) - _draw_line_width,
                         MIN(ty1, ty2) - _draw_line_width,
@@ -1129,8 +1243,8 @@ track_add(guint unitx, guint unity, gboolean newly_fixed)
         }
         MACRO_TRACK_INCREMENT_TAIL(_track);
 
-        _track.tail->unitx = unitx;
-        _track.tail->unity = unity;
+        _track.tail->point = pos;
+        _track.tail->time = time;
 
         if(_autoroute_data.enabled && !_autoroute_data.in_progress
                 && _near_point_dist_rough > 400)
@@ -1144,7 +1258,7 @@ track_add(guint unitx, guint unity, gboolean newly_fixed)
     }
 
     /* Check if we should announce upcoming waypoints. */
-    if(unity && _next_way_dist_rough
+    if(time && _next_way_dist_rough
             < (10 + (guint)_speed) * _announce_notice_ratio * 5)
     {
         if(_enable_voice && strcmp(_next_way->desc, _last_spoken_phrase))
@@ -1335,7 +1449,7 @@ update_gcs()
     UPDATE_GC(_vel_current_gc);
     UPDATE_GC(_vel_old_gc);
     UPDATE_GC(_track_gc);
-    UPDATE_GC(_track_way_gc);
+    UPDATE_GC(_track_break_gc);
     UPDATE_GC(_route_gc);
     UPDATE_GC(_route_way_gc);
     UPDATE_GC(_next_way_gc);
@@ -2255,7 +2369,7 @@ menu_init()
     gtk_menu_append(submenu, _menu_track_save_item
             = gtk_menu_item_new_with_label(_("Save...")));
     gtk_menu_append(submenu, _menu_track_mark_way_item
-            = gtk_menu_item_new_with_label(_("Mark a Waypoint")));
+            = gtk_menu_item_new_with_label(_("Insert Breakpoint")));
     gtk_menu_append(submenu, _menu_track_clear_item
             = gtk_menu_item_new_with_label(_("Clear")));
 
@@ -2805,7 +2919,7 @@ map_force_redraw()
                     new_y * TILE_SIZE_PIXELS,
                     FALSE);
         }
-    map_render_tracks();
+    map_render_paths();
     MACRO_QUEUE_DRAW_AREA();
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -2961,7 +3075,7 @@ map_center_unit(guint new_center_unitx, guint new_center_unity)
                 }
             }
         }
-        map_render_tracks();
+        map_render_paths();
     }
 
     MACRO_RECALC_OFFSET();
@@ -3067,20 +3181,20 @@ gpx_start_element(SaxData *data, const xmlChar *name, const xmlChar **attrs)
             break;
         case INSIDE_GPX:
             if(!strcmp((gchar*)name, "trk"))
-                data->state = INSIDE_TRACK;
+                data->state = INSIDE_PATH;
             else
                 MACRO_SET_UNKNOWN();
             break;
-        case INSIDE_TRACK:
+        case INSIDE_PATH:
             if(!strcmp((gchar*)name, "trkseg"))
             {
-                data->state = INSIDE_TRACK_SEGMENT;
+                data->state = INSIDE_PATH_SEGMENT;
                 data->at_least_one_trkpt = FALSE;
             }
             else
                 MACRO_SET_UNKNOWN();
             break;
-        case INSIDE_TRACK_SEGMENT:
+        case INSIDE_PATH_SEGMENT:
             if(!strcmp((gchar*)name, "trkpt"))
             {
                 const xmlChar **curr_attr;
@@ -3108,10 +3222,22 @@ gpx_start_element(SaxData *data, const xmlChar *name, const xmlChar **attrs)
                 }
                 if(has_lat && has_lon)
                 {
-                    MACRO_TRACK_INCREMENT_TAIL(data->track);
-                    latlon2unit(lat, lon, data->track.tail->unitx,
-                            data->track.tail->unity);
-                    data->state = INSIDE_TRACK_POINT;
+                    if(data->path.path_type == TRACK)
+                    {
+                        MACRO_TRACK_INCREMENT_TAIL(data->path.path.track);
+                        latlon2unit(lat, lon,
+                                data->path.path.track.tail->point.unitx,
+                                data->path.path.track.tail->point.unity);
+                        data->path.path.track.tail->time = 0;
+                    }
+                    else
+                    {
+                        MACRO_ROUTE_INCREMENT_TAIL(data->path.path.route);
+                        latlon2unit(lat, lon,
+                                data->path.path.route.tail->unitx,
+                                data->path.path.route.tail->unity);
+                    }
+                    data->state = INSIDE_PATH_POINT;
                 }
                 else
                     data->state = ERROR;
@@ -3119,9 +3245,17 @@ gpx_start_element(SaxData *data, const xmlChar *name, const xmlChar **attrs)
             else
                 MACRO_SET_UNKNOWN();
             break;
-        case INSIDE_TRACK_POINT:
-            if(!strcmp((gchar*)name, "desc"))
-                data->state = INSIDE_TRACK_POINT_DESC;
+        case INSIDE_PATH_POINT:
+            /* only parse time for tracks */
+            if(data->path.path_type == TRACK
+                    && !strcmp((gchar*)name, "time"))
+                data->state = INSIDE_PATH_POINT_TIME;
+
+            /* only parse description for routes */
+            else if(data->path.path_type == ROUTE
+                    && !strcmp((gchar*)name, "desc"))
+                data->state = INSIDE_PATH_POINT_DESC;
+
             else
                 MACRO_SET_UNKNOWN();
             break;
@@ -3156,42 +3290,117 @@ gpx_end_element(SaxData *data, const xmlChar *name)
             else
                 data->state = ERROR;
             break;
-        case INSIDE_TRACK:
+        case INSIDE_PATH:
             if(!strcmp((gchar*)name, "trk"))
                 data->state = INSIDE_GPX;
             else
                 data->state = ERROR;
             break;
-        case INSIDE_TRACK_SEGMENT:
+        case INSIDE_PATH_SEGMENT:
             if(!strcmp((gchar*)name, "trkseg"))
             {
                 if(data->at_least_one_trkpt)
                 {
-                    MACRO_TRACK_INCREMENT_TAIL(data->track);
-                    data->track.tail->unitx = data->track.tail->unity = 0;
+                    if(data->path.path_type == TRACK)
+                    {
+                        MACRO_TRACK_INCREMENT_TAIL(data->path.path.track);
+                        *data->path.path.track.tail = _track_null;
+                    }
+                    else
+                    {
+                        MACRO_ROUTE_INCREMENT_TAIL(data->path.path.route);
+                        *data->path.path.route.tail = _pos_null;
+                    }
                 }
-                data->state = INSIDE_TRACK;
+                data->state = INSIDE_PATH;
             }
             else
                 data->state = ERROR;
             break;
-        case INSIDE_TRACK_POINT:
+        case INSIDE_PATH_POINT:
             if(!strcmp((gchar*)name, "trkpt"))
             {
-                data->state = INSIDE_TRACK_SEGMENT;
+                data->state = INSIDE_PATH_SEGMENT;
                 data->at_least_one_trkpt = TRUE;
             }
             else
                 data->state = ERROR;
             break;
-        case INSIDE_TRACK_POINT_DESC:
+        case INSIDE_PATH_POINT_TIME:
+            /* only parse time for tracks */
+            if(!strcmp((gchar*)name, "time"))
+            {
+                struct tm time;
+                gchar *ptr;
+
+                if(NULL == (ptr = strptime(data->chars->str,
+                            XML_DATE_FORMAT, &time)))
+                    /* Failed to parse dateTime format. */
+                    data->state = ERROR;
+                else
+                {
+                    /* Parse was successful. Now we have to parse timezone.
+                     * From here on, if there is an error, I just assume local
+                     * timezone.  Yes, this is not proper XML, but I don't
+                     * care. */
+                    gchar *error_check;
+
+                    /* First, set time in "local" time zone. */
+                    data->path.path.track.tail->time = (mktime(&time));
+
+                    /* Now, skip inconsequential characters */
+                    while(*ptr && *ptr != 'Z' && *ptr != '-' && *ptr != '+')
+                        ptr++;
+
+                    /* Check if we ran to the end of the string. */
+                    if(*ptr)
+                    {
+                        /* Next character is either 'Z', '-', or '+' */
+                        if(*ptr == 'Z')
+                            /* Zulu (UTC) time. Undo the local time zone's
+                             * offset. */
+                            data->path.path.track.tail->time += time.tm_gmtoff;
+                        else
+                        {
+                            /* Not Zulu (UTC). Must parse hours and minutes. */
+                            gint offhours = strtol(ptr, &error_check, 10);
+                            if(error_check != ptr
+                                    && *(ptr = error_check) == ':')
+                            {
+                                /* Parse of hours worked. Check minutes. */
+                                gint offmins = strtol(ptr + 1,
+                                        &error_check, 10);
+                                if(error_check != (ptr + 1))
+                                {
+                                    /* Parse of minutes worked. Calculate. */
+                                    data->path.path.track.tail->time
+                                        += (time.tm_gmtoff
+                                                - (offhours * 60 * 60
+                                                    + offmins * 60));
+                                }
+                            }
+                        }
+                    }
+                    /* Successfully parsed dateTime. */
+                    data->state = INSIDE_PATH_POINT;
+                }
+
+                g_string_free(data->chars, TRUE);
+                data->chars = g_string_new("");
+            }
+            else
+                data->state = ERROR;
+            break;
+        case INSIDE_PATH_POINT_DESC:
+            /* only parse description for routes */
             if(!strcmp((gchar*)name, "desc"))
             {
-                MACRO_TRACK_INCREMENT_WTAIL(data->track);
-                data->track.wtail->point = data->track.tail;
-                data->track.wtail->desc = g_string_free(data->chars, FALSE);
+                MACRO_ROUTE_INCREMENT_WTAIL(data->path.path.route);
+                data->path.path.route.wtail->point = data->path.path.route.tail;
+                data->path.path.route.wtail->desc
+                    = g_string_free(data->chars, FALSE);
                 data->chars = g_string_new("");
-                data->state = INSIDE_TRACK_POINT;
+                data->state = INSIDE_PATH_POINT;
             }
             else
                 data->state = ERROR;
@@ -3221,14 +3430,16 @@ gpx_chars(SaxData *data, const xmlChar *ch, int len)
     switch(data->state)
     {
         case ERROR:
+        case UNKNOWN:
             break;
-        case INSIDE_TRACK_POINT_DESC:
+        case INSIDE_PATH_POINT_TIME:
+        case INSIDE_PATH_POINT_DESC:
             for (i = 0; i < len; i++)
                 data->chars = g_string_append_c(data->chars, ch[i]);
             vprintf("%s\n", data->chars->str);
             break;
         default:
-            ;
+            break;
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -3271,14 +3482,14 @@ gpx_error(SaxData *data, const gchar *msg, ...)
  * *replace* in the case of automatic routing.  Routes get no extra bins.
  */
 static gboolean
-parse_gpx(gchar *buffer, gint size, Track *toreplace, gint policy_old,
-        gint extra_bins)
+parse_track_gpx(gchar *buffer, gint size, gint policy_old)
 {
     SaxData data;
     xmlSAXHandler sax_handler;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    MACRO_INIT_TRACK(data.track);
+    data.path.path_type = TRACK;
+    MACRO_INIT_TRACK(data.path.path.track);
     data.state = START;
     data.chars = g_string_new("");
 
@@ -3301,7 +3512,7 @@ parse_gpx(gchar *buffer, gint size, Track *toreplace, gint policy_old,
     }
     
     /* Successful parsing - replace given Track structure. */
-    if(policy_old && toreplace->head)
+    if(policy_old && _track.head)
     {
         TrackPoint *src_first;
         Track *src, *dest;
@@ -3309,40 +3520,127 @@ parse_gpx(gchar *buffer, gint size, Track *toreplace, gint policy_old,
         if(policy_old > 0)
         {
             /* Append to current track. */
-            src = &data.track;
-            dest = toreplace;
+            src = &data.path.path.track;
+            dest = &_track;
         }
         else
         {
             /* Prepend to current track. */
-            src = toreplace;
-            dest = &data.track;
+            src = &_track;
+            dest = &data.path.path.track;
         }
 
         /* Find src_first non-zero point. */
         for(src_first = src->head - 1; src_first++ != src->tail; )
-            if(src_first->unity != 0)
+            if(src_first->point.unity)
                 break;
 
         /* Append track points from src to dest. */
+        if(src->tail >= src_first)
+        {
+            guint num_dest_points = dest->tail - dest->head + 1;
+            guint num_src_points = src->tail - src_first + 1;
+
+            /* Adjust dest->tail to be able to fit src track data
+             * plus room for more track data. */
+            track_resize(dest,
+                    num_dest_points + num_src_points + ARRAY_CHUNK_SIZE);
+
+            memcpy(dest->tail + 1, src_first,
+                    num_src_points * sizeof(TrackPoint));
+
+            dest->tail += num_src_points;
+        }
+
+        MACRO_CLEAR_TRACK(*src);
+        if(policy_old < 0)
+            _track = *dest;
+    }
+    else
+    {
+        MACRO_CLEAR_TRACK(_track);
+        /* Overwrite with data.track. */
+        _track = data.path.path.track;
+        track_resize(&_track,
+                _track.tail - _track.head + 1 + ARRAY_CHUNK_SIZE);
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+parse_route_gpx(gchar *buffer, gint size, gint policy_old)
+{
+    SaxData data;
+    xmlSAXHandler sax_handler;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    data.path.path_type = ROUTE;
+    MACRO_INIT_ROUTE(data.path.path.route);
+    data.state = START;
+    data.chars = g_string_new("");
+
+    memset(&sax_handler, 0, sizeof(sax_handler));
+    sax_handler.characters = (charactersSAXFunc)gpx_chars;
+    sax_handler.startElement = (startElementSAXFunc)gpx_start_element;
+    sax_handler.endElement = (endElementSAXFunc)gpx_end_element;
+    sax_handler.entityDecl = (entityDeclSAXFunc)gpx_get_entity;
+    sax_handler.warning = (warningSAXFunc)gpx_error;
+    sax_handler.error = (errorSAXFunc)gpx_error;
+    sax_handler.fatalError = (fatalErrorSAXFunc)gpx_error;
+
+    xmlSAXUserParseMemory(&sax_handler, &data, buffer, size);
+    g_string_free(data.chars, TRUE);
+
+    if(data.state != FINISH)
+    {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+    
+    if(policy_old && _route.head)
+    {
+        Point *src_first;
+        Route *src, *dest;
+
+        if(policy_old > 0)
+        {
+            /* Append to current route. */
+            src = &data.path.path.route;
+            dest = &_route;
+        }
+        else
+        {
+            /* Prepend to current route. */
+            src = &_route;
+            dest = &data.path.path.route;
+        }
+
+        /* Find src_first non-zero point. */
+        for(src_first = src->head - 1; src_first++ != src->tail; )
+            if(src_first->unity)
+                break;
+
+        /* Append route points from src to dest. */
         if(src->tail >= src_first)
         {
             WayPoint *curr;
             guint num_dest_points = dest->tail - dest->head + 1;
             guint num_src_points = src->tail - src_first + 1;
 
-            /* Adjust dest->tail to be able to fit src track data
-             * plus room for more track data. */
-            track_resize(dest, num_dest_points + num_src_points + extra_bins);
+            /* Adjust dest->tail to be able to fit src route data
+             * plus room for more route data. */
+            route_resize(dest, num_dest_points + num_src_points);
 
             memcpy(dest->tail + 1, src_first,
-                    num_src_points * sizeof(TrackPoint));
+                    num_src_points * sizeof(Point));
 
             dest->tail += num_src_points;
 
             /* Append waypoints from src to dest->. */
-            track_wresize(dest, (dest->wtail - dest->whead)
-                    + (src->wtail - src->whead) + 2 + extra_bins);
+            route_wresize(dest, (dest->wtail - dest->whead)
+                    + (src->wtail - src->whead) + 2);
             for(curr = src->whead - 1; curr++ != src->wtail; )
             {
                 (++(dest->wtail))->point = dest->head + num_dest_points
@@ -3352,20 +3650,19 @@ parse_gpx(gchar *buffer, gint size, Track *toreplace, gint policy_old,
 
         }
 
-        /* Kill old track - don't use MACRO_CLEAR_TRACK(), because that
-         * would free the string desc's that we moved to data.track. */
+        /* Kill old route - don't use MACRO_CLEAR_ROUTE(), because that
+         * would free the string desc's that we just moved to data.route. */
         g_free(src->head);
         g_free(src->whead);
         if(policy_old < 0)
-            *toreplace = *dest;
+            _route = *dest;
     }
     else
     {
-        MACRO_CLEAR_TRACK(*toreplace);
-        /* Overwrite with data.track. */
-        *toreplace = data.track;
-        track_resize(toreplace,
-                toreplace->tail - toreplace->head + 1 + extra_bins);
+        MACRO_CLEAR_ROUTE(_route);
+        /* Overwrite with data.route. */
+        _route = data.path.path.route;
+        route_resize(&_route, _route.tail - _route.head + 1);
     }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -3481,8 +3778,7 @@ auto_route_dl_idle_refresh()
         _autoroute_data.handle = NULL;
     else
     {
-        if(parse_gpx(_autoroute_data.bytes, _autoroute_data.bytes_read,
-                    &_route, 0, 0))
+        if(parse_route_gpx(_autoroute_data.bytes, _autoroute_data.bytes_read,0))
         {
             /* Find the nearest route point, if we're connected. */
             route_find_nearest_point();
@@ -3686,6 +3982,16 @@ maemo_mapper_init(gint argc, gchar **argv)
 
     /* Initialize data. */
 
+    /* set XML_TZONE */
+    {
+        time_t time1;
+        struct tm time2;
+        time1 = time(NULL);
+        localtime_r(&time1, &time2);
+        sprintf(XML_TZONE, "%+03ld:%02ld",
+                (time2.tm_gmtoff / 60 / 60), (time2.tm_gmtoff / 60) % 60);
+    }
+
     memset(&_track, 0, sizeof(_track));
     memset(&_route, 0, sizeof(_route));
     _last_spoken_phrase = g_strdup("");
@@ -3701,13 +4007,13 @@ maemo_mapper_init(gint argc, gchar **argv)
 
     /* Initialize our line styles. */
     {
-        GdkColor red = { 0, 0xffff, 0, 0 };
-        GdkColor dark_red = { 0, 0xbfff, 0, 0 };
-        GdkColor green = { 0, 0, 0xdfff, 0 };
-        GdkColor dark_green = { 0, 0, 0xbfff, 0 };
-        GdkColor darker_green = { 0, 0, 0x9fff, 0 };
-        GdkColor blue = { 0, 0x5fff, 0x5fff, 0xffff };
-        GdkColor dark_blue = { 0, 0, 0, 0xffff };
+        GdkColor red = { 0, 0xdfff, 0, 0 };
+        GdkColor dark_red = { 0, 0x9fff, 0, 0 };
+        GdkColor green = { 0, 0, 0x9fff, 0 };
+        GdkColor dark_green = { 0, 0, 0x7fff, 0 };
+        GdkColor darker_green = { 0, 0, 0x5fff, 0 };
+        GdkColor blue = { 0, 0x3fff, 0x3fff, 0xffff };
+        GdkColor dark_blue = { 0, 0, 0, 0xbfff };
         GdkColor gray = { 0, 0x7fff, 0x7fff, 0x7fff };
 
         gdk_color_alloc(gtk_widget_get_colormap(_map_widget), &red);
@@ -3742,10 +4048,10 @@ maemo_mapper_init(gint argc, gchar **argv)
         gdk_gc_copy(_track_gc, _mark_current_gc);
         gdk_gc_set_foreground(_track_gc, &red);
 
-        /* _track_way_gc is used to draw the track_way line. */
-        _track_way_gc = gdk_gc_new(_map_pixmap);
-        gdk_gc_copy(_track_way_gc, _mark_current_gc);
-        gdk_gc_set_foreground(_track_way_gc, &dark_red);
+        /* _track_break_gc is used to draw the track_break dots. */
+        _track_break_gc = gdk_gc_new(_map_pixmap);
+        gdk_gc_copy(_track_break_gc, _mark_current_gc);
+        gdk_gc_set_foreground(_track_break_gc, &dark_red);
 
         /* _route_gc is used to draw the route line. */
         _route_gc = gdk_gc_new(_map_pixmap);
@@ -3789,7 +4095,7 @@ maemo_mapper_init(gint argc, gchar **argv)
         else
         {
             /* If auto is enabled, append the route, otherwise replace it. */
-            if(parse_gpx(buffer, size, &_route, 0, 0))
+            if(parse_route_gpx(buffer, size, 0))
                 hildon_banner_show_information(
                         _window, NULL, _("Route Opened"));
             else
@@ -3894,7 +4200,7 @@ osso_cb_hw_state(osso_hw_state_t *state, gpointer data)
         {
             set_conn_state(RCVR_OFF);
             rcvr_disconnect();
-            track_add(0, 0, FALSE);
+            track_add(0, FALSE);
             /* Pretend the autoroute is in progress to avoid download. */
             if(_autoroute_data.enabled)
                 _autoroute_data.in_progress = TRUE;
@@ -4060,7 +4366,7 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
         unit2latlon(_pos.unitx, _pos.unity, _pos_lat, _pos_lon);
         _speed = 20.f;
         integerize_data();
-        track_add(_pos.unitx, _pos.unity, FALSE);
+        track_add(time(NULL), FALSE);
         refresh_mark();
     }
     else
@@ -4085,7 +4391,7 @@ channel_cb_error(GIOChannel *src, GIOCondition condition, gpointer data)
 
     /* An error has occurred - re-connect(). */
     rcvr_disconnect();
-    track_add(0, 0, FALSE);
+    track_add(0, FALSE);
 
     if(_fd != -1)
         /* Attempt to reset the radio if user has sudo access. */
@@ -4190,7 +4496,7 @@ channel_parse_rmc(gchar *sentence)
         if(_conn_state != RCVR_UP)
         {
             set_conn_state(RCVR_UP);
-            track_add(0, 0, FALSE);
+            track_add(0, FALSE);
         }
     }
     else
@@ -4250,7 +4556,7 @@ channel_parse_rmc(gchar *sentence)
 
     /* Add new data to track. */
     if(_conn_state == RCVR_FIXED)
-        track_add(_pos.unitx, _pos.unity, newly_fixed);
+        track_add(time(NULL), newly_fixed);
 
     /* Move mark to new location. */
     refresh_mark();
@@ -4535,9 +4841,9 @@ menu_cb_route_download(GtkAction *action)
         else
         {
             /* If GPS is enabled, append the route, otherwise replace it. */
-            if(parse_gpx(bytes, size, &_route,
+            if(parse_route_gpx(bytes, size,
                     (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chk_gps))
-                        ? 0 : 1), 0))
+                        ? 0 : 1)))
             {
                 GtkTreeIter iter;
 
@@ -4607,7 +4913,7 @@ menu_cb_route_open(GtkAction *action)
                     GTK_FILE_CHOOSER_ACTION_OPEN))
     {
         /* If auto is enabled, append the route, otherwise replace it. */
-        if(parse_gpx(buffer, size, &_route, _autoroute_data.enabled ? 0 : 1, 0))
+        if(parse_route_gpx(buffer, size, _autoroute_data.enabled ? 0 : 1))
         {
             cancel_autoroute();
 
@@ -4633,7 +4939,7 @@ menu_cb_route_reset(GtkAction *action)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     route_find_nearest_point();
-    map_render_tracks();
+    map_render_paths();
     MACRO_QUEUE_DRAW_AREA();
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -4664,7 +4970,7 @@ menu_cb_track_open(GtkAction *action)
     if(open_file(&buffer, NULL, &size, NULL, &_track_file_uri,
                     GTK_FILE_CHOOSER_ACTION_OPEN))
     {
-        if(parse_gpx(buffer, size, &_track, -1, ARRAY_CHUNK_SIZE))
+        if(parse_track_gpx(buffer, size, -1))
         {
             map_force_redraw();
             hildon_banner_show_information(_window, NULL, _("Track Opened"));
@@ -4694,72 +5000,121 @@ menu_cb_track_open(GtkAction *action)
 }
 
 static gboolean
-write_gpx(GnomeVFSHandle *handle, Track *track)
+write_track_gpx(GnomeVFSHandle *handle)
 {
-    gboolean last_was_way = FALSE;
+    TrackPoint *curr;
+    gboolean trkseg_break = FALSE;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    /* Find first non-zero point. */
+    for(curr = _track.head-1; curr++ != _track.tail; )
+        if(curr->point.unity)
+            break;
+
     /* Write the header. */
-    WRITE_STRING("<?xml version=\"1.0\"?>\n"
-                    "<gpx version=\"1.0\" creator=\"Maemo Mapper\" "
-                    "xmlns=\"http://www.topografix.com/GPX/1/0\">\n"
-                    "  <trk>\n"
-                    "    <trkseg>\n");
+    WRITE_STRING(XML_TRKSEG_HEADER);
 
-    /* Iterate through the track and write the points to the file. */
+    /* Curr points to first non-zero point. */
+    for(curr--; curr++ != _track.tail; )
     {
-        TrackPoint *curr;
-        WayPoint *wcurr;
-        gboolean trkseg_break = FALSE;
-
-        /* Find first non-zero point. */
-        for(curr = track->head-1, wcurr = track->whead; curr++ != track->tail; )
-            if(curr->unity != 0)
-                break;
-            else if(curr == wcurr->point)
-                wcurr++;
-
-        /* Curr points to first non-zero point. */
-        for(curr--; curr++ != track->tail; )
+        gfloat lat, lon;
+        if(curr->point.unity)
         {
-            gfloat lat, lon;
-            if(curr->unity != 0)
+            gchar buffer[80];
+            gchar strlat[80], strlon[80];
+            if(trkseg_break)
             {
-                gchar buffer[80];
-                gchar strlat[80], strlon[80];
-                if(trkseg_break)
+                /* First trkpt of the segment - write trkseg header. */
+                WRITE_STRING("    </trkseg>\n"
+                /* Write trkseg header. */
+                             "    <trkseg>\n");
+                trkseg_break = FALSE;
+            }
+            unit2latlon(curr->point.unitx, curr->point.unity, lat, lon);
+            g_ascii_formatd(strlat, 80, "%.6f", lat);
+            g_ascii_formatd(strlon, 80, "%.6f", lon);
+            sprintf(buffer, "      <trkpt lat=\"%s\" lon=\"%s\"",
+                    strlat, strlon);
+            WRITE_STRING(buffer);
+            
+            /* write the time */
+            if(curr->time)
+            {
+                WRITE_STRING(">\n        <time>");
                 {
-                    /* First trkpt of the segment - write trkseg header. */
-                    WRITE_STRING("    </trkseg>\n");
-                    /* Write trkseg header. */
-                    WRITE_STRING("    <trkseg>\n");
-                    trkseg_break = FALSE;
+                    struct tm time;
+                    localtime_r(&curr->time, &time);
+                    strftime(buffer, 80, XML_DATE_FORMAT, &time);
+                    WRITE_STRING(buffer);
+                    WRITE_STRING(XML_TZONE);
                 }
-                unit2latlon(curr->unitx, curr->unity, lat, lon);
-                g_ascii_formatd(strlat, 80, "%.6f", lat);
-                g_ascii_formatd(strlon, 80, "%.6f", lon);
-                sprintf(buffer, "      <trkpt lat=\"%s\" lon=\"%s\"",
-                        strlat, strlon);
-                if(curr == wcurr->point)
-                {
-                    sprintf(buffer + strlen(buffer),
-                            "><desc>%s</desc></trkpt>\n", wcurr++->desc);
-                    last_was_way = TRUE;
-                }
-                else
-                {
-                    strcat(buffer, "/>\n");
-                    last_was_way = FALSE;
-                }
-                WRITE_STRING(buffer);
+                WRITE_STRING("</time>\n"
+                         "      </trkpt>\n");
             }
             else
-                trkseg_break = TRUE;
+                WRITE_STRING("/>\n");
         }
+        else
+            trkseg_break = TRUE;
     }
 
     /* Write the footer. */
-    WRITE_STRING("    </trkseg>\n  </trk>\n</gpx>\n");
+    WRITE_STRING(XML_TRKSEG_FOOTER);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+write_route_gpx(GnomeVFSHandle *handle)
+{
+    Point *curr;
+    WayPoint *wcurr;
+    gboolean trkseg_break = FALSE;
+
+    /* Find first non-zero point. */
+    for(curr = _route.head-1, wcurr = _route.whead; curr++ != _route.tail; )
+        if(curr->unity)
+            break;
+        else if(curr == wcurr->point)
+            wcurr++;
+
+    /* Write the header. */
+    WRITE_STRING(XML_TRKSEG_HEADER);
+
+    /* Curr points to first non-zero point. */
+    for(curr--; curr++ != _route.tail; )
+    {
+        gfloat lat, lon;
+        if(curr->unity)
+        {
+            gchar buffer[80];
+            gchar strlat[80], strlon[80];
+            if(trkseg_break)
+            {
+                /* First trkpt of the segment - write trkseg header. */
+                WRITE_STRING("    </trkseg>\n"
+                             "    <trkseg>\n");
+                trkseg_break = FALSE;
+            }
+            unit2latlon(curr->unitx, curr->unity, lat, lon);
+            g_ascii_formatd(strlat, 80, "%.6f", lat);
+            g_ascii_formatd(strlon, 80, "%.6f", lon);
+            sprintf(buffer, "      <trkpt lat=\"%s\" lon=\"%s\"",
+                    strlat, strlon);
+            if(curr == wcurr->point)
+                sprintf(buffer + strlen(buffer),
+                        "><desc>%s</desc></trkpt>\n", wcurr++->desc);
+            else
+                strcat(buffer, "/>\n");
+            WRITE_STRING(buffer);
+        }
+        else
+            trkseg_break = TRUE;
+    }
+
+    /* Write the footer. */
+    WRITE_STRING(XML_TRKSEG_FOOTER);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -4774,7 +5129,7 @@ menu_cb_track_save(GtkAction *action)
     if(open_file(NULL, &handle, NULL, NULL, &_track_file_uri,
                     GTK_FILE_CHOOSER_ACTION_SAVE))
     {
-        if(write_gpx(handle, &_track))
+        if(write_track_gpx(handle))
             hildon_banner_show_information(_window, NULL, _("Track Saved"));
         else
             popup_error(_("Error writing GPX file."));
@@ -4790,21 +5145,25 @@ menu_cb_track_mark_way(GtkAction *action)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    MACRO_TRACK_INCREMENT_WTAIL(_track);
-    if(_track.tail->unity != 0)
+    if(_track.tail->point.unity)
     {
         guint x1, y1;
-        _track.wtail->point = _track.tail;
-        _track.wtail->desc = g_strdup(_("Track Waypoint"));
+
+        /* To mark a "waypoint" in a track, we'll add a (0, 0) point and then
+         * another instance of the most recent track point. */
+        MACRO_TRACK_INCREMENT_TAIL(_track);
+        *_track.tail = _track_null;
+        MACRO_TRACK_INCREMENT_TAIL(_track);
+        *_track.tail = _track.tail[2];
         
-        /** Instead of calling map_render_tracks(), we'll just add the waypoint
+        /** Instead of calling map_render_paths(), we'll just add the waypoint
          * ourselves. */
-        x1 = unit2bufx(_track.tail->unitx);
-        y1 = unit2bufy(_track.tail->unity);
+        x1 = unit2bufx(_track.tail->point.unitx);
+        y1 = unit2bufy(_track.tail->point.unity);
         /* Make sure this circle will be visible. */
         if((x1 < BUF_WIDTH_PIXELS)
                 && ((unsigned)y1 < BUF_HEIGHT_PIXELS))
-            gdk_draw_arc(_map_pixmap, _track_way_gc,
+            gdk_draw_arc(_map_pixmap, _track_break_gc,
                     FALSE, /* FALSE: not filled. */
                     x1 - _draw_line_width,
                     y1 - _draw_line_width,
@@ -4827,7 +5186,7 @@ menu_cb_route_save(GtkAction *action)
     if(open_file(NULL, &handle, NULL, &_route_dir_uri, NULL,
                     GTK_FILE_CHOOSER_ACTION_SAVE))
     {
-        if(write_gpx(handle, &_route))
+        if(write_route_gpx(handle))
             hildon_banner_show_information(_window, NULL, _("Route Saved"));
         else
             popup_error(_("Error writing GPX file."));
@@ -4844,7 +5203,6 @@ menu_cb_track_clear(GtkAction *action)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     _track.tail = _track.head;
-    _track.wtail = _track.whead;
     map_force_redraw();
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -4861,7 +5219,7 @@ menu_cb_show_tracks(GtkAction *action)
                 GTK_CHECK_MENU_ITEM(_menu_show_tracks_item)))
     {
         _show_tracks |= TRACKS_MASK;
-        map_render_tracks();
+        map_render_paths();
         MACRO_QUEUE_DRAW_AREA();
         hildon_banner_show_information(
                 _window, NULL, _("Tracks are now shown"));
@@ -4887,7 +5245,7 @@ menu_cb_show_routes(GtkAction *action)
                 GTK_CHECK_MENU_ITEM(_menu_show_routes_item)))
     {
         _show_tracks |= ROUTES_MASK;
-        map_render_tracks();
+        map_render_paths();
         MACRO_QUEUE_DRAW_AREA();
         hildon_banner_show_information(
                 _window, NULL, _("Routes are now shown"));
@@ -4963,7 +5321,7 @@ static gboolean
 menu_cb_maps_dlroute(GtkAction *action)
 {
     guint last_tilex, last_tiley;
-    TrackPoint *curr;
+    Point *curr;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(!_route.head)
@@ -5359,7 +5717,7 @@ menu_cb_enable_gps(GtkAction *action)
         if(_conn_state > RCVR_OFF)
             set_conn_state(RCVR_OFF);
         rcvr_disconnect();
-        track_add(0, 0, FALSE);
+        track_add(0, FALSE);
     }
     map_move_mark();
 
@@ -5446,7 +5804,7 @@ map_download_idle_refresh(ProgressUpdateInfo *pui)
                                 ((tilex - _base_tilex) << TILE_SIZE_P2),
                                 ((tiley - _base_tiley) << TILE_SIZE_P2),
                                 TRUE);
-                        map_render_tracks();
+                        map_render_paths();
                         gtk_widget_queue_draw_area(
                                 _map_widget,
                                 ((tilex-_base_tilex)<<TILE_SIZE_P2) - _offsetx,
