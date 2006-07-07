@@ -55,7 +55,7 @@ AC_SUBST(LIBXML2_CFLAGS)
 GETTEXT_PACKAGE=$PACKAGE
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "${GETTEXT_PACKAGE}", [Name of gettext package])
-ALL_LINGUAS="en_US"
+ALL_LINGUAS="en_US nl_NL"
 AM_GLIB_GNU_GETTEXT
 
 # To make application visible in maemo Task Navigator it needs a Desktop
