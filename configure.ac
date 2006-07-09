@@ -19,9 +19,10 @@
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 1.0.2)
+AM_INIT_AUTOMAKE(maemo-mapper, 1.1)
 
 AC_PROG_CPP
+AC_CONFIG_HEADERS(src/config.h)
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_PROG_INTLTOOL([0.23])

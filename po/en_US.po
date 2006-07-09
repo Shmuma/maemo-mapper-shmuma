@@ -9,97 +9,120 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: maemo-mapper 1.0.2\n"
-"Report-Msgid-Bugs-To: gnuite@gmail.com\n"
+"Project-Id-Version: maemo-mapper 1.1\n"
+"Report-Msgid-Bugs-To: John Costigan <gnuite@gmail.com>\n"
 "POT-Creation-Date: 2006-07-01 05:57-0400\n"
-"PO-Revision-Date: 2006-07-01 05:57-0400\n"
+"PO-Revision-Date: 2006-07-09 12:26-0400\n"
 "Last-Translator: John Costigan <gnuite@gmail.com>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/maemo-mapper.c:1749
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2426
 msgid "Advance Notice"
 msgstr "Advance Notice"
 
-#: ../src/maemo-mapper.c:1745
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:1931
+msgid "An error occurred while scanning."
+msgstr "An error occurred while scanning."
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2422
 msgid "Announce"
 msgstr "Announce"
 
-#: ../src/maemo-mapper.c:5069
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6182
 msgid "Area"
 msgstr "Area"
 
-#: ../src/maemo-mapper.c:1718 ../src/maemo-mapper.c:2291
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2391
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3031
 msgid "Auto-Center"
 msgstr "Auto-Center"
 
-#: ../src/maemo-mapper.c:4931
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6045
 msgid "Auto-Center Mode: Lat/Lon"
 msgstr "Auto-Center Mode: Lat/Lon"
 
-#: ../src/maemo-mapper.c:4916
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6029
 msgid "Auto-Center Mode: Lead"
 msgstr "Auto-Center Mode: Lead"
 
-#: ../src/maemo-mapper.c:4945
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6059
 msgid "Auto-Center Off"
 msgstr "Auto-Center Off"
 
-#: ../src/maemo-mapper.c:2265
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3005
 msgid "Auto-Download"
 msgstr "Auto-Download"
 
-#: ../src/maemo-mapper.c:4441
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5484
 msgid "Auto-Update"
 msgstr "Auto-Update"
 
-#: ../src/maemo-mapper.c:5132
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6245
 msgid "Bottom-Right"
 msgstr "Bottom-Right"
 
-#: ../src/maemo-mapper.c:1711
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2384
 msgid "Browse..."
 msgstr "Browse..."
 
-#: ../src/maemo-mapper.c:1701
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2374
 msgid "Cache Dir."
 msgstr "Cache Dir."
 
-#: ../src/maemo-mapper.c:5340
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6455
 msgid ""
 "Cannot enable GPS until a GPS Receiver MAC is set in the Settings dialog box."
 msgstr ""
 "Cannot enable GPS until a GPS Receiver MAC is set in the Settings dialog box."
 
-#: ../src/maemo-mapper.c:1657
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2327
 msgid "Channel"
 msgstr "Channel"
 
-#: ../src/maemo-mapper.c:2240 ../src/maemo-mapper.c:2254
-#: ../src/maemo-mapper.c:5057
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2980
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2994
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6170
 msgid "Clear"
 msgstr "Clear"
 
-#: ../src/maemo-mapper.c:2330
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3073
 msgid "Close"
 msgstr "Close"
 
-#: ../src/maemo-mapper.c:5266
-#, c-format
-msgid ""
-"Confirm download of %d maps\n"
-"(up to about %.2f MB)\n"
-msgstr ""
-"Confirm download of %d maps\n"
-"(up to about %.2f MB)\n"
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2134
+msgid "Colors"
+msgstr "Colors"
 
-#: ../src/maemo-mapper.c:1862
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2297
+msgid "Colors..."
+msgstr "Colors..."
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6917
+msgid "Confirm delete of waypoint"
+msgstr "Confirm delete of waypoint"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6384
+msgid "Confirm download of"
+msgstr "Confirm download of"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3162
+msgid "Copy Description to Clipboard"
+msgstr "Copy Description to Clipboard"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3141
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3160
+msgid "Copy Lat/Lon to Clipboard"
+msgstr "Copy Lat/Lon to Clipboard"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2554
 msgid "Could not create Map Cache directory."
 msgstr "Could not create Map Cache directory."
 
-#: ../src/maemo-mapper.c:2006
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2698
 msgid ""
 "Could not create Map Cache directory.\n"
 "Please set a valid Map Cache directory in the Settings dialog box."
@@ -107,213 +130,218 @@ msgstr ""
 "Could not create Map Cache directory.\n"
 "Please set a valid Map Cache directory in the Settings dialog box."
 
-#: ../src/maemo-mapper.c:4519
-msgid "Could not generate directions. Make sure your locations are valid."
-msgstr "Could not generate directions. Make sure your locations are valid."
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5567
+msgid ""
+"Could not generate directions. Make sure your source and destination are "
+"valid."
+msgstr ""
+"Could not generate directions. Make sure your source and destination are "
+"valid."
 
-#: ../src/maemo-mapper.c:4458
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2140
+msgid "Defaults"
+msgstr "Defaults"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3169
+msgid "Delete"
+msgstr "Delete"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2017
+msgid "Description"
+msgstr "Description"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5501
 msgid "Destination"
 msgstr "Destination"
 
-#: ../src/maemo-mapper.c:2261
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6698
+msgid "Distance to Location"
+msgstr "Distance to Location"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6889
+msgid "Distance to Waypoint"
+msgstr "Distance to Waypoint"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3001
 msgid "Download Along Route"
 msgstr "Download Along Route"
 
-#: ../src/maemo-mapper.c:2263
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3003
 msgid "Download Area..."
 msgstr "Download Area..."
 
-#: ../src/maemo-mapper.c:5051
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6164
 msgid "Download Maps by Area"
 msgstr "Download Maps by Area"
 
-#: ../src/maemo-mapper.c:4415
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5458
 msgid "Download Route"
 msgstr "Download Route"
 
-#: ../src/maemo-mapper.c:2234
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3144
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3165
+msgid "Download Route to..."
+msgstr "Download Route to..."
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2974
 msgid "Download..."
 msgstr "Download..."
 
-#: ../src/maemo-mapper.c:3558
-#, c-format
-msgid "Downloading %s\n"
-msgstr "Downloading %s\n"
-
-#: ../src/maemo-mapper.c:2688
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3506
 msgid "Downloading maps"
 msgstr "Downloading maps"
 
-#: ../src/maemo-mapper.c:2318
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3058
 msgid "Enable GPS"
 msgstr "Enable GPS"
 
-#: ../src/maemo-mapper.c:1761
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2438
 msgid "Enable Voice Synthesis (requires flite)"
 msgstr "Enable Voice Synthesis (requires flite)"
 
-#: ../src/maemo-mapper.c:3785 ../src/maemo-mapper.c:4575
-#: ../src/maemo-mapper.c:4611 ../src/maemo-mapper.c:4662
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4738
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5623
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5666
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5717
 msgid "Error parsing GPX file."
 msgstr "Error parsing GPX file."
 
-#: ../src/maemo-mapper.c:4677
-#, c-format
-msgid ""
-"Error while writing to file:\n"
-"%s\n"
-"File is incomplete."
-msgstr ""
-"Error while writing to file:\n"
-"%s\n"
-"File is incomplete."
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5732
+msgid "Error while writing to file"
+msgstr "Error while writing to file"
 
-#: ../src/maemo-mapper.c:4769 ../src/maemo-mapper.c:4822
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5873
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5936
 msgid "Error writing GPX file."
 msgstr "Error writing GPX file."
 
-#: ../src/maemo-mapper.c:742
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:927
 msgid "Establishing GPS fix"
 msgstr "Establishing GPS fix"
 
-#: ../src/maemo-mapper.c:4512
-#, c-format
-msgid ""
-"Failed to connect to GPX Directions server.\n"
-"%s"
-msgstr ""
-"Failed to connect to GPX Directions server.\n"
-"%s"
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5559
+msgid "Failed to connect to GPX Directions server"
+msgstr "Failed to connect to GPX Directions server"
 
-#: ../src/maemo-mapper.c:1969
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2660
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "Failed to initialize GConf.  Quitting."
 
-#: ../src/maemo-mapper.c:1396
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:1709
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "Failed to initialize GConf.  Settings were not saved."
 
-#: ../src/maemo-mapper.c:3421
-#, c-format
-msgid ""
-"Failed to open file for %s.\n"
-"%s"
-msgstr ""
-"Failed to open file for %s.\n"
-"%s"
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4422
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4727
+msgid "Failed to open file for"
+msgstr "Failed to open file for"
 
-#: ../src/maemo-mapper.c:3774
-#, c-format
-msgid ""
-"Failed to open file for reading.\n"
-"%s"
-msgstr ""
-"Failed to open file for reading.\n"
-"%s"
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5733
+msgid "File is incomplete."
+msgstr "File is incomplete."
 
-#: ../src/maemo-mapper.c:4139
-#, c-format
-msgid "Failed to parse string as float: %s\n"
-msgstr "Failed to parse string as float: %s\n"
-
-#: ../src/maemo-mapper.c:4128
-#, c-format
-msgid "Failed to parse string as int: %s\n"
-msgstr "Failed to parse string as int: %s\n"
-
-#: ../src/maemo-mapper.c:2313
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3053
 msgid "Full Screen"
 msgstr "Full Screen"
 
-#: ../src/maemo-mapper.c:1644
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2308
 msgid "GPS"
 msgstr "GPS"
 
-#: ../src/maemo-mapper.c:5083
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6196
 msgid "GPS Location"
 msgstr "GPS Location"
 
-#: ../src/maemo-mapper.c:4356
-msgid "GSV"
-msgstr "GSV"
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2152
+msgid "GPS Mark"
+msgstr "GPS Mark"
 
-#: ../src/maemo-mapper.c:2336
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3070
 msgid "Help"
 msgstr "Help"
 
-#: ../src/maemo-mapper.c:2252
-msgid "Insert Waypoint"
-msgstr "Insert Waypoint"
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2992
+msgid "Insert Breakpoint"
+msgstr "Insert Breakpoint"
 
-#: ../src/maemo-mapper.c:5220
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6338
 msgid "Invalid Bottom-Right Latitude"
 msgstr "Invalid Bottom-Right Latitude"
 
-#: ../src/maemo-mapper.c:5227
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6345
 msgid "Invalid Bottom-Right Longitude"
 msgstr "Invalid Bottom-Right Longitude"
 
-#: ../src/maemo-mapper.c:4130 ../src/maemo-mapper.c:4141
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5159
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5170
 msgid "Invalid NMEA input from receiver!"
 msgstr "Invalid NMEA input from receiver!"
 
-#: ../src/maemo-mapper.c:5206
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6324
 msgid "Invalid Top-Left Latitude"
 msgstr "Invalid Top-Left Latitude"
 
-#: ../src/maemo-mapper.c:5213
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6331
 msgid "Invalid Top-Left Longitude"
 msgstr "Invalid Top-Left Longitude"
 
-#: ../src/maemo-mapper.c:1813
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2490
 msgid "Keep Display On Only in Fullscreen Mode"
 msgstr "Keep Display On Only in Fullscreen Mode"
 
-#: ../src/maemo-mapper.c:2295
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3035
 msgid "Lat/Lon"
 msgstr "Lat/Lon"
 
-#: ../src/maemo-mapper.c:5073
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6186
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6632
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6751
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6803
 msgid "Latitude"
 msgstr "Latitude"
 
-#: ../src/maemo-mapper.c:2301
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3041
 msgid "Lead"
 msgstr "Lead"
 
-#: ../src/maemo-mapper.c:1733
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2408
 msgid "Lead Amount"
 msgstr "Lead Amount"
 
-#: ../src/maemo-mapper.c:1801
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2478
 msgid "Line Width"
 msgstr "Line Width"
 
-#: ../src/maemo-mapper.c:5077
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3133
+msgid "Location"
+msgstr "Location"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6190
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6633
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6752
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6804
 msgid "Longitude"
 msgstr "Longitude"
 
-#: ../src/maemo-mapper.c:1648
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2012
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2312
 msgid "MAC"
 msgstr "MAC"
 
-#: ../src/maemo-mapper.c:3634
-msgid "Maemo Mapper"
-msgstr "Maemo Mapper"
-
-#: ../src/maemo-mapper.c:1632
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2291
 msgid "Maemo Mapper Settings"
 msgstr "Maemo Mapper Settings"
 
-#: ../src/maemo-mapper.c:1676 ../src/maemo-mapper.c:2257
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2348
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2997
 msgid "Maps"
 msgstr "Maps"
 
-#: ../src/maemo-mapper.c:1797
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2474
 msgid "Misc."
 msgstr "Misc."
 
-#: ../src/maemo-mapper.c:1880
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2572
 msgid ""
 "No GPS Receiver MAC Provided.\n"
 "GPS Disabled."
@@ -321,157 +349,238 @@ msgstr ""
 "No GPS Receiver MAC Provided.\n"
 "GPS Disabled."
 
-#: ../src/maemo-mapper.c:2307
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:1938
+msgid "No bluetooth devices found."
+msgstr "No bluetooth devices found."
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5926
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6074
+msgid "No route is loaded."
+msgstr "No route is loaded."
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6758
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6778
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6811
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6832
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6865
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6895
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6931
+msgid "No waypoints are visible."
+msgstr "No waypoints are visible."
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3047
 msgid "None"
 msgstr "None"
 
-#: ../src/maemo-mapper.c:1667
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2339
 msgid "Note: \"Channel\" refers to the device side!"
 msgstr "Note: \"Channel\" refers to the device side!"
 
-#: ../src/maemo-mapper.c:2232 ../src/maemo-mapper.c:2248
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2972
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2988
 msgid "Open..."
 msgstr "Open..."
 
-#: ../src/maemo-mapper.c:4447
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5490
 msgid "Origin"
 msgstr "Origin"
 
-#: ../src/maemo-mapper.c:1786
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2463
+#  This word refers to Pitch as in of a person's voice.
 msgid "Pitch"
 msgstr "Pitch"
 
-#: ../src/maemo-mapper.c:4489
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2037
+msgid "Please select a bluetooth device from the list."
+msgstr "Please select a bluetooth device from the list."
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5535
 msgid "Please specify a start location."
 msgstr "Please specify a start location."
 
-#: ../src/maemo-mapper.c:4496
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5542
 msgid "Please specify an end location."
 msgstr "Please specify an end location."
 
-#: ../src/maemo-mapper.c:4353
-msgid "RMC"
-msgstr "RMC"
-
-#: ../src/maemo-mapper.c:2238
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2978
 msgid "Reset"
 msgstr "Reset"
 
-#: ../src/maemo-mapper.c:2228 ../src/maemo-mapper.c:2276
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2189
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2968
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3016
 msgid "Route"
 msgstr "Route"
 
-#: ../src/maemo-mapper.c:4570
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5618
 msgid "Route Downloaded"
 msgstr "Route Downloaded"
 
-#: ../src/maemo-mapper.c:3783 ../src/maemo-mapper.c:4608
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4736
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5663
 msgid "Route Opened"
 msgstr "Route Opened"
 
-#: ../src/maemo-mapper.c:4820
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5934
 msgid "Route Saved"
 msgstr "Route Saved"
 
-#: ../src/maemo-mapper.c:4889
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6002
 msgid "Routes are now hidden"
 msgstr "Routes are now hidden"
 
-#: ../src/maemo-mapper.c:4882
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5995
 msgid "Routes are now shown"
 msgstr "Routes are now shown"
 
-#: ../src/maemo-mapper.c:2236 ../src/maemo-mapper.c:2250
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2976
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2990
 msgid "Save..."
 msgstr "Save..."
 
-#: ../src/maemo-mapper.c:1830
-msgid "Scanning for bluetooth devices"
-msgstr "Scanning for bluetooth devices"
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2322
+msgid "Scan..."
+msgstr "Scan..."
 
-#: ../src/maemo-mapper.c:732
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:1991
+msgid "Scanning Bluetooth Devices"
+msgstr "Scanning Bluetooth Devices"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:917
 msgid "Searching for GPS receiver"
 msgstr "Searching for GPS receiver"
 
-#: ../src/maemo-mapper.c:1148
-#, c-format
-msgid "Sending to flite: %s\n"
-msgstr "Sending to flite: %s\n"
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:1982
+msgid "Select Bluetooth Device"
+msgstr "Select Bluetooth Device"
 
-#: ../src/maemo-mapper.c:1722
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2395
 msgid "Sensitivity"
 msgstr "Sensitivity"
 
-#: ../src/maemo-mapper.c:821
-#, c-format
-msgid "Setting _next_way to NULL\n"
-msgstr "Setting _next_way to NULL\n"
-
-#: ../src/maemo-mapper.c:2325
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3065
 msgid "Settings..."
 msgstr "Settings..."
 
-#: ../src/maemo-mapper.c:2272
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3012
 msgid "Show"
 msgstr "Show"
 
-#: ../src/maemo-mapper.c:1774
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3158
+msgid "Show Description"
+msgstr "Show Description"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3146
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3167
+msgid "Show Distance to"
+msgstr "Show Distance to"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3139
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3156
+msgid "Show Lat/Lon"
+msgstr "Show Lat/Lon"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2451
 msgid "Speed"
 msgstr "Speed"
 
-#: ../src/maemo-mapper.c:5118
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6231
 msgid "Top-Left"
 msgstr "Top-Left"
 
-#: ../src/maemo-mapper.c:2244 ../src/maemo-mapper.c:2281
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2173
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2984
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3021
 msgid "Track"
 msgstr "Track"
 
-#: ../src/maemo-mapper.c:4659
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5714
 msgid "Track Opened"
 msgstr "Track Opened"
 
-#: ../src/maemo-mapper.c:4767
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5871
 msgid "Track Saved"
 msgstr "Track Saved"
 
-#: ../src/maemo-mapper.c:4787
-msgid "Track Waypoint"
-msgstr "Track Waypoint"
-
-#: ../src/maemo-mapper.c:4863
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5976
 msgid "Tracks are now hidden"
 msgstr "Tracks are now hidden"
 
-#: ../src/maemo-mapper.c:4856
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5969
 msgid "Tracks are now shown"
 msgstr "Tracks are now shown"
 
-#: ../src/maemo-mapper.c:1680
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2352
 msgid "URI Format"
 msgstr "URI Format"
 
-#: ../src/maemo-mapper.c:4437
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2495
+msgid "Units"
+msgstr "Units"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:1952
+msgid "Unknown"
+msgstr "Unknown"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5480
 msgid "Use GPS Location"
 msgstr "Use GPS Location"
 
-#: ../src/maemo-mapper.c:2286
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3026
 msgid "Velocity Vector"
 msgstr "Velocity Vector"
 
-#: ../src/maemo-mapper.c:5099
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6212
 msgid "View Center"
 msgstr "View Center"
 
-#: ../src/maemo-mapper.c:5147
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3151
+msgid "Waypoint"
+msgstr "Waypoint"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6260
 msgid "Zoom"
 msgstr "Zoom"
 
-#: ../src/maemo-mapper.c:5150
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6263
 msgid "Zoom Levels to Download: (0 -> most detail)"
 msgstr "Zoom Levels to Download: (0 -> most detail)"
 
-#: ../src/maemo-mapper.c:1690
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2361
 msgid "Zoom Steps"
 msgstr "Zoom Steps"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4888
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4948
+msgid "Zoom to Level"
+msgstr "Zoom to Level"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:142
+msgid "km"
+msgstr "km"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6385
+msgid "maps"
+msgstr "maps"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:143
+msgid "mi."
+msgstr "mi."
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:144
+msgid "n.m."
+msgstr "n.m."
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4424
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4728
+msgid "reading"
+msgstr "reading"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6385
+msgid "up to about"
+msgstr "up to about"
+
+#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4424
+msgid "writing"
+msgstr "writing"
 

@@ -1,3 +1,25 @@
+maemo-mapper (1.1) unstable; urgency=low
+
+  * Added ability to customize the colors. (closes #11)
+  * Added temporal data to Track Export/Import functionality. (closes #9)
+  * Added context menu for performing various operations. (closes #37)
+  * Added Dutch Translation (closes #38)
+  * Added ability to change zoom by more than one zoom level at a time, and
+    added user feedback so that user knows which zoom level he is at.
+    (begins to address #21)
+  * Fixed locale issue with "Download Route" using GPS Location.  (closes #36)
+  * Removed hciconfig hack, since it seems no longer necessary. (closes #27)
+  * Eliminated "closest" zoom level in order to maintain consistency between
+    map storage names and zoom level names.
+  * Made some minor aesthetic changes in the Settings dialog.
+  * Added error-checking and retrying to downloading.
+  * Fixed some maemo intricacies suggested by the new Maemo Programming
+    Guidelines document.
+  * Changed the old "previous two center points" behavior in the Download by
+    Area dialog box to a more intuitive "bounds of the screen" behavior.
+
+ -- John Costigan <gnuite@gmail.com>  Sat, 1 Jul 2006 10:14:00 -0400
+
 maemo-mapper (1.0.2) unstable; urgency=low
 
   * Re-organized to work better with the final version of 2006 OS.
