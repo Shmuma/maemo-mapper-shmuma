@@ -20,8 +20,11 @@
 
 bin_PROGRAMS = maemo-mapper
 
-maemo_mapper_CFLAGS = $(GTK_CFLAGS) $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(GNOME_VFS_CFLAGS) $(GCONF_CFLAGS) $(LIBXML2_CFLAGS)
+maemo_mapper_CFLAGS = $(GTK_CFLAGS) $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(GNOME_VFS_CFLAGS) $(GCONF_CFLAGS) $(LIBXML2_CFLAGS) $(SQLITE_CFLAGS)
 
-maemo_mapper_LDADD = $(GTK_LIBS) $(OSSO_LIBS) $(HILDON_LIBS) $(GNOME_VFS_LIBS) $(GCONF_LIBS) $(LIBXML2_LIBS) -lbluetooth
+maemo_mapper_LDADD = $(GTK_LIBS) $(OSSO_LIBS) $(HILDON_LIBS) $(GNOME_VFS_LIBS) $(GCONF_LIBS) $(LIBXML2_LIBS) $(SQLITE_LIBS) -lbluetooth
 
 maemo_mapper_SOURCES = maemo-mapper.c
+
+bin_SCRIPTS = maemo-mapper.sh
+

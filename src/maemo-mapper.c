@@ -60,6 +60,8 @@
 #include <bluetooth/hci_lib.h>
 #include <bluetooth/rfcomm.h>
 
+#include <sqlite.h>
+
 /****************************************************************************
  * BELOW: DEFINES ***********************************************************
  ****************************************************************************/
@@ -137,11 +139,7 @@
 /* Pans are done two "grids" at a time, or 64 pixels. */
 #define PAN_UNITS (grid2unit(2))
 
-#define INITIAL_DOWNLOAD_RETRIES (2)
-
-#define UNITS_KM _("km")
-#define UNITS_MI _("mi.")
-#define UNITS_NM _("n.m.")
+#define INITIAL_DOWNLOAD_RETRIES (3)
 
 #define GCONF_KEY_PREFIX "/apps/maemo/maemo-mapper"
 #define GCONF_KEY_RCVR_MAC GCONF_KEY_PREFIX"/receiver_mac"
@@ -158,6 +156,10 @@
 #define GCONF_KEY_VOICE_PITCH GCONF_KEY_PREFIX"/voice_pitch"
 #define GCONF_KEY_ALWAYS_KEEP_ON GCONF_KEY_PREFIX"/always_keep_on"
 #define GCONF_KEY_UNITS GCONF_KEY_PREFIX"/units"
+#define GCONF_KEY_ESCAPE_KEY GCONF_KEY_PREFIX"/escape_key"
+
+#define GCONF_KEY_POI_DB GCONF_KEY_PREFIX"/poi_db"
+#define GCONF_KEY_POI_ZOOM GCONF_KEY_PREFIX"/poi_zoom"
 
 #define GCONF_KEY_COLOR_MARK GCONF_KEY_PREFIX"/color_mark"
 #define GCONF_KEY_COLOR_MARK_VELOCITY GCONF_KEY_PREFIX"/color_mark_velocity"
@@ -167,6 +169,7 @@
 #define GCONF_KEY_COLOR_ROUTE GCONF_KEY_PREFIX"/color_route"
 #define GCONF_KEY_COLOR_ROUTE_WAY GCONF_KEY_PREFIX"/color_route_way"
 #define GCONF_KEY_COLOR_ROUTE_NEXTWAY GCONF_KEY_PREFIX"/color_route_nextway"
+#define GCONF_KEY_COLOR_POI GCONF_KEY_PREFIX"/color_poi"
 
 #define GCONF_KEY_AUTOCENTER_MODE GCONF_KEY_PREFIX"/autocenter_mode"
 #define GCONF_KEY_LEAD_AMOUNT GCONF_KEY_PREFIX"/lead_amount"
@@ -182,6 +185,10 @@
 #define GCONF_KEY_SHOWVELVEC GCONF_KEY_PREFIX"/show_velocity_vector"
 #define GCONF_KEY_ENABLE_GPS GCONF_KEY_PREFIX"/enable_gps"
 #define GCONF_KEY_ROUTE_LOCATIONS GCONF_KEY_PREFIX"/route_locations"
+#define GCONF_KEY_REPOSITORIES GCONF_KEY_PREFIX"/repositories"
+#define GCONF_KEY_CURRREPO GCONF_KEY_PREFIX"/curr_repo"
+#define GCONF_KEY_GPS_INFO GCONF_KEY_PREFIX"/gps_info"
+
 
 #define XML_DATE_FORMAT "%FT%T"
 
@@ -219,10 +226,6 @@
             ; \
     } \
 };
-
-#define EARTH_RADIUS_KM (6371.f)
-#define EARTH_RADIUS_MI (3958.75587f)
-#define EARTH_RADIUS_NM (3440.06479f)
 
 #define MERCATOR_SPAN (-6.28318377773622f)
 #define MERCATOR_TOP (3.14159188886811f)
@@ -385,6 +388,65 @@ typedef enum
     ERROR,
 } SaxState;
 
+/** POI dialog action **/
+typedef enum
+{
+    ACTION_ADD_POI,
+    ACTION_EDIT_POI,
+} POIAction;
+
+/** Category list **/
+typedef enum
+{
+    CAT_ID,
+    CAT_ENABLED,
+    CAT_LABEL,
+    CAT_DESCRIPTION,
+    CAT_NUM_COLUMNS
+} CategoryList;
+
+/** POI list **/
+typedef enum
+{
+    POI_INDEX,
+    POI_LATITUDE,
+    POI_LONGITUDE,
+    POI_LABEL,
+    POI_CATEGORY,
+    POI_NUM_COLUMNS
+} POIList;
+
+/** This enum defines the possible units we can use. */
+typedef enum
+{
+    UNITS_KM,
+#define UNITS_KM_TEXT _("km")
+    UNITS_MI,
+#define UNITS_MI_TEXT _("mi.")
+    UNITS_NM,
+#define UNITS_NM_TEXT _("n.m.")
+} UnitType;
+gchar *UNITS_TEXT[3];
+#define EARTH_RADIUS (3440.06479f)
+gfloat UNITS_CONVERT[] =
+{
+    1.85200,
+    1.15077945,
+    1.f,
+};
+
+typedef enum
+{
+    ESCAPE_KEY_TOGGLE_TRACKS,
+#define ESCAPE_KEY_TOGGLE_TRACKS_TEXT _("Toggle Tracks")
+    ESCAPE_KEY_CHANGE_REPO,
+#define ESCAPE_KEY_CHANGE_REPO_TEXT _("Next Repository")
+    ESCAPE_KEY_RESET_BLUETOOTH,
+#define ESCAPE_KEY_RESET_BLUETOOTH_TEXT _("Reset Bluetooth")
+} EscapeKeyAction;
+gchar *ESCAPE_KEY_TEXT[3];
+
+
 /** A general definition of a point in the Maemo Mapper unit system. */
 typedef struct _Point Point;
 struct _Point {
@@ -451,6 +513,14 @@ struct _SaxData {
     GString *chars;
 };
 
+/** Data used during action: add or edit category/poi **/
+typedef struct _DeletePOI DeletePOI;
+struct _DeletePOI {
+    GtkWidget *dialog;
+    gchar *txt_label;
+    guint id;
+};
+
 /** Data used during the asynchronous progress update phase of automatic map
  * downloading. */
 typedef struct _ProgressUpdateInfo ProgressUpdateInfo;
@@ -460,7 +530,7 @@ struct _ProgressUpdateInfo
     GList *src_list;
     GList *dest_list;
     guint tilex, tiley, zoom; /* for refresh. */
-    gint retries_left;
+    gint retries_left; /* if equal to zero, it means we're DELETING maps. */
     guint hash;
 };
 
@@ -476,12 +546,51 @@ struct _AutoRouteDownloadData {
     guint bytes_maxsize;
 };
 
+/** Data regarding a map repository. */
+typedef struct _RepoData RepoData;
+struct _RepoData {
+    gchar *name;
+    gchar *url;
+    gchar *cache_dir;
+    guint dl_zoom_steps;
+    guint view_zoom_steps;
+    GtkWidget *menu_item;
+};
+
+/** GPS Data and Satellite **/
+typedef struct _GpsData GpsData;
+struct _GpsData {
+    guint fix;
+    guint fixquality;
+    struct tm time;    /* gps fix time */
+    struct tm timeloc;    /* local time */
+    gfloat latitude;
+    gfloat longitude;
+    gchar slatitude[15];
+    gchar slongitude[15];
+    gfloat speed;    /* in knots */
+    gfloat maxspeed;    /* in knots */
+    guint altitude; /* in meters */
+    gfloat heading;
+    gfloat hdop;
+    gfloat pdop;
+    gfloat vdop;
+    guint satinview;
+    guint satinuse;
+    guint satforfix[12];
+};
+
+typedef struct _GpsSatelliteData GpsSatelliteData;
+struct _GpsSatelliteData {
+    guint prn;
+    guint elevation;
+    guint azimuth;
+    guint snr;
+};
 
 /****************************************************************************
  * ABOVE: TYPEDEFS **********************************************************
  ****************************************************************************/
-
-
 
 /****************************************************************************
  * BELOW: DATA **************************************************************
@@ -502,9 +611,32 @@ static GtkWidget *_map_widget = NULL;
 /** The backing pixmap of _map_widget. */
 static GdkPixmap *_map_pixmap = NULL;
 
+static GtkWidget *_gps_widget = NULL;
+static GtkWidget *_text_lat = NULL;
+static GtkWidget *_text_lon = NULL;
+static GtkWidget *_text_speed = NULL;
+static GtkWidget *_text_alt = NULL;
+static GtkWidget *_sat_panel = NULL;
+static GtkWidget *_text_time = NULL;
+static GtkWidget *_heading_panel = NULL;
+
+static GtkWidget *_sat_details_panel = NULL;
+static GtkWidget *_sdi_lat = NULL;
+static GtkWidget *_sdi_lon = NULL;
+static GtkWidget *_sdi_spd = NULL;
+static GtkWidget *_sdi_alt = NULL;
+static GtkWidget *_sdi_hea = NULL;
+static GtkWidget *_sdi_tim = NULL;
+static GtkWidget *_sdi_vie = NULL;
+static GtkWidget *_sdi_use = NULL;
+static GtkWidget *_sdi_fix = NULL;
+static GtkWidget *_sdi_fqu = NULL;
+static GtkWidget *_sdi_msp = NULL;
 
 /** The file descriptor of our connection with the GPS receiver. */
 static gint _fd = -1;
+static gchar _gps_read_buf[256];
+static guint _gps_read_buf_pos = 0;
 
 /** The GIOChannel through which communication with the GPS receiver is
  * performed. */
@@ -532,6 +664,9 @@ static gfloat _heading = 0;
 static gint _vel_offsetx = 0;
 static gint _vel_offsety = 0;
 
+static GpsData _gps;
+static GpsSatelliteData _gps_sat[12];
+gboolean _satdetails_on = FALSE;
 
 /** The current connection state. */
 static ConnState _conn_state = RCVR_OFF;
@@ -608,6 +743,7 @@ static GdkGC *_gc_track_break = NULL;
 static GdkGC *_gc_route = NULL;
 static GdkGC *_gc_route_way = NULL;
 static GdkGC *_gc_route_nextway = NULL;
+static GdkGC *_gc_poi = NULL;
 static GdkColor _color_mark = {0, 0, 0, 0};
 static GdkColor _color_mark_velocity = {0, 0, 0, 0};
 static GdkColor _color_mark_old = {0, 0, 0, 0};
@@ -616,6 +752,7 @@ static GdkColor _color_track_break = {0, 0, 0, 0};
 static GdkColor _color_route = {0, 0, 0, 0};
 static GdkColor _color_route_way = {0, 0, 0, 0};
 static GdkColor _color_route_nextway = {0, 0, 0, 0};
+static GdkColor _color_poi = {0, 0, 0, 0};
 static GdkColor DEFAULT_COLOR_MARK = {0, 0x0000, 0x0000, 0xc000};
 static GdkColor DEFAULT_COLOR_MARK_VELOCITY = {0, 0x6000, 0x6000, 0xf800};
 static GdkColor DEFAULT_COLOR_MARK_OLD = {0, 0x8000, 0x8000, 0x8000};
@@ -624,6 +761,7 @@ static GdkColor DEFAULT_COLOR_TRACK_BREAK = {0, 0xa000, 0x0000, 0x0000};
 static GdkColor DEFAULT_COLOR_ROUTE = {0, 0x0000, 0xa000, 0x0000};
 static GdkColor DEFAULT_COLOR_ROUTE_WAY = {0, 0x0000, 0x8000, 0x0000};
 static GdkColor DEFAULT_COLOR_ROUTE_NEXTWAY = {0, 0x0000, 0x6000, 0x0000};
+static GdkColor DEFAULT_COLOR_POI = {0, 0xa000, 0x0000, 0xa000};
 
 /** MAIN MENU ITEMS. */
 static GtkWidget *_menu_route_download_item = NULL;
@@ -635,8 +773,9 @@ static GtkWidget *_menu_track_open_item = NULL;
 static GtkWidget *_menu_track_save_item = NULL;
 static GtkWidget *_menu_track_mark_way_item = NULL;
 static GtkWidget *_menu_track_clear_item = NULL;
-static GtkWidget *_menu_maps_dlroute_item = NULL;
-static GtkWidget *_menu_maps_dlarea_item = NULL;
+static GtkWidget *_menu_maps_submenu = NULL;
+static GtkWidget *_menu_maps_mapman_item = NULL;
+static GtkWidget *_menu_maps_repoman_item = NULL;
 static GtkWidget *_menu_auto_download_item = NULL;
 static GtkWidget *_menu_show_tracks_item = NULL;
 static GtkWidget *_menu_show_routes_item = NULL;
@@ -646,7 +785,11 @@ static GtkWidget *_menu_ac_lead_item = NULL;
 static GtkWidget *_menu_ac_none_item = NULL;
 static GtkWidget *_menu_fullscreen_item = NULL;
 static GtkWidget *_menu_enable_gps_item = NULL;
+static GtkWidget *_menu_gps_show_info_item = NULL;
+static GtkWidget *_menu_gps_details_item = NULL;
+static GtkWidget *_menu_gps_reset_item = NULL;
 static GtkWidget *_menu_settings_item = NULL;
+static GtkWidget *_menu_poi_item = NULL;
 static GtkWidget *_menu_help_item = NULL;
 static GtkWidget *_menu_close_item = NULL;
 
@@ -658,6 +801,8 @@ static GtkWidget *_cmenu_loc_show_latlon_item = NULL;
 static GtkWidget *_cmenu_loc_clip_latlon_item = NULL;
 static GtkWidget *_cmenu_loc_route_to_item = NULL;
 static GtkWidget *_cmenu_loc_distance_to_item = NULL;
+static GtkWidget *_cmenu_add_poi = NULL;
+static GtkWidget *_cmenu_edit_poi = NULL;
 
 static GtkWidget *_cmenu_way_show_latlon_item = NULL;
 static GtkWidget *_cmenu_way_show_desc_item = NULL;
@@ -680,33 +825,42 @@ static GHashTable *_downloads_hash = NULL;
 /** CONFIGURATION INFORMATION. */
 static struct sockaddr_rc _rcvr_addr = { 0 };
 static gchar *_rcvr_mac = NULL;
-static gchar *_map_dir_name = NULL;
-static gchar *_map_uri_format = NULL;
 static gchar *_route_dir_uri = NULL;
 static gchar *_track_file_uri = NULL;
 static CenterMode _center_mode = CENTER_LEAD;
 static gboolean _fullscreen = FALSE;
 static gboolean _enable_gps = FALSE;
+static gboolean _gps_info = FALSE;
 static gint _show_tracks = 0;
 static gboolean _show_velvec = TRUE;
 static gboolean _auto_download = FALSE;
-static guint _zoom_steps = 2;
 static guint _lead_ratio = 5;
 static guint _center_ratio = 7;
 static guint _draw_line_width = 5;
-static guint _announce_notice_ratio = 6;
+static guint _announce_notice_ratio = 8;
 static gboolean _enable_voice = TRUE;
 static gboolean _always_keep_on = FALSE;
 static gdouble _voice_speed = 1.0;
 static gint _voice_pitch = 0;
 static GSList *_loc_list;
 static GtkListStore *_loc_model;
-static gchar *_units = NULL;
+static UnitType _units = UNITS_KM;
+static EscapeKeyAction _escape_key = ESCAPE_KEY_TOGGLE_TRACKS;
+
+static GList *_repo_list = NULL;
+static RepoData *_curr_repo = NULL;
+
+/** POI */
+static gchar *_poi_db = NULL;
+static sqlite *_db = NULL;
+static guint _poi_zoom = 6;
+static gboolean _dbconn = FALSE;
 
 /** The singleton auto-route-download data. */
 static AutoRouteDownloadData _autoroute_data;
 
 static gchar XML_TZONE[7];
+static gint _gmtoffset = 0;
 
 /****************************************************************************
  * ABOVE: DATA **************************************************************
@@ -736,6 +890,12 @@ static gboolean
 map_cb_button_press(GtkWidget *widget, GdkEventButton *event);
 static gboolean
 map_cb_button_release(GtkWidget *widget, GdkEventButton *event);
+static gboolean
+heading_panel_expose(GtkWidget *widget, GdkEventExpose *event);
+static gboolean
+sat_panel_expose(GtkWidget *widget, GdkEventExpose *event);
+static gboolean
+sat_details_panel_expose(GtkWidget *widget, GdkEventExpose *event);
 
 static gboolean
 channel_cb_error(GIOChannel *src, GIOCondition condition, gpointer data);
@@ -770,11 +930,16 @@ static gboolean
 menu_cb_show_routes(GtkAction *action);
 static gboolean
 menu_cb_show_velvec(GtkAction *action);
+static gboolean
+menu_cb_category(GtkAction *action);
+
 
 static gboolean
-menu_cb_maps_dlroute(GtkAction *action);
+menu_cb_maps_select(GtkAction *action, gpointer new_repo);
 static gboolean
-menu_cb_maps_dlarea(GtkAction *action);
+menu_cb_mapman(GtkAction *action);
+static gboolean
+menu_cb_maps_repoman(GtkAction *action);
 static gboolean
 menu_cb_auto_download(GtkAction *action);
 
@@ -794,6 +959,10 @@ static gboolean
 cmenu_cb_loc_route_to(GtkAction *action);
 static gboolean
 cmenu_cb_loc_distance_to(GtkAction *action);
+static gboolean
+cmenu_cb_add_poi(GtkAction *action);
+static gboolean
+cmenu_cb_edit_poi(GtkAction *action);
 
 static gboolean
 cmenu_cb_way_show_latlon(GtkAction *action);
@@ -815,6 +984,12 @@ static gboolean
 menu_cb_fullscreen(GtkAction *action);
 static gboolean
 menu_cb_enable_gps(GtkAction *action);
+static gboolean
+menu_cb_gps_show_info(GtkAction *action);
+static gboolean
+menu_cb_gps_details(GtkAction *action);
+static gboolean
+menu_cb_gps_reset(GtkAction *action);
 
 static gboolean
 menu_cb_settings(GtkAction *action);
@@ -841,6 +1016,771 @@ auto_route_dl_idle();
  * BELOW: ROUTINES **********************************************************
  ****************************************************************************/
 
+static gboolean
+gps_display_details(void)
+{
+    gchar *buffer, strtime[15];
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_gps.fix < 2)
+    {
+        /* no fix no fun */
+        gtk_label_set_label(GTK_LABEL(_sdi_lat), " --- ");
+        gtk_label_set_label(GTK_LABEL(_sdi_lon), " --- ");
+        gtk_label_set_label(GTK_LABEL(_sdi_spd), " --- ");
+        gtk_label_set_label(GTK_LABEL(_sdi_alt), " --- ");
+        gtk_label_set_label(GTK_LABEL(_sdi_hea), " --- ");
+        gtk_label_set_label(GTK_LABEL(_sdi_tim), " --:--:-- ");
+    }
+    else
+    {
+        gfloat speed = _gps.speed * UNITS_CONVERT[_units];
+
+        /* latitude */
+        gtk_label_set_label(GTK_LABEL(_sdi_lat), _gps.slatitude);
+
+        /* longitude */
+        gtk_label_set_label(GTK_LABEL(_sdi_lon), _gps.slongitude);
+
+        /* speed */
+        switch(_units)
+        {
+            case UNITS_MI:
+                buffer = g_strdup_printf("%.1f mph", speed);
+                break;
+            case UNITS_NM:
+                buffer = g_strdup_printf("%.1f kn", speed);
+                break;
+            default:
+                buffer = g_strdup_printf("%.1f km/h", speed);
+                break;
+        }
+        gtk_label_set_label(GTK_LABEL(_sdi_spd), buffer);
+        g_free(buffer);
+
+        /* altitude */
+        switch(_units)
+        {
+            case UNITS_MI:
+            case UNITS_NM:
+                buffer = g_strdup_printf("%d ft",
+                        (guint)(_gps.altitude * 3.2808399f));
+                break;
+            default:
+                buffer = g_strdup_printf("%d m", _gps.altitude);
+                break;
+        }
+        gtk_label_set_label(GTK_LABEL(_sdi_alt), buffer);
+        g_free(buffer);
+
+        /* heading */
+        buffer = g_strdup_printf("%0.0f\u00b0", _gps.heading);
+        gtk_label_set_label(GTK_LABEL(_sdi_hea), buffer);
+        g_free(buffer);
+
+        /* local time */
+        strftime(strtime, 15, "%X", &_gps.timeloc);
+        gtk_label_set_label(GTK_LABEL(_sdi_tim), strtime);
+    }
+
+    /* Sat in view */
+    buffer = g_strdup_printf("%d", _gps.satinview);
+    gtk_label_set_label(GTK_LABEL(_sdi_vie), buffer);
+    g_free(buffer);
+
+    /* Sat in use */
+    buffer = g_strdup_printf("%d", _gps.satinuse);
+    gtk_label_set_label(GTK_LABEL(_sdi_use), buffer);
+    g_free(buffer);
+
+    /* fix */
+    switch(_gps.fix)
+    {
+        case 2:
+        case 3: buffer = g_strdup_printf("%dD fix", _gps.fix); break;
+        default: buffer = g_strdup_printf("nofix"); break;
+    }
+    gtk_label_set_label(GTK_LABEL(_sdi_fix), buffer);
+    g_free(buffer);
+
+    if(_gps.fix == 1)
+        buffer = g_strdup("none");
+    else
+    {
+        switch (_gps.fixquality)
+        {
+            case 1 : buffer = g_strdup_printf(_("SPS")); break;
+            case 2 : buffer = g_strdup_printf(_("DGPS")); break;
+            case 3 : buffer = g_strdup_printf(_("PPS")); break;
+            case 4 : buffer = g_strdup_printf(_("Real Time Kinematic")); break;
+            case 5 : buffer = g_strdup_printf(_("Float RTK")); break;
+            case 6 : buffer = g_strdup_printf(_("Estimated")); break;
+            case 7 : buffer = g_strdup_printf(_("Manual)")); break;
+            case 8 : buffer = g_strdup_printf(_("Simulation")); break;
+            default : buffer = g_strdup_printf(_("none")); break;
+        }
+    }
+    gtk_label_set_label(GTK_LABEL(_sdi_fqu), buffer);
+    g_free(buffer);
+
+    /* max speed */
+    {
+        gfloat maxspeed = _gps.maxspeed * UNITS_CONVERT[_units];
+
+        /* speed */
+        switch(_units)
+        {
+            case UNITS_MI:
+                buffer = g_strdup_printf("%.1f mph", maxspeed);
+                break;
+            case UNITS_NM:
+                buffer = g_strdup_printf("%.1f kn", maxspeed);
+                break;
+            default:
+                buffer = g_strdup_printf("%.1f km/h", maxspeed);
+                break;
+        }
+        gtk_label_set_label(GTK_LABEL(_sdi_msp), buffer);
+        g_free(buffer);
+    }
+
+    /* refresh sat panel */
+    gtk_widget_queue_draw_area(GTK_WIDGET(_sat_details_panel),
+        0, 0,
+        _sat_details_panel->allocation.width,
+        _sat_details_panel->allocation.height);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static void
+gps_display_data(void)
+{
+    gchar *buffer, strtime[15];
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_gps.fix < 2)
+    {
+        /* no fix no fun */
+        gtk_label_set_label(GTK_LABEL(_text_lat), " --- ");
+        gtk_label_set_label(GTK_LABEL(_text_lon), " --- ");
+        gtk_label_set_label(GTK_LABEL(_text_speed), " --- ");
+        gtk_label_set_label(GTK_LABEL(_text_alt), " --- ");
+        gtk_label_set_label(GTK_LABEL(_text_time), " --:--:-- ");
+    }
+    else
+    {
+        gfloat speed = _gps.speed * UNITS_CONVERT[_units];
+
+        /* latitude */
+        gtk_label_set_label(GTK_LABEL(_text_lat), _gps.slatitude);
+
+        /* longitude */
+        gtk_label_set_label(GTK_LABEL(_text_lon), _gps.slongitude);
+
+        /* speed */
+        switch(_units)
+        {
+            case UNITS_MI:
+                buffer = g_strdup_printf("Spd: %.1f mph", speed);
+                break;
+            case UNITS_NM:
+                buffer = g_strdup_printf("Spd: %.1f kn", speed);
+                break;
+            default:
+                buffer = g_strdup_printf("Spd: %.1f km/h", speed);
+                break;
+        }
+        gtk_label_set_label(GTK_LABEL(_text_speed), buffer);
+        g_free(buffer);
+
+        /* altitude */
+        switch(_units)
+        {
+            case UNITS_MI:
+            case UNITS_NM:
+                buffer = g_strdup_printf("Alt: %d ft",
+                        (guint)(_gps.altitude * 3.2808399f));
+                break;
+            default:
+                buffer = g_strdup_printf("Alt: %d m", _gps.altitude);
+        }
+        gtk_label_set_label(GTK_LABEL(_text_alt), buffer);
+        g_free(buffer);
+
+        /* local time */
+        strftime(strtime, 15, "%X", &_gps.timeloc);
+        gtk_label_set_label(GTK_LABEL(_sdi_tim), strtime);
+    }
+
+    /* refresh sat panel */
+    gtk_widget_queue_draw_area(GTK_WIDGET(_sat_panel),
+        0, 0,
+        _sat_panel->allocation.width,
+        _sat_panel->allocation.height);
+
+    /* refresh heading panel*/
+    gtk_widget_queue_draw_area(GTK_WIDGET(_heading_panel),
+        0, 0,
+        _heading_panel->allocation.width,
+        _heading_panel->allocation.height);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    return;
+}
+
+static void
+gps_hide_text(void)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Clear gps data */
+    _gps.fix = 1;
+    _gps.satinuse = 0;
+    _gps.satinview = 0;
+
+    if(_gps_info)
+        gps_display_data();
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+gps_show_info(void)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_gps_info && _enable_gps)
+        gtk_widget_show_all(GTK_WIDGET(_gps_widget));
+    else
+    {
+        gps_hide_text();
+        gtk_widget_hide_all(GTK_WIDGET(_gps_widget));
+    }
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+draw_sat_info(GtkWidget *widget, guint x0, guint y0,
+        guint width, guint height, gboolean showsnr)
+{
+    PangoContext *context = NULL;
+    PangoLayout *layout = NULL;
+    PangoFontDescription *fontdesc = NULL;
+    GdkColor color;
+    GdkGC *gc1, *gc2, *gc;
+    guint step, i, j, snr_height, bymargin, xoffset, yoffset;
+    guint x, y, x1, y1;
+    gchar *tmp = NULL;
+
+    xoffset = x0;
+    yoffset = y0;
+    /* Bootom margin - 12% */
+    bymargin = height * 0.88f;
+
+    /* Bottom line */
+    gdk_draw_line(widget->window,
+        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+        xoffset + 5, yoffset + bymargin,
+        xoffset + width - 10 - 2, yoffset + bymargin);
+    gdk_draw_line(widget->window,
+        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+        xoffset + 5, yoffset + bymargin - 1,
+        xoffset + width - 10 - 2, yoffset + bymargin - 1);
+
+    context = gtk_widget_get_pango_context(widget);
+    layout = pango_layout_new(context);
+    fontdesc =  pango_font_description_new();
+
+    pango_font_description_set_family(fontdesc,"Sans Serif");
+
+    if(_gps.satinview > 0 )
+    {
+        pango_font_description_set_size(fontdesc, 8*PANGO_SCALE);
+
+        pango_layout_set_font_description (layout, fontdesc);
+        pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
+
+        /* Left margin - 5pix, Right margin - 5pix */
+        step = (width - 10) / _gps.satinview;
+
+        color.red = 0;
+        color.green = 0;
+        color.blue = 0;
+        gc1 = gdk_gc_new (widget->window);
+        gdk_gc_set_rgb_fg_color (gc1, &color);
+
+        color.red = 0;
+        color.green = 0;
+        color.blue = 0xffff;
+        gc2 = gdk_gc_new (widget->window);
+        gdk_gc_set_rgb_fg_color (gc2, &color);
+
+        for(i = 0; i < _gps.satinview; i++)
+        {
+            /* Sat used or not */
+            gc = gc1;
+            for(j = 0; j < _gps.satinuse ; j++)
+            {
+                if(_gps.satforfix[j] == _gps_sat[i].prn)
+                {
+                    gc = gc2;
+                    break;
+                }
+            }
+
+            x = 5 + i * step;
+            snr_height = _gps_sat[i].snr * height * 0.78f / 100;
+            y = height * 0.1f + (height * 0.78f - snr_height);
+
+            /* draw sat rectangle... */
+            gdk_draw_rectangle(widget->window,
+                    gc,
+                    TRUE,
+                    xoffset + x,
+                    yoffset + y,
+                    step - 2,
+                    snr_height);
+
+            if(showsnr && _gps_sat[i].snr > 0)
+            {
+                /* ...snr.. */
+                tmp = g_strdup_printf("%02d", _gps_sat[i].snr);
+                pango_layout_set_text(layout, tmp, 2);
+                pango_layout_get_pixel_size(layout, &x1, &y1);
+                gdk_draw_layout(widget->window,
+                    widget->style->fg_gc[GTK_STATE_NORMAL],
+                    xoffset + x + ((step - 2) - x1)/2,
+                    yoffset + y - 15,
+                    layout);
+                g_free(tmp);
+            }
+
+            /* ...and sat number */
+            tmp = g_strdup_printf("%02d", _gps_sat[i].prn);
+            pango_layout_set_text(layout, tmp, 2);
+            pango_layout_get_pixel_size(layout, &x1, &y1);
+            gdk_draw_layout(widget->window,
+                widget->style->fg_gc[GTK_STATE_NORMAL],
+                xoffset + x + ((step - 2) - x1)/2 ,
+                yoffset + bymargin + 1,
+                layout);
+            g_free(tmp);
+        }
+        g_object_unref (gc1);
+        g_object_unref (gc2);
+    }
+
+    pango_font_description_free (fontdesc);
+    g_object_unref (layout);
+
+    return;
+}
+
+static void
+draw_sat_details(GtkWidget *widget, guint x0, guint y0,
+        guint width, guint height)
+{
+    guint i, j, x, y, size, halfsize, xoffset, yoffset;
+    guint x1, y1;
+    gfloat tmp;
+    GdkColor color;
+    GdkGC *gc1, *gc2, *gc3, *gc;
+    PangoContext *context = NULL;
+    PangoLayout *layout = NULL;
+    PangoFontDescription *fontdesc = NULL;
+    gchar *buffer = NULL;
+
+    size = MIN(width, height);
+    halfsize = size/2;
+    if(width > height)
+    {
+        xoffset = x0 + (width - height - 10) / 2;
+        yoffset = y0 + 5;
+    }
+    else
+    {
+        xoffset = x0 + 5;
+        yoffset = y0 + (height - width - 10) / 2;
+    }
+
+    context = gtk_widget_get_pango_context(widget);
+    layout = pango_layout_new(context);
+    fontdesc =  pango_font_description_new();
+
+    pango_font_description_set_family(fontdesc,"Sans Serif");
+    pango_font_description_set_size(fontdesc, 10*PANGO_SCALE);
+    pango_layout_set_font_description (layout, fontdesc);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
+
+    /* 90 */
+    gdk_draw_arc(widget->window,
+            widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
+            FALSE,
+            xoffset + 2, yoffset + 2, size - 4, size - 4,
+            0, 64 * 360);
+
+    /* 60 */
+    gdk_draw_arc(widget->window,
+            widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
+            FALSE,
+            xoffset + size/6, yoffset + size/6,
+            size/6*4, size/6*4,
+            0, 64 * 360);
+
+    /* 30 */
+    gdk_draw_arc(widget->window,
+            widget->style->fg_gc[GTK_WIDGET_STATE(widget)],
+            FALSE,
+            xoffset + size/6*2, yoffset + size/6*2,
+            size/6*2, size/6*2,
+            0, 64 * 360);
+
+    guint line[12] = {0,30,60,90,120,150,180,210,240,270,300,330};
+
+    for(i = 0; i < 6; i++)
+    {
+        /* line */
+        tmp = (line[i] * (1.f / 180.f)) * PI;
+        gdk_draw_line(widget->window,
+            widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+            xoffset + halfsize + (halfsize -2) * sinf(tmp),
+            yoffset + halfsize - (halfsize -2) * cosf(tmp),
+            xoffset + halfsize - (halfsize -2) * sinf(tmp),
+            yoffset + halfsize + (halfsize -2) * cosf(tmp));
+    }
+
+    for(i = 0; i < 12; i++)
+    {
+        tmp = (line[i] * (1.f / 180.f)) * PI;
+        /* azimuth */
+        if(line[i] == 0)
+            buffer = g_strdup_printf("N");
+        else
+            buffer = g_strdup_printf("%d\u00b0", line[i]);
+        pango_layout_set_text(layout, buffer, strlen(buffer));
+        pango_layout_get_pixel_size(layout, &x, &y);
+        gdk_draw_layout(widget->window,
+            widget->style->fg_gc[GTK_STATE_NORMAL],
+            (xoffset + halfsize + (halfsize - size/12) * sinf(tmp)) - x/2,
+            (yoffset + halfsize - (halfsize - size/12) * cosf(tmp)) - y/2,
+            layout);
+        g_free(buffer);
+    }
+
+    /* elevation 30 */
+    tmp = (30 * (1.f / 180.f)) * PI;
+    buffer = g_strdup_printf("30\u00b0");
+    pango_layout_set_text(layout, buffer, strlen(buffer));
+    pango_layout_get_pixel_size(layout, &x, &y);
+    gdk_draw_layout(widget->window,
+        widget->style->fg_gc[GTK_STATE_NORMAL],
+        (xoffset + halfsize + size/6*2 * sinf(tmp)) - x/2,
+        (yoffset + halfsize - size/6*2 * cosf(tmp)) - y/2,
+        layout);
+    g_free(buffer);
+
+    /* elevation 60 */
+    tmp = (30 * (1.f / 180.f)) * PI;
+    buffer = g_strdup_printf("60\u00b0");
+    pango_layout_set_text(layout, buffer, strlen(buffer));
+    pango_layout_get_pixel_size(layout, &x, &y);
+    gdk_draw_layout(widget->window,
+        widget->style->fg_gc[GTK_STATE_NORMAL],
+        (xoffset + halfsize + size/6 * sinf(tmp)) - x/2,
+        (yoffset + halfsize - size/6 * cosf(tmp)) - y/2,
+        layout);
+    g_free(buffer);
+
+    color.red = 0;
+    color.green = 0;
+    color.blue = 0;
+    gc1 = gdk_gc_new (widget->window);
+    gdk_gc_set_rgb_fg_color (gc1, &color);
+
+    color.red = 0;
+    color.green = 0;
+    color.blue = 0xffff;
+    gc2 = gdk_gc_new (widget->window);
+    gdk_gc_set_rgb_fg_color (gc2, &color);
+
+    color.red = 0xffff;
+    color.green = 0xffff;
+    color.blue = 0xffff;
+    gc3 = gdk_gc_new (widget->window);
+    gdk_gc_set_rgb_fg_color (gc3, &color);
+
+    for(i = 0; i < _gps.satinview; i++)
+    {
+        /* satellite track */
+        tmp = (_gps_sat[i].azimuth * (1.f / 180.f)) * PI;
+        x = xoffset + halfsize + (90 - _gps_sat[i].elevation)
+            * halfsize / 90 * sinf(tmp);
+        y = yoffset + halfsize - (90 - _gps_sat[i].elevation)
+            * halfsize/90 * cosf(tmp);
+        gdk_draw_point (widget->window, gc2, x, y);
+
+        /* Sat used or not */
+        gc = gc1;
+        for(j = 0; j < _gps.satinuse ; j++)
+        {
+            if(_gps.satforfix[j] == _gps_sat[i].prn)
+            {
+                gc = gc2;
+                break;
+            }
+        }
+
+        tmp = (_gps_sat[i].azimuth * (1.f / 180.f)) * PI;
+        x = xoffset + halfsize
+            + (90 - _gps_sat[i].elevation)*halfsize/90 * sinf(tmp);
+        y = yoffset + halfsize
+            - (90 - _gps_sat[i].elevation)*halfsize/90 * cosf(tmp);
+
+        gdk_draw_arc (widget->window,
+            gc, TRUE,
+            x - 10, y - 10, 20, 20,
+            0, 64 * 360);
+
+        buffer = g_strdup_printf("%02d", _gps_sat[i].prn);
+        pango_layout_set_text(layout, buffer, strlen(buffer));
+        pango_layout_get_pixel_size(layout, &x1, &y1);
+        gdk_draw_layout(widget->window,
+            gc3,
+            x - x1/2,
+            y - y1/2,
+            layout);
+        g_free(buffer);
+    }
+    g_object_unref (gc1);
+    g_object_unref (gc2);
+    g_object_unref (gc3);
+
+    pango_font_description_free (fontdesc);
+    g_object_unref (layout);
+
+    return;
+}
+
+
+static gboolean
+sat_details_panel_expose(GtkWidget *widget, GdkEventExpose *event)
+{
+    guint width, height, x, y;
+    PangoContext *context = NULL;
+    PangoLayout *layout = NULL;
+    PangoFontDescription *fontdesc = NULL;
+    gchar *buffer = NULL;
+
+    width = widget->allocation.width;
+    height = widget->allocation.height * 0.9;
+
+    draw_sat_info(widget, 0, 0, width/2, height, TRUE);
+    draw_sat_details(widget, width/2, 0, width/2, height);
+
+    context = gtk_widget_get_pango_context(widget);
+    layout = pango_layout_new(context);
+    fontdesc =  pango_font_description_new();
+
+    pango_font_description_set_family(fontdesc,"Sans Serif");
+    pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
+    pango_font_description_set_size(fontdesc, 14*PANGO_SCALE);
+    pango_layout_set_font_description (layout, fontdesc);
+
+    buffer = g_strdup_printf(
+        _("Satellites in view: %d; in use: %d"),
+        _gps.satinview,
+        _gps.satinuse);
+    pango_layout_set_text(layout, buffer, strlen(buffer));
+    pango_layout_get_pixel_size(layout, &x, &y);
+    gdk_draw_layout(widget->window,
+        widget->style->fg_gc[GTK_STATE_NORMAL],
+        10,
+        height*0.9 + 10,
+        layout);
+    g_free(buffer);
+
+    buffer = g_strdup_printf(_("HDOP: %.01f"), _gps.hdop);
+    pango_layout_set_text(layout, buffer, strlen(buffer));
+    pango_layout_get_pixel_size(layout, &x, &y);
+    gdk_draw_layout(widget->window,
+        widget->style->fg_gc[GTK_STATE_NORMAL],
+        (width/8) - x/2,
+        (height/6) - y/2,
+        layout);
+    g_free(buffer);
+    buffer = g_strdup_printf(_("PDOP: %.01f"), _gps.pdop);
+    pango_layout_set_text(layout, buffer, strlen(buffer));
+    pango_layout_get_pixel_size(layout, &x, &y);
+    gdk_draw_layout(widget->window,
+        widget->style->fg_gc[GTK_STATE_NORMAL],
+        (width/8) - x/2,
+        (height/6) - y/2 + 20,
+        layout);
+    g_free(buffer);
+    buffer = g_strdup_printf(_("VDOP: %.01f"), _gps.vdop);
+    pango_layout_set_text(layout, buffer, strlen(buffer));
+    pango_layout_get_pixel_size(layout, &x, &y);
+    gdk_draw_layout(widget->window,
+        widget->style->fg_gc[GTK_STATE_NORMAL],
+        (width/8) - x/2,
+        (height/6) - y/2 + 40,
+        layout);
+    g_free(buffer);
+
+    pango_font_description_free (fontdesc);
+    g_object_unref (layout);
+
+    return TRUE;
+}
+
+static void
+gps_details(void)
+{
+    GtkWidget *dialog;
+    GtkWidget *table;
+    GtkWidget *label;
+    GtkWidget *notebook;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    dialog = gtk_dialog_new_with_buttons(_("GPS Details"),
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            NULL);
+
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 600, 300);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+            notebook = gtk_notebook_new(), TRUE, TRUE, 0);
+
+    /* textual info */
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+            table = gtk_table_new(4, 6, FALSE),
+            label = gtk_label_new(_("GPS Information")));
+
+    _sat_details_panel = gtk_drawing_area_new ();
+    gtk_widget_set_size_request (_sat_details_panel, 300, 300);
+    /* sat details info */
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+            _sat_details_panel,
+            label = gtk_label_new(_("Satellites details")));
+    g_signal_connect (G_OBJECT (_sat_details_panel), "expose_event",
+                        G_CALLBACK (sat_details_panel_expose), NULL);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Latitude")),
+            0, 1, 0, 1, GTK_EXPAND | GTK_FILL, 0, 20, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            _sdi_lat = gtk_label_new(" --- "),
+            1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(_sdi_lat), 0.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Longitude")),
+            0, 1, 1, 2, GTK_EXPAND | GTK_FILL, 0, 20, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            _sdi_lon = gtk_label_new(" --- "),
+            1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(_sdi_lon), 0.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Speed")),
+            0, 1, 2, 3, GTK_EXPAND | GTK_FILL, 0, 20, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            _sdi_spd = gtk_label_new(" --- "),
+            1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(_sdi_spd), 0.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Altitude")),
+            0, 1, 3, 4, GTK_EXPAND | GTK_FILL, 0, 20, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            _sdi_alt = gtk_label_new(" --- "),
+            1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(_sdi_alt), 0.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Heading")),
+            0, 1, 4, 5, GTK_EXPAND | GTK_FILL, 0, 20, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            _sdi_hea = gtk_label_new(" --- "),
+            1, 2, 4, 5, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(_sdi_hea), 0.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Local time")),
+            0, 1, 5, 6, GTK_EXPAND | GTK_FILL, 0, 20, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            _sdi_tim = gtk_label_new(_(" --:--:-- ")),
+            1, 2, 5, 6, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(_sdi_tim), 0.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Sat in view")),
+            2, 3, 0, 1, GTK_EXPAND | GTK_FILL, 0, 20, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            _sdi_vie = gtk_label_new("0"),
+            3, 4, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(_sdi_vie), 0.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Sat in use")),
+            2, 3, 1, 2, GTK_EXPAND | GTK_FILL, 0, 20, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            _sdi_use = gtk_label_new("0"),
+            3, 4, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(_sdi_use), 0.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Fix")),
+            2, 3, 2, 3, GTK_EXPAND | GTK_FILL, 0, 20, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            _sdi_fix = gtk_label_new(_("nofix")),
+            3, 4, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(_sdi_fix), 0.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Fix Quality")),
+            2, 3, 3, 4, GTK_EXPAND | GTK_FILL, 0, 20, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            _sdi_fqu = gtk_label_new(_("none")),
+            3, 4, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(_sdi_fix), 0.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Max speed")),
+            2, 3, 5, 6, GTK_EXPAND | GTK_FILL, 0, 20, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            _sdi_msp = gtk_label_new(" --- "),
+            3, 4, 5, 6, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(_sdi_msp), 0.f, 0.5f);
+
+    gtk_widget_show_all(dialog);
+    _satdetails_on = TRUE;
+    gps_display_details();
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        _satdetails_on = FALSE;
+        break;
+    }
+    gtk_widget_destroy(dialog);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
 static gfloat
 calculate_distance(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2)
 {
@@ -854,15 +1794,13 @@ calculate_distance(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2)
 
     dlat = lat2 - lat1;
     dlon = lon2 - lon1;
-    
+
     slat = sinf(dlat / 2.f);
     slon = sinf(dlon / 2.f);
     a = (slat * slat) + (cosf(lat1) * cosf(lat2) * slon * slon);
 
-    return (2.f * atan2f(sqrtf(a), sqrtf(1.f - a))) *
-            (!strcmp(_units, UNITS_MI) ? EARTH_RADIUS_MI :
-             !strcmp(_units, UNITS_NM) ? EARTH_RADIUS_NM : 
-             EARTH_RADIUS_KM);
+    return ((2.f * atan2f(sqrtf(a), sqrtf(1.f - a))) * EARTH_RADIUS)
+        * UNITS_CONVERT[_units];
 }
 
 /**
@@ -880,6 +1818,88 @@ popup_error(GtkWidget *window, const gchar *error)
     gtk_widget_destroy(dialog);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+db_connect()
+{
+    gchar buffer[100];
+    gchar *perror;
+    gchar **pszResult;
+    guint nRow, nColumn;
+
+    _dbconn = FALSE;
+
+    if(!_poi_db)
+        return;
+
+    if((_db = sqlite_open(_poi_db, 0666, &perror)) == NULL)
+    {
+        gchar buffer2[200];
+        sprintf(buffer2, "%s: %s", _("Problem with POI database"), perror);
+        popup_error(_window, buffer2);
+        g_free(perror);
+        return;
+    }
+
+    if(sqlite_get_table(_db, "select label from poi limit 1",
+        &pszResult, &nRow, &nColumn, NULL) != SQLITE_OK)
+    {
+        if(SQLITE_OK != sqlite_exec(_db,
+                "create table poi (poi_id integer PRIMARY KEY, lat real, "
+                "lon real, label text, desc text, cat_id integer);"
+                "create table category (cat_id integer PRIMARY KEY,"
+                "label text, desc text, enabled integer);"
+                "insert into category (label, desc, enabled) "
+                "values ('Fuel',"
+                  "'Stations for purchasing fuel for vehicles.', 1);"
+                "insert into category (label, desc, enabled) "
+                "values ('Residence', "
+                  "'Houses, apartments, or other residences of import.', 1);"
+                "insert into category (label, desc, enabled) "
+                "values ('Dining', "
+                  "'Places to eat or drink.', 1);"
+                "insert into category (label, desc, enabled) "
+                "values ('Shopping/Services', "
+                  "'Places to shop or acquire services.', 1);"
+                "insert into category (label, desc, enabled) "
+                "values ('Recreation', "
+                  "'Indoor or Outdoor places to have fun.', 1);"
+                "insert into category (label, desc, enabled) "
+                "values ('Transportation', "
+                  "'Bus stops, airports, train stations, etc.', 1);"
+                "insert into category (label, desc, enabled) "
+                "values ('Lodging', "
+                  "'Places to stay temporarily or for the night.', 1);"
+                "insert into category (label, desc, enabled) "
+                "values ('School', "
+                  "'Elementary schools, college campuses, etc.', 1);"
+                "insert into category (label, desc, enabled) "
+                "values ('Business', "
+                  "'General places of business.', 1);"
+                "insert into category (label, desc, enabled) "
+                "values ('Landmark', "
+                  "'General landmarks.', 1);"
+                "insert into category (label, desc, enabled) "
+                "values ('Other', "
+                  "'Miscellaneous category for everything else.', 1);",
+                NULL,
+                NULL,
+                &perror)
+                && (sqlite_get_table(_db, "select label from poi limit 1",
+                        &pszResult, &nRow, &nColumn, NULL) != SQLITE_OK))
+        {
+            sprintf(buffer, _("Failed to open or create database:\n%s"),
+                    _poi_db);
+            popup_error(_window, buffer);
+            sqlite_close(_db);
+            return;
+        }
+    }
+    else
+        sqlite_free_table(pszResult);
+
+    _dbconn = TRUE;
 }
 
 /**
@@ -1333,9 +2353,12 @@ track_add(time_t time, gboolean newly_fixed)
     Point pos = (time == 0 ? _pos_null : _pos);
     printf("%s(%u, %u)\n", __PRETTY_FUNCTION__, pos.unitx, pos.unity);
 
+    printf("A: %p\n", _track.tail);
+    printf("A.1: %d %d\n", _track.tail->point.unitx, _track.tail->point.unity);
     if(abs((gint)pos.unitx - _track.tail->point.unitx) > _draw_line_width
     || abs((gint)pos.unity - _track.tail->point.unity) > _draw_line_width)
     {
+        printf("B\n");
         if(time && _route.head
                 && (newly_fixed ? (route_find_nearest_point(), TRUE)
                                 : route_update_nears(TRUE)))
@@ -1343,16 +2366,19 @@ track_add(time_t time, gboolean newly_fixed)
             map_render_paths();
             MACRO_QUEUE_DRAW_AREA();
         }
+        printf("C\n");
         if(_show_tracks & TRACKS_MASK)
         {
             /* Instead of calling map_render_paths(), we'll draw the new line
              * ourselves and call gtk_widget_queue_draw_area(). */
             gint tx1, ty1, tx2, ty2;
+            printf("C.a\n");
             map_render_segment(_gc_track, _gc_track_break,
                     _track.tail->point.unitx, _track.tail->point.unity,
                     pos.unitx, pos.unity);
             if(time && _track.tail->point.unity)
             {
+                printf("C.b\n");
                 tx1 = unit2x(_track.tail->point.unitx);
                 ty1 = unit2y(_track.tail->point.unity);
                 tx2 = unit2x(pos.unitx);
@@ -1364,17 +2390,22 @@ track_add(time_t time, gboolean newly_fixed)
                         abs(ty1 - ty2) + (2 * _draw_line_width));
             }
         }
+        printf("D\n");
         MACRO_TRACK_INCREMENT_TAIL(_track);
+        printf("E\n");
 
         _track.tail->point = pos;
         _track.tail->time = time;
 
+        printf("F\n");
         if(_autoroute_data.enabled && !_autoroute_data.in_progress
                 && _near_point_dist_rough > 400)
         {
+            printf("F.a\n");
             _autoroute_data.in_progress = TRUE;
             g_idle_add((GSourceFunc)auto_route_dl_idle, NULL);
         }
+        printf("G\n");
 
         /* Keep the display on. */
         KEEP_DISPLAY_ON();
@@ -1382,35 +2413,24 @@ track_add(time_t time, gboolean newly_fixed)
 
     /* Check if we should announce upcoming waypoints. */
     if(time && _next_way_dist_rough
-            < (10 + (guint)_speed) * _announce_notice_ratio * 5)
+            < (20 + (guint)_speed) * _announce_notice_ratio * 3)
     {
         if(_enable_voice && strcmp(_next_way->desc, _last_spoken_phrase))
         {
             g_free(_last_spoken_phrase);
             _last_spoken_phrase = g_strdup(_next_way->desc);
-            printf("Sending to flite: %s\n", _last_spoken_phrase);
-            hildon_play_system_sound(
-                    "/usr/share/sounds/ui-information_note.wav");
-            osso_rpc_async_run(_osso,
-                    "com.nokia.flite",
-                    "/com/nokia/flite",
-                    "com.nokia.flite",
-                    "flite_tts",
-                    NULL,
-                    NULL,
-                    DBUS_TYPE_UINT32,
-                    getpid(),
-                    DBUS_TYPE_STRING,
-                    _last_spoken_phrase,
-                    DBUS_TYPE_UINT32,
-                    18,
-                    DBUS_TYPE_DOUBLE,
-                    _voice_speed,
-                    DBUS_TYPE_DOUBLE,
-                    _voice_pitch,
-                    DBUS_TYPE_STRING,
-                    g_strdup("cmu_us_kal"),
-                    DBUS_TYPE_INVALID);
+            if(!fork())
+            {
+                /* We are the fork child.  Synthesize the voice. */
+                hildon_play_system_sound(
+                        "/usr/share/sounds/ui-information_note.wav");
+                sleep(1);
+#               define _voice_synth_path "/usr/bin/flite"
+                printf("%s %s\n", _voice_synth_path, _last_spoken_phrase);
+                execl(_voice_synth_path, _voice_synth_path,
+                        "-t", _last_spoken_phrase, (char *)NULL);
+                exit(0);
+            }
         }
         hildon_banner_show_information(_window, NULL, _next_way->desc);
     }
@@ -1497,6 +2517,7 @@ rcvr_connect_now()
             rcvr_connect_later();
         else
         {
+            _gps_read_buf_pos = 0;
             _channel = g_io_channel_unix_new(_fd);
             g_io_channel_set_flags(_channel, G_IO_FLAG_NONBLOCK, NULL);
             _error_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
@@ -1583,6 +2604,8 @@ update_gcs()
             &_color_route_way);
     gdk_color_alloc(gtk_widget_get_colormap(_map_widget),
             &_color_route_nextway);
+    gdk_color_alloc(gtk_widget_get_colormap(_map_widget),
+            &_color_poi);
 
     if(_gc_mark)
     {
@@ -1594,6 +2617,7 @@ update_gcs()
         g_object_unref(_gc_route);
         g_object_unref(_gc_route_way);
         g_object_unref(_gc_route_nextway);
+        g_object_unref(_gc_poi);
     }
 
     /* _gc_mark is used to draw the mark when data is current. */
@@ -1644,52 +2668,14 @@ update_gcs()
     gdk_gc_set_line_attributes(_gc_route_nextway,
             _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 
+    /* _gc_poi is used to draw the default POI icon. */
+    _gc_poi = gdk_gc_new(_map_pixmap);
+    gdk_gc_set_foreground(_gc_poi, &_color_poi);
+    gdk_gc_set_background(_gc_poi, &_color_poi);
+    gdk_gc_set_line_attributes(_gc_poi,
+            _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-}
-
-/**
- * Change the map cache directory and update dependent variables.
- */
-static gboolean
-config_set_map_dir_name(gchar *new_map_dir_name)
-{
-    GnomeVFSURI *map_dir_uri;
-    gboolean retval = FALSE;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    /* Rest of the function devoted to making sure the directory exists. */
-    map_dir_uri = gnome_vfs_uri_new(new_map_dir_name);
-    if(!gnome_vfs_uri_exists(map_dir_uri))
-    {
-        GnomeVFSURI *parent, *curr_uri;
-        GList *list = NULL;
-
-        list = g_list_prepend(list, curr_uri = map_dir_uri);
-        while(GNOME_VFS_ERROR_NOT_FOUND == gnome_vfs_make_directory_for_uri(
-                        parent = gnome_vfs_uri_get_parent(curr_uri), 0755))
-            list = g_list_prepend(list, curr_uri = parent);
-
-        while(list != NULL)
-        {
-            retval = (GNOME_VFS_OK == gnome_vfs_make_directory_for_uri(
-                        (GnomeVFSURI*)list->data, 0755));
-            gnome_vfs_uri_unref((GnomeVFSURI*)list->data);
-            list = g_list_remove(list, list->data);
-        }
-        /* Retval now equals result of last make-dir attempt. */
-    }
-    else
-        retval = TRUE;
-
-    if(retval)
-    {
-        if(_map_dir_name)
-            g_free(_map_dir_name);
-        _map_dir_name = new_map_dir_name;
-    }
-
-    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, retval);
-    return retval;
 }
 
 /**
@@ -1722,18 +2708,17 @@ config_save()
             GCONF_KEY_RCVR_CHAN, _rcvr_addr.rc_channel, NULL);
 
     /* Save Map Download URI Format. */
-    if(_map_uri_format)
-        gconf_client_set_string(gconf_client,
-                GCONF_KEY_MAP_URI_FORMAT, _map_uri_format, NULL);
+    gconf_client_set_string(gconf_client,
+            GCONF_KEY_MAP_URI_FORMAT, _curr_repo->url, NULL);
 
     /* Save Map Download Zoom Steps. */
     gconf_client_set_int(gconf_client,
-            GCONF_KEY_MAP_ZOOM_STEPS, _zoom_steps, NULL);
+            GCONF_KEY_MAP_ZOOM_STEPS, _curr_repo->dl_zoom_steps, NULL);
 
     /* Save Map Cache Directory. */
-    if(_map_dir_name)
+    if(_curr_repo->cache_dir)
         gconf_client_set_string(gconf_client,
-            GCONF_KEY_MAP_DIR_NAME, _map_dir_name, NULL);
+            GCONF_KEY_MAP_DIR_NAME, _curr_repo->cache_dir, NULL);
 
     /* Save Auto-Download. */
     gconf_client_set_bool(gconf_client,
@@ -1765,7 +2750,11 @@ config_save()
 
     /* Save Units. */
     gconf_client_set_string(gconf_client,
-            GCONF_KEY_UNITS, _units, NULL);
+            GCONF_KEY_UNITS, UNITS_TEXT[_units], NULL);
+
+    /* Save Escape Key Function. */
+    gconf_client_set_string(gconf_client,
+            GCONF_KEY_ESCAPE_KEY, ESCAPE_KEY_TEXT[_escape_key], NULL);
 
     /* Save last saved latitude. */
     gconf_client_set_float(gconf_client,
@@ -1798,6 +2787,38 @@ config_save()
         gconf_client_set_string(gconf_client,
                 GCONF_KEY_ROUTEDIR, _route_dir_uri, NULL);
 
+    /* Save the repositories. */
+    {
+        GList *curr = _repo_list;
+        GSList *temp_list = NULL;
+        gint curr_repo_index = 0;
+        
+        for(curr = _repo_list; curr != NULL; curr = curr->next)
+        {
+            /* Build from each part of a repo, delimited by newline characters:
+             * 1. url
+             * 2. cache_dir
+             * 3. dl_zoom_steps
+             * 4. view_zoom_steps
+             */
+            RepoData *rd = curr->data;
+            gchar buffer[1024];
+            sprintf(buffer, "%s\n%s\n%s\n%d\n%d\n",
+                    rd->name,
+                    rd->url,
+                    rd->cache_dir,
+                    rd->dl_zoom_steps,
+                    rd->view_zoom_steps);
+            temp_list = g_slist_append(temp_list, g_strdup(buffer));
+            if(rd == _curr_repo)
+                gconf_client_set_int(gconf_client,
+                        GCONF_KEY_CURRREPO, curr_repo_index, NULL);
+            curr_repo_index++;
+        }
+        gconf_client_set_list(gconf_client,
+                GCONF_KEY_REPOSITORIES, GCONF_VALUE_STRING, temp_list, NULL);
+    }
+
     /* Save Last Track File. */
     if(_track_file_uri)
         gconf_client_set_string(gconf_client,
@@ -1826,6 +2847,10 @@ config_save()
     /* Save Route Locations. */
     gconf_client_set_list(gconf_client,
             GCONF_KEY_ROUTE_LOCATIONS, GCONF_VALUE_STRING, _loc_list, NULL);
+
+    /* Save GPS Info flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_GPS_INFO, _gps_info, NULL);
 
     /* Save Colors. */
     sprintf(buffer, "#%02x%02x%02x",
@@ -1883,6 +2908,24 @@ config_save()
             _color_route_nextway.blue >> 8);
     gconf_client_set_string(gconf_client,
             GCONF_KEY_COLOR_ROUTE_NEXTWAY, buffer, NULL);
+
+    sprintf(buffer, "#%02x%02x%02x",
+            _color_poi.red >> 8,
+            _color_poi.green >> 8,
+            _color_poi.blue >> 8);
+    gconf_client_set_string(gconf_client,
+            GCONF_KEY_COLOR_POI, buffer, NULL);
+
+    /* Save POI database. */
+    if(_poi_db)
+        gconf_client_set_string(gconf_client,
+                GCONF_KEY_POI_DB, _poi_db, NULL);
+    else
+        gconf_client_unset(gconf_client, GCONF_KEY_POI_DB, NULL);
+
+   /* Save Show POI below zoom. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_POI_ZOOM, _poi_zoom, NULL);
 
     g_object_unref(gconf_client);
 
@@ -2047,28 +3090,28 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
 typedef struct _BrowseInfo BrowseInfo;
 struct _BrowseInfo {
     GtkWidget *dialog;
-    GtkWidget *txt_map_dir_name;
+    GtkWidget *txt;
 };
 
 static gboolean
-settings_dialog_browse(GtkWidget *widget, BrowseInfo *browse_info)
+settings_dialog_browse_forfile(GtkWidget *widget, BrowseInfo *browse_info)
 {
     GtkWidget *dialog;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     dialog = GTK_WIDGET(
             hildon_file_chooser_dialog_new(GTK_WINDOW(browse_info->dialog),
-            GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER));
+            GTK_FILE_CHOOSER_ACTION_OPEN));
 
     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
-            gtk_entry_get_text(GTK_ENTRY(browse_info->txt_map_dir_name)));
+            gtk_entry_get_text(GTK_ENTRY(browse_info->txt)));
 
     if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
         gchar *filename = gtk_file_chooser_get_filename(
                 GTK_FILE_CHOOSER(dialog));
-        gtk_entry_set_text(GTK_ENTRY(browse_info->txt_map_dir_name), filename);
+        gtk_entry_set_text(GTK_ENTRY(browse_info->txt), filename);
         g_free(filename);
     }
 
@@ -2077,6 +3120,7 @@ settings_dialog_browse(GtkWidget *widget, BrowseInfo *browse_info)
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
+
 
 typedef struct _ColorsDialogInfo ColorsDialogInfo;
 struct _ColorsDialogInfo {
@@ -2088,6 +3132,7 @@ struct _ColorsDialogInfo {
     GtkWidget *col_route;
     GtkWidget *col_route_way;
     GtkWidget *col_route_nextway;
+    GtkWidget *col_poi;
 };
 
 static gboolean
@@ -2117,6 +3162,9 @@ settings_dialog_colors_reset(GtkWidget *widget, ColorsDialogInfo *cdi)
     hildon_color_button_set_color(
             HILDON_COLOR_BUTTON(cdi->col_route_nextway),
             &DEFAULT_COLOR_ROUTE_NEXTWAY);
+    hildon_color_button_set_color(
+            HILDON_COLOR_BUTTON(cdi->col_poi),
+            &DEFAULT_COLOR_POI);
     return TRUE;
 }
 
@@ -2203,6 +3251,17 @@ settings_dialog_colors(GtkWidget *widget, GtkWidget *parent)
             3, 4, 2, 3, 0, 0, 2, 4);
     hildon_color_button_set_color(
             HILDON_COLOR_BUTTON(cdi.col_route_nextway), &_color_route_nextway);
+    
+    /* POI. */
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("POI")),
+            0, 1, 3, 4, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            cdi.col_poi = hildon_color_button_new(),
+            1, 2, 3, 4, 0, 0, 2, 4);
+    hildon_color_button_set_color(
+            HILDON_COLOR_BUTTON(cdi.col_poi), &_color_poi);
 
     gtk_widget_show_all(dialog);
 
@@ -2242,6 +3301,10 @@ settings_dialog_colors(GtkWidget *widget, GtkWidget *parent)
                 HILDON_COLOR_BUTTON(cdi.col_route_nextway));
         _color_route_nextway = *color;
 
+        color = hildon_color_button_get_color(
+                HILDON_COLOR_BUTTON(cdi.col_poi));
+        _color_poi = *color;
+
         update_gcs();
         break;
     }
@@ -2267,9 +3330,6 @@ settings_dialog()
     GtkWidget *label;
     GtkWidget *txt_rcvr_mac;
     GtkWidget *num_rcvr_chan;
-    GtkWidget *txt_map_uri_format;
-    GtkWidget *txt_map_dir_name;
-    GtkWidget *num_zoom_steps;
     GtkWidget *num_center_ratio;
     GtkWidget *num_lead_ratio;
     GtkWidget *num_announce_notice;
@@ -2279,9 +3339,14 @@ settings_dialog()
     GtkWidget *num_draw_line_width;
     GtkWidget *chk_always_keep_on;
     GtkWidget *cmb_units;
+    GtkWidget *cmb_escape_key;
     GtkWidget *btn_scan;
-    GtkWidget *btn_browse;
     GtkWidget *btn_colors;
+
+    GtkWidget *txt_poi_db;
+    GtkWidget *btn_browsepoi;
+    GtkWidget *num_poi_zoom;
+
     BrowseInfo browse_info = {0, 0};
     ScanInfo scan_info = {0};
     gboolean rcvr_changed = FALSE;
@@ -2339,49 +3404,6 @@ settings_dialog()
             0, 2, 2, 3, GTK_FILL, 0, 2, 4);
     gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
     gtk_misc_set_alignment(GTK_MISC(label), 0.5f, 0.5f);
-
-
-    /* Maps page. */
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-            table = gtk_table_new(2, 3, FALSE),
-            label = gtk_label_new(_("Maps")));
-
-    /* Map download URI. */
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("URI Format")),
-            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            txt_map_uri_format = gtk_entry_new(),
-            1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-
-    /* Zoom Steps. */
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Zoom Steps")),
-            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-            1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-    gtk_container_add(GTK_CONTAINER(label),
-            num_zoom_steps = hildon_controlbar_new());
-    hildon_controlbar_set_range(HILDON_CONTROLBAR(num_zoom_steps), 1, 4);
-    force_min_visible_bars(HILDON_CONTROLBAR(num_zoom_steps), 1);
-
-    /* Map Directory. */
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Cache Dir.")),
-            0, 1, 2, 3, GTK_FILL, 0, 2, 4);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            hbox = gtk_hbox_new(FALSE, 4),
-            1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-    gtk_box_pack_start(GTK_BOX(hbox),
-            txt_map_dir_name = gtk_entry_new(),
-            TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox),
-            btn_browse = gtk_button_new_with_label(_("Browse...")),
-            FALSE, FALSE, 0);
 
 
     /* Auto-Center page. */
@@ -2491,40 +3513,92 @@ settings_dialog()
 
     /* Units. */
     gtk_table_attach(GTK_TABLE(table),
+            hbox = gtk_hbox_new(FALSE, 4),
+            0, 2, 2, 3, GTK_FILL, 0, 2, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
             label = gtk_label_new(_("Units")),
+            FALSE, FALSE, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+            TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(label),
+            cmb_units = gtk_combo_box_new_text());
+    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_KM_TEXT);
+    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_MI_TEXT);
+    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_NM_TEXT);
+
+    /* Escape Key. */
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_label_new(_("Escape Key")),
+            FALSE, FALSE, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+            TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(label),
+            cmb_escape_key = gtk_combo_box_new_text());
+    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_escape_key),
+            ESCAPE_KEY_TOGGLE_TRACKS_TEXT);
+    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_escape_key),
+            ESCAPE_KEY_CHANGE_REPO_TEXT);
+    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_escape_key),
+            ESCAPE_KEY_RESET_BLUETOOTH_TEXT);
+
+    /* POI page */
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+            table = gtk_table_new(2, 3, FALSE),
+            label = gtk_label_new(_("POI")));
+
+    /* POI database. */
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("POI database")),
+            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            hbox = gtk_hbox_new(FALSE, 4),
+            1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            txt_poi_db = gtk_entry_new(),
+            TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            btn_browsepoi = gtk_button_new_with_label(_("Browse...")),
+            FALSE, FALSE, 0);
+
+    /* Show POI below zoom. */
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Show POI below zoom")),
             0, 1, 2, 3, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
             1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     gtk_container_add(GTK_CONTAINER(label),
-            cmb_units = gtk_combo_box_new_text());
-    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_KM);
-    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_MI);
-    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_NM);
+            num_poi_zoom = hildon_number_editor_new(0, MAX_ZOOM));
+
 
     /* Connect signals. */
     scan_info.settings_dialog = dialog;
     scan_info.txt_rcvr_mac = txt_rcvr_mac;
     g_signal_connect(G_OBJECT(btn_scan), "clicked",
                       G_CALLBACK(scan_bluetooth), &scan_info);
-    browse_info.dialog = dialog;
-    browse_info.txt_map_dir_name = txt_map_dir_name;
-    g_signal_connect(G_OBJECT(btn_browse), "clicked",
-                      G_CALLBACK(settings_dialog_browse), &browse_info);
     g_signal_connect(G_OBJECT(btn_colors), "clicked",
                       G_CALLBACK(settings_dialog_colors), dialog);
+
+    browse_info.dialog = dialog;
+    browse_info.txt = txt_poi_db;
+    g_signal_connect(G_OBJECT(btn_browsepoi), "clicked",
+                      G_CALLBACK(settings_dialog_browse_forfile), &browse_info);
 
     /* Initialize fields. */
     if(_rcvr_mac)
         gtk_entry_set_text(GTK_ENTRY(txt_rcvr_mac), _rcvr_mac);
     hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_rcvr_chan),
             _rcvr_addr.rc_channel);
-    if(_map_uri_format)
-        gtk_entry_set_text(GTK_ENTRY(txt_map_uri_format), _map_uri_format);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_zoom_steps), _zoom_steps);
-    if(_map_dir_name)
-        gtk_entry_set_text(GTK_ENTRY(txt_map_dir_name), _map_dir_name);
+    if(_poi_db)
+        gtk_entry_set_text(GTK_ENTRY(txt_poi_db), _poi_db);
+    hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_poi_zoom),
+            _poi_zoom);
     hildon_controlbar_set_value(HILDON_CONTROLBAR(num_center_ratio),
             _center_ratio);
     hildon_controlbar_set_value(HILDON_CONTROLBAR(num_lead_ratio),
@@ -2539,21 +3613,13 @@ settings_dialog()
             _draw_line_width);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_always_keep_on),
             !_always_keep_on);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_units),
-            !strcmp(_units, UNITS_MI) ? 1 :
-            !strcmp(_units, UNITS_NM) ? 2 : 0);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_units), _units);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_escape_key), _escape_key);
 
     gtk_widget_show_all(dialog);
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
-        if(!config_set_map_dir_name(gnome_vfs_expand_initial_tilde(
-                gtk_entry_get_text(GTK_ENTRY(txt_map_dir_name)))))
-        {
-            popup_error(dialog, _("Could not create Map Cache directory."));
-            continue;
-        }
-
         /* Set _rcvr_mac if necessary. */
         if(!*gtk_entry_get_text(GTK_ENTRY(txt_rcvr_mac)))
         {
@@ -2563,6 +3629,8 @@ settings_dialog()
                 g_free(_rcvr_mac);
                 _rcvr_mac = NULL;
                 rcvr_changed = TRUE;
+                gtk_widget_set_sensitive(
+                        GTK_WIDGET(_menu_gps_details_item), FALSE);
             }
             if(_enable_gps)
             {
@@ -2571,6 +3639,10 @@ settings_dialog()
                 popup_error(dialog, _("No GPS Receiver MAC Provided.\n"
                         "GPS Disabled."));
                 rcvr_changed = TRUE;
+                gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_details_item),
+                        FALSE);
+                gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_reset_item),
+                        FALSE);
             }
         }
         else if(!_rcvr_mac || strcmp(_rcvr_mac,
@@ -2592,17 +3664,6 @@ settings_dialog()
             rcvr_changed = TRUE;
         }
 
-        if(_map_uri_format)
-            g_free(_map_uri_format);
-        if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_map_uri_format))))
-            _map_uri_format = g_strdup(gtk_entry_get_text(
-                        GTK_ENTRY(txt_map_uri_format)));
-        else
-            _map_uri_format = NULL;
-
-        _zoom_steps = hildon_controlbar_get_value(
-                HILDON_CONTROLBAR(num_zoom_steps));
-
         _center_ratio = hildon_controlbar_get_value(
                 HILDON_CONTROLBAR(num_center_ratio));
 
@@ -2615,8 +3676,8 @@ settings_dialog()
         _always_keep_on = !gtk_toggle_button_get_active(
                 GTK_TOGGLE_BUTTON(chk_always_keep_on));
 
-        g_free(_units);
-        _units = gtk_combo_box_get_active_text(GTK_COMBO_BOX(cmb_units));
+        _units = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_units));
+        _escape_key = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_escape_key));
 
         _announce_notice_ratio = hildon_controlbar_get_value(
                 HILDON_CONTROLBAR(num_announce_notice));
@@ -2629,6 +3690,30 @@ settings_dialog()
 
         _enable_voice = gtk_toggle_button_get_active(
                 GTK_TOGGLE_BUTTON(chk_enable_voice));
+
+        if(_dbconn)
+        {
+            sqlite_close(_db);
+            _dbconn = FALSE;
+            gtk_widget_set_sensitive(_cmenu_add_poi, FALSE);
+            gtk_widget_set_sensitive(_cmenu_edit_poi, FALSE);
+            gtk_widget_set_sensitive(_menu_poi_item, FALSE);
+        }
+        if(_poi_db)
+            g_free(_poi_db);
+        if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_poi_db))))
+        {
+            _poi_db = g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_poi_db)));
+            db_connect();
+            gtk_widget_set_sensitive(_cmenu_add_poi, _dbconn);
+            gtk_widget_set_sensitive(_cmenu_edit_poi, _dbconn);
+            gtk_widget_set_sensitive(_menu_poi_item, _dbconn);
+        }
+        else
+            _poi_db = NULL;
+
+        _poi_zoom = hildon_number_editor_get_value(
+        HILDON_NUMBER_EDITOR(num_poi_zoom));
 
         update_gcs();
 
@@ -2675,32 +3760,6 @@ config_init()
     if(_rcvr_addr.rc_channel < 1)
         _rcvr_addr.rc_channel = 1;
 
-    /* Get Map Download URI Format.  Default is NULL. */
-    _map_uri_format = gconf_client_get_string(gconf_client,
-            GCONF_KEY_MAP_URI_FORMAT, NULL);
-
-    /* Get Map Download Zoom Steps.  Default is 2. */
-    _zoom_steps = gconf_client_get_int(gconf_client,
-            GCONF_KEY_MAP_ZOOM_STEPS, NULL);
-    if(!_zoom_steps)
-        _zoom_steps = 2;
-
-    /* Get Map Cache Directory.  Default is "~/apps/maemo-mapper". */
-    {
-        gchar *tmp = gconf_client_get_string(gconf_client,
-                GCONF_KEY_MAP_DIR_NAME, NULL);
-        if(!tmp)
-            tmp = g_strdup("~/apps/maemo-mapper");
-        if(!config_set_map_dir_name(gnome_vfs_expand_initial_tilde(tmp)))
-        {
-            popup_error(_window,
-                    _("Could not create Map Cache directory.\n"
-                    "Please set a valid Map Cache directory in the Settings"
-                    " dialog box."));
-        }
-        g_free(tmp);
-    }
-
     /* Get Auto-Download.  Default is FALSE. */
     _auto_download = gconf_client_get_bool(gconf_client,
             GCONF_KEY_AUTO_DOWNLOAD, NULL);
@@ -2731,7 +3790,7 @@ config_init()
         gconf_value_free(value);
     }
     else
-        _announce_notice_ratio = 6;
+        _announce_notice_ratio = 8;
 
     /* Get Enable Voice flag.  Default is TRUE. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ENABLE_VOICE, NULL);
@@ -2767,11 +3826,33 @@ config_init()
     _always_keep_on = gconf_client_get_bool(gconf_client,
             GCONF_KEY_ALWAYS_KEEP_ON, NULL);
 
-    /* Get Always Keep On flag.  Default is FALSE. */
-    _units = gconf_client_get_string(gconf_client,
-            GCONF_KEY_UNITS, NULL);
-    if(!_units)
-        _units = g_strdup(UNITS_KM);
+    /* Get Units.  Default is UNITS_KM. */
+    {
+        gchar *units_str = gconf_client_get_string(gconf_client,
+                GCONF_KEY_UNITS, NULL);
+        if(units_str == NULL)
+            _units = UNITS_KM;
+        else if(!strcmp(units_str, UNITS_MI_TEXT))
+            _units = UNITS_MI;
+        else if(!strcmp(units_str, UNITS_NM_TEXT))
+            _units = UNITS_NM;
+        else
+            _units = UNITS_KM;
+    }
+
+    /* Get Escape Key.  Default is ESCAPE_KEY_TOGGLE_TRACKS. */
+    {
+        gchar *escape_key_str = gconf_client_get_string(gconf_client,
+                GCONF_KEY_ESCAPE_KEY, NULL);
+        if(escape_key_str == NULL)
+            _escape_key = ESCAPE_KEY_TOGGLE_TRACKS;
+        else if(!strcmp(escape_key_str, ESCAPE_KEY_CHANGE_REPO_TEXT))
+            _escape_key = ESCAPE_KEY_CHANGE_REPO;
+        else if(!strcmp(escape_key_str, ESCAPE_KEY_RESET_BLUETOOTH_TEXT))
+            _escape_key = ESCAPE_KEY_RESET_BLUETOOTH;
+        else
+            _escape_key = ESCAPE_KEY_TOGGLE_TRACKS;
+    }
 
     /* Get last saved latitude.  Default is 0. */
     _pos_lat = gconf_client_get_float(gconf_client, GCONF_KEY_LAT, NULL);
@@ -2807,15 +3888,86 @@ config_init()
         latlon2unit(center_lat, center_lon, _center.unitx, _center.unity);
     }
 
+    /* Load the repositories. */
+    {
+        GSList *curr;
+        guint curr_repo_index = gconf_client_get_int(gconf_client,
+            GCONF_KEY_CURRREPO, NULL);
+        curr = gconf_client_get_list(gconf_client,
+            GCONF_KEY_REPOSITORIES, GCONF_VALUE_STRING, NULL);
+        
+        for(; curr != NULL; curr = curr->next)
+        {
+            /* Parse each part of a repo, delimited by newline characters:
+             * 1. url
+             * 2. cache_dir
+             * 3. dl_zoom_steps
+             * 4. view_zoom_steps
+             */
+            gchar *str = curr->data;
+            RepoData *rd = g_new(RepoData, 1);
+            rd->name = g_strdup(strsep(&str, "\n"));
+            rd->url = g_strdup(strsep(&str, "\n"));
+            rd->cache_dir = g_strdup(strsep(&str, "\n"));
+            rd->dl_zoom_steps = atoi(strsep(&str, "\n"));
+            if(rd->dl_zoom_steps == 0)
+                rd->dl_zoom_steps = 2;
+            rd->view_zoom_steps = atoi(strsep(&str, "\n"));
+            if(rd->view_zoom_steps == 0)
+                rd->view_zoom_steps = 1;
+
+            _repo_list = g_list_append(_repo_list, rd);
+            if(!curr_repo_index--)
+                _curr_repo = rd;
+            g_free(str);
+        }
+        g_slist_free(curr);
+    }
+
+    if(_repo_list == NULL)
+    {
+        /* We have no repositories - create a default one. */
+        _curr_repo = g_new(RepoData, 1);
+
+        /* Many fields can be retrieved from the "old" gconf keys. */
+
+        /* Get Map Cache Dir.  Default is ~/MyDocs/.documents/Maps. */
+        _curr_repo->cache_dir = gconf_client_get_string(gconf_client,
+                GCONF_KEY_MAP_DIR_NAME, NULL);
+
+        if(!_curr_repo->cache_dir)
+            _curr_repo->cache_dir = gnome_vfs_expand_initial_tilde(
+                    "~/MyDocs/.documents/Maps");
+
+        /* Get Map Download URI Format.  Default is "". */
+        _curr_repo->url = gconf_client_get_string(gconf_client,
+                GCONF_KEY_MAP_URI_FORMAT, NULL);
+        if(!_curr_repo->url)
+            _curr_repo->url = g_strdup("");
+
+        /* Get Map Download Zoom Steps.  Default is 2. */
+        _curr_repo->dl_zoom_steps = gconf_client_get_int(gconf_client,
+                GCONF_KEY_MAP_ZOOM_STEPS, NULL);
+        if(!_curr_repo->dl_zoom_steps)
+            _curr_repo->dl_zoom_steps = 2;
+
+        /* Other fields are brand new. */
+        _curr_repo->name = g_strdup("Default");
+        _curr_repo->view_zoom_steps = 1;
+        _repo_list = g_list_append(_repo_list, _curr_repo);
+    }
+
     /* Get last Zoom Level.  Default is 16. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ZOOM, NULL);
     if(value)
     {
-        _zoom = gconf_value_get_int(value);
+        _zoom = gconf_value_get_int(value) / _curr_repo->view_zoom_steps
+            * _curr_repo->view_zoom_steps;
         gconf_value_free(value);
     }
     else
-        _zoom = 16;
+        _zoom = 16 / _curr_repo->view_zoom_steps
+            * _curr_repo->view_zoom_steps;
     BOUND(_zoom, 0, MAX_ZOOM - 1);
     _world_size_tiles = unit2tile(WORLD_SIZE_UNITS);
 
@@ -2898,6 +4050,30 @@ config_init()
         }
     }
 
+    /* Get POI Database.  Default is in ~/MyDocs/.documents/Maps */
+    _poi_db = gconf_client_get_string(gconf_client,
+            GCONF_KEY_POI_DB, NULL);
+    if(_poi_db == NULL)
+        _poi_db = gnome_vfs_make_uri_full_from_relative(
+                _curr_repo->cache_dir, "poi.db");
+    db_connect();
+
+    _poi_zoom = gconf_client_get_int(gconf_client,
+            GCONF_KEY_POI_ZOOM, NULL);
+    if(!_poi_zoom)
+    _poi_zoom = 6;
+
+
+    /* Get GPS Info flag.  Default is FALSE. */
+    value = gconf_client_get(gconf_client, GCONF_KEY_GPS_INFO, NULL);
+    if(value)
+    {
+        _gps_info = gconf_value_get_bool(value);
+        gconf_value_free(value);
+    }
+    else
+        _gps_info = FALSE;
+
     /* Initialize colors. */
     str = gconf_client_get_string(gconf_client,
             GCONF_KEY_COLOR_MARK, NULL);
@@ -2939,9 +4115,76 @@ config_init()
     if(!str || !gdk_color_parse(str, &_color_route_nextway))
         _color_route_nextway = DEFAULT_COLOR_ROUTE_NEXTWAY;
 
+    str = gconf_client_get_string(gconf_client,
+            GCONF_KEY_COLOR_POI, NULL);
+    if(!str || !gdk_color_parse(str, &_color_poi))
+        _color_poi = DEFAULT_COLOR_POI;
+
 
     g_object_unref(gconf_client);
 
+    /* GPS data init */
+    _gps.fix = 1;
+    _gps.satinuse = 0;
+    _gps.satinview = 0;
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+menu_maps_remove_repos()
+{
+    GList *curr;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    
+    /* Delete one menu item for each repo. */
+    for(curr = _repo_list; curr; curr = curr->next)
+    {
+        gtk_widget_destroy(gtk_container_get_children(
+                    GTK_CONTAINER(_menu_maps_submenu))->data);
+    }
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+menu_maps_add_repos()
+{
+    GList *curr;
+    GtkWidget *last_repo = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    
+    for(curr = g_list_last(_repo_list); curr; curr = curr->prev)
+    {
+        RepoData *rd = (RepoData*)curr->data;
+        GtkWidget *menu_item;
+        if(last_repo)
+            gtk_menu_prepend(_menu_maps_submenu, menu_item
+                    = gtk_radio_menu_item_new_with_label_from_widget(
+                        GTK_RADIO_MENU_ITEM(last_repo), rd->name));
+        else
+        {
+            gtk_menu_prepend(_menu_maps_submenu, menu_item
+                    = gtk_radio_menu_item_new_with_label(NULL, rd->name));
+            last_repo = menu_item;
+        }
+        gtk_check_menu_item_set_active(
+                GTK_CHECK_MENU_ITEM(menu_item),
+                rd == _curr_repo);
+        rd->menu_item = menu_item;
+    }
+
+    /* Add signals (must be after entire menu is built). */
+    {
+        GList *currmi = gtk_container_get_children(
+                GTK_CONTAINER(_menu_maps_submenu));
+        for(curr = _repo_list; curr; curr = curr->next, currmi = currmi->next)
+        {
+            g_signal_connect(G_OBJECT(currmi->data), "activate",
+                             G_CALLBACK(menu_cb_maps_select), curr->data);
+        }
+    }
+
+    gtk_widget_show_all(_menu_maps_submenu);
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
@@ -2995,22 +4238,28 @@ menu_init()
     gtk_menu_append(menu, menu_item
             = gtk_menu_item_new_with_label(_("Maps")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
-            submenu = gtk_menu_new());
-    gtk_menu_append(submenu, _menu_maps_dlroute_item
-            = gtk_menu_item_new_with_label(_("Download Along Route")));
-    gtk_menu_append(submenu, _menu_maps_dlarea_item
-            = gtk_menu_item_new_with_label(_("Download Area...")));
-    gtk_menu_append(submenu, _menu_auto_download_item
+            _menu_maps_submenu = gtk_menu_new());
+    gtk_menu_append(_menu_maps_submenu, gtk_separator_menu_item_new());
+    gtk_menu_append(_menu_maps_submenu, _menu_maps_mapman_item
+            = gtk_menu_item_new_with_label(_("Manage Maps...")));
+    gtk_menu_append(_menu_maps_submenu, _menu_maps_repoman_item
+            = gtk_menu_item_new_with_label(_("Manage Repositories...")));
+    gtk_menu_append(_menu_maps_submenu, _menu_auto_download_item
             = gtk_check_menu_item_new_with_label(_("Auto-Download")));
     gtk_check_menu_item_set_active(
             GTK_CHECK_MENU_ITEM(_menu_auto_download_item), _auto_download);
+    menu_maps_add_repos(_curr_repo);
 
     gtk_menu_append(menu, gtk_separator_menu_item_new());
 
     gtk_menu_append(menu, menu_item
-            = gtk_menu_item_new_with_label(_("Show")));
+            = gtk_menu_item_new_with_label(_("View")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
             submenu = gtk_menu_new());
+    gtk_menu_append(submenu, _menu_fullscreen_item
+            = gtk_check_menu_item_new_with_label(_("Full Screen")));
+    gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(_menu_fullscreen_item), _fullscreen);
     gtk_menu_append(submenu, _menu_show_routes_item
             = gtk_check_menu_item_new_with_label(_("Route")));
     gtk_check_menu_item_set_active(
@@ -3025,6 +4274,10 @@ menu_init()
             = gtk_check_menu_item_new_with_label(_("Velocity Vector")));
     gtk_check_menu_item_set_active(
             GTK_CHECK_MENU_ITEM(_menu_show_velvec_item), _show_velvec);
+    gtk_menu_append(submenu, _menu_poi_item
+            = gtk_menu_item_new_with_label(_("POI Categories...")));
+    gtk_widget_set_sensitive(_menu_poi_item, _dbconn);
+
 
     gtk_menu_append(menu, menu_item
             = gtk_menu_item_new_with_label(_("Auto-Center")));
@@ -3048,15 +4301,24 @@ menu_init()
             GTK_CHECK_MENU_ITEM(_menu_ac_none_item),
             _center_mode < 0);
 
-    gtk_menu_append(menu, _menu_fullscreen_item
-            = gtk_check_menu_item_new_with_label(_("Full Screen")));
-    gtk_check_menu_item_set_active(
-            GTK_CHECK_MENU_ITEM(_menu_fullscreen_item), _fullscreen);
-
-    gtk_menu_append(menu, _menu_enable_gps_item
+    gtk_menu_append(menu, menu_item
+            = gtk_menu_item_new_with_label(_("GPS")));
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
+            submenu = gtk_menu_new());
+    gtk_menu_append(submenu, _menu_enable_gps_item
             = gtk_check_menu_item_new_with_label(_("Enable GPS")));
     gtk_check_menu_item_set_active(
             GTK_CHECK_MENU_ITEM(_menu_enable_gps_item), _enable_gps);
+    gtk_menu_append(submenu, _menu_gps_show_info_item
+            = gtk_check_menu_item_new_with_label(_("Show Information")));
+    gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(_menu_gps_show_info_item), _gps_info);
+    gtk_menu_append(submenu, _menu_gps_details_item
+            = gtk_menu_item_new_with_label(_("Details...")));
+    gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_details_item), _enable_gps);
+    gtk_menu_append(submenu, _menu_gps_reset_item
+        = gtk_menu_item_new_with_label(_("Reset Bluetooth")));
+    gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_reset_item), _enable_gps);
 
     gtk_menu_append(menu, gtk_separator_menu_item_new());
 
@@ -3101,10 +4363,13 @@ menu_init()
                       G_CALLBACK(menu_cb_show_routes), NULL);
     g_signal_connect(G_OBJECT(_menu_show_velvec_item), "toggled",
                       G_CALLBACK(menu_cb_show_velvec), NULL);
-    g_signal_connect(G_OBJECT(_menu_maps_dlroute_item), "activate",
-                      G_CALLBACK(menu_cb_maps_dlroute), NULL);
-    g_signal_connect(G_OBJECT(_menu_maps_dlarea_item), "activate",
-                      G_CALLBACK(menu_cb_maps_dlarea), NULL);
+    g_signal_connect(G_OBJECT(_menu_poi_item), "activate",
+                      G_CALLBACK(menu_cb_category), NULL);
+
+    g_signal_connect(G_OBJECT(_menu_maps_repoman_item), "activate",
+                      G_CALLBACK(menu_cb_maps_repoman), NULL);
+    g_signal_connect(G_OBJECT(_menu_maps_mapman_item), "activate",
+                      G_CALLBACK(menu_cb_mapman), NULL);
     g_signal_connect(G_OBJECT(_menu_ac_latlon_item), "toggled",
                       G_CALLBACK(menu_cb_ac_latlon), NULL);
     g_signal_connect(G_OBJECT(_menu_ac_lead_item), "toggled",
@@ -3115,6 +4380,12 @@ menu_init()
                       G_CALLBACK(menu_cb_fullscreen), NULL);
     g_signal_connect(G_OBJECT(_menu_enable_gps_item), "toggled",
                       G_CALLBACK(menu_cb_enable_gps), NULL);
+    g_signal_connect(G_OBJECT(_menu_gps_show_info_item), "toggled",
+                      G_CALLBACK(menu_cb_gps_show_info), NULL);
+    g_signal_connect(G_OBJECT(_menu_gps_details_item), "activate",
+                      G_CALLBACK(menu_cb_gps_details), NULL);
+    g_signal_connect(G_OBJECT(_menu_gps_reset_item), "activate",
+                      G_CALLBACK(menu_cb_gps_reset), NULL);
     g_signal_connect(G_OBJECT(_menu_auto_download_item), "toggled",
                       G_CALLBACK(menu_cb_auto_download), NULL);
     g_signal_connect(G_OBJECT(_menu_settings_item), "activate",
@@ -3143,7 +4414,13 @@ menu_init()
             = gtk_menu_item_new_with_label(_("Download Route to...")));
     gtk_menu_append(submenu, _cmenu_loc_distance_to_item
             = gtk_menu_item_new_with_label(_("Show Distance to")));
-
+    gtk_menu_append(submenu, gtk_separator_menu_item_new());
+    gtk_menu_append(submenu, _cmenu_add_poi
+                = gtk_menu_item_new_with_label(_("Add POI")));
+    gtk_widget_set_sensitive(_cmenu_add_poi, _dbconn);
+    gtk_menu_append(submenu, _cmenu_edit_poi
+                = gtk_menu_item_new_with_label(_("Edit POI")));
+    gtk_widget_set_sensitive(_cmenu_edit_poi, _dbconn);
 
     /* Setup the waypoint context menu. */
     gtk_menu_append(menu, menu_item
@@ -3176,6 +4453,10 @@ menu_init()
                       G_CALLBACK(cmenu_cb_loc_route_to), NULL);
     g_signal_connect(G_OBJECT(_cmenu_loc_distance_to_item), "activate",
                       G_CALLBACK(cmenu_cb_loc_distance_to), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_add_poi), "activate",
+                        G_CALLBACK(cmenu_cb_add_poi), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_edit_poi), "activate",
+                        G_CALLBACK(cmenu_cb_edit_poi), NULL);
     g_signal_connect(G_OBJECT(_cmenu_way_show_latlon_item), "activate",
                       G_CALLBACK(cmenu_cb_way_show_latlon), NULL);
     g_signal_connect(G_OBJECT(_cmenu_way_show_desc_item), "activate",
@@ -3215,6 +4496,7 @@ window_present()
         if(_rcvr_mac || !_enable_gps || settings_dialog())
         {
             gtk_widget_show_all(_window);
+            gps_show_info();
 
             /* Connect to receiver. */
             if(_enable_gps)
@@ -3394,7 +4676,7 @@ map_convert_coords_to_quadtree_string(int x, int y, int zoomlevel,gchar *buffer)
     gchar *ptr = buffer;
     int n;
     *ptr++ = 't';
-    for (n = 16 - zoomlevel; n >= 0; n--)
+    for(n = 16 - zoomlevel; n >= 0; n--)
     {
         int xbit = (x >> n) & 1;
         int ybit = (y >> n) & 1;
@@ -3412,16 +4694,16 @@ map_convert_coords_to_quadtree_string(int x, int y, int zoomlevel,gchar *buffer)
 static void
 map_construct_url(gchar *buffer, guint tilex, guint tiley, guint zoom)
 {
-    if(strstr(_map_uri_format, "%s"))
+    if(strstr(_curr_repo->url, "%s"))
     {
         /* This is a satellite-map URI. */
         gchar location[MAX_ZOOM + 2];
         map_convert_coords_to_quadtree_string(tilex, tiley, zoom, location);
-        sprintf(buffer, _map_uri_format, location);
+        sprintf(buffer, _curr_repo->url, location);
     }
     else
         /* This is a street-map URI. */
-        sprintf(buffer, _map_uri_format, tilex, tiley, zoom);
+        sprintf(buffer, _curr_repo->url, tilex, tiley, zoom);
 }
 
 
@@ -3431,29 +4713,33 @@ map_construct_url(gchar *buffer, guint tilex, guint tiley, guint zoom)
  * downloading the map, then this method does nothing.
  */
 static gboolean
-map_initiate_download(guint tilex, guint tiley, guint zoom, guint retries)
+map_initiate_download(guint tilex, guint tiley, guint zoom, gint retries)
 {
     gchar buffer[1024];
     GnomeVFSURI *src, *dest;
     GList *src_list, *dest_list;
     gint priority;
     ProgressUpdateInfo *pui;
-    vprintf("%s(%u, %u, %u, %u)\n", __PRETTY_FUNCTION__, tilex, tiley, zoom,
+    vprintf("%s(%u, %u, %u, %d)\n", __PRETTY_FUNCTION__, tilex, tiley, zoom,
             retries);
 
     pui = g_new(ProgressUpdateInfo, 1);
     pui->hash = tilex + (tiley << 12) + (zoom << 24);
+    pui->tilex = tilex;
+    pui->tiley = tiley;
+    pui->zoom = zoom;
     if(g_hash_table_lookup(_downloads_hash, pui))
     {
         /* Already downloading - return FALSE. */
         g_free(pui);
         return FALSE;
     }
-    sprintf(buffer, "%s/%u/%u/%u.jpg", _map_dir_name, zoom, tilex, tiley);
+    sprintf(buffer, "%s/%u/%u/%u.jpg", _curr_repo->cache_dir,
+            zoom, tilex, tiley);
     dest = gnome_vfs_uri_new(buffer);
-    if(gnome_vfs_uri_exists(dest))
+    if(retries > 0 && gnome_vfs_uri_exists(dest))
     {
-        /* Already downloaded - return FALSE. */
+        /* Already downloaded and not overwriting - return FALSE. */
         gnome_vfs_uri_unref(dest);
         g_free(pui);
         return FALSE;
@@ -3472,28 +4758,50 @@ map_initiate_download(guint tilex, guint tiley, guint zoom, guint retries)
     src_list = g_list_prepend(src_list = NULL, src);
     dest_list = g_list_prepend(dest_list = NULL, dest);
 
-    pui->tilex = tilex;
-    pui->tiley = tiley;
-    pui->zoom = zoom;
     pui->src_list = src_list;
     pui->dest_list = dest_list;
     pui->retries_left = retries;
 
     /* Initiate asynchronous download. */
-    if(GNOME_VFS_OK != gnome_vfs_async_xfer(
-                &pui->handle,
-                src_list, dest_list,
-                GNOME_VFS_XFER_USE_UNIQUE_NAMES, /* needed for dupe detect. */
-                GNOME_VFS_XFER_ERROR_MODE_QUERY,
-                GNOME_VFS_XFER_OVERWRITE_MODE_QUERY,
-                priority,
-                (GnomeVFSAsyncXferProgressCallback)map_download_cb_async,
-                pui,
-                (GnomeVFSXferProgressCallback)gtk_true,
-                NULL))
+    if(retries)
     {
-        progress_update_info_free(pui);
-        return FALSE;
+        /* This is a download; if retries < 0, then this is an overwrite */
+        if(GNOME_VFS_OK != gnome_vfs_async_xfer(
+                    &pui->handle,
+                    src_list, dest_list,
+                    retries < 0 ? GNOME_VFS_XFER_DEFAULT
+                                : GNOME_VFS_XFER_USE_UNIQUE_NAMES,
+                    GNOME_VFS_XFER_ERROR_MODE_QUERY,
+                    retries < 0 ? GNOME_VFS_XFER_OVERWRITE_MODE_REPLACE
+                                : GNOME_VFS_XFER_OVERWRITE_MODE_QUERY,
+                    priority,
+                    (GnomeVFSAsyncXferProgressCallback)map_download_cb_async,
+                    pui,
+                    (GnomeVFSXferProgressCallback)gtk_true,
+                    NULL))
+        {
+            progress_update_info_free(pui);
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* This is a deletion. */
+        if(GNOME_VFS_OK != gnome_vfs_async_xfer(
+                    &pui->handle,
+                    dest_list, NULL,
+                    GNOME_VFS_XFER_DELETE_ITEMS,
+                    GNOME_VFS_XFER_ERROR_MODE_QUERY,
+                    GNOME_VFS_XFER_OVERWRITE_MODE_QUERY,
+                    priority,
+                    (GnomeVFSAsyncXferProgressCallback)map_download_cb_async,
+                    pui,
+                    (GnomeVFSXferProgressCallback)gtk_true,
+                    NULL))
+        {
+            progress_update_info_free(pui);
+            return FALSE;
+        }
     }
 
     g_hash_table_insert(_downloads_hash, pui, pui);
@@ -3503,6 +4811,107 @@ map_initiate_download(guint tilex, guint tiley, guint zoom, guint retries)
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
+}
+
+static void
+map_render_poi()
+{
+    guint unitx, unity;
+    gfloat lat1, lat2, lon1, lon2, tmp;
+    gchar slat1[10], slat2[10], slon1[10], slon2[10];
+    gchar buffer[100], *sql;
+    gchar **pszResult;
+    gint nRow, nColumn, row, poix, poiy;
+    GdkPixbuf *pixbuf = NULL;
+    GError *error = NULL;
+
+    if(_db && _poi_zoom > _zoom)
+    {
+        unitx = x2unit(1);
+        unity = y2unit(1);
+        unit2latlon(unitx, unity, lat1, lon1);
+        unitx = x2unit(BUF_WIDTH_PIXELS);
+        unity = y2unit(BUF_HEIGHT_PIXELS);
+        unit2latlon(unitx, unity, lat2, lon2);
+        if(lat1 > lat2)
+        {
+            tmp = lat2;
+            lat2 = lat1;
+            lat1 = tmp;
+        }
+        if(lon1 > lon2)
+        {
+            tmp = lon2;
+            lon2 = lon1;
+            lon1 = tmp;
+        }
+
+        g_ascii_dtostr(slat1, sizeof(slat1), lat1);
+        g_ascii_dtostr(slat2, sizeof(slat2), lat2);
+        g_ascii_dtostr(slon1, sizeof(slon1), lon1);
+        g_ascii_dtostr(slon2, sizeof(slon2), lon2);
+
+        sql = g_strdup_printf(
+                "select p.lat, p.lon, lower(p.label), lower(c.label)"
+                " from poi p, category c "
+                " where p.lat between %s and %s "
+                " and p.lon  between %s and %s "
+                " and c.enabled = 1 and p.cat_id = c.cat_id",
+                slat1, slat2, slon1, slon2);
+
+        if(sqlite_get_table(_db, sql, &pszResult, &nRow, &nColumn, NULL)
+            == SQLITE_OK)
+        {
+            for(row=1; row<nRow+1; row++)
+            {
+                lat1 = g_ascii_strtod(pszResult[row*nColumn+0], NULL);
+                lon1 = g_ascii_strtod(pszResult[row*nColumn+1], NULL);
+                latlon2unit(lat1, lon1, unitx, unity);
+                poix = unit2bufx(unitx);
+                poiy = unit2bufy(unity);
+
+                /* Try to get icon for specific POI first. */
+                sprintf(buffer, "%s/poi/%s.jpg", _curr_repo->cache_dir,
+                    pszResult[row*nColumn+2]);
+                pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
+                if(error)
+                {
+                    /* No icon for specific POI - try for category. */
+                    error = NULL;
+                    sprintf(buffer, "%s/poi/%s.jpg", _curr_repo->cache_dir,
+                        pszResult[row*nColumn+3]);
+                    pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
+                }
+                if(error)
+                {
+                    /* No icon for POI or for category - draw default. */
+                    error = NULL;
+                    gdk_draw_rectangle(_map_pixmap, _gc_poi, TRUE,
+                        poix - (int)(0.5f * _draw_line_width),
+                        poiy - (int)(0.5f * _draw_line_width),
+                        3 * _draw_line_width,
+                        3 * _draw_line_width);
+                }
+                else
+                {
+                    gdk_draw_pixbuf(
+                            _map_pixmap,
+                            _gc_poi,
+                            pixbuf,
+                            0, 0,
+                            poix - gdk_pixbuf_get_width(pixbuf) / 2,
+                            poix - gdk_pixbuf_get_height(pixbuf) / 2,
+                            -1,-1,
+                            GDK_RGB_DITHER_NONE, 0, 0);
+                    g_object_unref(pixbuf);
+                }
+             }
+            sqlite_free_table(pszResult);
+        }
+        g_free(sql);
+    }
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 static void
@@ -3519,7 +4928,7 @@ map_render_tile(guint tilex, guint tiley, guint destx, guint desty,
         vprintf("%s(%u, %u, %u, %u)\n", __PRETTY_FUNCTION__,
                 tilex, tiley, destx, desty);
         sprintf(buffer, "%s/%u/%u/%u.jpg",
-            _map_dir_name, _zoom, tilex, tiley);
+            _curr_repo->cache_dir, _zoom, tilex, tiley);
         pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
 
         if(error)
@@ -3528,19 +4937,20 @@ map_render_tile(guint tilex, guint tiley, guint destx, guint desty,
             error = NULL;
         }
 
-        if(!pixbuf && !fast_fail && _auto_download && _map_uri_format
-                && !(_zoom % _zoom_steps))
+        if(!pixbuf && !fast_fail && _auto_download && *_curr_repo->url
+                && !(_zoom % _curr_repo->dl_zoom_steps))
         {
             map_initiate_download(tilex, tiley, _zoom,
                     INITIAL_DOWNLOAD_RETRIES);
             fast_fail = TRUE;
         }
 
-        for(zoff = 1; !pixbuf && (_zoom + zoff) <= MAX_ZOOM; zoff += 1)
+        for(zoff = 1; !pixbuf && (_zoom + zoff) <= MAX_ZOOM
+                && zoff <= TILE_SIZE_P2; zoff += 1)
         {
             /* Attempt to blit a wider map. */
             sprintf(buffer, "%s/%u/%u/%u.jpg",
-                    _map_dir_name, _zoom + zoff,
+                    _curr_repo->cache_dir, _zoom + zoff,
                     (tilex >> zoff), (tiley >> zoff));
             pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
             if(error)
@@ -3556,8 +4966,8 @@ map_render_tile(guint tilex, guint tiley, guint destx, guint desty,
             }
             else
             {
-                if(_auto_download && _map_uri_format
-                        && !((_zoom + zoff) % _zoom_steps))
+                if(_auto_download && *_curr_repo->url
+                        && !((_zoom + zoff) % _curr_repo->dl_zoom_steps))
                 {
                     if(!fast_fail)
                         map_initiate_download(
@@ -3611,6 +5021,7 @@ map_force_redraw()
                     FALSE);
         }
     map_render_paths();
+    map_render_poi();
     MACRO_QUEUE_DRAW_AREA();
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -3628,9 +5039,10 @@ map_set_zoom(guint new_zoom)
 
     /* Note that, since new_zoom is a guint and MIN_ZOOM is 0, this if
      * condition also checks for new_zoom >= MIN_ZOOM. */
-    if(new_zoom > (MAX_ZOOM - 1) || new_zoom == _zoom)
+    if(new_zoom > (MAX_ZOOM - 1))
         return;
-    _zoom = new_zoom;
+    _zoom = new_zoom / _curr_repo->view_zoom_steps
+                     * _curr_repo->view_zoom_steps;
     _world_size_tiles = unit2tile(WORLD_SIZE_UNITS);
 
     /* If we're leading, update the center to reflect new zoom level. */
@@ -3765,6 +5177,7 @@ map_center_unit(guint new_center_unitx, guint new_center_unity)
             }
         }
         map_render_paths();
+        map_render_poi();
     }
 
     MACRO_RECALC_OFFSET();
@@ -4123,7 +5536,7 @@ gpx_chars(SaxData *data, const xmlChar *ch, int len)
             break;
         case INSIDE_PATH_POINT_TIME:
         case INSIDE_PATH_POINT_DESC:
-            for (i = 0; i < len; i++)
+            for(i = 0; i < len; i++)
                 data->chars = g_string_append_c(data->chars, ch[i]);
             vprintf("%s\n", data->chars->str);
             break;
@@ -4545,12 +5958,15 @@ auto_route_dl_cb_open(GnomeVFSAsyncHandle *handle, GnomeVFSResult result)
 static gboolean
 auto_route_dl_idle()
 {
-    gchar buffer[1024];
+    gchar buffer[1024], latstr[32], lonstr[32];
     vprintf("%s(%f, %f, %s)\n", __PRETTY_FUNCTION__,
             _pos_lat, _pos_lon, _autoroute_data.dest);
 
-    sprintf(buffer,"http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%f,%f&daddr=%s",
-            _pos_lat, _pos_lon, _autoroute_data.dest);
+
+    g_ascii_dtostr(latstr, 32, _pos_lat);
+    g_ascii_dtostr(lonstr, 32, _pos_lon);
+    sprintf(buffer,"http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s,%s&daddr=%s",
+            latstr, lonstr, _autoroute_data.dest);
     _autoroute_data.bytes_read = 0;
 
     gnome_vfs_async_open(&_autoroute_data.handle,
@@ -4607,6 +6023,9 @@ maemo_mapper_destroy(void)
     rcvr_disconnect();
     /* _program and widgets have already been destroyed. */
 
+    if(_dbconn)
+        sqlite_close(_db);
+
     MACRO_CLEAR_TRACK(_track);
     if(_route.head)
         MACRO_CLEAR_TRACK(_route);
@@ -4620,6 +6039,7 @@ maemo_mapper_destroy(void)
 static void
 maemo_mapper_init(gint argc, gchar **argv)
 {
+    GtkWidget *hbox, *label, *vbox;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     config_init();
@@ -4633,8 +6053,57 @@ maemo_mapper_init(gint argc, gchar **argv)
     hildon_program_add_window(_program, HILDON_WINDOW(_window));
 
     /* Create and add widgets and supporting data. */
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(_window), hbox);
+
+    _gps_widget = gtk_frame_new("GPS Info");
+    gtk_container_add(GTK_CONTAINER(_gps_widget),
+            vbox = gtk_vbox_new(FALSE, 0));
+    gtk_widget_set_size_request(GTK_WIDGET(_gps_widget), 180, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), _gps_widget, FALSE, TRUE, 0);
+
+    label = gtk_label_new(" ");
+    gtk_widget_set_size_request(GTK_WIDGET(label), -1, 10);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, TRUE, 0);
+
+    _text_lat = gtk_label_new(" --- ");
+    gtk_widget_set_size_request(GTK_WIDGET(_text_lat), -1, 30);
+    gtk_box_pack_start(GTK_BOX(vbox), _text_lat, FALSE, TRUE, 0);
+
+    _text_lon = gtk_label_new(" --- ");
+    gtk_widget_set_size_request(GTK_WIDGET(_text_lon), -1, 30);
+    gtk_box_pack_start(GTK_BOX(vbox), _text_lon, FALSE, TRUE, 0);
+
+    _text_speed = gtk_label_new(" --- ");
+    gtk_widget_set_size_request(GTK_WIDGET(_text_speed), -1, 30);
+    gtk_box_pack_start(GTK_BOX(vbox), _text_speed, FALSE, TRUE, 0);
+
+    _text_alt = gtk_label_new(" --- ");
+    gtk_widget_set_size_request(GTK_WIDGET(_text_alt), -1, 30);
+    gtk_box_pack_start(GTK_BOX(vbox), _text_alt, FALSE, TRUE, 0);
+
+    label = gtk_label_new(" ");
+    gtk_widget_set_size_request(GTK_WIDGET(label), -1, 10);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, TRUE, 0);
+
+    _sat_panel = gtk_drawing_area_new ();
+    gtk_widget_set_size_request (_sat_panel, -1, 100);
+    gtk_box_pack_start(GTK_BOX(vbox), _sat_panel, TRUE, TRUE, 0);
+
+    label = gtk_label_new(" ");
+    gtk_widget_set_size_request(GTK_WIDGET(label), -1, 10);
+    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, TRUE, 0);
+
+    _text_time = gtk_label_new("--:--:--");
+    gtk_widget_set_size_request(GTK_WIDGET(_text_time), -1, 30);
+    gtk_box_pack_start(GTK_BOX(vbox), _text_time, FALSE, TRUE, 0);
+
+    _heading_panel = gtk_drawing_area_new ();
+    gtk_widget_set_size_request (_heading_panel, -1, 100);
+    gtk_box_pack_start(GTK_BOX(vbox), _heading_panel, TRUE, TRUE, 0);
+
     _map_widget = gtk_drawing_area_new();
-    gtk_container_add(GTK_CONTAINER(_window), _map_widget);
+    gtk_box_pack_start(GTK_BOX(hbox), _map_widget, TRUE, TRUE, 0);
 
     gtk_widget_realize(_map_widget);
 
@@ -4644,6 +6113,10 @@ maemo_mapper_init(gint argc, gchar **argv)
                 -1); /* -1: use bit depth of widget->window. */
 
     /* Connect signals. */
+    g_signal_connect(G_OBJECT(_sat_panel), "expose_event",
+            G_CALLBACK(sat_panel_expose), NULL);
+    g_signal_connect(G_OBJECT(_heading_panel), "expose_event",
+            G_CALLBACK(heading_panel_expose), NULL);
     g_signal_connect(G_OBJECT(_window), "destroy",
             G_CALLBACK(gtk_main_quit), NULL);
 
@@ -4676,6 +6149,14 @@ maemo_mapper_init(gint argc, gchar **argv)
 
     /* Initialize data. */
 
+    UNITS_TEXT[UNITS_KM] = UNITS_KM_TEXT;
+    UNITS_TEXT[UNITS_MI] = UNITS_MI_TEXT;
+    UNITS_TEXT[UNITS_NM] = UNITS_NM_TEXT;
+
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_TRACKS] = ESCAPE_KEY_TOGGLE_TRACKS_TEXT;
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_CHANGE_REPO] = ESCAPE_KEY_CHANGE_REPO_TEXT;
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_RESET_BLUETOOTH]=ESCAPE_KEY_RESET_BLUETOOTH_TEXT;
+
     /* set XML_TZONE */
     {
         time_t time1;
@@ -4684,6 +6165,7 @@ maemo_mapper_init(gint argc, gchar **argv)
         localtime_r(&time1, &time2);
         sprintf(XML_TZONE, "%+03ld:%02ld",
                 (time2.tm_gmtoff / 60 / 60), (time2.tm_gmtoff / 60) % 60);
+        _gmtoffset = time2.tm_gmtoff;
     }
 
     memset(&_track, 0, sizeof(_track));
@@ -4859,9 +6341,10 @@ key_zoom_timeout()
     if(_key_zoom_new < _zoom)
     {
         /* We're currently zooming in (_zoom is decreasing). */
-        if(_key_zoom_new)
+        guint test = _key_zoom_new - _curr_repo->view_zoom_steps;
+        if(test < MAX_ZOOM)
             /* We can zoom some more.  Hurray! */
-            _key_zoom_new--;
+            _key_zoom_new = test;
         else
             /* We can't zoom anymore.  Booooo! */
             return FALSE;
@@ -4869,9 +6352,10 @@ key_zoom_timeout()
     else
     {
         /* We're currently zooming out (_zoom is increasing). */
-        if(_key_zoom_new < (MAX_ZOOM - 1))
+        guint test = _key_zoom_new + _curr_repo->view_zoom_steps;
+        if(test < MAX_ZOOM)
             /* We can zoom some more.  Hurray! */
-            _key_zoom_new++;
+            _key_zoom_new = test;
         else
             /* We can't zoom anymore.  Booooo! */
             return FALSE;
@@ -4886,12 +6370,28 @@ key_zoom_timeout()
     return TRUE;
 }
 
+static void
+reset_bluetooth()
+{
+    if(system("/usr/bin/sudo -l | grep -q '/usr/sbin/hciconfig  *hci0  *reset'"
+            " && sudo /usr/sbin/hciconfig hci0 reset"))
+        popup_error(_window,
+                _("An error occurred while trying to reset the bluetooth "
+                "radio.\n\n"
+                "Did you make sure to modify\nthe /etc/sudoers file?"));
+    else if(_conn_state > RCVR_OFF)
+    {
+        set_conn_state(RCVR_DOWN);
+        rcvr_connect_now();
+    }
+}
+
 static gboolean
 window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    switch (event->keyval)
+    switch(event->keyval)
     {
         case HILDON_HARDKEY_UP:
             map_pan(0, -PAN_UNITS);
@@ -4935,7 +6435,9 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
             if(!_key_zoom_timeout_sid)
             {
                 _key_zoom_new = _zoom
-                    + (event->keyval == HILDON_HARDKEY_INCREASE ? -1 : 1);
+                    + (event->keyval == HILDON_HARDKEY_INCREASE
+                            ? -_curr_repo->view_zoom_steps
+                            : _curr_repo->view_zoom_steps);
                 /* Remember, _key_zoom_new is unsigned. */
                 if(_key_zoom_new < MAX_ZOOM)
                 {
@@ -4949,33 +6451,51 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
             return TRUE;
 
         case HILDON_HARDKEY_ESC:
+            switch(_escape_key)
             {
-                switch(_show_tracks)
-                {
-                    case 0:
-                        /* Nothing shown, nothing saved; just set both. */
-                        _show_tracks = TRACKS_MASK | ROUTES_MASK;
-                        break;
-                    case TRACKS_MASK << 16:
-                    case ROUTES_MASK << 16:
-                    case (ROUTES_MASK | TRACKS_MASK) << 16:
-                        /* Something was saved and nothing changed since.
-                         * Restore saved. */
-                        _show_tracks = _show_tracks >> 16;
-                        break;
-                    default:
-                        /* There is no history, or they changed something since
-                         * the last historical change. Save and clear. */
-                        _show_tracks = _show_tracks << 16;
-                }
+                case ESCAPE_KEY_CHANGE_REPO:
+                    {
+                        GList *curr = g_list_find(_repo_list, _curr_repo);
+                        if(curr && curr->next)
+                            curr = curr->next;
+                        else
+                            curr = _repo_list;
+                        _curr_repo = curr->data;
+                        gtk_check_menu_item_set_active(
+                                GTK_CHECK_MENU_ITEM(_curr_repo->menu_item),
+                                TRUE);
+                    }
+                    break;
+                case ESCAPE_KEY_RESET_BLUETOOTH:
+                    reset_bluetooth();
+                    break;
+                default:
+                    switch(_show_tracks)
+                    {
+                        case 0:
+                            /* Nothing shown, nothing saved; just set both. */
+                            _show_tracks = TRACKS_MASK | ROUTES_MASK;
+                            break;
+                        case TRACKS_MASK << 16:
+                        case ROUTES_MASK << 16:
+                        case (ROUTES_MASK | TRACKS_MASK) << 16:
+                            /* Something was saved and nothing changed since.
+                             * Restore saved. */
+                            _show_tracks = _show_tracks >> 16;
+                            break;
+                        default:
+                            /* There is no history, or they changed something
+                             * since the last historical change. Save and
+                             * clear. */
+                            _show_tracks = _show_tracks << 16;
+                    }
+                    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
+                                _menu_show_routes_item),
+                            _show_tracks & ROUTES_MASK);
 
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                            _menu_show_routes_item),
-                        _show_tracks & ROUTES_MASK);
-
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                            _menu_show_tracks_item),
-                        _show_tracks & TRACKS_MASK);
+                    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
+                                _menu_show_tracks_item),
+                            _show_tracks & TRACKS_MASK);
             }
             return TRUE;
 
@@ -4989,7 +6509,7 @@ window_cb_key_release(GtkWidget* widget, GdkEventKey *event)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    switch (event->keyval)
+    switch(event->keyval)
     {
         case HILDON_HARDKEY_INCREASE:
         case HILDON_HARDKEY_DECREASE:
@@ -5028,6 +6548,200 @@ map_cb_configure(GtkWidget *widget, GdkEventConfigure *event)
     map_center_unit(_center.unitx, _center.unity);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+sat_panel_expose(GtkWidget *widget, GdkEventExpose *event)
+{
+    PangoContext *context = NULL;
+    PangoLayout *layout = NULL;
+    PangoFontDescription *fontdesc = NULL;
+    gchar *tmp = NULL;
+    guint x, y;
+
+    draw_sat_info(widget,
+        0, 0,
+        widget->allocation.width,
+        widget->allocation.height,
+        FALSE);
+
+    context = gtk_widget_get_pango_context(widget);
+    layout = pango_layout_new(context);
+    fontdesc =  pango_font_description_new();
+
+    pango_font_description_set_family(fontdesc,"Sans Serif");
+    pango_font_description_set_size(fontdesc, 14*PANGO_SCALE);
+
+    /* Sat View/In Use */
+    tmp = g_strdup_printf("%d/%d", _gps.satinuse, _gps.satinview);
+    pango_layout_set_font_description (layout, fontdesc);
+    pango_layout_set_text(layout, tmp, strlen(tmp));
+    gdk_draw_layout(widget->window,
+        widget->style->fg_gc[GTK_STATE_NORMAL],
+        20, 2,
+        layout);
+    g_free(tmp);
+
+    switch(_gps.fix)
+    {
+        case 2:
+        case 3: tmp = g_strdup_printf("%dD fix", _gps.fix); break;
+        default: tmp = g_strdup_printf("nofix"); break;
+    }
+    pango_layout_set_text(layout, tmp, strlen(tmp));
+    pango_layout_set_alignment(layout, PANGO_ALIGN_RIGHT);
+    pango_layout_get_pixel_size(layout, &x, &y);
+    gdk_draw_layout(widget->window,
+        widget->style->fg_gc[GTK_STATE_NORMAL],
+        widget->allocation.width - 20 - x, 2,
+        layout);
+    g_free(tmp);
+
+    pango_font_description_free (fontdesc);
+    g_object_unref (layout);
+
+    return TRUE;
+}
+
+static gboolean
+heading_panel_expose(GtkWidget *widget, GdkEventExpose *event)
+{
+    guint size, xoffset, yoffset, i, x, y;
+    gint dir;
+    gfloat tmp;
+    gchar *text;
+    PangoContext            *context=NULL;
+    PangoLayout             *layout=NULL;
+    PangoFontDescription    *fontdesc=NULL;
+
+    size = MIN(widget->allocation.width, widget->allocation.height);
+    if(widget->allocation.width > widget->allocation.height)
+    {
+        xoffset = (widget->allocation.width - widget->allocation.height) / 2;
+        yoffset = 0;
+    }
+    else
+    {
+        xoffset = 0;
+        yoffset = (widget->allocation.height - widget->allocation.width) / 2;
+    }
+    context = gtk_widget_get_pango_context(widget);
+    layout = pango_layout_new(context);
+    fontdesc =  pango_font_description_new();
+    pango_font_description_set_family(fontdesc,"Sans Serif");
+    pango_font_description_set_size(fontdesc,12*PANGO_SCALE);
+    pango_layout_set_font_description (layout, fontdesc);
+    pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
+
+    text = g_strdup_printf("%3d°", (guint)_gps.heading);
+    pango_layout_set_text(layout, text, -1);
+    pango_layout_get_pixel_size(layout, &x, &y);
+
+    gdk_draw_layout(widget->window,
+        widget->style->fg_gc[GTK_STATE_NORMAL],
+        xoffset + size/2 - x/2,
+        yoffset + size - y - 2, layout);
+    g_free(text);
+
+    gdk_draw_arc (widget->window,
+        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+        FALSE,
+        xoffset, yoffset + size/2,
+        size, size,
+        0, 64 * 180);
+
+    /* Simple arrow for heading*/
+    gdk_draw_line(widget->window,
+        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+        xoffset + size/2 + 3,
+        yoffset + size - y - 5,
+        xoffset + size/2,
+        yoffset + size/2 + 5);
+
+    gdk_draw_line(widget->window,
+        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+        xoffset + size/2 - 3,
+        yoffset + size - y - 5,
+        xoffset + size/2,
+        yoffset + size/2 + 5);
+
+    gdk_draw_line(widget->window,
+        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+        xoffset + size/2 - 3,
+        yoffset + size - y - 5,
+        xoffset + size/2,
+        yoffset + size - y - 8);
+
+    gdk_draw_line(widget->window,
+        widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+        xoffset + size/2 + 3,
+        yoffset + size - y - 5,
+        xoffset + size/2,
+        yoffset + size - y - 8);
+
+    gint angle[5] = {-90,-45,0,45,90};
+    gint fsize[5] = {0,4,10,4,0};
+    for(i = 0; i < 5; i++)
+    {
+        dir = (gint)(_gps.heading/45)*45 + angle[i];
+
+        switch(dir)
+        {
+            case   0:
+            case 360: text = g_strdup("N"); break;
+            case  45:
+            case 405:
+                text = g_strdup("NE"); break;
+            case  90:
+                text = g_strdup("E"); break;
+            case 135:
+                text = g_strdup("SE"); break;
+            case 180:
+                text = g_strdup("S"); break;
+            case 225:
+                text = g_strdup("SW"); break;
+            case 270:
+            case -90:
+                text = g_strdup("W"); break;
+            case 315:
+            case -45:
+                text = g_strdup("NW"); break;
+            default :
+                text = g_strdup("??");
+                break;
+        }
+
+        tmp = ((dir - _gps.heading) * (1.f / 180.f)) * PI;
+        gdk_draw_line(widget->window,
+            widget->style->fg_gc[GTK_WIDGET_STATE (widget)],
+            xoffset + size/2 + ((size/2 - 5) * sinf(tmp)),
+            yoffset + size - ((size/2 - 5) * cosf(tmp)),
+            xoffset + size/2 + ((size/2 + 5) * sinf(tmp)),
+            yoffset + size - ((size/2 + 5) * cosf(tmp)));
+
+        x = fsize[i];
+        if(abs((guint)(_gps.heading/45)*45 - _gps.heading)
+                > abs((guint)(_gps.heading/45)*45 + 45 - _gps.heading)
+                && (i > 0))
+            x = fsize[i - 1];
+
+        pango_font_description_set_size(fontdesc,(10 + x)*PANGO_SCALE);
+        pango_layout_set_font_description (layout, fontdesc);
+        pango_layout_set_text(layout, text, -1);
+        pango_layout_get_pixel_size(layout, &x, &y);
+        x = xoffset + size/2 + ((size/2 + 15) * sinf(tmp)) - x/2,
+        y = yoffset + size - ((size/2 + 15) * cosf(tmp)) - y/2,
+
+        gdk_draw_layout(widget->window,
+            widget->style->fg_gc[GTK_STATE_NORMAL],
+            x, y, layout);
+        g_free(text);
+    }
+
+    pango_font_description_free (fontdesc);
+    g_object_unref (layout);
+
     return TRUE;
 }
 
@@ -5108,6 +6822,7 @@ channel_cb_error(GIOChannel *src, GIOCondition condition, gpointer data)
     if(_conn_state > RCVR_OFF)
     {
         set_conn_state(RCVR_DOWN);
+        gps_hide_text();
         rcvr_connect_now();
     }
 
@@ -5149,7 +6864,8 @@ channel_cb_connect(GIOChannel *src, GIOCondition condition, gpointer data)
     (tofill) = strtol((str), &error_check, 10); \
     if(error_check == (str)) \
     { \
-        fprintf(stderr, "Failed to parse string as int: %s\n", str); \
+        fprintf(stderr, "Line %d: Failed to parse string as int: %s\n", \
+                __LINE__, str); \
         hildon_banner_show_information(_window, NULL, \
                 _("Invalid NMEA input from receiver!")); \
         return; \
@@ -5184,16 +6900,17 @@ channel_parse_rmc(gchar *sentence)
      * 12) FAA mode indicator (NMEA 2.3 and later)
      * 13) Checksum
      */
-    gchar *token, *dpoint;
-    gdouble tmpd;
-    guint tmpi;
+    gchar *token, *dpoint, *gpstime, *gpsdate;
+    gdouble tmpd = 0.f;
+    guint tmpi = 0;
     gboolean newly_fixed = FALSE;
     vprintf("%s(): %s", __PRETTY_FUNCTION__, sentence);
 
 #define DELIM ","
 
-    /* Skip time. */
+    /* Parse time. */
     token = strsep(&sentence, DELIM);
+    gpstime = g_strdup(token);
 
     token = strsep(&sentence, DELIM);
     /* Token is now Status. */
@@ -5225,10 +6942,14 @@ channel_parse_rmc(gchar *sentence)
         dpoint[-2] = '\0';
         MACRO_PARSE_INT(tmpi, token);
         _pos_lat = tmpi + (tmpd * (1.0 / 60.0));
+        _gps.latitude = _pos_lat;
     }
 
     /* Parse N or S. */
     token = strsep(&sentence, DELIM);
+    if(*token)
+        sprintf(_gps.slatitude, "%c %u°%07.04f", token[0], tmpi, tmpd);
+
     if(*token && token[0] == 'S')
         _pos_lat = -_pos_lat;
 
@@ -5241,22 +6962,51 @@ channel_parse_rmc(gchar *sentence)
         dpoint[-2] = '\0';
         MACRO_PARSE_INT(tmpi, token);
         _pos_lon = tmpi + (tmpd * (1.0 / 60.0));
+        _gps.longitude = _pos_lon;
     }
 
     /* Parse E or W. */
     token = strsep(&sentence, DELIM);
+    if(*token)
+        sprintf(_gps.slongitude, "%c %u°%07.04f", token[0], tmpi, tmpd);
+
     if(*token && token[0] == 'W')
         _pos_lon = -_pos_lon;
 
     /* Parse speed over ground, knots. */
     token = strsep(&sentence, DELIM);
     if(*token)
+    {
         MACRO_PARSE_FLOAT(_speed, token);
+        _gps.speed = _speed;
+        if(_gps.fix > 1)
+            _gps.maxspeed = MAX(_gps.maxspeed, _speed);
+    }
 
     /* Parse heading, degrees from true north. */
     token = strsep(&sentence, DELIM);
     if(*token)
+    {
         MACRO_PARSE_FLOAT(_heading, token);
+        _gps.heading = _heading;
+    }
+
+    /* Parse date. */
+    token = strsep(&sentence, DELIM);
+    if(*token)
+    {
+        time_t timeloc;
+        gpsdate = g_strdup_printf("%s%s", token, gpstime);
+        strptime(gpsdate, "%d%m%y%H%M%S", &_gps.time);
+        if(_gps.time.tm_year >= 0 && _gps.time.tm_year <= 68)
+            _gps.time.tm_year += 100; /* year 2000 */
+        _gps.time.tm_mon -= 1;
+        timeloc = mktime(&_gps.time);
+        timeloc += _gmtoffset;
+        localtime_r(&timeloc, &_gps.timeloc);
+        g_free(gpstime);
+        g_free(gpsdate);
+    }
 
     /* Translate data into integers. */
     integerize_data();
@@ -5267,6 +7017,128 @@ channel_parse_rmc(gchar *sentence)
 
     /* Move mark to new location. */
     refresh_mark();
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+ static void
+channel_parse_gga(gchar *sentence)
+{
+    /* GGA          Global Positioning System Fix Data
+     1. Fix Time
+     2. Latitude
+     3. N or S
+     4. Longitude
+     5. E or W
+     6. Fix quality
+                   0 = invalid
+                   1 = GPS fix (SPS)
+                   2 = DGPS fix
+                   3 = PPS fix
+                   4 = Real Time Kinematic
+                   5 = Float RTK
+                   6 = estimated (dead reckoning) (2.3 feature)
+                   7 = Manual input mode
+                   8 = Simulation mode
+     7. Number of satellites being tracked
+     8. Horizontal dilution of position
+     9. Altitude, Meters, above mean sea level
+     10. Alt unit (meters)
+     11. Height of geoid (mean sea level) above WGS84 ellipsoid
+     12. unit
+     13. (empty field) time in seconds since last DGPS update
+     14. (empty field) DGPS station ID number
+     15. the checksum data
+     */
+    gchar *token;
+    vprintf("%s(): %s", __PRETTY_FUNCTION__, sentence);
+
+#define DELIM ","
+
+    /* Skip Fix time */
+    token = strsep(&sentence, DELIM);
+    /* Skip latitude */
+    token = strsep(&sentence, DELIM);
+    /* Skip N or S */
+    token = strsep(&sentence, DELIM);
+    /* Skip longitude */
+    token = strsep(&sentence, DELIM);
+    /* Skip S or W */
+    token = strsep(&sentence, DELIM);
+
+    /* Parse Fix quality */
+    token = strsep(&sentence, DELIM);
+
+    /* Parse number of satellites */
+    token = strsep(&sentence, DELIM);
+    if(*token)
+        MACRO_PARSE_INT(_gps.satinuse, token);
+
+    /* Parse Horizontal dilution of position */
+    token = strsep(&sentence, DELIM);
+    if(*token)
+        MACRO_PARSE_INT(_gps.hdop, token);
+
+    /* Altitude */
+    token = strsep(&sentence, DELIM);
+    if(!sentence)
+        return; /* because this is an invalid sentence. */
+    if(*token)
+        MACRO_PARSE_INT(_gps.altitude, token);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+channel_parse_gsa(gchar *sentence)
+{
+    /* GPS DOP and active satellites
+     *  1) Auto selection of 2D or 3D fix (M = manual)
+     *  2) 3D fix - values include: 1 = no fix, 2 = 2D, 3 = 2D
+     *  3) PRNs of satellites used for fix
+     *     (space for 12)
+     *  4) PDOP (dilution of precision)
+     *  5) Horizontal dilution of precision (HDOP)
+     *  6) Vertical dilution of precision (VDOP)
+     *  7) Checksum
+     */
+    gchar *token;
+    guint i, sat;
+    vprintf("%s(): %s", __PRETTY_FUNCTION__, sentence);
+
+#define DELIM ","
+
+    /* Skip Auto selection. */
+    token = strsep(&sentence, DELIM);
+
+    /* 3D fix. */
+    token = strsep(&sentence, DELIM);
+    if(!sentence)
+        return; /* because this is an invalid sentence. */
+    MACRO_PARSE_INT(_gps.fix, token);
+
+    _gps.satinuse = 0;
+    for(i = 0; i < 12; i++)
+    {
+        token = strsep(&sentence, DELIM);
+        if((sat = atoi(token)))
+            _gps.satforfix[_gps.satinuse++] = sat;
+    }
+
+    /* PDOP */
+    token = strsep(&sentence, DELIM);
+    if(*token)
+        MACRO_PARSE_FLOAT(_gps.pdop, token);
+
+    /* HDOP */
+    token = strsep(&sentence, DELIM);
+    if(*token)
+        MACRO_PARSE_FLOAT(_gps.hdop, token);
+
+    /* VDOP */
+    token = strsep(&sentence, DELIM);
+    if(*token)
+        MACRO_PARSE_FLOAT(_gps.vdop, token);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -5289,6 +7161,7 @@ channel_parse_gsv(gchar *sentence)
     guint msgcnt, nummsgs;
     static guint running_total = 0;
     static guint num_sats_used = 0;
+    static guint satcnt = 0;
     vprintf("%s(): %s", __PRETTY_FUNCTION__, sentence);
 
     /* Parse number of messages. */
@@ -5303,34 +7176,43 @@ channel_parse_gsv(gchar *sentence)
         return; /* because this is an invalid sentence. */
     MACRO_PARSE_INT(msgcnt, token);
 
-    /* Skip number of satellites in view. */
+    /* Parse number of satellites in view. */
     token = strsep(&sentence, DELIM);
+    if(!sentence)
+        return; /* because this is an invalid sentence. */
+    MACRO_PARSE_INT(_gps.satinview, token);
 
     /* Loop until there are no more satellites to parse. */
     while(sentence)
     {
-        guint snr;
-        /* Skip satellite number. */
+        /* Get token for Satellite Number. */
         token = strsep(&sentence, DELIM);
         if(!sentence)
             break; /* because this is an invalid sentence. */
-        /* Skip elevation in degrees (0-90). */
-        token = strsep(&sentence, DELIM);
-        if(!sentence)
-            break; /* because this is an invalid sentence. */
-        /* Skip azimuth in degrees to true north (0-359). */
-        token = strsep(&sentence, DELIM);
-        if(!sentence)
-            break; /* because this is an invalid sentence. */
+        _gps_sat[satcnt].prn = atoi(token);
 
-        /* Parse SNR. */
+        /* Get token for elevation in degrees (0-90). */
         token = strsep(&sentence, DELIM);
-        if((snr = atoi(token)))
+        if(!sentence)
+            break; /* because this is an invalid sentence. */
+        _gps_sat[satcnt].elevation = atoi(token);
+
+        /* Get token for azimuth in degrees to true north (0-359). */
+        token = strsep(&sentence, DELIM);
+        if(!sentence)
+            break; /* because this is an invalid sentence. */
+        _gps_sat[satcnt].azimuth = atoi(token);
+
+        /* Get token for SNR. */
+        token = strsep(&sentence, DELIM);
+        _gps_sat[satcnt].snr = atoi(token);
+        if(_gps_sat[satcnt].snr)
         {
             /* Snr is non-zero - add to total and count as used. */
-            running_total += snr;
+            running_total += _gps_sat[satcnt].snr;
             num_sats_used++;
         }
+        satcnt++;
     }
 
     if(msgcnt == nummsgs)
@@ -5338,13 +7220,18 @@ channel_parse_gsv(gchar *sentence)
         /*  This is the last message. Calculate signal strength. */
         if(num_sats_used)
         {
-            gdouble fraction = running_total * sqrt(num_sats_used)
-                / num_sats_used / 100.0;
-            BOUND(fraction, 0.0, 1.0);
+            if(_conn_state == RCVR_UP)
+            {
+                gdouble fraction = running_total * sqrt(num_sats_used)
+                    / num_sats_used / 100.0;
+                BOUND(fraction, 0.0, 1.0);
+                hildon_banner_set_fraction(
+                        HILDON_BANNER(_fix_banner), fraction);
+            }
             running_total = 0;
             num_sats_used = 0;
-            hildon_banner_set_fraction(HILDON_BANNER(_fix_banner), fraction);
         }
+        satcnt = 0;
 
         /* Keep awake while they watch the progress bar. */
         KEEP_DISPLAY_ON();
@@ -5356,36 +7243,65 @@ channel_parse_gsv(gchar *sentence)
 static gboolean
 channel_cb_input(GIOChannel *src, GIOCondition condition, gpointer data)
 {
-    gchar *sentence;
+    gchar *sentence = _gps_read_buf;
+    gsize bytes_read;
     vprintf("%s(%d)\n", __PRETTY_FUNCTION__, condition);
-    
-    while(G_IO_STATUS_NORMAL == g_io_channel_read_line(
+
+    if(G_IO_STATUS_NORMAL == g_io_channel_read_chars(
                 _channel,
-                &sentence,
-                NULL,
-                NULL,
-                NULL) && sentence)
+                _gps_read_buf + _gps_read_buf_pos,
+                sizeof(_gps_read_buf) - _gps_read_buf_pos -1,
+                &bytes_read,
+                NULL))
     {
-        gchar *sptr = sentence + 1;
-        guint csum = 0;
-        while(*sptr && *sptr != '*')
-            csum ^= *sptr++;
-        if (!*sptr || csum == strtol(sptr+1, NULL, 16))
+        gchar *eol;
+        _gps_read_buf_pos += bytes_read;
+        _gps_read_buf[_gps_read_buf_pos] = '\0';
+        eol = strchr(_gps_read_buf, '\n');
+        while(eol)
         {
-            if(*sptr)
-                *sptr = '\0'; /* take checksum out of the sentence. */
-            if(!strncmp(sentence + 3, "RMC", 3))
-                channel_parse_rmc(sentence + 7);
-            else if(_conn_state == RCVR_UP
-                    && !strncmp(sentence + 3, "GSV", 3))
-                channel_parse_gsv(sentence + 7);
+            gchar *sptr = sentence + 1;
+            guint csum = 0;
+            gint leftover = _gps_read_buf + _gps_read_buf_pos - eol - 1;
+            *eol = '\0';
+            while(*sptr && *sptr != '*')
+                csum ^= *sptr++;
+            if(!*sptr || csum == strtol(sptr + 1, NULL, 16))
+            {
+                if(*sptr)
+                    *sptr = '\0'; /* take checksum out of the sentence. */
+                if(!strncmp(sentence + 3, "GSV", 3))
+                    channel_parse_gsv(sentence + 7);
+                else if(!strncmp(sentence + 3, "RMC", 3))
+                    channel_parse_rmc(sentence + 7);
+                else if(!strncmp(sentence + 3, "GGA", 3))
+                    channel_parse_gga(sentence + 7);
+                else if(!strncmp(sentence + 3, "GSA", 3))
+                    channel_parse_gsa(sentence + 7);
+
+                if(_gps_info)
+                    gps_display_data();
+                if(_satdetails_on)
+                    gps_display_details();
+            }
+            else
+            {
+                fprintf(stderr, "%s: Bad checksum in NMEA sentence:\n%s\n",
+                        __PRETTY_FUNCTION__, sentence);
+            }
+            if(leftover <= 0)
+            {
+                /* last read was a newline */
+                _gps_read_buf_pos = 0;
+                eol = 0;
+            }
+            else
+            {
+                memmove(_gps_read_buf, eol+1, leftover+1); /* incl term. 0 */
+                _gps_read_buf_pos = leftover;
+                eol = strchr(_gps_read_buf, '\n');
+            }
         }
-        else
-        {
-            printf("%s: Bad checksum in NMEA sentence:\n%s\n",
-                    __PRETTY_FUNCTION__, sentence);
-        }
-        g_free(sentence);
     }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -5673,6 +7589,7 @@ menu_cb_route_reset(GtkAction *action)
 
     route_find_nearest_point();
     map_render_paths();
+    map_render_poi();
     MACRO_QUEUE_DRAW_AREA();
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -5918,7 +7835,7 @@ menu_cb_route_save(GtkAction *action)
 
     if(!_route.head)
     {
-        popup_error(_window, "No route is loaded.");
+        popup_error(_window, _("No route is loaded."));
         return TRUE;
     }
 
@@ -5994,7 +7911,7 @@ menu_cb_show_routes(GtkAction *action)
         _show_tracks &= ~ROUTES_MASK;
         map_force_redraw();
         hildon_banner_show_information(
-                _window, NULL, "Routes are now hidden");
+                _window, NULL, _("Routes are now hidden"));
     }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -6009,6 +7926,22 @@ menu_cb_show_velvec(GtkAction *action)
     _show_velvec = gtk_check_menu_item_get_active(
             GTK_CHECK_MENU_ITEM(_menu_show_velvec_item));
     map_move_mark();
+    gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_details_item), _enable_gps);
+    gps_show_info();
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_gps_show_info(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    _gps_info = gtk_check_menu_item_get_active(
+                GTK_CHECK_MENU_ITEM(_menu_gps_show_info_item));
+
+    gps_show_info();
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -6057,92 +7990,538 @@ menu_cb_ac_none(GtkAction *action)
     return TRUE;
 }
 
+
+typedef struct _RepoManInfo RepoManInfo;
+struct _RepoManInfo {
+    GtkWidget *dialog;
+    GtkWidget *notebook;
+    GtkWidget *cmb_repos;
+    GList *repo_edits;
+};
+
+typedef struct _RepoEditInfo RepoEditInfo;
+struct _RepoEditInfo {
+    gchar *name;
+    GtkWidget *page_table;
+    GtkWidget *txt_url;
+    GtkWidget *txt_cache_dir;
+    GtkWidget *num_dl_zoom_steps;
+    GtkWidget *num_view_zoom_steps;
+    GtkWidget *btn_browse;
+    BrowseInfo browse_info;
+};
+
 static gboolean
-menu_cb_maps_dlroute(GtkAction *action)
+repoman_dialog_select(GtkWidget *widget, RepoManInfo *rmi)
 {
-    guint last_tilex, last_tiley;
-    Point *curr;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    gint curr_index = gtk_combo_box_get_active(GTK_COMBO_BOX(rmi->cmb_repos));
+    gtk_notebook_set_current_page(GTK_NOTEBOOK(rmi->notebook), curr_index);
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+repoman_dialog_browse(GtkWidget *widget, BrowseInfo *browse_info)
+{
+    GtkWidget *dialog;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(!_route.head)
+    dialog = GTK_WIDGET(
+            hildon_file_chooser_dialog_new(GTK_WINDOW(browse_info->dialog),
+            GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER));
+
+    gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+            gtk_entry_get_text(GTK_ENTRY(browse_info->txt)));
+
+    if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
-        popup_error(_window, "No route is loaded.");
-        return TRUE;
+        gchar *filename = gtk_file_chooser_get_filename(
+                GTK_FILE_CHOOSER(dialog));
+        gtk_entry_set_text(GTK_ENTRY(browse_info->txt), filename);
+        g_free(filename);
     }
 
-    last_tilex = 0;
-    last_tiley = 0;
-    for(curr = _route.head - 1; ++curr != _route.tail; )
-    {
-        if(curr->unity)
-        {
-            guint tilex = unit2tile(curr->unitx);
-            guint tiley = unit2tile(curr->unity);
-            if(tilex != last_tilex || tiley != last_tiley)
-            {
-                guint minx, miny, maxx, maxy, x, y;
-                if(last_tiley != 0)
-                {
-                    minx = MIN(tilex, last_tilex) - 2;
-                    miny = MIN(tiley, last_tiley) - 2;
-                    maxx = MAX(tilex, last_tilex) + 2;
-                    maxy = MAX(tiley, last_tiley) + 2;
-                }
-                else
-                {
-                    minx = tilex - 2;
-                    miny = tiley - 2;
-                    maxx = tilex + 2;
-                    maxy = tiley + 2;
-                }
-                for(x = minx; x <= maxx; x++)
-                    for(y = miny; y <= maxy; y++)
-                        map_initiate_download(x, y, _zoom,
-                                INITIAL_DOWNLOAD_RETRIES);
-                last_tilex = tilex;
-                last_tiley = tiley;
-            }
-        }
-    }
+    gtk_widget_destroy(dialog);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
-typedef struct _DlAreaInfo DlAreaInfo;
-struct _DlAreaInfo {
+static gboolean
+repoman_dialog_rename(GtkWidget *widget, RepoManInfo *rmi)
+{
+    GtkWidget *hbox;
+    GtkWidget *label;
+    GtkWidget *txt_name;
+    GtkWidget *dialog;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    dialog = gtk_dialog_new_with_buttons(_("New Name"),
+            GTK_WINDOW(rmi->dialog), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+            NULL);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+            hbox = gtk_hbox_new(FALSE, 4), FALSE, FALSE, 4);
+
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_label_new(_("Name")),
+            FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            txt_name = gtk_entry_new(),
+            TRUE, TRUE, 0);
+
+    gtk_widget_show_all(dialog);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        gint active = gtk_combo_box_get_active(GTK_COMBO_BOX(rmi->cmb_repos));
+        RepoEditInfo *rei = g_list_nth_data(rmi->repo_edits, active);
+        g_free(rei->name);
+        rei->name = g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_name)));
+        gtk_combo_box_insert_text(GTK_COMBO_BOX(rmi->cmb_repos),
+                active, g_strdup(rei->name));
+        gtk_combo_box_set_active(GTK_COMBO_BOX(rmi->cmb_repos), active);
+        gtk_combo_box_remove_text(GTK_COMBO_BOX(rmi->cmb_repos), active + 1);
+        break;
+    }
+
+    gtk_widget_destroy(dialog);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+repoman_dialog_delete(GtkWidget *widget, RepoManInfo *rmi)
+{
+    gchar buffer[100];
+    GtkWidget *confirm;
+    gint active = gtk_combo_box_get_active(GTK_COMBO_BOX(rmi->cmb_repos));
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(
+                    gtk_combo_box_get_model(GTK_COMBO_BOX(rmi->cmb_repos))),
+                                NULL) <= 1)
+    {
+        popup_error(rmi->dialog,
+                _("Cannot delete the last repository - there must be at"
+                " lease one repository."));
+        vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+        return TRUE;
+    }
+
+    sprintf(buffer, "%s:\n%s\n",
+            _("Confirm delete of repository"),
+            gtk_combo_box_get_active_text(GTK_COMBO_BOX(rmi->cmb_repos)));
+    confirm = hildon_note_new_confirmation(GTK_WINDOW(_window), buffer);
+
+    if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
+    {
+        gtk_combo_box_remove_text(GTK_COMBO_BOX(rmi->cmb_repos), active);
+        gtk_notebook_remove_page(GTK_NOTEBOOK(rmi->notebook), active);
+        rmi->repo_edits = g_list_remove_link(
+                rmi->repo_edits,
+                g_list_nth(rmi->repo_edits, active));
+        gtk_combo_box_set_active(GTK_COMBO_BOX(rmi->cmb_repos),
+                MAX(0, active - 1));
+    }
+
+    gtk_widget_destroy(confirm);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static RepoEditInfo*
+repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
+{
+    GtkWidget *label;
+    GtkWidget *hbox;
+    RepoEditInfo *rei = g_new(RepoEditInfo, 1);
+    printf("%s(%s)\n", __PRETTY_FUNCTION__, name);
+
+    rei->name = name;
+
+    /* Maps page. */
+    gtk_notebook_append_page(GTK_NOTEBOOK(rmi->notebook),
+            rei->page_table = gtk_table_new(4, 4, FALSE),
+            gtk_label_new(name));
+
+    /* Map download URI. */
+    gtk_table_attach(GTK_TABLE(rei->page_table),
+            label = gtk_label_new(_("URI Format")),
+            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(rei->page_table),
+            rei->txt_url = gtk_entry_new(),
+            1, 3, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+
+    /* Map Directory. */
+    gtk_table_attach(GTK_TABLE(rei->page_table),
+            label = gtk_label_new(_("Cache Dir.")),
+            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(rei->page_table),
+            hbox = gtk_hbox_new(FALSE, 4),
+            1, 3, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            rei->txt_cache_dir = gtk_entry_new(),
+            TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            rei->btn_browse = gtk_button_new_with_label(_("Browse...")),
+            FALSE, FALSE, 0);
+
+    /* Download Zoom Steps. */
+    gtk_table_attach(GTK_TABLE(rei->page_table),
+            label = gtk_label_new(_("Download Zoom Steps")),
+            0, 2, 2, 3, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(rei->page_table),
+            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+            2, 3, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_container_add(GTK_CONTAINER(label),
+            rei->num_dl_zoom_steps = hildon_controlbar_new());
+    hildon_controlbar_set_range(
+            HILDON_CONTROLBAR(rei->num_dl_zoom_steps), 1, 4);
+    hildon_controlbar_set_value(
+            HILDON_CONTROLBAR(rei->num_dl_zoom_steps), 2);
+    force_min_visible_bars(HILDON_CONTROLBAR(rei->num_dl_zoom_steps), 1);
+
+    /* Download Zoom Steps. */
+    gtk_table_attach(GTK_TABLE(rei->page_table),
+            label = gtk_label_new(_("View Zoom Steps")),
+            0, 2, 3, 4, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(rei->page_table),
+            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+            2, 3, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_container_add(GTK_CONTAINER(label),
+            rei->num_view_zoom_steps = hildon_controlbar_new());
+    hildon_controlbar_set_range(
+            HILDON_CONTROLBAR(rei->num_view_zoom_steps), 1, 4);
+    hildon_controlbar_set_value(
+            HILDON_CONTROLBAR(rei->num_view_zoom_steps), 1);
+    force_min_visible_bars(HILDON_CONTROLBAR(rei->num_view_zoom_steps), 1);
+
+    rmi->repo_edits = g_list_append(rmi->repo_edits, rei);
+
+    /* Connect signals. */
+    rei->browse_info.dialog = rmi->dialog;
+    rei->browse_info.txt = rei->txt_cache_dir;
+    g_signal_connect(G_OBJECT(rei->btn_browse), "clicked",
+                      G_CALLBACK(repoman_dialog_browse),
+                      &rei->browse_info);
+
+    gtk_widget_show_all(rei->page_table);
+
+    gtk_combo_box_append_text(GTK_COMBO_BOX(rmi->cmb_repos), name);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(rmi->cmb_repos),
+            gtk_tree_model_iter_n_children(GTK_TREE_MODEL(
+                    gtk_combo_box_get_model(GTK_COMBO_BOX(rmi->cmb_repos))),
+                NULL) - 1);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return rei;
+}
+
+static gboolean
+repoman_dialog_new(GtkWidget *widget, RepoManInfo *rmi)
+{
+    GtkWidget *hbox;
+    GtkWidget *label;
+    GtkWidget *txt_name;
+    GtkWidget *dialog;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    dialog = gtk_dialog_new_with_buttons(_("New Repository"),
+            GTK_WINDOW(rmi->dialog), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+            NULL);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+            hbox = gtk_hbox_new(FALSE, 4), FALSE, FALSE, 4);
+
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_label_new(_("Name")),
+            FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            txt_name = gtk_entry_new(),
+            TRUE, TRUE, 0);
+
+    gtk_widget_show_all(dialog);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        repoman_dialog_add_repo(rmi,
+                g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_name))));
+        break;
+    }
+
+    gtk_widget_destroy(dialog);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_maps_repoman(GtkAction *action)
+{
+    RepoManInfo rmi;
+    GtkWidget *hbox;
+    GtkWidget *btn_rename;
+    GtkWidget *btn_delete;
+    GtkWidget *btn_new;
+    GList *curr;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    rmi.dialog = gtk_dialog_new_with_buttons(_("Repositories"),
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+            NULL);
+
+    hbox = gtk_hbox_new(FALSE, 4);
+
+    gtk_box_pack_start(GTK_BOX(hbox),
+            rmi.cmb_repos = gtk_combo_box_new_text(), FALSE, FALSE, 4);
+
+    gtk_box_pack_start(GTK_BOX(hbox),
+            gtk_vseparator_new(), TRUE, TRUE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            btn_rename = gtk_button_new_with_label("Rename..."),
+            FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            btn_delete = gtk_button_new_with_label("Delete..."),
+            FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            btn_new = gtk_button_new_with_label("New..."),
+            FALSE, FALSE, 4);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(rmi.dialog)->vbox),
+            hbox, FALSE, FALSE, 4);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(rmi.dialog)->vbox),
+            gtk_hseparator_new(), TRUE, TRUE, 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(rmi.dialog)->vbox),
+            rmi.notebook = gtk_notebook_new(), TRUE, TRUE, 4);
+
+    gtk_notebook_set_show_tabs(GTK_NOTEBOOK(rmi.notebook), FALSE);
+    gtk_notebook_set_show_border(GTK_NOTEBOOK(rmi.notebook), FALSE);
+
+    rmi.repo_edits = NULL;
+
+    /* Populate combo box and pages in notebook. */
+    for(curr = _repo_list; curr; curr = curr->next)
+    {
+        RepoData *rd = (RepoData*)curr->data;
+        RepoEditInfo *rei = repoman_dialog_add_repo(&rmi, g_strdup(rd->name));
+
+        /* Initialize fields with data from the RepoData object. */
+        gtk_entry_set_text(GTK_ENTRY(rei->txt_url), rd->url);
+        gtk_entry_set_text(GTK_ENTRY(rei->txt_cache_dir),
+                rd->cache_dir);
+        hildon_controlbar_set_value(
+                HILDON_CONTROLBAR(rei->num_dl_zoom_steps),
+                rd->dl_zoom_steps);
+        hildon_controlbar_set_value(
+                HILDON_CONTROLBAR(rei->num_view_zoom_steps),
+                rd->view_zoom_steps);
+    }
+
+    /* Connect signals. */
+    g_signal_connect(G_OBJECT(btn_rename), "clicked",
+            G_CALLBACK(repoman_dialog_rename), &rmi);
+    g_signal_connect(G_OBJECT(btn_delete), "clicked",
+            G_CALLBACK(repoman_dialog_delete), &rmi);
+    g_signal_connect(G_OBJECT(btn_new), "clicked",
+            G_CALLBACK(repoman_dialog_new), &rmi);
+    g_signal_connect(G_OBJECT(rmi.cmb_repos), "changed",
+            G_CALLBACK(repoman_dialog_select), &rmi);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(rmi.cmb_repos), 0);
+    gtk_widget_show_all(rmi.dialog);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(rmi.dialog)))
+    {
+        /* Iterate through repos and verify each. */
+        gboolean verified = TRUE;
+        gint i;
+        GList *curr;
+        gchar *old_curr_repo_name = NULL;
+        for(i = 0, curr = rmi.repo_edits;
+                verified && curr; curr = curr->next, i++)
+        {
+            RepoEditInfo *rei = curr->data;
+            /* Verify that cache directory exists or can be created. */
+            GnomeVFSURI *map_dir_uri = gnome_vfs_uri_new(gtk_entry_get_text(
+                        GTK_ENTRY(rei->txt_cache_dir)));
+            if(!gnome_vfs_uri_exists(map_dir_uri))
+            {
+                GnomeVFSURI *parent, *curr_uri;
+                GList *list = NULL;
+
+                list = g_list_prepend(list, curr_uri = map_dir_uri);
+                while(GNOME_VFS_ERROR_NOT_FOUND
+                        == gnome_vfs_make_directory_for_uri(
+                            parent = gnome_vfs_uri_get_parent(curr_uri), 0755))
+                    list = g_list_prepend(list, curr_uri = parent);
+
+                while(list != NULL)
+                {
+                    if(verified)
+                    {
+                        verified = (GNOME_VFS_OK
+                                == gnome_vfs_make_directory_for_uri(
+                                    (GnomeVFSURI*)list->data, 0755));
+                    }
+                    gnome_vfs_uri_unref((GnomeVFSURI*)list->data);
+                    list = g_list_remove(list, list->data);
+                }
+                /* verified now equals result of last make-dir attempt. */
+            }
+
+            if(!verified)
+            {
+                /* Failed to create Map Cache directory. */
+                gchar buffer[1024];
+                sprintf(buffer, "%s: %s",
+                        _("Unable to create cache directory for repository"),
+                        rei->name);
+                gtk_combo_box_set_active(GTK_COMBO_BOX(rmi.cmb_repos), i);
+                popup_error(rmi.dialog, buffer);
+            }
+        }
+        if(!verified)
+            continue;
+
+        /* We're good to replace.  Delete old _repo_list */
+        menu_maps_remove_repos();
+        while(_repo_list)
+        {
+            if(_repo_list->data == _curr_repo)
+                old_curr_repo_name = g_strdup(
+                        ((RepoData*)_repo_list->data)->name);
+            g_free(((RepoData*)_repo_list->data)->name);
+            g_free(((RepoData*)_repo_list->data)->url);
+            g_free(((RepoData*)_repo_list->data)->cache_dir);
+            g_free(_repo_list->data);
+            _repo_list = g_list_delete_link(_repo_list, _repo_list);
+        }
+
+        /* Write new _repo_list. */
+        _curr_repo = NULL;
+        for(i = 0, curr = rmi.repo_edits; curr; curr = curr->next, i++)
+        {
+            RepoEditInfo *rei = curr->data;
+            RepoData *rd = g_new(RepoData, 1);
+            rd->name = g_strdup(rei->name);
+            rd->url = g_strdup(gtk_entry_get_text(GTK_ENTRY(rei->txt_url)));
+            rd->cache_dir = g_strdup(gtk_entry_get_text(
+                    GTK_ENTRY(rei->txt_cache_dir)));
+            rd->dl_zoom_steps = hildon_controlbar_get_value(
+                    HILDON_CONTROLBAR(rei->num_dl_zoom_steps));
+            rd->view_zoom_steps = hildon_controlbar_get_value(
+                    HILDON_CONTROLBAR(rei->num_view_zoom_steps));
+            _repo_list = g_list_append(_repo_list, rd);
+
+            if(old_curr_repo_name && !strcmp(old_curr_repo_name, rd->name))
+                _curr_repo = rd;
+        }
+        if(!_curr_repo)
+            _curr_repo = (RepoData*)g_list_first(_repo_list)->data;
+        menu_maps_add_repos();
+        break;
+    }
+
+    gtk_widget_hide(rmi.dialog); /* Destroying causes a crash (!?!?!??!) */
+
+    map_set_zoom(_zoom); /* make sure we're at an appropriate zoom level. */
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+typedef struct _MapmanInfo MapmanInfo;
+struct _MapmanInfo {
     GtkWidget *notebook;
+    GtkWidget *tbl_area;
+
+    /* The "Setup" tab. */
+    GtkWidget *rad_download;
+    GtkWidget *rad_delete;
+    GtkWidget *chk_overwrite;
+    GtkWidget *rad_by_area;
+    GtkWidget *rad_along_route;
+    GtkWidget *txt_route_radius;
+
+    /* The "Area" tab. */
     GtkWidget *txt_topleft_lat;
     GtkWidget *txt_topleft_lon;
     GtkWidget *txt_botright_lat;
     GtkWidget *txt_botright_lon;
+
+    /* The "Zoom" tab. */
     GtkWidget *chk_zoom_levels[MAX_ZOOM];
 };
 
-static void dlarea_clear(GtkWidget *widget, DlAreaInfo *dlarea_info)
+static void mapman_clear(GtkWidget *widget, MapmanInfo *mapman_info)
 {
     guint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
-    if(gtk_notebook_get_current_page(GTK_NOTEBOOK(dlarea_info->notebook)))
+    if(gtk_notebook_get_current_page(GTK_NOTEBOOK(mapman_info->notebook)))
         /* This is the second page (the "Zoom" page) - clear the checks. */
         for(i = 0; i < MAX_ZOOM; i++)
             gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(dlarea_info->chk_zoom_levels[i]), FALSE);
+                    GTK_TOGGLE_BUTTON(mapman_info->chk_zoom_levels[i]), FALSE);
     else
     {
         /* This is the first page (the "Area" page) - clear the text fields. */
-        gtk_entry_set_text(GTK_ENTRY(dlarea_info->txt_topleft_lat), "");
-        gtk_entry_set_text(GTK_ENTRY(dlarea_info->txt_topleft_lon), "");
-        gtk_entry_set_text(GTK_ENTRY(dlarea_info->txt_botright_lat), "");
-        gtk_entry_set_text(GTK_ENTRY(dlarea_info->txt_botright_lon), "");
+        gtk_entry_set_text(GTK_ENTRY(mapman_info->txt_topleft_lat), "");
+        gtk_entry_set_text(GTK_ENTRY(mapman_info->txt_topleft_lon), "");
+        gtk_entry_set_text(GTK_ENTRY(mapman_info->txt_botright_lat), "");
+        gtk_entry_set_text(GTK_ENTRY(mapman_info->txt_botright_lon), "");
     }
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
+static void mapman_update_state(GtkWidget *widget, MapmanInfo *mapman_info)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    gtk_widget_set_sensitive( mapman_info->chk_overwrite,
+            gtk_toggle_button_get_active(
+                GTK_TOGGLE_BUTTON(mapman_info->rad_download)));
+
+    if(gtk_toggle_button_get_active(
+                GTK_TOGGLE_BUTTON(mapman_info->rad_by_area)))
+        gtk_widget_show(mapman_info->tbl_area);
+    else if(gtk_notebook_get_n_pages(GTK_NOTEBOOK(mapman_info->notebook)) == 3)
+        gtk_widget_hide(mapman_info->tbl_area);
+
+    gtk_widget_set_sensitive(mapman_info->txt_route_radius,
+            gtk_toggle_button_get_active(
+                GTK_TOGGLE_BUTTON(mapman_info->rad_along_route)));
+}
+
 static gboolean
-menu_cb_maps_dlarea(GtkAction *action)
+menu_cb_maps_select(GtkAction *action, gpointer new_repo)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    _curr_repo = new_repo;
+    map_force_redraw();
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_mapman(GtkAction *action)
 {
     GtkWidget *dialog;
+    GtkWidget *vbox;
+    GtkWidget *hbox;
     GtkWidget *table;
     GtkWidget *label;
     GtkWidget *button;
@@ -6150,13 +8529,13 @@ menu_cb_maps_dlarea(GtkAction *action)
     GtkWidget *lbl_gps_lon;
     GtkWidget *lbl_center_lat;
     GtkWidget *lbl_center_lon;
-    DlAreaInfo dlarea_info;
+    MapmanInfo mapman_info;
     gchar buffer[80];
     gfloat lat, lon;
     guint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    dialog = gtk_dialog_new_with_buttons(_("Download Maps by Area"),
+    dialog = gtk_dialog_new_with_buttons(_("Manage Maps"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
             NULL);
@@ -6164,95 +8543,79 @@ menu_cb_maps_dlarea(GtkAction *action)
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
             button = gtk_button_new_with_label(_("Clear")));
     g_signal_connect(G_OBJECT(button), "clicked",
-                      G_CALLBACK(dlarea_clear), &dlarea_info);
+                      G_CALLBACK(mapman_clear), &mapman_info);
 
+    /* Clear button. */
     gtk_dialog_add_button(GTK_DIALOG(dialog),
             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT);
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-            dlarea_info.notebook = gtk_notebook_new(), TRUE, TRUE, 0);
-    
-    gtk_notebook_append_page(GTK_NOTEBOOK(dlarea_info.notebook),
-            table = gtk_table_new(2, 3, FALSE),
-            label = gtk_label_new(_("Area")));
+            mapman_info.notebook = gtk_notebook_new(), TRUE, TRUE, 0);
 
-    /* Clear button and Label Columns. */
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Latitude")),
-            1, 2, 0, 1, GTK_FILL, 0, 4, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Longitude")),
-            2, 3, 0, 1, GTK_FILL, 0, 4, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    /* Setup page. */
+    gtk_notebook_append_page(GTK_NOTEBOOK(mapman_info.notebook),
+            vbox = gtk_vbox_new(FALSE, 2),
+            label = gtk_label_new(_("Setup")));
+    gtk_notebook_set_tab_label_packing(
+            GTK_NOTEBOOK(mapman_info.notebook), vbox,
+            FALSE, FALSE, GTK_PACK_START);
 
-    /* GPS. */
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("GPS Location")),
-            0, 1, 1, 2, GTK_FILL, 0, 4, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            lbl_gps_lat = gtk_label_new(""),
-            1, 2, 1, 2, GTK_FILL, 0, 4, 0);
-    gtk_label_set_selectable(GTK_LABEL(lbl_gps_lat), TRUE);
-    gtk_misc_set_alignment(GTK_MISC(lbl_gps_lat), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            lbl_gps_lon = gtk_label_new(""),
-            2, 3, 1, 2, GTK_FILL, 0, 4, 0);
-    gtk_label_set_selectable(GTK_LABEL(lbl_gps_lon), TRUE);
-    gtk_misc_set_alignment(GTK_MISC(lbl_gps_lon), 1.f, 0.5f);
+    gtk_box_pack_start(GTK_BOX(vbox),
+            hbox = gtk_hbox_new(FALSE, 4),
+            FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            mapman_info.rad_download
+                    = gtk_radio_button_new_with_label(NULL, _("Download Maps")),
+            FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+            FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(label),
+            mapman_info.chk_overwrite
+                    = gtk_check_button_new_with_label(_("Overwrite"))),
 
-    /* Center. */
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("View Center")),
-            0, 1, 2, 3, GTK_FILL, 0, 4, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            lbl_center_lat = gtk_label_new(""),
-            1, 2, 2, 3, GTK_FILL, 0, 4, 0);
-    gtk_label_set_selectable(GTK_LABEL(lbl_center_lat), TRUE);
-    gtk_misc_set_alignment(GTK_MISC(lbl_center_lat), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            lbl_center_lon = gtk_label_new(""),
-            2, 3, 2, 3, GTK_FILL, 0, 4, 0);
-    gtk_label_set_selectable(GTK_LABEL(lbl_center_lon), TRUE);
-    gtk_misc_set_alignment(GTK_MISC(lbl_center_lon), 1.f, 0.5f);
+    gtk_box_pack_start(GTK_BOX(vbox),
+            mapman_info.rad_delete
+                    = gtk_radio_button_new_with_label_from_widget(
+                        GTK_RADIO_BUTTON(mapman_info.rad_download),
+                        _("Delete Maps")),
+            FALSE, FALSE, 0);
 
-    /* default values for Top Left and Bottom Right are defined by the
-     * rectangle of the current and the previous Center */
+    gtk_box_pack_start(GTK_BOX(vbox),
+            gtk_hseparator_new(),
+            FALSE, FALSE, 0);
 
-    /* Top Left. */
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Top-Left")),
-            0, 1, 3, 4, GTK_FILL, 0, 4, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            dlarea_info.txt_topleft_lat = gtk_entry_new(),
-            1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
-    gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_topleft_lat), 1.f);
-    gtk_table_attach(GTK_TABLE(table),
-            dlarea_info.txt_topleft_lon = gtk_entry_new(),
-            2, 3, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
-    gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_topleft_lon), 1.f);
-
-    /* Bottom Right. */
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Bottom-Right")),
-            0, 1, 4, 5, GTK_FILL, 0, 4, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            dlarea_info.txt_botright_lat = gtk_entry_new(),
-            1, 2, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
-    gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_botright_lat), 1.f);
-    gtk_table_attach(GTK_TABLE(table),
-            dlarea_info.txt_botright_lon = gtk_entry_new(),
-            2, 3, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
-    gtk_entry_set_alignment(GTK_ENTRY(dlarea_info.txt_botright_lon), 1.f);
+    gtk_box_pack_start(GTK_BOX(vbox),
+            mapman_info.rad_by_area
+                    = gtk_radio_button_new_with_label(NULL,
+                        _("By Area (see tab)")),
+            FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox),
+            hbox = gtk_hbox_new(FALSE, 4),
+            FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            mapman_info.rad_along_route
+                    = gtk_radio_button_new_with_label_from_widget(
+                        GTK_RADIO_BUTTON(mapman_info.rad_by_area),
+                        _("Along Route - Radius:")),
+            FALSE, FALSE, 0);
+    gtk_widget_set_sensitive(mapman_info.rad_along_route, _route.head != NULL);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            mapman_info.txt_route_radius
+                    = gtk_entry_new(),
+            FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            gtk_label_new(UNITS_TEXT[_units]), FALSE, FALSE, 0);
+    gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_route_radius), 1.f);
 
 
-    gtk_notebook_append_page(GTK_NOTEBOOK(dlarea_info.notebook),
+    /* Zoom page. */
+    gtk_notebook_append_page(GTK_NOTEBOOK(mapman_info.notebook),
             table = gtk_table_new(5, 5, FALSE),
             label = gtk_label_new(_("Zoom")));
+    gtk_notebook_set_tab_label_packing(
+            GTK_NOTEBOOK(mapman_info.notebook), table,
+            FALSE, FALSE, GTK_PACK_START);
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(
                 _("Zoom Levels to Download: (0 -> most detail)")),
@@ -6262,14 +8625,97 @@ menu_cb_maps_dlarea(GtkAction *action)
     {
         sprintf(buffer, "%d", i);
         gtk_table_attach(GTK_TABLE(table),
-                dlarea_info.chk_zoom_levels[i]
+                mapman_info.chk_zoom_levels[i]
                         = gtk_check_button_new_with_label(buffer),
                 i % 5, i % 5 + 1, i / 5 + 1, i / 5 + 2,
                 GTK_EXPAND | GTK_FILL, 0, 4, 0);
     }
 
+    /* Area page. */
+    gtk_notebook_append_page(GTK_NOTEBOOK(mapman_info.notebook),
+        mapman_info.tbl_area = gtk_table_new(3, 4, FALSE),
+        label = gtk_label_new(_("Area")));
+
+    /* Label Columns. */
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            label = gtk_label_new(_("Latitude")),
+            1, 2, 0, 1, GTK_FILL, 0, 4, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            label = gtk_label_new(_("Longitude")),
+            2, 3, 0, 1, GTK_FILL, 0, 4, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+    /* GPS. */
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            label = gtk_label_new(_("GPS Location")),
+            0, 1, 1, 2, GTK_FILL, 0, 4, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            lbl_gps_lat = gtk_label_new(""),
+            1, 2, 1, 2, GTK_FILL, 0, 4, 0);
+    gtk_label_set_selectable(GTK_LABEL(lbl_gps_lat), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(lbl_gps_lat), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            lbl_gps_lon = gtk_label_new(""),
+            2, 3, 1, 2, GTK_FILL, 0, 4, 0);
+    gtk_label_set_selectable(GTK_LABEL(lbl_gps_lon), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(lbl_gps_lon), 1.f, 0.5f);
+
+    /* Center. */
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            label = gtk_label_new(_("View Center")),
+            0, 1, 2, 3, GTK_FILL, 0, 4, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            lbl_center_lat = gtk_label_new(""),
+            1, 2, 2, 3, GTK_FILL, 0, 4, 0);
+    gtk_label_set_selectable(GTK_LABEL(lbl_center_lat), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(lbl_center_lat), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            lbl_center_lon = gtk_label_new(""),
+            2, 3, 2, 3, GTK_FILL, 0, 4, 0);
+    gtk_label_set_selectable(GTK_LABEL(lbl_center_lon), TRUE);
+    gtk_misc_set_alignment(GTK_MISC(lbl_center_lon), 1.f, 0.5f);
+
+    /* default values for Top Left and Bottom Right are defined by the
+     * rectangle of the current and the previous Center */
+
+    /* Top Left. */
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            label = gtk_label_new(_("Top-Left")),
+            0, 1, 3, 4, GTK_FILL, 0, 4, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            mapman_info.txt_topleft_lat = gtk_entry_new(),
+            1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+    gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lat), 1.f);
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            mapman_info.txt_topleft_lon = gtk_entry_new(),
+            2, 3, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+    gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lon), 1.f);
+
+    /* Bottom Right. */
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            label = gtk_label_new(_("Bottom-Right")),
+            0, 1, 4, 5, GTK_FILL, 0, 4, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            mapman_info.txt_botright_lat = gtk_entry_new(),
+            1, 2, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+    gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lat), 1.f);
+    gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+            mapman_info.txt_botright_lon = gtk_entry_new(),
+            2, 3, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+    gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lon), 1.f);
+
+    /* Default action is to download by area. */
+    gtk_toggle_button_set_active(
+            GTK_TOGGLE_BUTTON(mapman_info.rad_by_area), TRUE);
+
     /* Initialize fields.  Do no use g_ascii_formatd; these strings will be
      * output (and parsed) as locale-dependent. */
+
     sprintf(buffer, "%.06f", _pos_lat);
     gtk_label_set_text(GTK_LABEL(lbl_gps_lat), buffer);
     sprintf(buffer, "%.06f", _pos_lon);
@@ -6284,25 +8730,44 @@ menu_cb_maps_dlarea(GtkAction *action)
     /* Initialize to the bounds of the screen. */
     unit2latlon(x2unit(0), y2unit(0), lat, lon);
     sprintf(buffer, "%.06f", lat);
-    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_topleft_lat), buffer);
+    gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_topleft_lat), buffer);
     sprintf(buffer, "%.06f", lon);
-    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_topleft_lon), buffer);
+    gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_topleft_lon), buffer);
 
     unit2latlon(x2unit(_screen_width_pixels), y2unit(_screen_height_pixels),
             lat, lon);
     sprintf(buffer, "%.06f", lat);
-    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_botright_lat), buffer);
+    gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_botright_lat), buffer);
     sprintf(buffer, "%.06f", lon);
-    gtk_entry_set_text(GTK_ENTRY(dlarea_info.txt_botright_lon), buffer);
+    gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_botright_lon), buffer);
 
-    for(i = 0; i < MAX_ZOOM; i++)
-        gtk_toggle_button_set_active(
-            GTK_TOGGLE_BUTTON(dlarea_info.chk_zoom_levels[i]), FALSE);
     gtk_toggle_button_set_active(
-            GTK_TOGGLE_BUTTON(dlarea_info.chk_zoom_levels[_zoom]), TRUE);
-
+            GTK_TOGGLE_BUTTON(mapman_info.chk_zoom_levels[_zoom]), TRUE);
 
     gtk_widget_show_all(dialog);
+
+    mapman_update_state(NULL, &mapman_info);
+
+    /* Connect signals. */
+    if(*_curr_repo->url)
+    {
+        g_signal_connect(G_OBJECT(mapman_info.rad_download), "clicked",
+                          G_CALLBACK(mapman_update_state), &mapman_info);
+        gtk_widget_set_sensitive(mapman_info.rad_download, TRUE);
+    }
+    else
+    {
+        gtk_widget_set_sensitive(mapman_info.rad_download, FALSE);
+        popup_error(dialog,
+                _("NOTE: You must set a Map URI in the Repository Manager in "
+                    "order to download maps."));
+    }
+    g_signal_connect(G_OBJECT(mapman_info.rad_delete), "clicked",
+                      G_CALLBACK(mapman_update_state), &mapman_info);
+    g_signal_connect(G_OBJECT(mapman_info.rad_by_area), "clicked",
+                      G_CALLBACK(mapman_update_state), &mapman_info);
+    g_signal_connect(G_OBJECT(mapman_info.rad_along_route), "clicked",
+                      G_CALLBACK(mapman_update_state), &mapman_info);
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
@@ -6312,29 +8777,30 @@ menu_cb_maps_dlarea(GtkAction *action)
         guint start_unitx, start_unity, end_unitx, end_unity;
         guint num_maps = 0;
         GtkWidget *confirm;
+        gboolean is_deleting, is_overwriting;
 
-        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_topleft_lat));
+        text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lat));
         start_lat = strtof(text, &error_check);
         if(text == error_check) {
             popup_error(dialog, _("Invalid Top-Left Latitude"));
             continue;
         }
 
-        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_topleft_lon));
+        text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lon));
         start_lon = strtof(text, &error_check);
         if(text == error_check) {
             popup_error(dialog, _("Invalid Top-Left Longitude"));
             continue;
         }
 
-        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_botright_lat));
+        text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_botright_lat));
         end_lat = strtof(text, &error_check);
         if(text == error_check) {
             popup_error(dialog, _("Invalid Bottom-Right Latitude"));
             continue;
         }
 
-        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_botright_lon));
+        text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_botright_lon));
         end_lon = strtof(text, &error_check);
         if(text == error_check) {
             popup_error(dialog,_("Invalid Bottom-Right Longitude"));
@@ -6362,7 +8828,7 @@ menu_cb_maps_dlarea(GtkAction *action)
         for(i = 0; i < MAX_ZOOM; i++)
         {
             if(gtk_toggle_button_get_active(
-                        GTK_TOGGLE_BUTTON(dlarea_info.chk_zoom_levels[i])))
+                        GTK_TOGGLE_BUTTON(mapman_info.chk_zoom_levels[i])))
             {
                 guint start_tilex, start_tiley, end_tilex, end_tiley;
                 start_tilex = unit2ztile(start_unitx, i);
@@ -6373,22 +8839,35 @@ menu_cb_maps_dlarea(GtkAction *action)
                     * (end_tiley - start_tiley + 1);
             }
         }
-        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_topleft_lat));
+        text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lat));
 
-        sprintf(buffer,
-                "%s %d %s\n(%s %.2f MB)\n", _("Confirm download of"),
-                num_maps, _("maps"), _("up to about"),
-                num_maps * (strstr(_map_uri_format, "%s") ? 18e-3 : 6e-3));
-        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_topleft_lat));
+        is_deleting = gtk_toggle_button_get_active(
+                GTK_TOGGLE_BUTTON(mapman_info.rad_delete));
+        is_overwriting = gtk_toggle_button_get_active(
+                GTK_TOGGLE_BUTTON(mapman_info.chk_overwrite));
+
+        if(is_deleting)
+        {
+            sprintf(buffer, "%s %d %s", _("Confirm DELETION of"),
+                    num_maps, _("maps"));
+        }
+        else
+        {
+            sprintf(buffer,
+                    "%s %d %s\n(%s %.2f MB)\n", _("Confirm download of"),
+                    num_maps, _("maps"), _("up to about"),
+                    num_maps * (strstr(_curr_repo->url, "%s") ? 18e-3 : 6e-3));
+        }
+        text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lat));
         confirm = hildon_note_new_confirmation(GTK_WINDOW(dialog), buffer);
-        text = gtk_entry_get_text(GTK_ENTRY(dlarea_info.txt_topleft_lat));
+        text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lat));
 
         if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
         {
             for(i = 0; i < MAX_ZOOM; i++)
             {
                 if(gtk_toggle_button_get_active(
-                            GTK_TOGGLE_BUTTON(dlarea_info.chk_zoom_levels[i])))
+                            GTK_TOGGLE_BUTTON(mapman_info.chk_zoom_levels[i])))
                 {
                     guint start_tilex, start_tiley, end_tilex, end_tiley;
                     guint tilex, tiley;
@@ -6399,7 +8878,10 @@ menu_cb_maps_dlarea(GtkAction *action)
                     for(tiley = start_tiley; tiley <= end_tiley; tiley++)
                         for(tilex = start_tilex; tilex <= end_tilex; tilex++)
                             map_initiate_download(tilex, tiley, i,
-                                    INITIAL_DOWNLOAD_RETRIES);
+                                    is_deleting ? 0 :
+                                              (is_overwriting
+                                                ? -INITIAL_DOWNLOAD_RETRIES
+                                                : INITIAL_DOWNLOAD_RETRIES));
                 }
             }
             gtk_widget_destroy(confirm);
@@ -6461,6 +8943,7 @@ menu_cb_enable_gps(GtkAction *action)
         track_add(0, FALSE);
     }
     map_move_mark();
+    gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_reset_item), _enable_gps);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -6473,7 +8956,35 @@ menu_cb_auto_download(GtkAction *action)
 
     if((_auto_download = gtk_check_menu_item_get_active(
             GTK_CHECK_MENU_ITEM(_menu_auto_download_item))))
+    {
+        if(!*_curr_repo->url)
+            popup_error(_window,
+                _("NOTE: You must set a Map URI in the Repository Manager in "
+                    "order to download maps."));
         map_force_redraw();
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_gps_reset(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    reset_bluetooth();
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_gps_details(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    gps_details();
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -6521,8 +9032,9 @@ map_download_idle_refresh(ProgressUpdateInfo *pui)
     /* Remove pui from hash now in case we need to retry. */
     g_hash_table_remove(_downloads_hash, pui);
 
-    /* Test if download succeeded. */
-    if(gnome_vfs_uri_exists((GnomeVFSURI*)pui->dest_list->data))
+    /* Test if download succeeded (only if retries_left != 0). */
+    if(!pui->retries_left
+            || gnome_vfs_uri_exists((GnomeVFSURI*)pui->dest_list->data))
     {
         gint zoom_diff = pui->zoom - _zoom;
         /* Only refresh at same or "lower" (more detailed) zoom level. */
@@ -6547,6 +9059,7 @@ map_download_idle_refresh(ProgressUpdateInfo *pui)
                                 ((tiley - _base_tiley) << TILE_SIZE_P2),
                                 TRUE);
                         map_render_paths();
+                        map_render_poi();
                         gtk_widget_queue_draw_area(
                                 _map_widget,
                                 ((tilex-_base_tilex)<<TILE_SIZE_P2) - _offsetx,
@@ -6558,9 +9071,16 @@ map_download_idle_refresh(ProgressUpdateInfo *pui)
         }
     }
     /* Else the download failed. Update retries_left and maybe try again. */
-    else if(pui->retries_left--)
-        map_initiate_download(pui->tilex, pui->tiley,
-                pui->zoom, pui->retries_left);
+    else
+    {
+        if(pui->retries_left > 0)
+            --pui->retries_left;
+        else if(pui->retries_left < 0)
+            ++pui->retries_left;
+        if(pui->retries_left)
+            map_initiate_download(pui->tilex, pui->tiley,
+                    pui->zoom, pui->retries_left);
+    }
 
     progress_update_info_free(pui);
 
@@ -6595,9 +9115,10 @@ map_download_cb_async(GnomeVFSAsyncHandle *handle,
         {
             /* Directory doesn't exist yet - create it, then we'll retry */
             gchar buffer[1024];
-            sprintf(buffer, "%s/%u", _map_dir_name, pui->zoom);
+            sprintf(buffer, "%s/%u", _curr_repo->cache_dir, pui->zoom);
             gnome_vfs_make_directory(buffer, 0775);
-            sprintf(buffer, "%s/%u/%u", _map_dir_name, pui->zoom, pui->tilex);
+            sprintf(buffer, "%s/%u/%u",
+                    _curr_repo->cache_dir, pui->zoom, pui->tilex);
             gnome_vfs_make_directory(buffer, 0775);
         }
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
@@ -6691,9 +9212,10 @@ cmenu_cb_loc_distance_to(GtkAction *action)
     unit2latlon(unitx, unity, lat, lon);
 
     sprintf(buffer, "%s: %.02f %s", _("Distance to Location"),
-            calculate_distance(_pos_lat, _pos_lon, lat, lon), _units);
+            calculate_distance(_pos_lat, _pos_lon, lat, lon),
+            UNITS_TEXT[_units]);
     hildon_banner_show_information(_window, NULL, buffer);
-    
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -6792,11 +9314,7 @@ cmenu_cb_way_clip_latlon(GtkAction *action)
     {
         unit2latlon(way->point->unitx, way->point->unity, lat, lon);
 
-        sprintf(buffer,
-                "%s: %.06f\n"
-                "%s: %.06f",
-                _("Latitude"), lat,
-                _("Longitude"), lon);
+        sprintf(buffer, "%.06f, %.06f", lat, lon);
 
         gtk_clipboard_set_text(
                 gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), buffer, -1);
@@ -6882,7 +9400,8 @@ cmenu_cb_way_distance_to(GtkAction *action)
         unit2latlon(way->point->unitx, way->point->unity, lat, lon);
 
         sprintf(buffer, "%s: %.02f %s", _("Distance to Waypoint"),
-                calculate_distance(_pos_lat, _pos_lon, lat, lon), _units);
+                calculate_distance(_pos_lat, _pos_lon, lat, lon),
+                UNITS_TEXT[_units]);
         hildon_banner_show_information(_window, NULL, buffer);
     }
     else
@@ -6929,6 +9448,981 @@ cmenu_cb_way_delete(GtkAction *action)
     return TRUE;
 }
 
+static gboolean
+category_delete(GtkWidget *widget, DeletePOI *dpoi)
+{
+    GtkWidget *dialog;
+    guint i;
+    gchar *buffer;
+
+    buffer = g_strdup_printf(_("Delete category?\n%s"), dpoi->txt_label);
+    dialog = hildon_note_new_confirmation (GTK_WINDOW(_window), buffer);
+    g_free(buffer);
+    i = gtk_dialog_run (GTK_DIALOG (dialog));
+    gtk_widget_destroy (GTK_WIDGET (dialog));
+
+    if(i == GTK_RESPONSE_OK)
+    {
+        /* delete dpoi->poi_id */
+        buffer = g_strdup_printf("delete from poi where cat_id = %d",
+            dpoi->id);
+
+        if(sqlite_exec(_db, buffer, NULL, NULL, NULL)
+            != SQLITE_OK)
+        {
+            hildon_banner_show_information(_window, NULL,
+                _("Problem deleting POI"));
+            g_free(buffer);
+            return FALSE;
+        }
+
+        g_free(buffer);
+        buffer = g_strdup_printf("delete from category where cat_id = %d",
+            dpoi->id);
+
+        if(sqlite_exec(_db, buffer, NULL, NULL, NULL)
+            != SQLITE_OK)
+        {
+            hildon_banner_show_information(_window, NULL,
+                _("Problem deleting category"));
+            g_free(buffer);
+            return FALSE;
+        }
+
+        gtk_widget_hide_all(dpoi->dialog);
+        map_force_redraw();
+        g_free(buffer);
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+category_dialog(guint cat_id)
+{
+    gchar **pszResult;
+    gint nRow, nColumn;
+    gchar *sql;
+    gchar *cat_label = NULL, *cat_desc = NULL;
+    guint cat_enabled;
+    GtkWidget *dialog;
+    GtkWidget *table;
+    GtkWidget *label;
+    GtkWidget *txt_label;
+    GtkWidget *txt_desc;
+    GtkWidget *btn_delete = NULL;
+    GtkWidget *txt_scroll;
+    GtkWidget *chk_enabled;
+    GtkTextBuffer *desc_txt;
+    GtkTextIter begin, end;
+    gboolean results = TRUE;
+    DeletePOI dpoi = {NULL, NULL, 0};
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(cat_id > 0)
+    {
+        sql = g_strdup_printf(
+            "select c.label, c. desc, c.enabled"
+            " from category c"
+            " where c.cat_id = %d",
+             cat_id);
+
+        if(sqlite_get_table(_db, sql, &pszResult, &nRow, &nColumn, NULL)
+            != SQLITE_OK)
+        {
+            g_free(sql);
+            printf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+            return FALSE;
+        }
+        g_free(sql);
+
+        if(nRow == 0)
+            return FALSE;
+
+        cat_label = g_strdup(pszResult[1 * nColumn + 0]);
+        cat_desc  = g_strdup(pszResult[1 * nColumn + 1]);
+        cat_enabled = atoi(pszResult[1 * nColumn + 2]);
+        sqlite_free_table(pszResult);
+
+        dialog = gtk_dialog_new_with_buttons(_("Edit Category"),
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            NULL);
+
+        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
+                btn_delete = gtk_button_new_with_label(_("Delete")));
+
+        dpoi.dialog = dialog;
+        dpoi.txt_label = g_strdup_printf("%s (%s)", cat_label, cat_desc);
+        dpoi.id = cat_id;
+
+        g_signal_connect(G_OBJECT(btn_delete), "clicked",
+                          G_CALLBACK(category_delete), &dpoi);
+
+        gtk_dialog_add_button(GTK_DIALOG(dialog),
+                GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT);
+    }
+    else
+    {
+        cat_enabled = 1;
+        cat_label = g_strdup("");
+        cat_id = 0;
+        cat_desc = g_strdup("");
+
+        dialog = gtk_dialog_new_with_buttons(_("Add Category"),
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+            NULL);
+    }
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+            table = gtk_table_new(6, 4, FALSE), TRUE, TRUE, 0);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Label: ")),
+            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            txt_label = gtk_entry_new(),
+            1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Desc.: ")),
+            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+    txt_scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(txt_scroll),
+                                   GTK_SHADOW_IN);
+    gtk_table_attach(GTK_TABLE(table),
+            txt_scroll,
+            1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(txt_scroll),
+                                 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+
+    txt_desc = gtk_text_view_new ();
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(txt_desc), GTK_WRAP_WORD);
+
+    gtk_container_add(GTK_CONTAINER(txt_scroll), txt_desc);
+    gtk_widget_show(txt_scroll);
+    gtk_widget_set_size_request(GTK_WIDGET(txt_scroll), 400, 60);
+
+    desc_txt = gtk_text_view_get_buffer(GTK_TEXT_VIEW(txt_desc));
+
+    gtk_table_attach(GTK_TABLE(table),
+            chk_enabled = gtk_check_button_new_with_label(
+                _("Enabled")),
+            0, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+
+    /* label */
+    gtk_entry_set_text(GTK_ENTRY(txt_label), cat_label);
+
+    /* desc */
+    gtk_text_buffer_set_text(desc_txt, cat_desc, -1);
+
+    /* enabled */
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_enabled),
+            (cat_enabled == 1 ? TRUE : FALSE));
+
+    g_free(cat_label);
+    cat_label = NULL;
+    g_free(cat_desc);
+    cat_desc = NULL;
+
+    gtk_widget_show_all(dialog);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_label))))
+            cat_label = g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_label)));
+        else
+        {
+            popup_error(dialog, _("Please specify a name for the category."));
+            continue;
+        }
+
+        gtk_text_buffer_get_iter_at_offset(desc_txt, &begin,0 );
+        gtk_text_buffer_get_end_iter (desc_txt, &end);
+        cat_desc = gtk_text_buffer_get_text(desc_txt, &begin, &end, TRUE);
+
+        cat_enabled = (gtk_toggle_button_get_active(
+                GTK_TOGGLE_BUTTON(chk_enabled)) ? 1 : 0);
+
+        if(cat_id > 0)
+        {
+            /* edit category */
+            sql = g_strdup_printf(
+                "update category set label = '%s', desc = '%s', "
+                "enabled = %d where poi_id = %d",
+                cat_label, cat_desc, cat_enabled, cat_id);
+            if(sqlite_exec(_db, sql, NULL, NULL, NULL) != SQLITE_OK)
+            {
+                hildon_banner_show_information(_window, NULL,
+                    _("Problem updating category"));
+                results = FALSE;
+            }
+        }
+        else
+        {
+            /* add category */
+            sql = g_strdup_printf(
+                "insert into category (label, desc, enabled) "
+                "values ('%s', '%s', %d)",
+                cat_label, cat_desc, cat_enabled);
+            if(sqlite_exec(_db, sql, NULL, NULL, NULL) != SQLITE_OK)
+            {
+                hildon_banner_show_information(_window, NULL,
+                    _("Problem adding category"));
+                results = FALSE;
+            }
+        }
+        g_free(sql);
+        break;
+    }
+
+    if(cat_label)
+        g_free(cat_label);
+    if(cat_desc)
+        g_free(cat_desc);
+    g_object_unref (desc_txt);
+
+    gtk_widget_hide_all(dialog);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    return results;
+}
+
+static void
+category_toggled (GtkCellRendererToggle *cell,
+           gchar                 *path,
+           gpointer               data)
+{
+    GtkTreeIter iter;
+    gboolean cat_enabled;
+    guint cat_id;
+    gchar buffer[100];
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    GtkTreeModel *model = GTK_TREE_MODEL(data);
+    if( !gtk_tree_model_get_iter_from_string(model, &iter, path) )
+        return;
+
+    gtk_tree_model_get(model, &iter, CAT_ENABLED, &cat_enabled, -1);
+    gtk_tree_model_get(model, &iter, CAT_ID, &cat_id, -1);
+
+    cat_enabled ^= 1;
+
+    sprintf(buffer, "update category set enabled = %d where cat_id = %d",
+        (cat_enabled ? 1 : 0), cat_id);
+
+    if(sqlite_exec(_db, buffer, NULL, NULL, NULL) != SQLITE_OK)
+        hildon_banner_show_information(_window, NULL,
+            _("Problem updating Category"));
+    else
+        gtk_list_store_set(GTK_LIST_STORE(model), &iter,
+                   CAT_ENABLED, cat_enabled, -1);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+}
+
+static GtkListStore*
+generate_store()
+{
+    guint i;
+    GtkTreeIter iter;
+    GtkListStore *store;
+    gchar *sql;
+    gchar **pszResult;
+    gint nRow, nColumn;
+    sql = g_strdup(
+        "select c.cat_id, c.enabled, c.label, c.desc"
+        " from category c "
+        " order by c.label");
+
+    if(sqlite_get_table(_db, sql, &pszResult, &nRow, &nColumn, NULL)
+        != SQLITE_OK)
+    {
+        g_free(sql);
+        printf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return NULL;
+    }
+    g_free(sql);
+
+    store = gtk_list_store_new(CAT_NUM_COLUMNS,
+                               G_TYPE_UINT,
+                               G_TYPE_BOOLEAN,
+                               G_TYPE_STRING,
+                               G_TYPE_STRING);
+
+    for(i = 1; i < nRow + 1; i++)
+    {
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter,
+                CAT_ID, atoi(pszResult[i * nColumn + 0]),
+                CAT_ENABLED,
+                (atoi(pszResult[i * nColumn + 1]) == 1 ? TRUE : FALSE),
+                CAT_LABEL, pszResult[i * nColumn + 2],
+                CAT_DESCRIPTION, pszResult[i * nColumn + 3],
+                -1);
+    }
+
+    sqlite_free_table(pszResult);
+    vprintf("%s(): return %p\n", __PRETTY_FUNCTION__, store);
+    return store;
+}
+
+static gboolean
+category_add(GtkWidget *widget, GtkWidget *tree_view)
+{
+    GtkListStore *store;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(category_dialog(0))
+    {
+        store = generate_store();
+        gtk_tree_view_set_model(
+                GTK_TREE_VIEW(tree_view),
+                GTK_TREE_MODEL(store));
+        g_object_unref(G_OBJECT(store));
+    }
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+category_edit(GtkWidget *widget, GtkWidget *tree_view)
+{
+    GtkTreeIter iter;
+    GtkTreeModel *store;
+    GtkTreeSelection *selection;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    store = gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view));
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+    if(gtk_tree_selection_get_selected(selection, &store, &iter))
+    {
+        GValue val;
+        memset(&val, 0, sizeof(val));
+        gtk_tree_model_get_value(store, &iter, 0, &val);
+        if(category_dialog(g_value_get_uint(&val)))
+        {
+            GtkListStore *new_store = generate_store();
+            gtk_tree_view_set_model(
+                    GTK_TREE_VIEW(tree_view),
+                    GTK_TREE_MODEL(new_store));
+            g_object_unref(G_OBJECT(new_store));
+        }
+    }
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+category_list()
+{
+    GtkWidget *dialog;
+    GtkWidget *tree_view;
+    GtkWidget *sw;
+    GtkWidget *btn_edit;
+    GtkWidget *btn_add;
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GtkListStore *store;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    dialog = gtk_dialog_new_with_buttons(_("Category List"),
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            NULL);
+
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
+            btn_edit = gtk_button_new_with_label(_("Edit")));
+
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
+            btn_add = gtk_button_new_with_label(_("Add")));
+
+    store = generate_store();
+
+    if(!store)
+        return TRUE;
+
+    sw = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (sw),
+                  GTK_POLICY_NEVER,
+                  GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+            sw, TRUE, TRUE, 0);
+
+    tree_view = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    /* Maemo-related? */
+    g_object_set(tree_view, "allow-checkbox-mode", FALSE, NULL);
+    gtk_container_add (GTK_CONTAINER (sw), tree_view);
+
+    gtk_tree_selection_set_mode(
+            gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view)),
+            GTK_SELECTION_SINGLE);
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tree_view), TRUE);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("ID"), renderer, "text", CAT_ID);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+    gtk_tree_view_column_set_max_width (column, 1);
+
+    renderer = gtk_cell_renderer_toggle_new();
+    g_signal_connect (renderer, "toggled",
+            G_CALLBACK (category_toggled), store);
+    column = gtk_tree_view_column_new_with_attributes(
+            _("Enabled"), renderer, "active", CAT_ENABLED);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+
+    g_object_unref(G_OBJECT(store));
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("Label"), renderer, "text", CAT_LABEL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("Desc."), renderer, "text", CAT_DESCRIPTION);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 300);
+    gtk_widget_show_all(dialog);
+
+    g_signal_connect(G_OBJECT(btn_edit), "clicked",
+            G_CALLBACK(category_edit), tree_view);
+
+    g_signal_connect(G_OBJECT(btn_add), "clicked",
+            G_CALLBACK(category_add), tree_view);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        break;
+    }
+    gtk_widget_destroy(dialog);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_category(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(category_list())
+        map_force_redraw();
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+poi_delete(GtkWidget *widget, DeletePOI *dpoi)
+{
+    GtkWidget *dialog;
+    guint i;
+    gchar *buffer;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    buffer = g_strdup_printf(_("Delete POI?\n%s"), dpoi->txt_label);
+    dialog = hildon_note_new_confirmation (GTK_WINDOW(_window), buffer);
+    g_free(buffer);
+    i = gtk_dialog_run (GTK_DIALOG (dialog));
+    gtk_widget_destroy (GTK_WIDGET (dialog));
+
+    if(i == GTK_RESPONSE_OK)
+    {
+        /* delete dpoi->poi_id */
+        buffer = g_strdup_printf("delete from poi where poi_id = %d",
+            dpoi->id);
+
+        if(sqlite_exec(_db, buffer, NULL, NULL, NULL)
+            != SQLITE_OK)
+        {
+            hildon_banner_show_information(_window, NULL,
+                _("Problem deleting POI"));
+        }
+        else
+        {
+            gtk_widget_hide_all(dpoi->dialog);
+            map_force_redraw();
+        }
+        g_free(buffer);
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static guint
+poi_list(gchar **pszResult, gint nRow, gint nColumn)
+{
+    GtkWidget *dialog;
+    GtkWidget *list;
+    GtkWidget *sw;
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
+    GtkListStore *store;
+    GtkTreeIter iter;
+    guint i, row = -1;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    dialog = gtk_dialog_new_with_buttons(_("Select POI"),
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+            NULL);
+
+    store = gtk_list_store_new(POI_NUM_COLUMNS,
+                               G_TYPE_INT,
+                               G_TYPE_FLOAT,
+                               G_TYPE_FLOAT,
+                               G_TYPE_STRING,
+                               G_TYPE_STRING);
+
+    for(i = 1; i < nRow + 1; i++)
+    {
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter,
+                POI_INDEX, i,
+                POI_LATITUDE, atof(pszResult[i * nColumn + 0]),
+                POI_LONGITUDE, atof(pszResult[i * nColumn + 1]),
+                POI_LABEL, pszResult[i * nColumn + 2],
+                POI_CATEGORY, pszResult[i * nColumn + 6],
+                -1);
+    }
+
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 300);
+
+    sw = gtk_scrolled_window_new (NULL, NULL);
+    gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sw),
+                   GTK_SHADOW_ETCHED_IN);
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw),
+                  GTK_POLICY_NEVER,
+                  GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+            sw, TRUE, TRUE, 0);
+
+    list = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    g_object_unref(G_OBJECT(store));
+    gtk_container_add (GTK_CONTAINER (sw), list);
+
+    gtk_tree_selection_set_mode(
+            gtk_tree_view_get_selection(GTK_TREE_VIEW(list)),
+            GTK_SELECTION_SINGLE);
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(list), TRUE);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("POI_INDEX"), renderer, "text", POI_INDEX);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
+    gtk_tree_view_column_set_max_width (column, 1);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("Latitude"), renderer, "text", POI_LATITUDE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("Longitude"), renderer, "text", POI_LONGITUDE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("Label"), renderer, "text", POI_LABEL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("Category"), renderer, "text", POI_CATEGORY);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
+
+    gtk_widget_show_all(dialog);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        GtkTreeIter iter;
+        if(gtk_tree_selection_get_selected(
+                    gtk_tree_view_get_selection(GTK_TREE_VIEW(list)),
+                    NULL, &iter))
+        {
+            gtk_tree_model_get(GTK_TREE_MODEL(store),
+                &iter, 0, &row, -1);
+            break;
+        }
+        else
+            popup_error(dialog, _("Select one POI from the list."));
+    }
+
+    gtk_widget_destroy(dialog);
+
+    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, row);
+    return row;
+}
+
+static void
+poi_populate_cat_combo(GtkWidget *cmb_category, guint cat_id)
+{
+    gchar **pszResult;
+    gint nRow, nColumn, row;
+    guint i, catindex = 0;
+    gint n_children = gtk_tree_model_iter_n_children(
+            gtk_combo_box_get_model(GTK_COMBO_BOX(cmb_category)), NULL);
+
+    for(i = 0; i < n_children; i++)
+        gtk_combo_box_remove_text(GTK_COMBO_BOX(cmb_category), 0);
+
+    if(sqlite_get_table(_db,
+                "select c.label, c.cat_id from category c order by c.label",
+                &pszResult, &nRow, &nColumn, NULL) == SQLITE_OK)
+    {
+        for(row=1; row<nRow+1; row++)
+        {
+            gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_category),
+                pszResult[row*nColumn]);
+            if(atoi(pszResult[row*nColumn+1]) == cat_id)
+                catindex = row - 1;
+        }
+        sqlite_free_table(pszResult);
+    }
+    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_category), catindex);
+}
+
+typedef struct _PoiCategoryEditInfo PoiCategoryEditInfo;
+struct _PoiCategoryEditInfo
+{
+    GtkWidget *cmb_category;
+    guint cat_id;
+};
+
+static gboolean
+poi_edit_cat(GtkWidget *widget, PoiCategoryEditInfo *data)
+{
+    if(category_list())
+        poi_populate_cat_combo(data->cmb_category, data->cat_id);
+    return TRUE;
+}
+
+static gboolean
+poi_dialog(guint action)
+{
+    gchar **pszResult;
+    gint nRow, nColumn, rowindex;
+    gchar *sql;
+    gchar *poi_label = NULL;
+    gchar *poi_category = NULL;
+    gchar *poi_desc = NULL;
+    guint unitx, unity, cat_id = 0, poi_id = 0;
+    gfloat lat, lon, lat1, lon1, lat2, lon2, tmp;
+    gchar slat1[10], slon1[10];
+    gchar slat2[10], slon2[10];
+    gchar *p_latlon, *p_label = NULL, *p_desc = NULL;
+    GtkWidget *dialog;
+    GtkWidget *table;
+    GtkWidget *label;
+    GtkWidget *txt_label;
+    GtkWidget *cmb_category;
+    GtkWidget *txt_desc;
+    GtkWidget *btn_delete = NULL;
+    GtkWidget *btn_catedit;
+    GtkWidget *hbox;
+    GtkWidget *txt_scroll;
+    GtkTextBuffer *desc_txt;
+    GtkTextIter begin, end;
+    DeletePOI dpoi = {NULL, NULL, 0};
+    PoiCategoryEditInfo pcedit;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    unitx = x2unit(_cmenu_position_x);
+    unity = y2unit(_cmenu_position_y);
+    unit2latlon(unitx, unity, lat, lon);
+
+    if(action == ACTION_EDIT_POI)
+    {
+        unitx = x2unit(_cmenu_position_x - (3 * _draw_line_width));
+        unity = y2unit(_cmenu_position_y - (3 * _draw_line_width));
+        unit2latlon(unitx, unity, lat1, lon1);
+
+        unitx = x2unit(_cmenu_position_x + (3 * _draw_line_width));
+        unity = y2unit(_cmenu_position_y + (3 * _draw_line_width));
+        unit2latlon(unitx, unity, lat2, lon2);
+
+        if(lat1 > lat2)
+        {
+            tmp = lat2;
+            lat2 = lat1;
+            lat1 = tmp;
+        }
+        if(lon1 > lon2)
+        {
+            tmp = lon2;
+            lon2 = lon1;
+            lon1 = tmp;
+        }
+
+        g_ascii_dtostr(slat1, sizeof(slat1), lat1);
+        g_ascii_dtostr(slon1, sizeof(slon1), lon1);
+        g_ascii_dtostr(slat2, sizeof(slat2), lat2);
+        g_ascii_dtostr(slon2, sizeof(slon2), lon2);
+
+        sql = g_strdup_printf(
+            "select p.lat, p.lon, p.label, p.desc, p.cat_id, p.poi_id, c.label"
+            " from poi p, category c "
+            " where p.lat between %s and %s "
+            " and p.lon between %s and %s "
+            " and c.enabled = 1 and p.cat_id = c.cat_id",
+             slat1, slat2, slon1, slon2);
+
+        if(sqlite_get_table(_db, sql, &pszResult, &nRow, &nColumn, NULL)
+            != SQLITE_OK)
+        {
+            g_free(sql);
+            printf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+            return FALSE;
+        }
+        g_free(sql);
+
+        if(nRow == 0)
+            return FALSE;
+
+        if(nRow > 1)
+        {
+            rowindex = poi_list(pszResult, nRow, nColumn);
+            if(rowindex == -1)
+                return FALSE;
+        }
+        else
+            rowindex = 1;
+
+        p_latlon = g_strdup_printf("%s, %s",
+            pszResult[rowindex * nColumn + 0],
+            pszResult[rowindex * nColumn + 1]);
+        p_label = g_strdup(pszResult[rowindex * nColumn + 2]);
+        p_desc = g_strdup(pszResult[rowindex * nColumn + 3]);
+        cat_id = atoi(pszResult[rowindex * nColumn + 4]);
+        poi_id = atoi(pszResult[rowindex * nColumn + 5]);
+        sqlite_free_table(pszResult);
+
+        dialog = gtk_dialog_new_with_buttons(_("Edit POI"),
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            NULL);
+
+        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
+                btn_delete = gtk_button_new_with_label(_("Delete")));
+
+        dpoi.dialog = dialog;
+        dpoi.txt_label = g_strdup(p_label);
+        dpoi.id = poi_id;
+
+        g_signal_connect(G_OBJECT(btn_delete), "clicked",
+                          G_CALLBACK(poi_delete), &dpoi);
+
+        gtk_dialog_add_button(GTK_DIALOG(dialog),
+                GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT);
+    }
+    else
+    {
+        p_latlon = g_strdup_printf("%.06f, %.06f", lat, lon);
+
+        if(sqlite_get_table(_db, "select ifnull(max(poi_id) + 1,1) from poi",
+            &pszResult, &nRow, &nColumn, NULL) == SQLITE_OK)
+        {
+            p_label = g_strdup_printf("Point%06d", atoi(pszResult[nColumn]));
+            sqlite_free_table(pszResult);
+        }
+
+        p_desc = g_strdup("");
+        cat_id = 0;
+        poi_id = 0;
+
+        dialog = gtk_dialog_new_with_buttons(_("Add POI"),
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+            NULL);
+    }
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+            table = gtk_table_new(6, 4, FALSE), TRUE, TRUE, 0);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Lat, Lon: ")),
+            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(p_latlon),
+            1, 3, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Label: ")),
+            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            txt_label = gtk_entry_new(),
+            1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Category: ")),
+            0, 1, 3, 4, GTK_FILL, 0, 2, 4);
+    gtk_table_attach(GTK_TABLE(table),
+            hbox = gtk_hbox_new(FALSE, 4),
+            1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            cmb_category = gtk_combo_box_new_text(),
+            FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            btn_catedit = gtk_button_new_with_label(_("Edit Categories...")),
+            FALSE, FALSE, 4);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Desc.: ")),
+            0, 1, 5, 6, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+    txt_scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(txt_scroll),
+                                   GTK_SHADOW_IN);
+    gtk_table_attach(GTK_TABLE(table),
+            txt_scroll,
+            1, 2, 5, 6, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(txt_scroll),
+                                 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+
+    txt_desc = gtk_text_view_new ();
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(txt_desc), GTK_WRAP_WORD);
+
+    gtk_container_add(GTK_CONTAINER(txt_scroll), txt_desc);
+    gtk_widget_show(txt_scroll);
+    gtk_widget_set_size_request(GTK_WIDGET(txt_scroll), 400, 60);
+
+    desc_txt = gtk_text_view_get_buffer (GTK_TEXT_VIEW (txt_desc));
+
+    /* label */
+    gtk_entry_set_text(GTK_ENTRY(txt_label), p_label);
+
+    /* category */
+    poi_populate_cat_combo(cmb_category, cat_id);
+
+    /* poi_desc */
+    gtk_text_buffer_set_text(desc_txt, p_desc, -1);
+
+    /* Connect Signals */
+    pcedit.cmb_category = cmb_category;
+    pcedit.cat_id = cat_id;
+    g_signal_connect(G_OBJECT(btn_catedit), "clicked",
+            G_CALLBACK(poi_edit_cat), &pcedit);
+    gtk_widget_show_all(dialog);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_label))))
+            poi_label = g_strdup(gtk_entry_get_text(
+                        GTK_ENTRY(txt_label)));
+        else
+        {
+            popup_error(dialog, _("Please specify a name for the POI."));
+            continue;
+        }
+
+        gtk_text_buffer_get_iter_at_offset(desc_txt, &begin,0 );
+        gtk_text_buffer_get_end_iter (desc_txt, &end);
+        poi_desc = gtk_text_buffer_get_text(desc_txt, &begin, &end, TRUE);
+
+        poi_category = gtk_combo_box_get_active_text(
+                GTK_COMBO_BOX(cmb_category));
+
+        sql = g_strdup_printf("select cat_id from category where label = '%s'",
+            poi_category);
+        if(sqlite_get_table(_db, sql, &pszResult, &nRow, &nColumn, NULL)
+            == SQLITE_OK)
+        {
+            g_free(sql);
+
+            if(action == ACTION_EDIT_POI)
+            {
+                /* edit poi */
+                sql = g_strdup_printf(
+                    "update poi set label = '%s', desc = '%s', "
+                    "cat_id = %d where poi_id = %d",
+                    poi_label, poi_desc, atoi(pszResult[nColumn]), poi_id);
+                if(sqlite_exec(_db, sql, NULL, NULL, NULL) != SQLITE_OK)
+                    hildon_banner_show_information(_window, NULL,
+                        _("Problem updating POI"));
+                else
+                    map_render_poi();
+            }
+            else
+            {
+                /* add poi */
+                g_ascii_dtostr(slat1, sizeof(slat1), lat);
+                g_ascii_dtostr(slon1, sizeof(slon1), lon);
+                sql = g_strdup_printf(
+                        "insert into poi (lat, lon, label, desc, cat_id)"
+                        " values (%s, %s, '%s', '%s', %d)",
+                        slat1, slon1, poi_label, poi_desc,
+                        atoi(pszResult[nColumn]));
+                if(sqlite_exec(_db, sql, NULL, NULL, NULL) != SQLITE_OK)
+                    hildon_banner_show_information(_window, NULL,
+                        _("Problem adding POI"));
+                else
+                    map_render_poi();
+            }
+
+            sqlite_free_table(pszResult);
+        }
+        g_free(sql);
+        break;
+    }
+
+    g_object_unref (desc_txt);
+    g_free(poi_label);
+    g_free(poi_category);
+    g_free(poi_desc);
+
+    g_free(p_latlon);
+    g_free(p_label);
+    g_free(p_desc);
+
+    gtk_widget_hide_all(dialog);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_add_poi(GtkAction *action)
+{
+    gboolean results;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    results = poi_dialog(ACTION_ADD_POI);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return results;
+}
+
+static gboolean
+cmenu_cb_edit_poi(GtkAction *action)
+{
+    gboolean results;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    results = poi_dialog(ACTION_EDIT_POI);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    return results;
+}
 
 /****************************************************************************
  * ABOVE: CALLBACKS *********************************************************

@@ -1,3 +1,21 @@
+maemo-mapper (1.2) unstable; urgency=low
+
+  * Added support for multiple repositories. (closes #7)
+  * Added support for POI (including category editing). (closes #22)
+  * Added support for Textual GPS information. (closes #13)
+  * Added ability to delete or "re-download" maps. (closes #25)
+  * Added feature to zoom by more than one level at a time. (closes #39)
+  * Fixed seg fault when switching map cache directories. (closes #64)
+  * Fixed locale issue with route auto-update. (closes #62)
+  * Fixed broken hashing (wrt equals). (closes #58)
+  * Fixed crash that occurred when map uri is blank. (closes #50)
+  * Added auto-connect to internet when needed (downloading maps).
+  * Added ability to manually reset bluetooth radio.
+  * Added ability to re-assign the Escape Key.
+  * Changed IO read mechanism slightly to try to avoid bluetooth errors.
+
+ -- John Costigan <gnuite@gmail.com>  Sun, 15 Oct 2006 12:24:26 -0400
+
 maemo-mapper (1.1) unstable; urgency=low
 
   * Added ability to customize the colors. (closes #11)

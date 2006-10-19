@@ -19,7 +19,7 @@
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 1.1)
+AM_INIT_AUTOMAKE(maemo-mapper, 1.2)
 
 AC_PROG_CPP
 AC_CONFIG_HEADERS(src/config.h)
@@ -51,12 +51,16 @@ PKG_CHECK_MODULES(LIBXML2, libxml-2.0 >= 2.6.16)
 AC_SUBST(LIBXML2_LIBS)
 AC_SUBST(LIBXML2_CFLAGS)
 
+PKG_CHECK_MODULES(SQLITE, sqlite)
+AC_SUBST(SQLITE_LIBS)
+AC_SUBST(SQLITE_CFLAGS)
+
 
 # Localisation
 GETTEXT_PACKAGE=$PACKAGE
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "${GETTEXT_PACKAGE}", [Name of gettext package])
-ALL_LINGUAS="en_US nl_NL"
+ALL_LINGUAS="en_US nl_NL it_IT"
 AM_GLIB_GNU_GETTEXT
 
 # To make application visible in maemo Task Navigator it needs a Desktop
