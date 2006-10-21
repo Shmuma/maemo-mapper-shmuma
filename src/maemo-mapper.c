@@ -188,6 +188,7 @@
 #define GCONF_KEY_REPOSITORIES GCONF_KEY_PREFIX"/repositories"
 #define GCONF_KEY_CURRREPO GCONF_KEY_PREFIX"/curr_repo"
 #define GCONF_KEY_GPS_INFO GCONF_KEY_PREFIX"/gps_info"
+#define GCONF_KEY_DISCONNECT_ON_COVER "/system/osso/connectivity/IAP/disconnect_on_cover"
 
 
 #define XML_DATE_FORMAT "%FT%T"
@@ -562,7 +563,6 @@ typedef struct _GpsData GpsData;
 struct _GpsData {
     guint fix;
     guint fixquality;
-    struct tm time;    /* gps fix time */
     struct tm timeloc;    /* local time */
     gfloat latitude;
     gfloat longitude;
@@ -570,7 +570,7 @@ struct _GpsData {
     gchar slongitude[15];
     gfloat speed;    /* in knots */
     gfloat maxspeed;    /* in knots */
-    guint altitude; /* in meters */
+    gint altitude; /* in meters */
     gfloat heading;
     gfloat hdop;
     gfloat pdop;
@@ -1211,7 +1211,7 @@ gps_display_data(void)
 
         /* local time */
         strftime(strtime, 15, "%X", &_gps.timeloc);
-        gtk_label_set_label(GTK_LABEL(_sdi_tim), strtime);
+        gtk_label_set_label(GTK_LABEL(_text_time), strtime);
     }
 
     /* refresh sat panel */
@@ -3890,13 +3890,13 @@ config_init()
 
     /* Load the repositories. */
     {
-        GSList *curr;
+        GSList *list, *curr;
         guint curr_repo_index = gconf_client_get_int(gconf_client,
             GCONF_KEY_CURRREPO, NULL);
-        curr = gconf_client_get_list(gconf_client,
+        list = gconf_client_get_list(gconf_client,
             GCONF_KEY_REPOSITORIES, GCONF_VALUE_STRING, NULL);
         
-        for(; curr != NULL; curr = curr->next)
+        for(curr = list; curr != NULL; curr = curr->next)
         {
             /* Parse each part of a repo, delimited by newline characters:
              * 1. url
@@ -3909,19 +3909,17 @@ config_init()
             rd->name = g_strdup(strsep(&str, "\n"));
             rd->url = g_strdup(strsep(&str, "\n"));
             rd->cache_dir = g_strdup(strsep(&str, "\n"));
-            rd->dl_zoom_steps = atoi(strsep(&str, "\n"));
-            if(rd->dl_zoom_steps == 0)
+            if(!(rd->dl_zoom_steps = atoi(strsep(&str, "\n"))));
                 rd->dl_zoom_steps = 2;
-            rd->view_zoom_steps = atoi(strsep(&str, "\n"));
-            if(rd->view_zoom_steps == 0)
+            if(!(rd->view_zoom_steps = atoi(strsep(&str, "\n"))));
                 rd->view_zoom_steps = 1;
 
             _repo_list = g_list_append(_repo_list, rd);
             if(!curr_repo_index--)
                 _curr_repo = rd;
-            g_free(str);
+            g_free(curr->data);
         }
-        g_slist_free(curr);
+        g_slist_free(list);
     }
 
     if(_repo_list == NULL)
@@ -6311,12 +6309,18 @@ osso_cb_hw_state(osso_hw_state_t *state, gpointer data)
             _must_save_data = FALSE;
         else if(_conn_state > RCVR_OFF)
         {
-            set_conn_state(RCVR_OFF);
-            rcvr_disconnect();
-            track_add(0, FALSE);
-            /* Pretend the autoroute is in progress to avoid download. */
-            if(_autoroute_data.enabled)
-                _autoroute_data.in_progress = TRUE;
+            GConfClient *gconf_client = gconf_client_get_default();
+            if(!gconf_client || gconf_client_get_bool(
+                        gconf_client, GCONF_KEY_DISCONNECT_ON_COVER, NULL))
+            {
+                g_object_unref(gconf_client);
+                set_conn_state(RCVR_OFF);
+                rcvr_disconnect();
+                track_add(0, FALSE);
+                /* Pretend the autoroute is in progress to avoid download. */
+                if(_autoroute_data.enabled)
+                    _autoroute_data.in_progress = TRUE;
+            }
         }
     }
     else if(state->save_unsaved_data_ind)
@@ -6900,7 +6904,7 @@ channel_parse_rmc(gchar *sentence)
      * 12) FAA mode indicator (NMEA 2.3 and later)
      * 13) Checksum
      */
-    gchar *token, *dpoint, *gpstime, *gpsdate;
+    gchar *token, *dpoint, *gpstime = NULL, *gpsdate = NULL;
     gdouble tmpd = 0.f;
     guint tmpi = 0;
     gboolean newly_fixed = FALSE;
@@ -6910,7 +6914,8 @@ channel_parse_rmc(gchar *sentence)
 
     /* Parse time. */
     token = strsep(&sentence, DELIM);
-    gpstime = g_strdup(token);
+    if(*token)
+        gpstime = g_strdup(token);
 
     token = strsep(&sentence, DELIM);
     /* Token is now Status. */
@@ -6948,10 +6953,11 @@ channel_parse_rmc(gchar *sentence)
     /* Parse N or S. */
     token = strsep(&sentence, DELIM);
     if(*token)
-        sprintf(_gps.slatitude, "%c %u°%07.04f", token[0], tmpi, tmpd);
-
-    if(*token && token[0] == 'S')
-        _pos_lat = -_pos_lat;
+    {
+        sprintf(_gps.slatitude, "%c %u\u00b0%07.04f", token[0], tmpi, tmpd);
+        if(token[0] == 'S')
+            _pos_lat = -_pos_lat;
+    }
 
     /* Parse the longitude. */
     token = strsep(&sentence, DELIM);
@@ -6968,10 +6974,11 @@ channel_parse_rmc(gchar *sentence)
     /* Parse E or W. */
     token = strsep(&sentence, DELIM);
     if(*token)
-        sprintf(_gps.slongitude, "%c %u°%07.04f", token[0], tmpi, tmpd);
-
-    if(*token && token[0] == 'W')
-        _pos_lon = -_pos_lon;
+    {
+        sprintf(_gps.slongitude, "%c %u\u00b0%07.04f", token[0], tmpi, tmpd);
+        if(*token && token[0] == 'W')
+            _pos_lon = -_pos_lon;
+    }
 
     /* Parse speed over ground, knots. */
     token = strsep(&sentence, DELIM);
@@ -6996,12 +7003,13 @@ channel_parse_rmc(gchar *sentence)
     if(*token)
     {
         time_t timeloc;
+        struct tm time;
         gpsdate = g_strdup_printf("%s%s", token, gpstime);
-        strptime(gpsdate, "%d%m%y%H%M%S", &_gps.time);
-        if(_gps.time.tm_year >= 0 && _gps.time.tm_year <= 68)
-            _gps.time.tm_year += 100; /* year 2000 */
-        _gps.time.tm_mon -= 1;
-        timeloc = mktime(&_gps.time);
+        strptime(gpsdate, "%d%m%y%H%M%S", &time);
+        if(time.tm_year >= 0 && time.tm_year <= 68)
+            time.tm_year += 100; /* year 2000 */
+        time.tm_mon -= 1;
+        timeloc = mktime(&time);
         timeloc += _gmtoffset;
         localtime_r(&timeloc, &_gps.timeloc);
         g_free(gpstime);
@@ -7068,11 +7076,11 @@ channel_parse_gga(gchar *sentence)
 
     /* Parse Fix quality */
     token = strsep(&sentence, DELIM);
-
-    /* Parse number of satellites */
-    token = strsep(&sentence, DELIM);
     if(*token)
-        MACRO_PARSE_INT(_gps.satinuse, token);
+        MACRO_PARSE_INT(_gps.fixquality, token);
+
+    /* Skip number of satellites */
+    token = strsep(&sentence, DELIM);
 
     /* Parse Horizontal dilution of position */
     token = strsep(&sentence, DELIM);
@@ -7081,8 +7089,6 @@ channel_parse_gga(gchar *sentence)
 
     /* Altitude */
     token = strsep(&sentence, DELIM);
-    if(!sentence)
-        return; /* because this is an invalid sentence. */
     if(*token)
         MACRO_PARSE_INT(_gps.altitude, token);
 
@@ -7103,7 +7109,7 @@ channel_parse_gsa(gchar *sentence)
      *  7) Checksum
      */
     gchar *token;
-    guint i, sat;
+    guint i;
     vprintf("%s(): %s", __PRETTY_FUNCTION__, sentence);
 
 #define DELIM ","
@@ -7113,16 +7119,14 @@ channel_parse_gsa(gchar *sentence)
 
     /* 3D fix. */
     token = strsep(&sentence, DELIM);
-    if(!sentence)
-        return; /* because this is an invalid sentence. */
     MACRO_PARSE_INT(_gps.fix, token);
 
     _gps.satinuse = 0;
     for(i = 0; i < 12; i++)
     {
         token = strsep(&sentence, DELIM);
-        if((sat = atoi(token)))
-            _gps.satforfix[_gps.satinuse++] = sat;
+        if(*token)
+            _gps.satforfix[_gps.satinuse++] = atoi(token);
     }
 
     /* PDOP */
@@ -7166,24 +7170,22 @@ channel_parse_gsv(gchar *sentence)
 
     /* Parse number of messages. */
     token = strsep(&sentence, DELIM);
-    if(!sentence)
-        return; /* because this is an invalid sentence. */
-    MACRO_PARSE_INT(nummsgs, token);
+    if(*token)
+        MACRO_PARSE_INT(nummsgs, token);
 
     /* Parse message number. */
     token = strsep(&sentence, DELIM);
-    if(!sentence)
+    if(!*token)
         return; /* because this is an invalid sentence. */
     MACRO_PARSE_INT(msgcnt, token);
 
     /* Parse number of satellites in view. */
     token = strsep(&sentence, DELIM);
-    if(!sentence)
-        return; /* because this is an invalid sentence. */
-    MACRO_PARSE_INT(_gps.satinview, token);
+    if(*token)
+        MACRO_PARSE_INT(_gps.satinview, token);
 
     /* Loop until there are no more satellites to parse. */
-    while(sentence)
+    while(sentence && satcnt < 12)
     {
         /* Get token for Satellite Number. */
         token = strsep(&sentence, DELIM);
@@ -7205,10 +7207,9 @@ channel_parse_gsv(gchar *sentence)
 
         /* Get token for SNR. */
         token = strsep(&sentence, DELIM);
-        _gps_sat[satcnt].snr = atoi(token);
-        if(_gps_sat[satcnt].snr)
+        if((_gps_sat[satcnt].snr = atoi(token)))
         {
-            /* Snr is non-zero - add to total and count as used. */
+            /* SNR is non-zero - add to total and count as used. */
             running_total += _gps_sat[satcnt].snr;
             num_sats_used++;
         }
@@ -7271,7 +7272,10 @@ channel_cb_input(GIOChannel *src, GIOCondition condition, gpointer data)
                 if(*sptr)
                     *sptr = '\0'; /* take checksum out of the sentence. */
                 if(!strncmp(sentence + 3, "GSV", 3))
-                    channel_parse_gsv(sentence + 7);
+                {
+                    if(_conn_state == RCVR_UP || _gps_info || _satdetails_on)
+                        channel_parse_gsv(sentence + 7);
+                }
                 else if(!strncmp(sentence + 3, "RMC", 3))
                     channel_parse_rmc(sentence + 7);
                 else if(!strncmp(sentence + 3, "GGA", 3))
@@ -7317,8 +7321,8 @@ gps_toggled_from(GtkToggleButton *chk_gps,
     gchar strlon[32];
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    g_ascii_formatd(strlat, 80, "%.06f", _pos_lat);
-    g_ascii_formatd(strlon, 80, "%.06f", _pos_lon);
+    g_ascii_formatd(strlat, 32, "%.06f", _pos_lat);
+    g_ascii_formatd(strlon, 32, "%.06f", _pos_lon);
     sprintf(buffer, "%s, %s", strlat, strlon);
     gtk_widget_set_sensitive(txt_from, !gtk_toggle_button_get_active(chk_gps));
     gtk_entry_set_text(GTK_ENTRY(txt_from), buffer);
@@ -8943,6 +8947,7 @@ menu_cb_enable_gps(GtkAction *action)
         track_add(0, FALSE);
     }
     map_move_mark();
+    gps_show_info();
     gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_reset_item), _enable_gps);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
