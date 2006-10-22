@@ -1721,7 +1721,7 @@ gps_details(void)
             0, 1, 5, 6, GTK_EXPAND | GTK_FILL, 0, 20, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
-            _sdi_tim = gtk_label_new(_(" --:--:-- ")),
+            _sdi_tim = gtk_label_new(" --:--:-- "),
             1, 2, 5, 6, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(_sdi_tim), 0.f, 0.5f);
 
@@ -4900,7 +4900,7 @@ map_render_poi()
                             pixbuf,
                             0, 0,
                             poix - gdk_pixbuf_get_width(pixbuf) / 2,
-                            poix - gdk_pixbuf_get_height(pixbuf) / 2,
+                            poiy - gdk_pixbuf_get_height(pixbuf) / 2,
                             -1,-1,
                             GDK_RGB_DITHER_NONE, 0, 0);
                     g_object_unref(pixbuf);
@@ -6640,7 +6640,7 @@ heading_panel_expose(GtkWidget *widget, GdkEventExpose *event)
     pango_layout_set_font_description (layout, fontdesc);
     pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
 
-    text = g_strdup_printf("%3d°", (guint)_gps.heading);
+    text = g_strdup_printf("%3d\u00b0", (guint)_gps.heading);
     pango_layout_set_text(layout, text, -1);
     pango_layout_get_pixel_size(layout, &x, &y);
 
@@ -8299,13 +8299,13 @@ menu_cb_maps_repoman(GtkAction *action)
     gtk_box_pack_start(GTK_BOX(hbox),
             gtk_vseparator_new(), TRUE, TRUE, 4);
     gtk_box_pack_start(GTK_BOX(hbox),
-            btn_rename = gtk_button_new_with_label("Rename..."),
+            btn_rename = gtk_button_new_with_label(_("Rename...")),
             FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox),
-            btn_delete = gtk_button_new_with_label("Delete..."),
+            btn_delete = gtk_button_new_with_label(_("Delete...")),
             FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox),
-            btn_new = gtk_button_new_with_label("New..."),
+            btn_new = gtk_button_new_with_label(_("New...")),
             FALSE, FALSE, 4);
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(rmi.dialog)->vbox),
@@ -8950,6 +8950,7 @@ menu_cb_enable_gps(GtkAction *action)
     }
     map_move_mark();
     gps_show_info();
+    gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_details_item), _enable_gps);
     gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_reset_item), _enable_gps);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -9875,7 +9876,7 @@ category_list()
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            _("ID"), renderer, "text", CAT_ID);
+            "ID", renderer, "text", CAT_ID);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
     gtk_tree_view_column_set_max_width (column, 1);
 
@@ -10027,7 +10028,7 @@ poi_list(gchar **pszResult, gint nRow, gint nColumn)
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            _("POI_INDEX"), renderer, "text", POI_INDEX);
+            "POI_INDEX", renderer, "text", POI_INDEX);
     gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
     gtk_tree_view_column_set_max_width (column, 1);
 
