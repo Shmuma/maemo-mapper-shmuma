@@ -1835,7 +1835,7 @@ db_connect()
     if(!_poi_db)
         return;
 
-    if((_db = sqlite_open(_poi_db, 0666, &perror)) == NULL)
+    if(NULL == (_db = sqlite_open(_poi_db, 0666, &perror)))
     {
         gchar buffer2[200];
         sprintf(buffer2, "%s: %s", _("Problem with POI database"), perror);
@@ -1844,14 +1844,16 @@ db_connect()
         return;
     }
 
-    if(sqlite_get_table(_db, "select label from poi limit 1",
-        &pszResult, &nRow, &nColumn, NULL) != SQLITE_OK)
+    if(SQLITE_OK != sqlite_get_table(_db, "select label from poi limit 1",
+        &pszResult, &nRow, &nColumn, NULL))
     {
         if(SQLITE_OK != sqlite_exec(_db,
+                /* Create the necessary tables... */
                 "create table poi (poi_id integer PRIMARY KEY, lat real, "
                 "lon real, label text, desc text, cat_id integer);"
                 "create table category (cat_id integer PRIMARY KEY,"
                 "label text, desc text, enabled integer);"
+                /* Add some default categories... */
                 "insert into category (label, desc, enabled) "
                 "values ('Fuel',"
                   "'Stations for purchasing fuel for vehicles.', 1);"
@@ -1888,8 +1890,9 @@ db_connect()
                 NULL,
                 NULL,
                 &perror)
-                && (sqlite_get_table(_db, "select label from poi limit 1",
-                        &pszResult, &nRow, &nColumn, NULL) != SQLITE_OK))
+                && (SQLITE_OK != sqlite_get_table(_db,
+                            "select label from poi limit 1",
+                            &pszResult, &nRow, &nColumn, NULL)))
         {
             sprintf(buffer, _("Failed to open or create database:\n%s"),
                     _poi_db);
@@ -3651,8 +3654,7 @@ settings_dialog()
                       gtk_entry_get_text(GTK_ENTRY(txt_rcvr_mac))))
         {
             /* User specified a new rcvr mac. */
-            if(_rcvr_mac)
-                g_free(_rcvr_mac);
+            g_free(_rcvr_mac);
             _rcvr_mac = g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_rcvr_mac)));
             str2ba(_rcvr_mac, &_rcvr_addr.rc_bdaddr);
             rcvr_changed = TRUE;
@@ -3701,8 +3703,7 @@ settings_dialog()
             gtk_widget_set_sensitive(_cmenu_edit_poi, FALSE);
             gtk_widget_set_sensitive(_menu_poi_item, FALSE);
         }
-        if(_poi_db)
-            g_free(_poi_db);
+        g_free(_poi_db);
         if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_poi_db))))
         {
             _poi_db = g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_poi_db)));
@@ -4819,7 +4820,7 @@ map_render_poi()
     guint unitx, unity;
     gfloat lat1, lat2, lon1, lon2, tmp;
     gchar slat1[10], slat2[10], slon1[10], slon2[10];
-    gchar buffer[100], *sql;
+    gchar buffer[100];
     gchar **pszResult;
     gint nRow, nColumn, row, poix, poiy;
     GdkPixbuf *pixbuf = NULL;
@@ -4851,16 +4852,14 @@ map_render_poi()
         g_ascii_dtostr(slon1, sizeof(slon1), lon1);
         g_ascii_dtostr(slon2, sizeof(slon2), lon2);
 
-        sql = g_strdup_printf(
-                "select p.lat, p.lon, lower(p.label), lower(c.label)"
-                " from poi p, category c "
-                " where p.lat between %s and %s "
-                " and p.lon  between %s and %s "
-                " and c.enabled = 1 and p.cat_id = c.cat_id",
-                slat1, slat2, slon1, slon2);
-
-        if(sqlite_get_table(_db, sql, &pszResult, &nRow, &nColumn, NULL)
-            == SQLITE_OK)
+        if(SQLITE_OK == sqlite_get_table_printf(_db,
+                    "select p.lat, p.lon, lower(p.label), lower(c.label)"
+                    " from poi p, category c "
+                    " where p.lat between %s and %s "
+                    " and p.lon  between %s and %s "
+                    " and c.enabled = 1 and p.cat_id = c.cat_id",
+                    &pszResult, &nRow, &nColumn, NULL,
+                    slat1, slat2, slon1, slon2))
         {
             for(row=1; row<nRow+1; row++)
             {
@@ -4908,7 +4907,6 @@ map_render_poi()
              }
             sqlite_free_table(pszResult);
         }
-        g_free(sql);
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -5845,8 +5843,7 @@ open_file(gchar **bytes_out, GnomeVFSHandle **handle_out, gint *size_out,
         /* Success!. */
         if(dir)
         {
-            if(*dir)
-                g_free(*dir);
+            g_free(*dir);
             *dir = gtk_file_chooser_get_current_folder_uri(
                     GTK_FILE_CHOOSER(dialog));
         }
@@ -5854,8 +5851,7 @@ open_file(gchar **bytes_out, GnomeVFSHandle **handle_out, gint *size_out,
         /* If desired, save the file for later. */
         if(file)
         {
-            if(*file)
-                g_free(*file);
+            g_free(*file);
             *file = gtk_file_chooser_get_uri(GTK_FILE_CHOOSER(dialog));
         }
     }
@@ -9466,7 +9462,10 @@ category_delete(GtkWidget *widget, DeletePOI *dpoi)
     guint i;
     gchar *buffer;
 
-    buffer = g_strdup_printf(_("Delete category?\n%s"), dpoi->txt_label);
+    buffer = g_strdup_printf("%s\n\t%s\n%s",
+            _("Delete category?"),
+            dpoi->txt_label,
+            _("WARNING: All POIs in that category will also be deleted!"));
     dialog = hildon_note_new_confirmation (GTK_WINDOW(_window), buffer);
     g_free(buffer);
     i = gtk_dialog_run (GTK_DIALOG (dialog));
@@ -9475,34 +9474,28 @@ category_delete(GtkWidget *widget, DeletePOI *dpoi)
     if(i == GTK_RESPONSE_OK)
     {
         /* delete dpoi->poi_id */
-        buffer = g_strdup_printf("delete from poi where cat_id = %d",
-            dpoi->id);
-
-        if(sqlite_exec(_db, buffer, NULL, NULL, NULL)
-            != SQLITE_OK)
+        if(SQLITE_OK != sqlite_exec_printf(_db,
+                    "delete from poi where cat_id = %d",
+                    NULL, NULL, NULL,
+                    dpoi->id))
         {
             hildon_banner_show_information(_window, NULL,
                 _("Problem deleting POI"));
-            g_free(buffer);
             return FALSE;
         }
 
-        g_free(buffer);
-        buffer = g_strdup_printf("delete from category where cat_id = %d",
-            dpoi->id);
-
-        if(sqlite_exec(_db, buffer, NULL, NULL, NULL)
-            != SQLITE_OK)
+        if(SQLITE_OK != sqlite_exec_printf(_db,
+                    "delete from category where cat_id = %d",
+                    NULL, NULL, NULL,
+                    dpoi->id))
         {
             hildon_banner_show_information(_window, NULL,
                 _("Problem deleting category"));
-            g_free(buffer);
             return FALSE;
         }
 
         gtk_widget_hide_all(dpoi->dialog);
         map_force_redraw();
-        g_free(buffer);
     }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -9514,7 +9507,6 @@ category_dialog(guint cat_id)
 {
     gchar **pszResult;
     gint nRow, nColumn;
-    gchar *sql;
     gchar *cat_label = NULL, *cat_desc = NULL;
     guint cat_enabled;
     GtkWidget *dialog;
@@ -9533,20 +9525,16 @@ category_dialog(guint cat_id)
 
     if(cat_id > 0)
     {
-        sql = g_strdup_printf(
-            "select c.label, c. desc, c.enabled"
-            " from category c"
-            " where c.cat_id = %d",
-             cat_id);
-
-        if(sqlite_get_table(_db, sql, &pszResult, &nRow, &nColumn, NULL)
-            != SQLITE_OK)
+        if(SQLITE_OK != sqlite_get_table_printf(_db,
+                    "select c.label, c.desc, c.enabled"
+                    " from category c"
+                    " where c.cat_id = %d",
+                    &pszResult, &nRow, &nColumn, NULL,
+                    cat_id))
         {
-            g_free(sql);
             printf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
             return FALSE;
         }
-        g_free(sql);
 
         if(nRow == 0)
             return FALSE;
@@ -9565,7 +9553,7 @@ category_dialog(guint cat_id)
                 btn_delete = gtk_button_new_with_label(_("Delete")));
 
         dpoi.dialog = dialog;
-        dpoi.txt_label = g_strdup_printf("%s (%s)", cat_label, cat_desc);
+        dpoi.txt_label = g_strdup_printf("%s", cat_label, cat_desc);
         dpoi.id = cat_id;
 
         g_signal_connect(G_OBJECT(btn_delete), "clicked",
@@ -9665,11 +9653,11 @@ category_dialog(guint cat_id)
         if(cat_id > 0)
         {
             /* edit category */
-            sql = g_strdup_printf(
-                "update category set label = '%s', desc = '%s', "
-                "enabled = %d where poi_id = %d",
-                cat_label, cat_desc, cat_enabled, cat_id);
-            if(sqlite_exec(_db, sql, NULL, NULL, NULL) != SQLITE_OK)
+            if(SQLITE_OK != sqlite_exec_printf(_db,
+                        "update category set label = %Q, desc = %Q, "
+                        "enabled = %d where poi_id = %d",
+                        NULL, NULL, NULL,
+                        cat_label, cat_desc, cat_enabled, cat_id))
             {
                 hildon_banner_show_information(_window, NULL,
                     _("Problem updating category"));
@@ -9679,25 +9667,24 @@ category_dialog(guint cat_id)
         else
         {
             /* add category */
-            sql = g_strdup_printf(
-                "insert into category (label, desc, enabled) "
-                "values ('%s', '%s', %d)",
-                cat_label, cat_desc, cat_enabled);
-            if(sqlite_exec(_db, sql, NULL, NULL, NULL) != SQLITE_OK)
+            if(SQLITE_OK != sqlite_exec_printf(_db,
+                        "insert into category (label, desc, enabled) "
+                        "values (%Q, %Q, %d)",
+                        NULL, NULL, NULL,
+                        cat_label, cat_desc, cat_enabled))
             {
                 hildon_banner_show_information(_window, NULL,
                     _("Problem adding category"));
                 results = FALSE;
             }
         }
-        g_free(sql);
         break;
     }
 
-    if(cat_label)
-        g_free(cat_label);
-    if(cat_desc)
-        g_free(cat_desc);
+    g_free(cat_label);
+    g_free(cat_desc);
+    g_free(dpoi.txt_label);
+
     g_object_unref (desc_txt);
 
     gtk_widget_hide_all(dialog);
@@ -9714,7 +9701,6 @@ category_toggled (GtkCellRendererToggle *cell,
     GtkTreeIter iter;
     gboolean cat_enabled;
     guint cat_id;
-    gchar buffer[100];
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     GtkTreeModel *model = GTK_TREE_MODEL(data);
@@ -9726,10 +9712,10 @@ category_toggled (GtkCellRendererToggle *cell,
 
     cat_enabled ^= 1;
 
-    sprintf(buffer, "update category set enabled = %d where cat_id = %d",
-        (cat_enabled ? 1 : 0), cat_id);
-
-    if(sqlite_exec(_db, buffer, NULL, NULL, NULL) != SQLITE_OK)
+    if(SQLITE_OK != sqlite_exec_printf(_db,
+                "update category set enabled = %d where cat_id = %d",
+                NULL, NULL, NULL,
+                (cat_enabled ? 1 : 0), cat_id))
         hildon_banner_show_information(_window, NULL,
             _("Problem updating Category"));
     else
@@ -9745,22 +9731,18 @@ generate_store()
     guint i;
     GtkTreeIter iter;
     GtkListStore *store;
-    gchar *sql;
     gchar **pszResult;
     gint nRow, nColumn;
-    sql = g_strdup(
-        "select c.cat_id, c.enabled, c.label, c.desc"
-        " from category c "
-        " order by c.label");
 
-    if(sqlite_get_table(_db, sql, &pszResult, &nRow, &nColumn, NULL)
-        != SQLITE_OK)
+    if(SQLITE_OK != sqlite_get_table(_db,
+                "select c.cat_id, c.enabled, c.label, c.desc"
+                " from category c "
+                " order by c.label",
+                &pszResult, &nRow, &nColumn, NULL))
     {
-        g_free(sql);
         printf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return NULL;
     }
-    g_free(sql);
 
     store = gtk_list_store_new(CAT_NUM_COLUMNS,
                                G_TYPE_UINT,
@@ -9949,12 +9931,10 @@ poi_delete(GtkWidget *widget, DeletePOI *dpoi)
 
     if(i == GTK_RESPONSE_OK)
     {
-        /* delete dpoi->poi_id */
-        buffer = g_strdup_printf("delete from poi where poi_id = %d",
-            dpoi->id);
-
-        if(sqlite_exec(_db, buffer, NULL, NULL, NULL)
-            != SQLITE_OK)
+        if(SQLITE_OK != sqlite_exec_printf(_db,
+                    "delete from poi where poi_id = %d",
+                    NULL, NULL, NULL,
+                    dpoi->id))
         {
             hildon_banner_show_information(_window, NULL,
                 _("Problem deleting POI"));
@@ -9964,7 +9944,6 @@ poi_delete(GtkWidget *widget, DeletePOI *dpoi)
             gtk_widget_hide_all(dpoi->dialog);
             map_force_redraw();
         }
-        g_free(buffer);
     }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -10090,9 +10069,9 @@ poi_populate_cat_combo(GtkWidget *cmb_category, guint cat_id)
     for(i = 0; i < n_children; i++)
         gtk_combo_box_remove_text(GTK_COMBO_BOX(cmb_category), 0);
 
-    if(sqlite_get_table(_db,
+    if(SQLITE_OK == sqlite_get_table(_db,
                 "select c.label, c.cat_id from category c order by c.label",
-                &pszResult, &nRow, &nColumn, NULL) == SQLITE_OK)
+                &pszResult, &nRow, &nColumn, NULL))
     {
         for(row=1; row<nRow+1; row++)
         {
@@ -10126,7 +10105,6 @@ poi_dialog(guint action)
 {
     gchar **pszResult;
     gint nRow, nColumn, rowindex;
-    gchar *sql;
     gchar *poi_label = NULL;
     gchar *poi_category = NULL;
     gchar *poi_desc = NULL;
@@ -10183,22 +10161,19 @@ poi_dialog(guint action)
         g_ascii_dtostr(slat2, sizeof(slat2), lat2);
         g_ascii_dtostr(slon2, sizeof(slon2), lon2);
 
-        sql = g_strdup_printf(
-            "select p.lat, p.lon, p.label, p.desc, p.cat_id, p.poi_id, c.label"
-            " from poi p, category c "
-            " where p.lat between %s and %s "
-            " and p.lon between %s and %s "
-            " and c.enabled = 1 and p.cat_id = c.cat_id",
-             slat1, slat2, slon1, slon2);
-
-        if(sqlite_get_table(_db, sql, &pszResult, &nRow, &nColumn, NULL)
-            != SQLITE_OK)
+        if(SQLITE_OK != sqlite_get_table_printf(_db,
+                    "select p.lat, p.lon, p.label, p.desc, p.cat_id,"
+                    " p.poi_id, c.label"
+                    " from poi p, category c "
+                    " where p.lat between %s and %s "
+                    " and p.lon between %s and %s "
+                    " and c.enabled = 1 and p.cat_id = c.cat_id",
+                    &pszResult, &nRow, &nColumn, NULL,
+                    slat1, slat2, slon1, slon2))
         {
-            g_free(sql);
             printf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
             return FALSE;
         }
-        g_free(sql);
 
         if(nRow == 0)
             return FALSE;
@@ -10243,8 +10218,9 @@ poi_dialog(guint action)
     {
         p_latlon = g_strdup_printf("%.06f, %.06f", lat, lon);
 
-        if(sqlite_get_table(_db, "select ifnull(max(poi_id) + 1,1) from poi",
-            &pszResult, &nRow, &nColumn, NULL) == SQLITE_OK)
+        if(SQLITE_OK == sqlite_get_table(_db,
+                    "select ifnull(max(poi_id) + 1,1) from poi",
+            &pszResult, &nRow, &nColumn, NULL))
         {
             p_label = g_strdup_printf("Point%06d", atoi(pszResult[nColumn]));
             sqlite_free_table(pszResult);
@@ -10353,21 +10329,19 @@ poi_dialog(guint action)
         poi_category = gtk_combo_box_get_active_text(
                 GTK_COMBO_BOX(cmb_category));
 
-        sql = g_strdup_printf("select cat_id from category where label = '%s'",
-            poi_category);
-        if(sqlite_get_table(_db, sql, &pszResult, &nRow, &nColumn, NULL)
-            == SQLITE_OK)
+        if(SQLITE_OK == sqlite_get_table_printf(_db,
+                    "select cat_id from category where label = %Q",
+                    &pszResult, &nRow, &nColumn, NULL,
+                    poi_category))
         {
-            g_free(sql);
-
             if(action == ACTION_EDIT_POI)
             {
                 /* edit poi */
-                sql = g_strdup_printf(
-                    "update poi set label = '%s', desc = '%s', "
-                    "cat_id = %d where poi_id = %d",
-                    poi_label, poi_desc, atoi(pszResult[nColumn]), poi_id);
-                if(sqlite_exec(_db, sql, NULL, NULL, NULL) != SQLITE_OK)
+                if(SQLITE_OK != sqlite_exec_printf(_db,
+                            "update poi set label = %Q, desc = %Q, "
+                            "cat_id = %s where poi_id = %d",
+                            NULL, NULL, NULL,
+                            poi_label, poi_desc, pszResult[nColumn], poi_id))
                     hildon_banner_show_information(_window, NULL,
                         _("Problem updating POI"));
                 else
@@ -10378,12 +10352,12 @@ poi_dialog(guint action)
                 /* add poi */
                 g_ascii_dtostr(slat1, sizeof(slat1), lat);
                 g_ascii_dtostr(slon1, sizeof(slon1), lon);
-                sql = g_strdup_printf(
-                        "insert into poi (lat, lon, label, desc, cat_id)"
-                        " values (%s, %s, '%s', '%s', %d)",
-                        slat1, slon1, poi_label, poi_desc,
-                        atoi(pszResult[nColumn]));
-                if(sqlite_exec(_db, sql, NULL, NULL, NULL) != SQLITE_OK)
+                if(SQLITE_OK != sqlite_exec_printf(_db,
+                            "insert into poi (lat, lon, label, desc, cat_id)"
+                            " values (%s, %s, %Q, %Q, %s)",
+                            NULL, NULL, NULL,
+                            slat1, slon1, poi_label, poi_desc,
+                            pszResult[nColumn]))
                     hildon_banner_show_information(_window, NULL,
                         _("Problem adding POI"));
                 else
@@ -10392,7 +10366,6 @@ poi_dialog(guint action)
 
             sqlite_free_table(pszResult);
         }
-        g_free(sql);
         break;
     }
 
