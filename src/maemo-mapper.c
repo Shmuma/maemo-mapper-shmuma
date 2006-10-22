@@ -7593,10 +7593,13 @@ menu_cb_route_reset(GtkAction *action)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    route_find_nearest_point();
-    map_render_paths();
-    map_render_poi();
-    MACRO_QUEUE_DRAW_AREA();
+    if(_route.head)
+    {
+        route_find_nearest_point();
+        map_render_paths();
+        map_render_poi();
+        MACRO_QUEUE_DRAW_AREA();
+    }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
