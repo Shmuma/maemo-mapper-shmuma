@@ -203,6 +203,14 @@ msgstr "Defaults"
 msgid "Delete"
 msgstr "Delete"
 
+#: ../src/maemo-mapper.c:9466
+msgid "Delete category?"
+msgstr "Delete category?"
+
+#: ../src/maemo-mapper.c:8304
+msgid "Delete..."
+msgstr "Delete..."
+
 #: ../src/maemo-mapper.c:8411
 #, fuzzy
 msgid "Delete Maps"
@@ -647,9 +655,8 @@ msgid "Real Time Kinematic"
 msgstr "Real Time Kinematic"
 
 #: ../src/maemo-mapper.c:8125
-#, fuzzy
 msgid "Rename..."
-msgstr "Open..."
+msgstr "Rename..."
 
 #: ../src/maemo-mapper.c:8111
 msgid "Repositories"
@@ -662,7 +669,7 @@ msgstr "Reset"
 #: ../src/maemo-mapper.c:417 ../src/maemo-mapper.c:4141
 #, fuzzy
 msgid "Reset Bluetooth"
-msgstr "Select Bluetooth Device"
+msgstr "Reset Bluetooth"
 
 #: ../src/maemo-mapper.c:3092 ../src/maemo-mapper.c:4035
 #: ../src/maemo-mapper.c:4089
@@ -888,6 +895,10 @@ msgstr "Vergrootings-Stappen"
 #: ../src/maemo-mapper.c:6504
 msgid "W"
 msgstr "W"
+
+#: ../src/maemo-mapper.c:9468
+msgid "WARNING: All POIs in that category will also be deleted!"
+msgstr "WARNING: All POIs in that category will also be deleted!"
 
 #: ../src/maemo-mapper.c:4245
 msgid "Waypoint"

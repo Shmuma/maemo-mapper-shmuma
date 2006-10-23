@@ -198,9 +198,17 @@ msgstr "Defaults"
 msgid "Delete"
 msgstr "Delete"
 
+#: ../src/maemo-mapper.c:9466
+msgid "Delete category?"
+msgstr "Delete category?"
+
 #: ../src/maemo-mapper.c:8411
 msgid "Delete Maps"
 msgstr "Delete Maps"
+
+#: ../src/maemo-mapper.c:8304
+msgid "Delete..."
+msgstr "Delete..."
 
 #: ../src/maemo-mapper.c:9236
 #, c-format
@@ -867,6 +875,10 @@ msgstr "View Zoom Steps"
 #: ../src/maemo-mapper.c:6504
 msgid "W"
 msgstr "W"
+
+#: ../src/maemo-mapper.c:9468
+msgid "WARNING: All POIs in that category will also be deleted!"
+msgstr "WARNING: All POIs in that category will also be deleted!"
 
 #: ../src/maemo-mapper.c:4245
 msgid "Waypoint"
