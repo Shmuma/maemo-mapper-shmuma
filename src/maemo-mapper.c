@@ -1516,14 +1516,6 @@ draw_sat_details(GtkWidget *widget, guint x0, guint y0,
 
     for(i = 0; i < _gps.satinview; i++)
     {
-        /* satellite track */
-        tmp = (_gps_sat[i].azimuth * (1.f / 180.f)) * PI;
-        x = xoffset + halfsize + (90 - _gps_sat[i].elevation)
-            * halfsize / 90 * sinf(tmp);
-        y = yoffset + halfsize - (90 - _gps_sat[i].elevation)
-            * halfsize/90 * cosf(tmp);
-        gdk_draw_point (widget->window, gc2, x, y);
-
         /* Sat used or not */
         gc = gc1;
         for(j = 0; j < _gps.satinuse ; j++)
@@ -6636,7 +6628,7 @@ heading_panel_expose(GtkWidget *widget, GdkEventExpose *event)
     pango_layout_set_font_description (layout, fontdesc);
     pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
 
-    text = g_strdup_printf("%3d\u00b0", (guint)_gps.heading);
+    text = g_strdup_printf("%3.0f\u00b0", _gps.heading);
     pango_layout_set_text(layout, text, -1);
     pango_layout_get_pixel_size(layout, &x, &y);
 
