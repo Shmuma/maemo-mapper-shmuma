@@ -9553,7 +9553,7 @@ category_dialog(guint cat_id)
                 btn_delete = gtk_button_new_with_label(_("Delete")));
 
         dpoi.dialog = dialog;
-        dpoi.txt_label = g_strdup_printf("%s", cat_label, cat_desc);
+        dpoi.txt_label = g_strdup_printf("%s", cat_label);
         dpoi.id = cat_id;
 
         g_signal_connect(G_OBJECT(btn_delete), "clicked",
