@@ -3912,9 +3912,9 @@ config_init()
             rd->name = g_strdup(strsep(&str, "\n"));
             rd->url = g_strdup(strsep(&str, "\n"));
             rd->cache_dir = g_strdup(strsep(&str, "\n"));
-            if(!(rd->dl_zoom_steps = atoi(strsep(&str, "\n"))));
+            if(!(rd->dl_zoom_steps = atoi(strsep(&str, "\n"))))
                 rd->dl_zoom_steps = 2;
-            if(!(rd->view_zoom_steps = atoi(strsep(&str, "\n"))));
+            if(!(rd->view_zoom_steps = atoi(strsep(&str, "\n"))))
                 rd->view_zoom_steps = 1;
 
             _repo_list = g_list_append(_repo_list, rd);
