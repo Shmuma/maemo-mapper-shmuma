@@ -219,10 +219,6 @@ msgstr ""
 "Delete POI?\n"
 "%s"
 
-#: ../src/maemo-mapper.c:8128
-msgid "Delete..."
-msgstr "Delete..."
-
 #: ../src/maemo-mapper.c:9125 ../src/maemo-mapper.c:9492
 msgid "Desc.: "
 msgstr "Desc.: "

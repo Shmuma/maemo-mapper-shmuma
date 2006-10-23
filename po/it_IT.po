@@ -223,11 +223,6 @@ msgid ""
 "%s"
 msgstr "Elimina"
 
-#: ../src/maemo-mapper.c:8128
-#, fuzzy
-msgid "Delete..."
-msgstr "Elimina"
-
 #: ../src/maemo-mapper.c:9125 ../src/maemo-mapper.c:9492
 msgid "Desc.: "
 msgstr "Desc.: "
