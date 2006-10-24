@@ -442,6 +442,7 @@ typedef enum
     ESCAPE_KEY_TOGGLE_TRACKS,
     ESCAPE_KEY_CHANGE_REPO,
     ESCAPE_KEY_RESET_BLUETOOTH,
+    ESCAPE_KEY_TOGGLE_GPS,
     ESCAPE_KEY_TOGGLE_GPSINFO,
     ESCAPE_KEY_ENUM_COUNT
 } EscapeKeyAction;
@@ -1963,7 +1964,7 @@ route_update_nears(gboolean quick)
     WayPoint *wcurr, *wnext;
     guint near_dist_rough;
     printf("%s(%d)\n", __PRETTY_FUNCTION__, quick);
-    
+
     /* If we have waypoints (_next_way != NULL), then determine the "next
      * waypoint", which is defined as the waypoint after the nearest point,
      * UNLESS we've passed that waypoint, in which case the waypoint after
@@ -2782,7 +2783,7 @@ config_save()
         GList *curr = _repo_list;
         GSList *temp_list = NULL;
         gint curr_repo_index = 0;
-        
+
         for(curr = _repo_list; curr != NULL; curr = curr->next)
         {
             /* Build from each part of a repo, delimited by newline characters:
@@ -3167,7 +3168,7 @@ settings_dialog_colors(GtkWidget *widget, GtkWidget *parent)
     GtkWidget *btn_defaults;
     ColorsDialogInfo cdi;
     printf("%s()\n", __PRETTY_FUNCTION__);
-    
+
     dialog = gtk_dialog_new_with_buttons(_("Colors"),
             GTK_WINDOW(parent), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -3241,7 +3242,7 @@ settings_dialog_colors(GtkWidget *widget, GtkWidget *parent)
             3, 4, 2, 3, 0, 0, 2, 4);
     hildon_color_button_set_color(
             HILDON_COLOR_BUTTON(cdi.col_route_nextway), &_color_route_nextway);
-    
+
     /* POI. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(_("POI")),
@@ -3356,7 +3357,7 @@ settings_dialog()
 
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
             notebook = gtk_notebook_new(), TRUE, TRUE, 0);
-    
+
     /* Receiver page. */
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
             table = gtk_table_new(2, 3, FALSE),
@@ -3874,7 +3875,7 @@ config_init()
             GCONF_KEY_CURRREPO, NULL);
         list = gconf_client_get_list(gconf_client,
             GCONF_KEY_REPOSITORIES, GCONF_VALUE_STRING, NULL);
-        
+
         for(curr = list; curr != NULL; curr = curr->next)
         {
             /* Parse each part of a repo, delimited by newline characters:
@@ -4113,7 +4114,7 @@ menu_maps_remove_repos()
 {
     GList *curr;
     printf("%s()\n", __PRETTY_FUNCTION__);
-    
+
     /* Delete one menu item for each repo. */
     for(curr = _repo_list; curr; curr = curr->next)
     {
@@ -4129,7 +4130,7 @@ menu_maps_add_repos()
     GList *curr;
     GtkWidget *last_repo = NULL;
     printf("%s()\n", __PRETTY_FUNCTION__);
-    
+
     for(curr = g_list_last(_repo_list); curr; curr = curr->prev)
     {
         RepoData *rd = (RepoData*)curr->data;
@@ -5586,7 +5587,7 @@ parse_track_gpx(gchar *buffer, gint size, gint policy_old)
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
     }
-    
+
     /* Successful parsing - replace given Track structure. */
     if(policy_old && _track.head)
     {
@@ -5674,7 +5675,7 @@ parse_route_gpx(gchar *buffer, gint size, gint policy_old)
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
     }
-    
+
     if(policy_old && _route.head)
     {
         Point *src_first;
@@ -6022,6 +6023,7 @@ maemo_mapper_init(gint argc, gchar **argv)
     ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_TRACKS] = _("Toggle Tracks");
     ESCAPE_KEY_TEXT[ESCAPE_KEY_CHANGE_REPO] = _("Next Repository");
     ESCAPE_KEY_TEXT[ESCAPE_KEY_RESET_BLUETOOTH] = _("Reset Bluetooth");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_GPS] = _("Toggle GPS");
     ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_GPSINFO] = _("Toggle GPS Info");
 
     config_init();
@@ -6448,6 +6450,11 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                     break;
                 case ESCAPE_KEY_RESET_BLUETOOTH:
                     reset_bluetooth();
+                    break;
+                case ESCAPE_KEY_TOGGLE_GPS:
+                    gtk_check_menu_item_set_active(
+                            GTK_CHECK_MENU_ITEM(_menu_enable_gps_item),
+                            !_enable_gps);
                     break;
                 case ESCAPE_KEY_TOGGLE_GPSINFO:
                     gtk_check_menu_item_set_active(
@@ -7685,7 +7692,7 @@ write_track_gpx(GnomeVFSHandle *handle)
             sprintf(buffer, "      <trkpt lat=\"%s\" lon=\"%s\"",
                     strlat, strlon);
             WRITE_STRING(buffer);
-            
+
             /* write the time */
             if(curr->time)
             {
@@ -7804,7 +7811,7 @@ menu_cb_track_mark_way(GtkAction *action)
         *_track.tail = _track_null;
         MACRO_TRACK_INCREMENT_TAIL(_track);
         *_track.tail = _track.tail[2];
-        
+
         /** Instead of calling map_render_paths(), we'll just add the waypoint
          * ourselves. */
         x1 = unit2bufx(_track.tail->point.unitx);
@@ -9171,7 +9178,7 @@ cmenu_cb_loc_clip_latlon(GtkAction *action)
 
     gtk_clipboard_set_text(
             gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), buffer, -1);
-    
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -9185,7 +9192,7 @@ cmenu_cb_loc_route_to(GtkAction *action)
     guint unitx, unity;
     gfloat lat, lon;
     printf("%s()\n", __PRETTY_FUNCTION__);
-    
+
     unitx = x2unit(_cmenu_position_x);
     unity = y2unit(_cmenu_position_y);
     unit2latlon(unitx, unity, lat, lon);
@@ -9193,7 +9200,7 @@ cmenu_cb_loc_route_to(GtkAction *action)
     g_ascii_formatd(strlat, 32, "%.06f", lat);
     g_ascii_formatd(strlon, 32, "%.06f", lon);
     sprintf(buffer, "%s, %s", strlat, strlon);
-    
+
     route_download(NULL, buffer, TRUE);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -9207,7 +9214,7 @@ cmenu_cb_loc_distance_to(GtkAction *action)
     guint unitx, unity;
     gfloat lat, lon;
     printf("%s()\n", __PRETTY_FUNCTION__);
-    
+
     unitx = x2unit(_cmenu_position_x);
     unity = y2unit(_cmenu_position_y);
     unit2latlon(unitx, unity, lat, lon);
@@ -9371,7 +9378,7 @@ cmenu_cb_way_route_to(GtkAction *action)
         g_ascii_formatd(strlat, 32, "%.06f", lat);
         g_ascii_formatd(strlon, 32, "%.06f", lon);
         sprintf(buffer, "%s, %s", strlat, strlon);
-        
+
         route_download(NULL, buffer, TRUE);
     }
     else
