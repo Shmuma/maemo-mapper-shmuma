@@ -1,3 +1,10 @@
+maemo-mapper (1.2.3) unstable; urgency=low
+
+  * Fixed the /dev/rfcomm crash (and probably other crashes)
+    (closes #105, #113).
+
+ -- John Costigan <gnuite@gmail.com>  Sun, 22 Oct 2006 20:34:00 -0400
+
 maemo-mapper (1.2.2) unstable; urgency=low
 
   * Fixed a few minor bugs (#109, #110, #111).

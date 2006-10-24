@@ -423,13 +423,12 @@ typedef enum
 typedef enum
 {
     UNITS_KM,
-#define UNITS_KM_TEXT _("km")
     UNITS_MI,
-#define UNITS_MI_TEXT _("mi.")
     UNITS_NM,
-#define UNITS_NM_TEXT _("n.m.")
+    UNITS_ENUM_COUNT
 } UnitType;
-gchar *UNITS_TEXT[3];
+gchar *UNITS_TEXT[UNITS_ENUM_COUNT];
+
 #define EARTH_RADIUS (3440.06479f)
 gfloat UNITS_CONVERT[] =
 {
@@ -441,13 +440,12 @@ gfloat UNITS_CONVERT[] =
 typedef enum
 {
     ESCAPE_KEY_TOGGLE_TRACKS,
-#define ESCAPE_KEY_TOGGLE_TRACKS_TEXT _("Toggle Tracks")
     ESCAPE_KEY_CHANGE_REPO,
-#define ESCAPE_KEY_CHANGE_REPO_TEXT _("Next Repository")
     ESCAPE_KEY_RESET_BLUETOOTH,
-#define ESCAPE_KEY_RESET_BLUETOOTH_TEXT _("Reset Bluetooth")
+    ESCAPE_KEY_TOGGLE_GPSINFO,
+    ESCAPE_KEY_ENUM_COUNT
 } EscapeKeyAction;
-gchar *ESCAPE_KEY_TEXT[3];
+gchar *ESCAPE_KEY_TEXT[ESCAPE_KEY_ENUM_COUNT];
 
 
 /** A general definition of a point in the Maemo Mapper unit system. */
@@ -637,8 +635,10 @@ static GtkWidget *_sdi_msp = NULL;
 
 /** The file descriptor of our connection with the GPS receiver. */
 static gint _fd = -1;
-static gchar _gps_read_buf[256];
-static guint _gps_read_buf_pos = 0;
+#define GPS_READ_BUF_SIZE 256
+static gchar _gps_read_buf[GPS_READ_BUF_SIZE];
+static gchar *_gps_read_buf_curr = _gps_read_buf;
+static gchar *_gps_read_buf_last = _gps_read_buf + GPS_READ_BUF_SIZE - 1;
 
 /** The GIOChannel through which communication with the GPS receiver is
  * performed. */
@@ -2350,12 +2350,9 @@ track_add(time_t time, gboolean newly_fixed)
     Point pos = (time == 0 ? _pos_null : _pos);
     printf("%s(%u, %u)\n", __PRETTY_FUNCTION__, pos.unitx, pos.unity);
 
-    printf("A: %p\n", _track.tail);
-    printf("A.1: %d %d\n", _track.tail->point.unitx, _track.tail->point.unity);
     if(abs((gint)pos.unitx - _track.tail->point.unitx) > _draw_line_width
     || abs((gint)pos.unity - _track.tail->point.unity) > _draw_line_width)
     {
-        printf("B\n");
         if(time && _route.head
                 && (newly_fixed ? (route_find_nearest_point(), TRUE)
                                 : route_update_nears(TRUE)))
@@ -2363,19 +2360,16 @@ track_add(time_t time, gboolean newly_fixed)
             map_render_paths();
             MACRO_QUEUE_DRAW_AREA();
         }
-        printf("C\n");
         if(_show_tracks & TRACKS_MASK)
         {
             /* Instead of calling map_render_paths(), we'll draw the new line
              * ourselves and call gtk_widget_queue_draw_area(). */
             gint tx1, ty1, tx2, ty2;
-            printf("C.a\n");
             map_render_segment(_gc_track, _gc_track_break,
                     _track.tail->point.unitx, _track.tail->point.unity,
                     pos.unitx, pos.unity);
             if(time && _track.tail->point.unity)
             {
-                printf("C.b\n");
                 tx1 = unit2x(_track.tail->point.unitx);
                 ty1 = unit2y(_track.tail->point.unity);
                 tx2 = unit2x(pos.unitx);
@@ -2387,22 +2381,17 @@ track_add(time_t time, gboolean newly_fixed)
                         abs(ty1 - ty2) + (2 * _draw_line_width));
             }
         }
-        printf("D\n");
         MACRO_TRACK_INCREMENT_TAIL(_track);
-        printf("E\n");
 
         _track.tail->point = pos;
         _track.tail->time = time;
 
-        printf("F\n");
         if(_autoroute_data.enabled && !_autoroute_data.in_progress
                 && _near_point_dist_rough > 400)
         {
-            printf("F.a\n");
             _autoroute_data.in_progress = TRUE;
             g_idle_add((GSourceFunc)auto_route_dl_idle, NULL);
         }
-        printf("G\n");
 
         /* Keep the display on. */
         KEEP_DISPLAY_ON();
@@ -2514,7 +2503,11 @@ rcvr_connect_now()
             rcvr_connect_later();
         else
         {
-            _gps_read_buf_pos = 0;
+            /* Reset GPS read buffer */
+            _gps_read_buf_curr = _gps_read_buf;
+            *_gps_read_buf_curr = '\0';
+
+            /* Create channel and add watches. */
             _channel = g_io_channel_unix_new(_fd);
             g_io_channel_set_flags(_channel, G_IO_FLAG_NONBLOCK, NULL);
             _error_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
@@ -3347,6 +3340,7 @@ settings_dialog()
     BrowseInfo browse_info = {0, 0};
     ScanInfo scan_info = {0};
     gboolean rcvr_changed = FALSE;
+    guint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     dialog = gtk_dialog_new_with_buttons(_("Maemo Mapper Settings"),
@@ -3521,9 +3515,8 @@ settings_dialog()
             TRUE, TRUE, 0);
     gtk_container_add(GTK_CONTAINER(label),
             cmb_units = gtk_combo_box_new_text());
-    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_KM_TEXT);
-    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_MI_TEXT);
-    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_NM_TEXT);
+    for(i = 0; i < UNITS_ENUM_COUNT; i++)
+        gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_TEXT[i]);
 
     /* Escape Key. */
     gtk_box_pack_start(GTK_BOX(hbox),
@@ -3535,12 +3528,9 @@ settings_dialog()
             TRUE, TRUE, 0);
     gtk_container_add(GTK_CONTAINER(label),
             cmb_escape_key = gtk_combo_box_new_text());
-    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_escape_key),
-            ESCAPE_KEY_TOGGLE_TRACKS_TEXT);
-    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_escape_key),
-            ESCAPE_KEY_CHANGE_REPO_TEXT);
-    gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_escape_key),
-            ESCAPE_KEY_RESET_BLUETOOTH_TEXT);
+    for(i = 0; i < ESCAPE_KEY_ENUM_COUNT; i++)
+        gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_escape_key),
+                ESCAPE_KEY_TEXT[i]);
 
     /* POI page */
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
@@ -3825,28 +3815,22 @@ config_init()
     {
         gchar *units_str = gconf_client_get_string(gconf_client,
                 GCONF_KEY_UNITS, NULL);
-        if(units_str == NULL)
-            _units = UNITS_KM;
-        else if(!strcmp(units_str, UNITS_MI_TEXT))
-            _units = UNITS_MI;
-        else if(!strcmp(units_str, UNITS_NM_TEXT))
-            _units = UNITS_NM;
-        else
-            _units = UNITS_KM;
+        guint i;
+        for(i = UNITS_ENUM_COUNT - 1; i > 0; i--)
+            if(!strcmp(units_str, UNITS_TEXT[i]))
+                break;
+        _units = i;
     }
 
     /* Get Escape Key.  Default is ESCAPE_KEY_TOGGLE_TRACKS. */
     {
         gchar *escape_key_str = gconf_client_get_string(gconf_client,
                 GCONF_KEY_ESCAPE_KEY, NULL);
-        if(escape_key_str == NULL)
-            _escape_key = ESCAPE_KEY_TOGGLE_TRACKS;
-        else if(!strcmp(escape_key_str, ESCAPE_KEY_CHANGE_REPO_TEXT))
-            _escape_key = ESCAPE_KEY_CHANGE_REPO;
-        else if(!strcmp(escape_key_str, ESCAPE_KEY_RESET_BLUETOOTH_TEXT))
-            _escape_key = ESCAPE_KEY_RESET_BLUETOOTH;
-        else
-            _escape_key = ESCAPE_KEY_TOGGLE_TRACKS;
+        guint i;
+        for(i = ESCAPE_KEY_ENUM_COUNT - 1; i > 0; i--)
+            if(!strcmp(escape_key_str, ESCAPE_KEY_TEXT[i]))
+                break;
+        _escape_key = i;
     }
 
     /* Get last saved latitude.  Default is 0. */
@@ -6030,6 +6014,16 @@ maemo_mapper_init(gint argc, gchar **argv)
     GtkWidget *hbox, *label, *vbox;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    /* Set enum-based constants. */
+    UNITS_TEXT[UNITS_KM] = _("km");
+    UNITS_TEXT[UNITS_MI] = _("mi.");
+    UNITS_TEXT[UNITS_NM] = _("n.m.");
+
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_TRACKS] = _("Toggle Tracks");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_CHANGE_REPO] = _("Next Repository");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_RESET_BLUETOOTH] = _("Reset Bluetooth");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_GPSINFO] = _("Toggle GPS Info");
+
     config_init();
 
     /* Initialize _program. */
@@ -6136,14 +6130,6 @@ maemo_mapper_init(gint argc, gchar **argv)
     gnome_vfs_async_set_job_limit(24);
 
     /* Initialize data. */
-
-    UNITS_TEXT[UNITS_KM] = UNITS_KM_TEXT;
-    UNITS_TEXT[UNITS_MI] = UNITS_MI_TEXT;
-    UNITS_TEXT[UNITS_NM] = UNITS_NM_TEXT;
-
-    ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_TRACKS] = ESCAPE_KEY_TOGGLE_TRACKS_TEXT;
-    ESCAPE_KEY_TEXT[ESCAPE_KEY_CHANGE_REPO] = ESCAPE_KEY_CHANGE_REPO_TEXT;
-    ESCAPE_KEY_TEXT[ESCAPE_KEY_RESET_BLUETOOTH]=ESCAPE_KEY_RESET_BLUETOOTH_TEXT;
 
     /* set XML_TZONE */
     {
@@ -6462,6 +6448,11 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                     break;
                 case ESCAPE_KEY_RESET_BLUETOOTH:
                     reset_bluetooth();
+                    break;
+                case ESCAPE_KEY_TOGGLE_GPSINFO:
+                    gtk_check_menu_item_set_active(
+                            GTK_CHECK_MENU_ITEM(_menu_gps_show_info_item),
+                            !_gps_info);
                     break;
                 default:
                     switch(_show_tracks)
@@ -6898,7 +6889,7 @@ channel_parse_rmc(gchar *sentence)
     gdouble tmpd = 0.f;
     guint tmpi = 0;
     gboolean newly_fixed = FALSE;
-    vprintf("%s(): %s", __PRETTY_FUNCTION__, sentence);
+    vprintf("%s(): %s\n", __PRETTY_FUNCTION__, sentence);
 
 #define DELIM ","
 
@@ -7049,7 +7040,7 @@ channel_parse_gga(gchar *sentence)
      15. the checksum data
      */
     gchar *token;
-    vprintf("%s(): %s", __PRETTY_FUNCTION__, sentence);
+    vprintf("%s(): %s\n", __PRETTY_FUNCTION__, sentence);
 
 #define DELIM ","
 
@@ -7100,7 +7091,7 @@ channel_parse_gsa(gchar *sentence)
      */
     gchar *token;
     guint i;
-    vprintf("%s(): %s", __PRETTY_FUNCTION__, sentence);
+    vprintf("%s(): %s\n", __PRETTY_FUNCTION__, sentence);
 
 #define DELIM ","
 
@@ -7156,12 +7147,13 @@ channel_parse_gsv(gchar *sentence)
     static guint running_total = 0;
     static guint num_sats_used = 0;
     static guint satcnt = 0;
-    vprintf("%s(): %s", __PRETTY_FUNCTION__, sentence);
+    vprintf("%s(): %s\n", __PRETTY_FUNCTION__, sentence);
 
     /* Parse number of messages. */
     token = strsep(&sentence, DELIM);
-    if(*token)
-        MACRO_PARSE_INT(nummsgs, token);
+    if(!*token)
+        return; /* because this is an invalid sentence. */
+    MACRO_PARSE_INT(nummsgs, token);
 
     /* Parse message number. */
     token = strsep(&sentence, DELIM);
@@ -7234,66 +7226,76 @@ channel_parse_gsv(gchar *sentence)
 static gboolean
 channel_cb_input(GIOChannel *src, GIOCondition condition, gpointer data)
 {
-    gchar *sentence = _gps_read_buf;
     gsize bytes_read;
     vprintf("%s(%d)\n", __PRETTY_FUNCTION__, condition);
 
     if(G_IO_STATUS_NORMAL == g_io_channel_read_chars(
                 _channel,
-                _gps_read_buf + _gps_read_buf_pos,
-                sizeof(_gps_read_buf) - _gps_read_buf_pos -1,
+                _gps_read_buf_curr,
+                _gps_read_buf_last - _gps_read_buf_curr,
                 &bytes_read,
                 NULL))
     {
         gchar *eol;
-        _gps_read_buf_pos += bytes_read;
-        _gps_read_buf[_gps_read_buf_pos] = '\0';
-        eol = strchr(_gps_read_buf, '\n');
-        while(eol)
+        _gps_read_buf_curr += bytes_read;
+        *_gps_read_buf_curr = '\0'; /* append a \0 so we can read as string */
+        while((eol = strchr(_gps_read_buf, '\n')))
         {
-            gchar *sptr = sentence + 1;
+            gchar *sptr = _gps_read_buf + 1; /* Skip the $ */
             guint csum = 0;
-            gint leftover = _gps_read_buf + _gps_read_buf_pos - eol - 1;
-            *eol = '\0';
-            while(*sptr && *sptr != '*')
-                csum ^= *sptr++;
-            if(!*sptr || csum == strtol(sptr + 1, NULL, 16))
+            if(*_gps_read_buf == '$')
             {
-                if(*sptr)
-                    *sptr = '\0'; /* take checksum out of the sentence. */
-                if(!strncmp(sentence + 3, "GSV", 3))
-                {
-                    if(_conn_state == RCVR_UP || _gps_info || _satdetails_on)
-                        channel_parse_gsv(sentence + 7);
-                }
-                else if(!strncmp(sentence + 3, "RMC", 3))
-                    channel_parse_rmc(sentence + 7);
-                else if(!strncmp(sentence + 3, "GGA", 3))
-                    channel_parse_gga(sentence + 7);
-                else if(!strncmp(sentence + 3, "GSA", 3))
-                    channel_parse_gsa(sentence + 7);
+                /* This is the beginning of a sentence; okay to parse. */
+                *eol = '\0'; /* overwrite \n with \0 */
+                while(*sptr && *sptr != '*')
+                    csum ^= *sptr++;
 
-                if(_gps_info)
-                    gps_display_data();
-                if(_satdetails_on)
-                    gps_display_details();
+                /* If we're at a \0 (meaning there is no checksum), or if the
+                 * checksum is good, then parse the sentence. */
+                if(!*sptr || csum == strtol(sptr + 1, NULL, 16))
+                {
+                    if(*sptr)
+                        *sptr = '\0'; /* take checksum out of the buffer. */
+                    if(!strncmp(_gps_read_buf + 3, "GSV", 3))
+                    {
+                        if(_conn_state == RCVR_UP
+                                || _gps_info || _satdetails_on)
+                            channel_parse_gsv(_gps_read_buf + 7);
+                    }
+                    else if(!strncmp(_gps_read_buf + 3, "RMC", 3))
+                        channel_parse_rmc(_gps_read_buf + 7);
+                    else if(!strncmp(_gps_read_buf + 3, "GGA", 3))
+                        channel_parse_gga(_gps_read_buf + 7);
+                    else if(!strncmp(_gps_read_buf + 3, "GSA", 3))
+                        channel_parse_gsa(_gps_read_buf + 7);
+
+                    if(_gps_info)
+                        gps_display_data();
+                    if(_satdetails_on)
+                        gps_display_details();
+                }
+                else
+                {
+                    /* There was a checksum, and it was bad. */
+                    fprintf(stderr, "%s: Bad checksum in NMEA sentence:\n%s\n",
+                            __PRETTY_FUNCTION__, _gps_read_buf);
+                }
+            }
+
+            /* If eol is at or after (_gps_read_buf_curr - 1) */
+            if(eol >= (_gps_read_buf_curr - 1))
+            {
+                /* Last read was a newline - reset read buffer */
+                _gps_read_buf_curr = _gps_read_buf;
+                *_gps_read_buf_curr = '\0';
             }
             else
             {
-                fprintf(stderr, "%s: Bad checksum in NMEA sentence:\n%s\n",
-                        __PRETTY_FUNCTION__, sentence);
-            }
-            if(leftover <= 0)
-            {
-                /* last read was a newline */
-                _gps_read_buf_pos = 0;
-                eol = 0;
-            }
-            else
-            {
-                memmove(_gps_read_buf, eol+1, leftover+1); /* incl term. 0 */
-                _gps_read_buf_pos = leftover;
-                eol = strchr(_gps_read_buf, '\n');
+                /* Move the next line to the front of the buffer. */
+                memmove(_gps_read_buf, eol + 1,
+                        _gps_read_buf_curr - eol); /* include terminating 0 */
+                /* Subtract _curr so that it's pointing at the new \0. */
+                _gps_read_buf_curr -= (eol - _gps_read_buf + 1);
             }
         }
     }

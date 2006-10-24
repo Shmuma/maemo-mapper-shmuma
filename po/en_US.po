@@ -798,6 +798,10 @@ msgstr "Spd: %.1f mph"
 msgid "Speed"
 msgstr "Speed"
 
+#: ../src/maemo-mapper.c:6134
+msgid "Toggle GPS Info"
+msgstr "Toggle GPS Info"
+
 #: ../src/maemo-mapper.c:413
 msgid "Toggle Tracks"
 msgstr "Toggle Tracks"
