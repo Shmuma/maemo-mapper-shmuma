@@ -19,13 +19,12 @@
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 1.2.3)
+AM_INIT_AUTOMAKE(maemo-mapper, 1.2.4)
 
 AC_PROG_CPP
 AC_CONFIG_HEADERS(src/config.h)
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
-AC_PROG_INTLTOOL([0.23])
 
 PKG_CHECK_MODULES(GTK, gtk+-2.0)
 AC_SUBST(GTK_LIBS)
@@ -57,11 +56,14 @@ AC_SUBST(SQLITE_CFLAGS)
 
 
 # Localisation
+localedir=`$PKG_CONFIG osso-af-settings --variable=localedir`
+AC_PROG_INTLTOOL([0.23])
 GETTEXT_PACKAGE=$PACKAGE
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "${GETTEXT_PACKAGE}", [Name of gettext package])
 ALL_LINGUAS="en_US nl_NL it_IT"
 AM_GLIB_GNU_GETTEXT
+
 
 # To make application visible in maemo Task Navigator it needs a Desktop
 # file for the application.
@@ -70,9 +72,6 @@ AM_GLIB_GNU_GETTEXT
 # The following line defines install directories for these files.
 desktopentrydir=`$PKG_CONFIG osso-af-settings --variable=desktopentrydir`
 serviceentrydir=`$PKG_CONFIG osso-af-settings --variable=dbusservicedir`
-
-# Application locale install directory
-localedir=`$PKG_CONFIG osso-af-settings --variable=localedir`
 
 # Application pixmaps install directory
 pixmapdir=`$PKG_CONFIG osso-af-settings --variable=hildonpixmapdir`

@@ -2345,9 +2345,9 @@ sat_details_panel_expose(GtkWidget *widget, GdkEventExpose *event)
     pango_layout_set_font_description (layout, fontdesc);
 
     buffer = g_strdup_printf(
-        _("Satellites in view: %d; in use: %d"),
-        _gps.satinview,
-        _gps.satinuse);
+        "%s: %d; %s: %d",
+        _("Satellites in view"), _gps.satinview,
+        _("in use"), _gps.satinuse);
     pango_layout_set_text(layout, buffer, strlen(buffer));
     pango_layout_get_pixel_size(layout, &x, &y);
     gdk_draw_layout(widget->window,
@@ -2357,7 +2357,7 @@ sat_details_panel_expose(GtkWidget *widget, GdkEventExpose *event)
         layout);
     g_free(buffer);
 
-    buffer = g_strdup_printf(_("HDOP: %.01f"), _gps.hdop);
+    buffer = g_strdup_printf("HDOP: %.01f", _gps.hdop);
     pango_layout_set_text(layout, buffer, strlen(buffer));
     pango_layout_get_pixel_size(layout, &x, &y);
     gdk_draw_layout(widget->window,
@@ -2366,7 +2366,7 @@ sat_details_panel_expose(GtkWidget *widget, GdkEventExpose *event)
         (height/6) - y/2,
         layout);
     g_free(buffer);
-    buffer = g_strdup_printf(_("PDOP: %.01f"), _gps.pdop);
+    buffer = g_strdup_printf("PDOP: %.01f", _gps.pdop);
     pango_layout_set_text(layout, buffer, strlen(buffer));
     pango_layout_get_pixel_size(layout, &x, &y);
     gdk_draw_layout(widget->window,
@@ -2375,7 +2375,7 @@ sat_details_panel_expose(GtkWidget *widget, GdkEventExpose *event)
         (height/6) - y/2 + 20,
         layout);
     g_free(buffer);
-    buffer = g_strdup_printf(_("VDOP: %.01f"), _gps.vdop);
+    buffer = g_strdup_printf("VDOP: %.01f", _gps.vdop);
     pango_layout_set_text(layout, buffer, strlen(buffer));
     pango_layout_get_pixel_size(layout, &x, &y);
     gdk_draw_layout(widget->window,
@@ -2630,8 +2630,8 @@ db_connect()
                             "select label from poi limit 1",
                             &pszResult, &nRow, &nColumn, NULL)))
         {
-            sprintf(buffer, _("Failed to open or create database:\n%s"),
-                    _poi_db);
+            sprintf(buffer, "%s:\n%s",
+                    _("Failed to open or create database"), _poi_db);
             popup_error(_window, buffer);
             sqlite_close(_db);
             return;
@@ -6454,6 +6454,12 @@ main(gint argc, gchar *argv[])
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    /* Initialize localization. */
+    setlocale(LC_ALL, "");
+    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+    textdomain(GETTEXT_PACKAGE);
+
     g_thread_init(NULL);
 
     /* Initialize _osso. */
@@ -6471,12 +6477,6 @@ main(gint argc, gchar *argv[])
     gconf_init(argc, argv, NULL);
 
     gnome_vfs_init();
-
-    /* Initialize localization. */
-    setlocale(LC_ALL, "");
-    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
-    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-    textdomain(GETTEXT_PACKAGE);
 
     maemo_mapper_init(argc, argv);
 
@@ -10176,7 +10176,7 @@ poi_delete(GtkWidget *widget, DeletePOI *dpoi)
     gchar *buffer;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    buffer = g_strdup_printf(_("Delete POI?\n%s"), dpoi->txt_label);
+    buffer = g_strdup_printf("%s\n%s", _("Delete POI?"), dpoi->txt_label);
     dialog = hildon_note_new_confirmation (GTK_WINDOW(_window), buffer);
     g_free(buffer);
     i = gtk_dialog_run (GTK_DIALOG (dialog));
