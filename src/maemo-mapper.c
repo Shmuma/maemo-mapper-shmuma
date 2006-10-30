@@ -191,6 +191,7 @@
 #define GCONF_KEY_CURRREPO GCONF_KEY_PREFIX"/curr_repo"
 #define GCONF_KEY_GPS_INFO GCONF_KEY_PREFIX"/gps_info"
 #define GCONF_KEY_ROUTE_DL_RADIUS GCONF_KEY_PREFIX"/route_dl_radius"
+#define GCONF_KEY_DEG_FORMAT GCONF_KEY_PREFIX"/deg_format"
 
 #define GCONF_KEY_DISCONNECT_ON_COVER "/system/osso/connectivity/IAP/disconnect_on_cover"
 
@@ -469,6 +470,14 @@ typedef enum
 } EscapeKeyAction;
 gchar *ESCAPE_KEY_TEXT[ESCAPE_KEY_ENUM_COUNT];
 
+typedef enum
+{
+    DDPDDDDD,
+    DD_MMPMMM,
+    DD_MM_SSPS,
+    DEG_FORMAT_ENUM_COUNT
+} Degree_format;
+gchar *DEG_FORMAT_TEXT[DEG_FORMAT_ENUM_COUNT];
 
 /** A general definition of a point in the Maemo Mapper unit system. */
 typedef struct _Point Point;
@@ -871,6 +880,7 @@ static GSList *_loc_list;
 static GtkListStore *_loc_model;
 static UnitType _units = UNITS_KM;
 static EscapeKeyAction _escape_key = ESCAPE_KEY_TOGGLE_TRACKS;
+static guint _degformat = DDPDDDDD;
 
 static gchar *_config_dir_uri;
 
@@ -1778,6 +1788,29 @@ parse_route_gpx(gchar *buffer, gint size, gint policy_old)
 /****************************************************************************
  * BELOW: ROUTINES **********************************************************
  ****************************************************************************/
+
+static void
+deg_format(gfloat coor, gchar scoor[15])
+{
+    gint deg;
+    gfloat min, sec;
+
+    switch(_degformat)
+    {
+        case DD_MMPMMM:
+            sprintf(scoor, "%d\u00b0%06.3f'", (int)coor, (coor - (int)coor)*60.0);
+            break;
+        case DD_MM_SSPS:
+            deg = (int)coor;
+            min = (coor - (int)coor)*60.0;
+            sec = (min - (int)min)*60.0;
+            sprintf(scoor, "%d\u00b0%02d'%04.1f\"", deg, (int) min, sec);
+            break;
+        default:
+            sprintf(scoor, "%.5f\u00b0", coor);
+            break;
+    }
+}
 
 static gboolean
 gps_display_details(void)
@@ -3417,6 +3450,10 @@ config_save()
     gconf_client_set_string(gconf_client,
             GCONF_KEY_ESCAPE_KEY, ESCAPE_KEY_TEXT[_escape_key], NULL);
 
+    /* Save Escape Key Function. */
+    gconf_client_set_string(gconf_client,
+            GCONF_KEY_DEG_FORMAT, DEG_FORMAT_TEXT[_degformat], NULL);
+
     /* Save last saved latitude. */
     gconf_client_set_float(gconf_client,
             GCONF_KEY_LAT, _pos_lat, NULL);
@@ -4035,6 +4072,7 @@ settings_dialog()
     GtkWidget *chk_always_keep_on;
     GtkWidget *cmb_units;
     GtkWidget *cmb_escape_key;
+    GtkWidget *cmb_degformat;
     GtkWidget *btn_scan;
     GtkWidget *btn_colors;
 
@@ -4207,21 +4245,9 @@ settings_dialog()
                 _("Keep Display On Only in Fullscreen Mode")),
             0, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
 
-    /* Units. */
     gtk_table_attach(GTK_TABLE(table),
             hbox = gtk_hbox_new(FALSE, 4),
             0, 2, 2, 3, GTK_FILL, 0, 2, 4);
-    gtk_box_pack_start(GTK_BOX(hbox),
-            label = gtk_label_new(_("Units")),
-            FALSE, FALSE, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_box_pack_start(GTK_BOX(hbox),
-            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-            TRUE, TRUE, 0);
-    gtk_container_add(GTK_CONTAINER(label),
-            cmb_units = gtk_combo_box_new_text());
-    for(i = 0; i < UNITS_ENUM_COUNT; i++)
-        gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_TEXT[i]);
 
     /* Escape Key. */
     gtk_box_pack_start(GTK_BOX(hbox),
@@ -4236,6 +4262,43 @@ settings_dialog()
     for(i = 0; i < ESCAPE_KEY_ENUM_COUNT; i++)
         gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_escape_key),
                 ESCAPE_KEY_TEXT[i]);
+
+    /* Misc. 2 page. */
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+            table = gtk_table_new(2, 3, FALSE),
+            label = gtk_label_new(_("Misc. 2")));
+
+    /* Units. */
+    gtk_table_attach(GTK_TABLE(table),
+            hbox = gtk_hbox_new(FALSE, 4),
+            0, 2, 1, 2, GTK_FILL, 0, 2, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_label_new(_("Units")),
+            FALSE, FALSE, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+            TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(label),
+            cmb_units = gtk_combo_box_new_text());
+    for(i = 0; i < UNITS_ENUM_COUNT; i++)
+        gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_TEXT[i]);
+
+    gtk_table_attach(GTK_TABLE(table),
+            hbox = gtk_hbox_new(FALSE, 4),
+            0, 2, 2, 3, GTK_FILL, 0, 2, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_label_new(_("Degree format")),
+            FALSE, FALSE, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+            TRUE, TRUE, 0);
+    gtk_container_add(GTK_CONTAINER(label),
+            cmb_degformat = gtk_combo_box_new_text());
+    for(i = 0; i < DEG_FORMAT_ENUM_COUNT; i++)
+        gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_degformat),
+            DEG_FORMAT_TEXT[i]);
 
     /* POI page */
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
@@ -4307,6 +4370,7 @@ settings_dialog()
             !_always_keep_on);
     gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_units), _units);
     gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_escape_key), _escape_key);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_degformat), _degformat);
 
     gtk_widget_show_all(dialog);
 
@@ -4369,6 +4433,7 @@ settings_dialog()
 
         _units = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_units));
         _escape_key = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_escape_key));
+        _degformat = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_degformat));
 
         _announce_notice_ratio = hildon_controlbar_get_value(
                 HILDON_CONTROLBAR(num_announce_notice));
@@ -4575,6 +4640,18 @@ config_init()
                 if(!strcmp(escape_key_str, ESCAPE_KEY_TEXT[i]))
                     break;
         _escape_key = i;
+    }
+
+    /* Get Deg format.  Default is DDPDDDDD. */
+    {
+        gchar *degformat_key_str = gconf_client_get_string(gconf_client,
+                GCONF_KEY_DEG_FORMAT, NULL);
+        guint i = 0;
+        if(degformat_key_str)
+            for(i = DEG_FORMAT_ENUM_COUNT - 1; i > 0; i--)
+                if(!strcmp(degformat_key_str, DEG_FORMAT_TEXT[i]))
+                    break;
+        _degformat = i;
     }
 
     /* Get last saved latitude.  Default is 0. */
@@ -6266,6 +6343,10 @@ maemo_mapper_init(gint argc, gchar **argv)
     ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_GPS] = _("Toggle GPS");
     ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_GPSINFO] = _("Toggle GPS Info");
 
+    DEG_FORMAT_TEXT[DDPDDDDD] = "dd.ddddd\u00b0";
+    DEG_FORMAT_TEXT[DD_MMPMMM] = "dd\u00b0mm.mmm'";
+    DEG_FORMAT_TEXT[DD_MM_SSPS] = "dd\u00b0mm'ss.s\"";
+
     /* Set up track array (must be done before config). */
     memset(&_track, 0, sizeof(_track));
     memset(&_route, 0, sizeof(_route));
@@ -7138,7 +7219,7 @@ channel_parse_rmc(gchar *sentence)
      * 12) FAA mode indicator (NMEA 2.3 and later)
      * 13) Checksum
      */
-    gchar *token, *dpoint, *gpstime = NULL, *gpsdate = NULL;
+    gchar *token, *dpoint, *gpstime = NULL, *gpsdate = NULL, tmp[15];
     gdouble tmpd = 0.f;
     guint tmpi = 0;
     gboolean newly_fixed = FALSE;
@@ -7188,7 +7269,8 @@ channel_parse_rmc(gchar *sentence)
     token = strsep(&sentence, DELIM);
     if(*token)
     {
-        sprintf(_gps.slatitude, "%c %u\u00b0%07.04f", token[0], tmpi, tmpd);
+        deg_format(_pos_lat, tmp);
+        sprintf(_gps.slatitude, "%c %s", token[0], tmp);
         if(token[0] == 'S')
             _pos_lat = -_pos_lat;
     }
@@ -7209,7 +7291,8 @@ channel_parse_rmc(gchar *sentence)
     token = strsep(&sentence, DELIM);
     if(*token)
     {
-        sprintf(_gps.slongitude, "%c %u\u00b0%07.04f", token[0], tmpi, tmpd);
+        deg_format(_pos_lon, tmp);
+        sprintf(_gps.slongitude, "%c %s", token[0], tmp);
         if(*token && token[0] == 'W')
             _pos_lon = -_pos_lon;
     }
