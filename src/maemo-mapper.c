@@ -159,6 +159,9 @@
 #define GCONF_KEY_ALWAYS_KEEP_ON GCONF_KEY_PREFIX"/always_keep_on"
 #define GCONF_KEY_UNITS GCONF_KEY_PREFIX"/units"
 #define GCONF_KEY_ESCAPE_KEY GCONF_KEY_PREFIX"/escape_key"
+#define GCONF_KEY_SPEED_LIMIT_ON GCONF_KEY_PREFIX"/speed_limit_on"
+#define GCONF_KEY_SPEED_LIMIT GCONF_KEY_PREFIX"/speed_limit"
+#define GCONF_KEY_SPEED_LOCATION GCONF_KEY_PREFIX"/speed_location"
 
 #define GCONF_KEY_POI_DB GCONF_KEY_PREFIX"/poi_db"
 #define GCONF_KEY_POI_ZOOM GCONF_KEY_PREFIX"/poi_zoom"
@@ -466,6 +469,7 @@ typedef enum
     ESCAPE_KEY_RESET_BLUETOOTH,
     ESCAPE_KEY_TOGGLE_GPS,
     ESCAPE_KEY_TOGGLE_GPSINFO,
+    ESCAPE_KEY_TOGGLE_SPEEDLIMIT,
     ESCAPE_KEY_ENUM_COUNT
 } EscapeKeyAction;
 gchar *ESCAPE_KEY_TEXT[ESCAPE_KEY_ENUM_COUNT];
@@ -478,6 +482,16 @@ typedef enum
     DEG_FORMAT_ENUM_COUNT
 } Degree_format;
 gchar *DEG_FORMAT_TEXT[DEG_FORMAT_ENUM_COUNT];
+
+typedef enum
+{
+    SPEED_LOCATION_TOP_LEFT,
+    SPEED_LOCATION_TOP_RIGHT,
+    SPEED_LOCATION_BOTTOM_RIGHT,
+    SPEED_LOCATION_BOTTOM_LEFT,
+    SPEED_LOCATION_ENUM_COUNT
+} SpeedLocation;
+gchar *SPEED_LOCATION_TEXT[SPEED_LOCATION_ENUM_COUNT];
 
 /** A general definition of a point in the Maemo Mapper unit system. */
 typedef struct _Point Point;
@@ -881,6 +895,10 @@ static GtkListStore *_loc_model;
 static UnitType _units = UNITS_KM;
 static EscapeKeyAction _escape_key = ESCAPE_KEY_TOGGLE_TRACKS;
 static guint _degformat = DDPDDDDD;
+static gboolean _speed_limit_on = FALSE;
+static guint _speed_limit = 65;
+static gboolean _speed_excess = FALSE;
+static SpeedLocation _speed_location = SPEED_LOCATION_TOP_RIGHT;
 
 static gchar *_config_dir_uri;
 
@@ -1264,6 +1282,105 @@ write_route_gpx(GnomeVFSHandle *handle)
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
+}
+
+static gboolean
+speed_excess(void)
+{
+    if (!_speed_excess)
+        return FALSE;
+
+    hildon_play_system_sound(
+        "/usr/share/sounds/ui-information_note.wav");
+
+    return TRUE;
+}
+
+static void
+speed_limit(void)
+{
+    PangoContext *context = NULL;
+    PangoLayout *layout = NULL;
+    PangoFontDescription *fontdesc = NULL;
+    GdkColor color;
+    GdkGC *gc;
+    gfloat cur_speed;
+    gchar *buffer;
+    static guint x = 0, y = 0, width = 0, height = 0;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    cur_speed = _gps.speed * UNITS_CONVERT[_units];
+
+    context = gtk_widget_get_pango_context(_map_widget);
+    layout = pango_layout_new(context);
+    fontdesc =  pango_font_description_new();
+
+    pango_font_description_set_size(fontdesc, 64 * PANGO_SCALE);
+    pango_layout_set_font_description (layout, fontdesc);
+
+    if (cur_speed > _speed_limit)
+    {
+        color.red = 0xffff;
+        if (!_speed_excess)
+        {
+            _speed_excess = TRUE;
+            g_timeout_add(5000, (GSourceFunc)speed_excess, NULL);
+        }
+    }
+    else
+    {
+        color.red = 0;
+        _speed_excess = FALSE;
+    }
+
+    color.green = 0;
+    color.blue = 0;
+    gc = gdk_gc_new (_map_widget->window);
+    gdk_gc_set_rgb_fg_color (gc, &color);
+
+    buffer = g_strdup_printf("%0.0f", cur_speed);
+    pango_layout_set_text(layout, buffer, strlen(buffer));
+
+    gtk_widget_queue_draw_area ( _map_widget,
+        x - 5,
+        y - 5,
+        width + 5,
+        height + 5);
+    gdk_window_process_all_updates();
+
+    pango_layout_get_pixel_size(layout, &width, &height);
+    switch (_speed_location)
+    {
+        case SPEED_LOCATION_TOP_RIGHT:
+            x = _map_widget->allocation.width - 10 - width;
+            y = 5;
+            break;
+        case SPEED_LOCATION_BOTTOM_RIGHT:
+            x = _map_widget->allocation.width - 10 - width;
+            y = _map_widget->allocation.height - 10 - height;
+            break;
+        case SPEED_LOCATION_BOTTOM_LEFT:
+            x = 10;
+            y = _map_widget->allocation.height - 10 - height;
+            break;
+        default:
+            x = 10;
+            y = 10;
+            break;
+    }
+
+    gdk_draw_layout(_map_widget->window,
+        gc,
+        x, y,
+        layout);
+    g_free(buffer);
+
+    pango_font_description_free (fontdesc);
+    g_object_unref (layout);
+    g_object_unref (gc);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 /**
@@ -3450,9 +3567,21 @@ config_save()
     gconf_client_set_string(gconf_client,
             GCONF_KEY_ESCAPE_KEY, ESCAPE_KEY_TEXT[_escape_key], NULL);
 
-    /* Save Escape Key Function. */
+    /* Save Deg Format. */
     gconf_client_set_string(gconf_client,
             GCONF_KEY_DEG_FORMAT, DEG_FORMAT_TEXT[_degformat], NULL);
+
+    /* Save Speed Limit On flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_SPEED_LIMIT_ON, _speed_limit_on, NULL);
+
+    /* Save Speed Limit. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_SPEED_LIMIT, _speed_limit, NULL);
+
+    /* Save Speed Location. */
+    gconf_client_set_string(gconf_client,
+            GCONF_KEY_SPEED_LOCATION, SPEED_LOCATION_TEXT[_speed_location], NULL);
 
     /* Save last saved latitude. */
     gconf_client_set_float(gconf_client,
@@ -4079,6 +4208,9 @@ settings_dialog()
     GtkWidget *txt_poi_db;
     GtkWidget *btn_browsepoi;
     GtkWidget *num_poi_zoom;
+    GtkWidget *chk_speed_limit_on;
+    GtkWidget *num_speed;
+    GtkWidget *cmb_speed_location;
 
     BrowseInfo browse_info = {0, 0};
     ScanInfo scan_info = {0};
@@ -4271,7 +4403,7 @@ settings_dialog()
     /* Units. */
     gtk_table_attach(GTK_TABLE(table),
             hbox = gtk_hbox_new(FALSE, 4),
-            0, 2, 1, 2, GTK_FILL, 0, 2, 4);
+            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
     gtk_box_pack_start(GTK_BOX(hbox),
             label = gtk_label_new(_("Units")),
             FALSE, FALSE, 0);
@@ -4284,11 +4416,12 @@ settings_dialog()
     for(i = 0; i < UNITS_ENUM_COUNT; i++)
         gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_units), UNITS_TEXT[i]);
 
+    /* Degrees format */
     gtk_table_attach(GTK_TABLE(table),
             hbox = gtk_hbox_new(FALSE, 4),
-            0, 2, 2, 3, GTK_FILL, 0, 2, 4);
+            1, 2, 0, 1, GTK_FILL, 0, 2, 4);
     gtk_box_pack_start(GTK_BOX(hbox),
-            label = gtk_label_new(_("Degree format")),
+            label = gtk_label_new(_("Degrees format")),
             FALSE, FALSE, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_box_pack_start(GTK_BOX(hbox),
@@ -4299,6 +4432,34 @@ settings_dialog()
     for(i = 0; i < DEG_FORMAT_ENUM_COUNT; i++)
         gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_degformat),
             DEG_FORMAT_TEXT[i]);
+
+    /* Speed warner. */
+    gtk_table_attach(GTK_TABLE(table),
+            hbox = gtk_hbox_new(FALSE, 4),
+            0, 2, 1, 2, GTK_FILL, 0, 2, 4);
+
+    gtk_box_pack_start(GTK_BOX(hbox),
+            chk_speed_limit_on = gtk_check_button_new_with_label(
+                _("Speed limit")),
+            FALSE, FALSE, 0);
+
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+            FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(label),
+            num_speed = hildon_number_editor_new(0, 999));
+
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_label_new(_("Location")),
+            FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+            FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(label),
+            cmb_speed_location = gtk_combo_box_new_text());
+    for(i = 0; i < SPEED_LOCATION_ENUM_COUNT; i++)
+        gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_speed_location),
+                SPEED_LOCATION_TEXT[i]);
 
     /* POI page */
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
@@ -4371,6 +4532,11 @@ settings_dialog()
     gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_units), _units);
     gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_escape_key), _escape_key);
     gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_degformat), _degformat);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_speed_limit_on),
+            _speed_limit_on);
+    hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_speed),
+            _speed_limit);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_speed_location), _speed_location);
 
     gtk_widget_show_all(dialog);
 
@@ -4434,6 +4600,13 @@ settings_dialog()
         _units = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_units));
         _escape_key = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_escape_key));
         _degformat = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_degformat));
+
+        _speed_limit_on = gtk_toggle_button_get_active(
+                GTK_TOGGLE_BUTTON(chk_speed_limit_on));
+        _speed_limit = hildon_number_editor_get_value(
+                HILDON_NUMBER_EDITOR(num_speed));
+        _speed_location = gtk_combo_box_get_active(
+                GTK_COMBO_BOX(cmb_speed_location));
 
         _announce_notice_ratio = hildon_controlbar_get_value(
                 HILDON_CONTROLBAR(num_announce_notice));
@@ -4652,6 +4825,28 @@ config_init()
                 if(!strcmp(degformat_key_str, DEG_FORMAT_TEXT[i]))
                     break;
         _degformat = i;
+    }
+
+    /* Get Speed Limit On flag.  Default is FALSE. */
+    _speed_limit_on = gconf_client_get_bool(gconf_client,
+            GCONF_KEY_SPEED_LIMIT_ON, NULL);
+
+    /* Get Speed Limit */
+    _speed_limit = gconf_client_get_int(gconf_client,
+            GCONF_KEY_SPEED_LIMIT, NULL);
+    if(_speed_limit < 0)
+        _speed_limit = 65;
+
+    /* Get Speed Location.  Default is SPEED_LOCATION_TOP_LEFT. */
+    {
+        gchar *speed_location_str = gconf_client_get_string(gconf_client,
+                GCONF_KEY_SPEED_LOCATION, NULL);
+        guint i = 0;
+        if(speed_location_str)
+            for(i = SPEED_LOCATION_ENUM_COUNT - 1; i > 0; i--)
+                if(!strcmp(speed_location_str, SPEED_LOCATION_TEXT[i]))
+                    break;
+        _speed_location = i;
     }
 
     /* Get last saved latitude.  Default is 0. */
@@ -6342,10 +6537,16 @@ maemo_mapper_init(gint argc, gchar **argv)
     ESCAPE_KEY_TEXT[ESCAPE_KEY_RESET_BLUETOOTH] = _("Reset Bluetooth");
     ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_GPS] = _("Toggle GPS");
     ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_GPSINFO] = _("Toggle GPS Info");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_SPEEDLIMIT] = _("Toggle Speed Limit");
 
     DEG_FORMAT_TEXT[DDPDDDDD] = "dd.ddddd\u00b0";
     DEG_FORMAT_TEXT[DD_MMPMMM] = "dd\u00b0mm.mmm'";
     DEG_FORMAT_TEXT[DD_MM_SSPS] = "dd\u00b0mm'ss.s\"";
+
+    SPEED_LOCATION_TEXT[SPEED_LOCATION_TOP_LEFT] = _("Top-Left");
+    SPEED_LOCATION_TEXT[SPEED_LOCATION_TOP_RIGHT] = _("Top-Right");
+    SPEED_LOCATION_TEXT[SPEED_LOCATION_BOTTOM_RIGHT] = _("Bottom-Right");
+    SPEED_LOCATION_TEXT[SPEED_LOCATION_BOTTOM_LEFT] = _("Bottom-Left");
 
     /* Set up track array (must be done before config). */
     memset(&_track, 0, sizeof(_track));
@@ -6788,6 +6989,9 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                             GTK_CHECK_MENU_ITEM(_menu_gps_show_info_item),
                             !_gps_info);
                     break;
+                case ESCAPE_KEY_TOGGLE_SPEEDLIMIT:
+                    _speed_limit_on ^= 1;
+                    break;
                 default:
                     switch(_show_tracks)
                     {
@@ -7137,6 +7341,7 @@ channel_cb_error(GIOChannel *src, GIOCondition condition, gpointer data)
     /* An error has occurred - re-connect(). */
     rcvr_disconnect();
     track_add(0, FALSE);
+    _speed_excess = FALSE;
 
     if(_conn_state > RCVR_OFF)
     {
@@ -7342,6 +7547,10 @@ channel_parse_rmc(gchar *sentence)
 
     /* Move mark to new location. */
     refresh_mark();
+
+    /* Draw speed info */
+    if (_speed_limit_on)
+        speed_limit();
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -9282,6 +9491,7 @@ menu_cb_enable_gps(GtkAction *action)
             set_conn_state(RCVR_OFF);
         rcvr_disconnect();
         track_add(0, FALSE);
+        _speed_excess = FALSE;
     }
     map_move_mark();
     gps_show_info();
