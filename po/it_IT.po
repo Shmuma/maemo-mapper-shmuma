@@ -14,7 +14,7 @@ msgstr ""
 "Project-Id-Version: it_IT\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2006-10-28 22:19-0400\n"
-"PO-Revision-Date: 2006-11-02 22:42+0100\n"
+"PO-Revision-Date: 2006-11-05 18:27+0100\n"
 "Last-Translator: Alessandro Pasotti <ale.pas@tiscali.it>\n"
 "Language-Team: Italiano <it@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -533,7 +533,7 @@ msgid ""
 "No GPS Receiver MAC Provided.\n"
 "GPS Disabled."
 msgstr ""
-"Nessun indirzzo MAC impostato per il ricevitore GPS.\n"
+"Nessun indirizzo MAC impostato per il ricevitore GPS.\n"
 "GPS disabilitato."
 
 #: ../src/maemo-mapper.c:3675
@@ -553,7 +553,7 @@ msgstr "Non ci sono waypoint visibili."
 
 #: ../src/maemo-mapper.c:5030
 msgid "None"
-msgstr "None"
+msgstr "Nessuno"
 
 #: ../src/maemo-mapper.c:4099
 msgid "Note: \"Channel\" refers to the device side!"
@@ -662,7 +662,7 @@ msgstr "Reimposta"
 
 #: ../src/maemo-mapper.c:5051 ../src/maemo-mapper.c:6265
 msgid "Reset Bluetooth"
-msgstr "Riavvia Bluetoothfloat rtk"
+msgstr "Riavvia Bluetooth"
 
 #: ../src/maemo-mapper.c:3931 ../src/maemo-mapper.c:4941
 #: ../src/maemo-mapper.c:4995
