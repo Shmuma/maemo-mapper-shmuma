@@ -369,10 +369,10 @@
           (I), (F), (D), NULL)
 
 #define MACRO_BANNER_SHOW_INFO(A, S) { \
-    gchar *buffer = g_strdup_printf("<span size='%s'>%s</span>", \
+    gchar *my_macro_buffer = g_strdup_printf("<span size='%s'>%s</span>", \
             INFO_FONT_TEXT[_info_font_size], (S)); \
-    hildon_banner_show_information_with_markup(A, NULL, buffer); \
-    g_free(buffer); \
+    hildon_banner_show_information_with_markup(A, NULL, my_macro_buffer); \
+    g_free(my_macro_buffer); \
 }
 
 /****************************************************************************
