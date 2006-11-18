@@ -1,3 +1,13 @@
+maemo-mapper (1.2.5) unstable; urgency=low
+
+  * Added altitude (elevation) support to the Track.
+  * Added configurability of degree format.
+  * Added speed warner for you law-breakers out there.
+  * Added setting for information font size.
+  * Cleaned up some string code.
+
+ -- John Costigan <gnuite@gmail.com>  Fri, 17 Nov 2006 20:47:00 -0400
+
 maemo-mapper (1.2.4) unstable; urgency=low
 
   * Fixed crash when loading two track files as route files. (closes #117)
