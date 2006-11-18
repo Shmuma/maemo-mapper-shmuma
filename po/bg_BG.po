@@ -10,8 +10,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
-"Report-Msgid-Bugs-To: John Costigan <gnuite@gmail.com>\n"
-"POT-Creation-Date: 2006-11-18 01:13-0500\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-11-18 12:15-0500\n"
 "PO-Revision-Date: 2006-10-28 22:19-0400\n"
 "Last-Translator: David Davidov <dave@del.bg>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
@@ -19,36 +19,35 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10810
+#: ../src/maemo-mapper.c:10760
 msgid "Add"
 msgstr "Добави"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10545
+#: ../src/maemo-mapper.c:10495
 msgid "Add Category"
 msgstr "Добави категория"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5570
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11204
+#: ../src/maemo-mapper.c:5570 ../src/maemo-mapper.c:11154
 msgid "Add POI"
 msgstr "Добави POI"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4377
+#: ../src/maemo-mapper.c:4377
 msgid "Advance Notice"
 msgstr "Придвижване инфо"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9745
+#: ../src/maemo-mapper.c:9695
 msgid "Along Route - Radius (tiles):"
 msgstr "Около маршрут - Радиус (блокчета):"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2659
+#: ../src/maemo-mapper.c:2659
 msgid "Altitude"
 msgstr "Височина"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3897
+#: ../src/maemo-mapper.c:3897
 msgid "An error occurred while scanning."
 msgstr "Грешка по време на сканиране."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7426
+#: ../src/maemo-mapper.c:7376
 msgid ""
 "An error occurred while trying to reset the bluetooth radio.\n"
 "\n"
@@ -60,495 +59,473 @@ msgstr ""
 "Променихте ли файла\n"
 "/etc/sudoers?"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4373
+#: ../src/maemo-mapper.c:4373
 msgid "Announce"
 msgstr "Анонси"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9781
+#: ../src/maemo-mapper.c:9731
 msgid "Area"
 msgstr "Зона"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4342
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5434
+#: ../src/maemo-mapper.c:4342 ../src/maemo-mapper.c:5434
 msgid "Auto-Center"
 msgstr "Авто-Центр."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8909
+#: ../src/maemo-mapper.c:8859
 msgid "Auto-Center Mode: Lat/Lon"
 msgstr "Авто-Центриране: Дълж/Шир"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8894
+#: ../src/maemo-mapper.c:8844
 msgid "Auto-Center Mode: Lead"
 msgstr "Авто-Центриране: Изпреварващо"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8923
+#: ../src/maemo-mapper.c:8873
 msgid "Auto-Center Off"
 msgstr "Авто-Центриране Изкл."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5399
+#: ../src/maemo-mapper.c:5399
 msgid "Auto-Download"
 msgstr "Авто-Изтегляне"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8468
+#: ../src/maemo-mapper.c:8418
 msgid "Auto-Update"
 msgstr "Авто-Обновяване"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7049
+#: ../src/maemo-mapper.c:6999
 #, fuzzy
 msgid "Bottom-Left"
 msgstr "Долу/Дясно"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7048
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9844
+#: ../src/maemo-mapper.c:6998 ../src/maemo-mapper.c:9794
 msgid "Bottom-Right"
 msgstr "Долу/Дясно"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4560
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9111
+#: ../src/maemo-mapper.c:4560 ../src/maemo-mapper.c:9061
 msgid "Browse..."
 msgstr "Избор..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9736
+#: ../src/maemo-mapper.c:9686
 msgid "By Area (see tab)"
 msgstr "Зона (виж таб)"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9101
+#: ../src/maemo-mapper.c:9051
 msgid "Cache Dir."
 msgstr "Кеш Директория"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9047
+#: ../src/maemo-mapper.c:8997
 msgid ""
 "Cannot delete the last repository - there must be at lease one repository."
 msgstr "Не мога да изтрия последното хранилище - трябва да остане поне едно."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10007
+#: ../src/maemo-mapper.c:9957
 msgid ""
 "Cannot enable GPS until a GPS Receiver MAC is set in the Settings dialog box."
 msgstr ""
 "Не мога да разреша GPS докато не е посочен MAC адреса на приемника в "
 "Настрийки."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11005
+#: ../src/maemo-mapper.c:10955
 msgid "Category"
 msgstr "Категория"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10801
+#: ../src/maemo-mapper.c:10751
 msgid "Category List"
 msgstr "Списък категории"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11233
+#: ../src/maemo-mapper.c:11183
 msgid "Category: "
 msgstr "Категория: "
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4321
+#: ../src/maemo-mapper.c:4321
 msgid "Channel"
 msgstr "Канал"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5373
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5387
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9689
+#: ../src/maemo-mapper.c:5373 ../src/maemo-mapper.c:5387
+#: ../src/maemo-mapper.c:9639
 msgid "Clear"
 msgstr "Изчистване"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5485
+#: ../src/maemo-mapper.c:5485
 msgid "Close"
 msgstr "Затваряне"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4105
+#: ../src/maemo-mapper.c:4105
 msgid "Colors"
 msgstr "Цветове"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4291
+#: ../src/maemo-mapper.c:4291
 msgid "Colors..."
 msgstr "Цветове..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9451
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9544
+#: ../src/maemo-mapper.c:9401 ../src/maemo-mapper.c:9494
 msgid "Confirm DELETION of"
 msgstr "Потвърдете ИЗТРИВАНЕ на"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9054
+#: ../src/maemo-mapper.c:9004
 msgid "Confirm delete of repository"
 msgstr "Потвърдете изтриване хранилище"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10412
+#: ../src/maemo-mapper.c:10362
 msgid "Confirm delete of waypoint"
 msgstr "Потвърдете изтриване на точка по пътя"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9457
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9550
+#: ../src/maemo-mapper.c:9407 ../src/maemo-mapper.c:9500
 msgid "Confirm download of"
 msgstr "Потвърдете изтегляне на"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5589
+#: ../src/maemo-mapper.c:5589
 msgid "Copy Description to Clipboard"
 msgstr "Копира Описание в Клипборд"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5562
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5587
+#: ../src/maemo-mapper.c:5562 ../src/maemo-mapper.c:5587
 msgid "Copy Lat/Lon to Clipboard"
 msgstr "Копира Шир/Дълж в Клипборд"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8551
+#: ../src/maemo-mapper.c:8501
 msgid ""
 "Could not generate directions. Make sure your source and destination are "
 "valid."
 msgstr ""
 "Не мога да генерирам инструкции. Моля проверета адресите на крайните точки."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2080
+#: ../src/maemo-mapper.c:2080
 msgid "DGPS"
 msgstr "DGPS"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4111
+#: ../src/maemo-mapper.c:4111
 msgid "Defaults"
 msgstr "Възстановяване"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4488
+#: ../src/maemo-mapper.c:4488
 msgid "Degrees Format"
 msgstr ""
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5596
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10526
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11176
+#: ../src/maemo-mapper.c:5596 ../src/maemo-mapper.c:10476
+#: ../src/maemo-mapper.c:11126
 msgid "Delete"
 msgstr "Изтриване"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9726
+#: ../src/maemo-mapper.c:9676
 msgid "Delete Maps"
 msgstr "Изтриване Карти"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10898
+#: ../src/maemo-mapper.c:10848
 msgid "Delete POI?"
 msgstr "Изтриване POI?"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10441
+#: ../src/maemo-mapper.c:10391
 msgid "Delete category?"
 msgstr "Изтриване категория?"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9236
+#: ../src/maemo-mapper.c:9186
 msgid "Delete..."
 msgstr "Изтриване..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10856
+#: ../src/maemo-mapper.c:10806
 msgid "Desc."
 msgstr "Опис."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10564
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11246
+#: ../src/maemo-mapper.c:10514 ../src/maemo-mapper.c:11196
 msgid "Desc.: "
 msgstr "Опис.: "
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3983
+#: ../src/maemo-mapper.c:3983
 msgid "Description"
 msgstr "Описание"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8485
+#: ../src/maemo-mapper.c:8435
 msgid "Destination"
 msgstr "Край"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5468
+#: ../src/maemo-mapper.c:5468
 msgid "Details..."
 msgstr "Подробности..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10186
+#: ../src/maemo-mapper.c:10136
 msgid "Distance to Location"
 msgstr "Разстояние до Локация"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10382
+#: ../src/maemo-mapper.c:10332
 msgid "Distance to Waypoint"
 msgstr "Разстояние до точка по пътя"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9713
+#: ../src/maemo-mapper.c:9663
 msgid "Download Maps"
 msgstr "Изтегляне Карти"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8442
+#: ../src/maemo-mapper.c:8392
 msgid "Download Route"
 msgstr "Изтегляне Маршрут"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5565
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5592
+#: ../src/maemo-mapper.c:5565 ../src/maemo-mapper.c:5592
 msgid "Download Route to..."
 msgstr "Изтегляне на маршрут в..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9116
+#: ../src/maemo-mapper.c:9066
 msgid "Download Zoom Steps"
 msgstr "Изтегляне Мащаб Стъпки"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5367
+#: ../src/maemo-mapper.c:5367
 msgid "Download..."
 msgstr "Изтегляне..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6006
+#: ../src/maemo-mapper.c:5952
 msgid "Downloading maps"
 msgstr "Изтегляне карти"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10807
+#: ../src/maemo-mapper.c:10757
 msgid "Edit"
 msgstr "Редакт."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11242
+#: ../src/maemo-mapper.c:11192
 msgid "Edit Categories..."
 msgstr "Редакт. категории..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10520
+#: ../src/maemo-mapper.c:10470
 msgid "Edit Category"
 msgstr "Редакт. категория"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5573
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11170
+#: ../src/maemo-mapper.c:5573 ../src/maemo-mapper.c:11120
 msgid "Edit POI"
 msgstr "Редакт. POI"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5460
+#: ../src/maemo-mapper.c:5460
 msgid "Enable GPS"
 msgstr "Използвай GPS"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4389
+#: ../src/maemo-mapper.c:4389
 msgid "Enable Voice Synthesis (requires flite)"
 msgstr "Разреши гласов синтез (изисква flite)"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10589
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10844
+#: ../src/maemo-mapper.c:10539 ../src/maemo-mapper.c:10794
 msgid "Enabled"
 msgstr "Разреши"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6361
+#: ../src/maemo-mapper.c:6311
 msgid "Error in download.  Check internet connection and/or URL Format."
 msgstr ""
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7225
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8605
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8647
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8702
+#: ../src/maemo-mapper.c:7175 ../src/maemo-mapper.c:8555
+#: ../src/maemo-mapper.c:8597 ../src/maemo-mapper.c:8652
 msgid "Error parsing GPX file."
 msgstr "Грешка при разчитане (parsing) GPX файл."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:1185
+#: ../src/maemo-mapper.c:1184
 msgid "Error while writing to file"
 msgstr "Грешка при запис във файл"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8724
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8789
+#: ../src/maemo-mapper.c:8674 ../src/maemo-mapper.c:8739
 msgid "Error writing GPX file."
 msgstr "Грешка при запис на GPX файл."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4450
+#: ../src/maemo-mapper.c:4450
 msgid "Escape Key"
 msgstr "Escape Key"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2893
+#: ../src/maemo-mapper.c:2893
 msgid "Establishing GPS fix"
 msgstr "Установяване GPS фикс"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2084
+#: ../src/maemo-mapper.c:2084
 msgid "Estimated"
 msgstr "Estimated"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8543
+#: ../src/maemo-mapper.c:8493
 msgid "Failed to connect to GPX Directions server"
 msgstr "Неуспешно свързване с  GPX сървър за инструкции"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4805
+#: ../src/maemo-mapper.c:4805
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "Неуспешна инициализация на GConf.  Прекъсвам."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3561
+#: ../src/maemo-mapper.c:3561
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "Неуспешна инициализация на GConf.  Запазих настройките."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6797
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7213
+#: ../src/maemo-mapper.c:6747 ../src/maemo-mapper.c:7163
 msgid "Failed to open file for"
 msgstr "Неуспех при отваряне за"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2839
+#: ../src/maemo-mapper.c:6401
+#, fuzzy
+msgid "Failed to open file for writing"
+msgstr "Неуспех при отваряне за"
+
+#: ../src/maemo-mapper.c:2839
 msgid "Failed to open or create database"
 msgstr "Неуспешно отваряне/създаване на база данни"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:1186
+#: ../src/maemo-mapper.c:1185
 msgid "File is incomplete."
 msgstr "Незавършен файл."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2704
+#: ../src/maemo-mapper.c:2704
 msgid "Fix"
 msgstr "Фикс"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2713
+#: ../src/maemo-mapper.c:2713
 msgid "Fix Quality"
 msgstr "Фикс качество"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2083
+#: ../src/maemo-mapper.c:2083
 msgid "Float RTK"
 msgstr "Float RTK"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5411
+#: ../src/maemo-mapper.c:5411
 msgid "Full Screen"
 msgstr "Пълноекранно"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4302
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5456
+#: ../src/maemo-mapper.c:4302 ../src/maemo-mapper.c:5456
 msgid "GPS"
 msgstr "GPS"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2607
+#: ../src/maemo-mapper.c:2607
 msgid "GPS Details"
 msgstr "GPS подробности"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2620
+#: ../src/maemo-mapper.c:2620
 msgid "GPS Information"
 msgstr "GPS Информация"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9795
+#: ../src/maemo-mapper.c:9745
 msgid "GPS Location"
 msgstr "GPS позиция"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4123
+#: ../src/maemo-mapper.c:4123
 msgid "GPS Mark"
 msgstr "GPS знак"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2668
+#: ../src/maemo-mapper.c:2668
 msgid "Heading"
 msgstr "Посока"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5482
+#: ../src/maemo-mapper.c:5482
 msgid "Help"
 msgstr "Помощ"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4533
+#: ../src/maemo-mapper.c:4533
 #, fuzzy
 msgid "Information Font Size"
 msgstr "GPS Информация"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5385
+#: ../src/maemo-mapper.c:5385
 msgid "Insert Breakpoint"
 msgstr "Вмъкване прекъсване"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9951
+#: ../src/maemo-mapper.c:9901
 msgid "Invalid Bottom-Right Latitude"
 msgstr "Невалидна ширина долу/дясно"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9958
+#: ../src/maemo-mapper.c:9908
 msgid "Invalid Bottom-Right Longitude"
 msgstr "Невалидна дължина долу/дясно"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7932
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7943
+#: ../src/maemo-mapper.c:7882 ../src/maemo-mapper.c:7893
 msgid "Invalid NMEA input from receiver!"
 msgstr "Невалидни NMEA данни от приемника!"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9937
+#: ../src/maemo-mapper.c:9887
 msgid "Invalid Top-Left Latitude"
 msgstr "Невалидна ширина горе/ляво"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9944
+#: ../src/maemo-mapper.c:9894
 msgid "Invalid Top-Left Longitude"
 msgstr "Невалидна дължина горе/ляво"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4441
+#: ../src/maemo-mapper.c:4441
 msgid "Keep Display On Only in Fullscreen Mode"
 msgstr "Не спирай дисплей само в пълноекранен режим"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10851
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11000
+#: ../src/maemo-mapper.c:10801 ../src/maemo-mapper.c:10950
 msgid "Label"
 msgstr "Етикет"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10556
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11225
+#: ../src/maemo-mapper.c:10506 ../src/maemo-mapper.c:11175
 msgid "Label: "
 msgstr "Етикет: "
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11215
+#: ../src/maemo-mapper.c:11165
 msgid "Lat, Lon: "
 msgstr "Шир, Дълж: "
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5438
+#: ../src/maemo-mapper.c:5438
 msgid "Lat/Lon"
 msgstr "Шир/Дълж"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2632
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9785
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10120
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10240
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10990
+#: ../src/maemo-mapper.c:2632 ../src/maemo-mapper.c:9735
+#: ../src/maemo-mapper.c:10070 ../src/maemo-mapper.c:10190
+#: ../src/maemo-mapper.c:10940
 msgid "Latitude"
 msgstr "Ширина"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5444
+#: ../src/maemo-mapper.c:5444
 msgid "Lead"
 msgstr "Изпреварващо"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4359
+#: ../src/maemo-mapper.c:4359
 msgid "Lead Amount"
 msgstr "Изпрев. дължина"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4429
+#: ../src/maemo-mapper.c:4429
 msgid "Line Width"
 msgstr "Дебелина"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2677
+#: ../src/maemo-mapper.c:2677
 msgid "Local time"
 msgstr "Местно време"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4517
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5554
+#: ../src/maemo-mapper.c:4517 ../src/maemo-mapper.c:5554
 msgid "Location"
 msgstr "Позиция"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2641
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9789
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10121
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10241
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10995
+#: ../src/maemo-mapper.c:2641 ../src/maemo-mapper.c:9739
+#: ../src/maemo-mapper.c:10071 ../src/maemo-mapper.c:10191
+#: ../src/maemo-mapper.c:10945
 msgid "Longitude"
 msgstr "Дължина"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3978
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4306
+#: ../src/maemo-mapper.c:3978 ../src/maemo-mapper.c:4306
 msgid "MAC"
 msgstr "MAC"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4285
+#: ../src/maemo-mapper.c:4285
 msgid "Maemo Mapper Settings"
 msgstr "Maemo Mapper Настройки"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9683
+#: ../src/maemo-mapper.c:9633
 msgid "Manage Maps"
 msgstr "Управление Карти"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5395
+#: ../src/maemo-mapper.c:5395
 msgid "Manage Maps..."
 msgstr "Управление Карти..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5397
+#: ../src/maemo-mapper.c:5397
 msgid "Manage Repositories..."
 msgstr "Управление Хранилища..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2085
+#: ../src/maemo-mapper.c:2085
 msgid "Manual)"
 msgstr "Ръчно)"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5390
+#: ../src/maemo-mapper.c:5390
 msgid "Maps"
 msgstr "Карти"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2722
+#: ../src/maemo-mapper.c:2722
 msgid "Max speed"
 msgstr "Макс. скорост"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4425
+#: ../src/maemo-mapper.c:4425
 msgid "Misc."
 msgstr "Други"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4465
+#: ../src/maemo-mapper.c:4465
 #, fuzzy
 msgid "Misc. 2"
 msgstr "Други"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9906
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10040
+#: ../src/maemo-mapper.c:9856 ../src/maemo-mapper.c:9990
 msgid ""
 "NOTE: You must set a Map URI in the Repository Manager in order to download "
 "maps."
@@ -556,28 +533,27 @@ msgstr ""
 "Задайте URI на картов сървър в \"Управление на Хранилища\" за да изтегляте "
 "карти."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9007
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9186
+#: ../src/maemo-mapper.c:8957 ../src/maemo-mapper.c:9136
 msgid "Name"
 msgstr "Име"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8997
+#: ../src/maemo-mapper.c:8947
 msgid "New Name"
 msgstr "Ново Име"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9176
+#: ../src/maemo-mapper.c:9126
 msgid "New Repository"
 msgstr "Ново Хранилище"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9239
+#: ../src/maemo-mapper.c:9189
 msgid "New..."
 msgstr "Ново ..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7036
+#: ../src/maemo-mapper.c:6986
 msgid "Next Repository"
 msgstr "Следващо Хранилище"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4645
+#: ../src/maemo-mapper.c:4645
 msgid ""
 "No GPS Receiver MAC Provided.\n"
 "GPS Disabled."
@@ -585,422 +561,399 @@ msgstr ""
 "Липсва MAC на приемник.\n"
 "Забранявам GPS."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3904
+#: ../src/maemo-mapper.c:3904
 msgid "No bluetooth devices found."
 msgstr "Не мога да открия bluetooth устройство."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8777
+#: ../src/maemo-mapper.c:8727
 msgid "No route is loaded."
 msgstr "Маршрът не е зареден."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10247
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10270
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10300
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10322
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10356
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10389
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10426
+#: ../src/maemo-mapper.c:10197 ../src/maemo-mapper.c:10220
+#: ../src/maemo-mapper.c:10250 ../src/maemo-mapper.c:10272
+#: ../src/maemo-mapper.c:10306 ../src/maemo-mapper.c:10339
+#: ../src/maemo-mapper.c:10376
 msgid "No waypoints are visible."
 msgstr "Няма видими точки по пътя."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5450
+#: ../src/maemo-mapper.c:5450
 msgid "None"
 msgstr "Не"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4333
+#: ../src/maemo-mapper.c:4333
 msgid "Note: \"Channel\" refers to the device side!"
 msgstr "* Канал от страната на приемника!"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5365
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5381
+#: ../src/maemo-mapper.c:5365 ../src/maemo-mapper.c:5381
 msgid "Open..."
 msgstr "Отваряне..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8474
+#: ../src/maemo-mapper.c:8424
 msgid "Origin"
 msgstr "Начало"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9720
+#: ../src/maemo-mapper.c:9670
 msgid "Overwrite"
 msgstr "Подмяна стари"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4181
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4546
+#: ../src/maemo-mapper.c:4181 ../src/maemo-mapper.c:4546
 msgid "POI"
 msgstr "POI"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5429
+#: ../src/maemo-mapper.c:5429
 msgid "POI Categories..."
 msgstr "POI Категории..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4550
+#: ../src/maemo-mapper.c:4550
 msgid "POI database"
 msgstr "POI база данни"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2081
+#: ../src/maemo-mapper.c:2081
 msgid "PPS"
 msgstr "PPS"
 
 #  This word refers to Pitch as in of a person's voice.
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4414
+#: ../src/maemo-mapper.c:4414
 msgid "Pitch"
 msgstr "Тон"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4003
+#: ../src/maemo-mapper.c:4003
 msgid "Please select a bluetooth device from the list."
 msgstr "Моля, изберете bluetooth устройство от списъка."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11292
+#: ../src/maemo-mapper.c:11242
 msgid "Please specify a name for the POI."
 msgstr "Моля посочете POI име."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10615
+#: ../src/maemo-mapper.c:10565
 msgid "Please specify a name for the category."
 msgstr "Моля посочете име за категорията."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8519
+#: ../src/maemo-mapper.c:8469
 msgid "Please specify a start location."
 msgstr "Моля задайте стартова точка."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8526
+#: ../src/maemo-mapper.c:8476
 msgid "Please specify an end location."
 msgstr "Моля задайте крайна точка."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11334
+#: ../src/maemo-mapper.c:11284
 msgid "Problem adding POI"
 msgstr "Проблем при добавяне на POI"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10648
+#: ../src/maemo-mapper.c:10598
 msgid "Problem adding category"
 msgstr "Проблем при добавяне категория"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10457
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10911
+#: ../src/maemo-mapper.c:10407 ../src/maemo-mapper.c:10861
 msgid "Problem deleting POI"
 msgstr "Проблем при изтриване на POI"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10466
+#: ../src/maemo-mapper.c:10416
 msgid "Problem deleting category"
 msgstr "Проблем при изтриване категория"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10691
+#: ../src/maemo-mapper.c:10641
 msgid "Problem updating Category"
 msgstr "Проблем при обновяване на Категория"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11317
+#: ../src/maemo-mapper.c:11267
 msgid "Problem updating POI"
 msgstr "Проблем при обновяване на POI"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10635
+#: ../src/maemo-mapper.c:10585
 msgid "Problem updating category"
 msgstr "Проблем при обновяване на категория"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2782
+#: ../src/maemo-mapper.c:2782
 msgid "Problem with POI database"
 msgstr "Проблем с POI база данни"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2082
+#: ../src/maemo-mapper.c:2082
 msgid "Real Time Kinematic"
 msgstr "Real Time Kinematic"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9233
+#: ../src/maemo-mapper.c:9183
 msgid "Rename..."
 msgstr "Преименуване..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9219
+#: ../src/maemo-mapper.c:9169
 msgid "Repositories"
 msgstr "Хранилища"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5371
+#: ../src/maemo-mapper.c:5371
 msgid "Reset"
 msgstr "Рестарт"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5471
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7037
+#: ../src/maemo-mapper.c:5471 ../src/maemo-mapper.c:6987
 msgid "Reset Bluetooth"
 msgstr "Рестарт Bluetooth"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4160
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5361
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5415
+#: ../src/maemo-mapper.c:4160 ../src/maemo-mapper.c:5361
+#: ../src/maemo-mapper.c:5415
 msgid "Route"
 msgstr "Маршрут"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8600
+#: ../src/maemo-mapper.c:8550
 msgid "Route Downloaded"
 msgstr "Маршрут изтеглен"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7222
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8644
+#: ../src/maemo-mapper.c:7172 ../src/maemo-mapper.c:8594
 msgid "Route Opened"
 msgstr "Маршрут отворен"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8786
+#: ../src/maemo-mapper.c:8736
 msgid "Route Saved"
 msgstr "Маршрут записан"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8851
+#: ../src/maemo-mapper.c:8801
 msgid "Routes are now hidden"
 msgstr "Маршрутите скрити"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8845
+#: ../src/maemo-mapper.c:8795
 msgid "Routes are now shown"
 msgstr "Маршрутите показани"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2079
+#: ../src/maemo-mapper.c:2079
 msgid "SPS"
 msgstr "SPS"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2695
+#: ../src/maemo-mapper.c:2695
 msgid "Sat in use"
 msgstr "Ползва сат."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2686
+#: ../src/maemo-mapper.c:2686
 msgid "Sat in view"
 msgstr "Виждими сат."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2627
+#: ../src/maemo-mapper.c:2627
 msgid "Satellites details"
 msgstr "Информация Сателити"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2553
+#: ../src/maemo-mapper.c:2553
 msgid "Satellites in view"
 msgstr "Видими сателити"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5369
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5383
+#: ../src/maemo-mapper.c:5369 ../src/maemo-mapper.c:5383
 msgid "Save..."
 msgstr "Записване..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4316
+#: ../src/maemo-mapper.c:4316
 msgid "Scan..."
 msgstr "Скан..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3957
+#: ../src/maemo-mapper.c:3957
 msgid "Scanning Bluetooth Devices"
 msgstr "Scanning Bluetooth Devices"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2883
+#: ../src/maemo-mapper.c:2883
 msgid "Searching for GPS receiver"
 msgstr "Търси GPS приемник"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3948
+#: ../src/maemo-mapper.c:3948
 msgid "Select Bluetooth Device"
 msgstr "Избор Bluetooth устрийство"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10937
+#: ../src/maemo-mapper.c:10887
 msgid "Select POI"
 msgstr "Избор POI"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:11022
+#: ../src/maemo-mapper.c:10972
 msgid "Select one POI from the list."
 msgstr "Избор на една POI от списъка."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4346
+#: ../src/maemo-mapper.c:4346
 msgid "Sensitivity"
 msgstr "Чувствителност"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5477
+#: ../src/maemo-mapper.c:5477
 msgid "Settings..."
 msgstr "Настройки..."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9703
+#: ../src/maemo-mapper.c:9653
 msgid "Setup"
 msgstr "Настройка"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5585
+#: ../src/maemo-mapper.c:5585
 msgid "Show Description"
 msgstr "Покажи Описание"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5567
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5594
+#: ../src/maemo-mapper.c:5567 ../src/maemo-mapper.c:5594
 msgid "Show Distance to"
 msgstr "Покажи разстояние до"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5464
+#: ../src/maemo-mapper.c:5464
 msgid "Show Information"
 msgstr "Покажи Информация"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5560
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5583
+#: ../src/maemo-mapper.c:5560 ../src/maemo-mapper.c:5583
 msgid "Show Lat/Lon"
 msgstr "Покажи Шир/Дълж"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4565
+#: ../src/maemo-mapper.c:4565
 msgid "Show POI below zoom"
 msgstr "Показвай POI под мащаб"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2086
+#: ../src/maemo-mapper.c:2086
 msgid "Simulation"
 msgstr "Симулация"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2650
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4402
+#: ../src/maemo-mapper.c:2650 ../src/maemo-mapper.c:4402
 msgid "Speed"
 msgstr "Скорост"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4507
+#: ../src/maemo-mapper.c:4507
 #, fuzzy
 msgid "Speed Limit"
 msgstr "Скорост"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7038
+#: ../src/maemo-mapper.c:6988
 msgid "Toggle GPS"
 msgstr "Вкл/изкл GPS"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7039
+#: ../src/maemo-mapper.c:6989
 msgid "Toggle GPS Info"
 msgstr "Вкл/изкл GPS инфо"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7040
+#: ../src/maemo-mapper.c:6990
 msgid "Toggle Speed Limit"
 msgstr ""
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7035
+#: ../src/maemo-mapper.c:6985
 msgid "Toggle Tracks"
 msgstr "Вкл/изкл Път"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7046
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9830
+#: ../src/maemo-mapper.c:6996 ../src/maemo-mapper.c:9780
 msgid "Top-Left"
 msgstr "Горе/Ляво"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7047
+#: ../src/maemo-mapper.c:6997
 #, fuzzy
 msgid "Top-Right"
 msgstr "Долу/Дясно"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4144
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5377
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5420
+#: ../src/maemo-mapper.c:4144 ../src/maemo-mapper.c:5377
+#: ../src/maemo-mapper.c:5420
 msgid "Track"
 msgstr "Път"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8699
+#: ../src/maemo-mapper.c:8649
 msgid "Track Opened"
 msgstr "Път отворен"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8721
+#: ../src/maemo-mapper.c:8671
 msgid "Track Saved"
 msgstr "Път записан"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8827
+#: ../src/maemo-mapper.c:8777
 msgid "Tracks are now hidden"
 msgstr "Пътеки скрити"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8821
+#: ../src/maemo-mapper.c:8771
 msgid "Tracks are now shown"
 msgstr "Пътеки показани"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9092
+#: ../src/maemo-mapper.c:9042
 msgid "URI Format"
 msgstr "URI формат"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9333
+#: ../src/maemo-mapper.c:9283
 msgid "Unable to create cache directory for repository"
 msgstr "Unable to create cache directory for repository"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:4472
+#: ../src/maemo-mapper.c:4472
 msgid "Units"
 msgstr "Единици"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:3918
+#: ../src/maemo-mapper.c:3918
 msgid "Unknown"
 msgstr "Неизвестно"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8464
+#: ../src/maemo-mapper.c:8414
 msgid "Use GPS Location"
 msgstr "Използвай GPS позиция"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5425
+#: ../src/maemo-mapper.c:5425
 msgid "Velocity Vector"
 msgstr "Вектор скорост"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5407
+#: ../src/maemo-mapper.c:5407
 msgid "View"
 msgstr "Изглед"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9811
+#: ../src/maemo-mapper.c:9761
 msgid "View Center"
 msgstr "Видим център"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9132
+#: ../src/maemo-mapper.c:9082
 msgid "View Zoom Steps"
 msgstr "Преглед Мащаб Стъпки"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:10443
+#: ../src/maemo-mapper.c:10393
 msgid "WARNING: All POIs in that category will also be deleted!"
 msgstr "ВНИМАНИЕ: Всияки POI в Категорията ще бъдат изтрити!"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:5578
+#: ../src/maemo-mapper.c:5578
 msgid "Waypoint"
 msgstr "Точки по пътя"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9759
+#: ../src/maemo-mapper.c:9709
 msgid "Zoom"
 msgstr "Мащаб"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9765
+#: ../src/maemo-mapper.c:9715
 msgid "Zoom Levels to Download: (0 -> most detail)"
 msgstr "Мащаб нива за изтегляне: (0 -> най-детайлно)"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7414
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7493
+#: ../src/maemo-mapper.c:7364 ../src/maemo-mapper.c:7443
 msgid "Zoom to Level"
 msgstr "Мащаб"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9544
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9551
+#: ../src/maemo-mapper.c:9494 ../src/maemo-mapper.c:9501
 msgid "about"
 msgstr "относно"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2554
+#: ../src/maemo-mapper.c:2554
 msgid "in use"
 msgstr "в употреба"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7023
+#: ../src/maemo-mapper.c:6973
 msgid "km"
 msgstr "km"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9452
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9458
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9545
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9552
+#: ../src/maemo-mapper.c:9402 ../src/maemo-mapper.c:9408
+#: ../src/maemo-mapper.c:9495 ../src/maemo-mapper.c:9502
 msgid "maps"
 msgstr "карти"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7024
+#: ../src/maemo-mapper.c:6974
 msgid "mi."
 msgstr "mi."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7025
+#: ../src/maemo-mapper.c:6975
 msgid "n.m."
 msgstr "n.m."
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2708
+#: ../src/maemo-mapper.c:2708
 msgid "nofix"
 msgstr "не фикс"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2087
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:2717
+#: ../src/maemo-mapper.c:2087 ../src/maemo-mapper.c:2717
 msgid "none"
 msgstr "няма"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6799
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:7214
+#: ../src/maemo-mapper.c:6749 ../src/maemo-mapper.c:7164
 msgid "reading"
 msgstr "четене"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8494
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:8496
+#: ../src/maemo-mapper.c:8444 ../src/maemo-mapper.c:8446
 msgid "toggled"
 msgstr "превключено"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9458
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:9552
+#: ../src/maemo-mapper.c:9408 ../src/maemo-mapper.c:9502
 msgid "up to about"
 msgstr "до около"
 
-#: /home/gnuite/src/maemo-mapper/src/maemo-mapper.c:6799
+#: ../src/maemo-mapper.c:6749
 msgid "writing"
 msgstr "запис"

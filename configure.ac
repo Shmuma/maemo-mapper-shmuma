@@ -19,7 +19,7 @@
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 1.3)
+AM_INIT_AUTOMAKE(maemo-mapper, 1.3.1)
 
 AC_PROG_CPP
 AC_CONFIG_HEADERS(src/config.h)
