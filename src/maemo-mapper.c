@@ -4529,7 +4529,7 @@ settings_dialog()
             hbox = gtk_hbox_new(FALSE, 4),
             0, 2, 2, 3, GTK_FILL, 0, 2, 4);
     gtk_box_pack_start(GTK_BOX(hbox),
-            label = gtk_label_new("Information Font Size"),
+            label = gtk_label_new(_("Information Font Size")),
             FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox),
             cmb_info_font_size = gtk_combo_box_new_text(),
