@@ -97,7 +97,6 @@
 
 #define TILE_SIZE_PIXELS (256)
 #define TILE_SIZE_P2 (8)
-#define TILE_PIXBUF_STRIDE (768)
 #define BUF_WIDTH_TILES (4)
 #define BUF_HEIGHT_TILES (3)
 #define BUF_WIDTH_PIXELS (1024)
@@ -1969,7 +1968,8 @@ deg_format(gfloat coor, gchar scoor[15])
     switch(_degformat)
     {
         case DD_MMPMMM:
-            sprintf(scoor, "%d\u00b0%06.3f'", (int)coor, (coor - (int)coor)*60.0);
+            sprintf(scoor, "%d\u00b0%06.3f'",
+                    (int)coor, (coor - (int)coor)*60.0);
             break;
         case DD_MM_SSPS:
             deg = (int)coor;
@@ -5750,17 +5750,11 @@ map_pixbuf_scale_inplace(GdkPixbuf* pixbuf, guint ratio_p2,
             for(; x >= 0; x--)
             {
                 guint src_offset, dest_offset, i;
-                src_offset = src_offset_y + (src_x + (x >> ratio_p2)) 
-		    * n_channels;
-                dest_offset = dest_offset_y + (dest_x + x) 
-		    * n_channels;
-		for ( i = 0; i < n_channels; ++i ) 
-		{
-		    pixels[dest_offset + i] = pixels[src_offset + i];
-		}
-                pixels[dest_offset + 0] = pixels[src_offset + 0];
-                pixels[dest_offset + 1] = pixels[src_offset + 1];
-                pixels[dest_offset + 2] = pixels[src_offset + 2];
+                src_offset = src_offset_y + (src_x+(x>>ratio_p2)) * n_channels;
+                dest_offset = dest_offset_y + (dest_x + x) * n_channels;
+                pixels[dest_offset] = pixels[src_offset];
+                for(i = n_channels - 1; i; --i) /* copy other channels */
+                    pixels[dest_offset + i] = pixels[src_offset + i];
                 if((unsigned)(dest_y + y - src_y) < src_dim && x == src_endx)
                     x -= src_dim;
             }
@@ -5785,52 +5779,16 @@ map_pixbuf_scale_inplace(GdkPixbuf* pixbuf, guint ratio_p2,
 static GdkPixbuf*
 pixbuf_trim(GdkPixbuf* pixbuf)
 {
-    gint width       = gdk_pixbuf_get_width(pixbuf);
-    gint height      = gdk_pixbuf_get_height(pixbuf);
-    gint n_channels  = 3;
-    gint srowstride  = 0;
-    gint drowstride  = 0;
-    gint x0 = 0;
-    gint y0 = 0;
-    gint x, y, c;
-
-    g_assert (gdk_pixbuf_get_bits_per_sample (pixbuf) == 8);
-
-    if ( width == TILE_SIZE_PIXELS && height == TILE_SIZE_PIXELS ) 
-    {
-	return pixbuf;
-    }
-
-    n_channels  = gdk_pixbuf_get_n_channels(pixbuf);
-    srowstride  = gdk_pixbuf_get_rowstride(pixbuf);
-
-    x0 = (width - TILE_SIZE_PIXELS)/2;
-    y0 = (height - TILE_SIZE_PIXELS)/2;
-
-    g_assert (gdk_pixbuf_get_bits_per_sample (pixbuf) == 8);
-
-    guchar* spixels = gdk_pixbuf_get_pixels(pixbuf);
-    
     GdkPixbuf* mpixbuf = gdk_pixbuf_new(
-	GDK_COLORSPACE_RGB, gdk_pixbuf_get_has_alpha(pixbuf),
-	8, TILE_SIZE_PIXELS, TILE_SIZE_PIXELS);
+            GDK_COLORSPACE_RGB, gdk_pixbuf_get_has_alpha(pixbuf),
+            8, TILE_SIZE_PIXELS, TILE_SIZE_PIXELS);
 
-    drowstride  = gdk_pixbuf_get_rowstride(mpixbuf);
-    guchar* dpixels = gdk_pixbuf_get_pixels(mpixbuf);
-
-
-    for ( x = 0; x < TILE_SIZE_PIXELS; ++x ) 
-    {
-	for ( y = 0; y < TILE_SIZE_PIXELS; ++y ) 
-	{
-	    guchar* sp = spixels + (y+y0) * srowstride + (x+x0) * n_channels;
-	    guchar* dp = dpixels + (y) * drowstride    + (x) * n_channels;
-	    for ( c = 0; c < n_channels; ++c ) 
-	    {
-		dp[c] = sp[c];
-	    }
-	}
-    }
+    gdk_pixbuf_copy_area(pixbuf,
+            (gdk_pixbuf_get_width(pixbuf) - TILE_SIZE_PIXELS) / 2,
+            (gdk_pixbuf_get_height(pixbuf) - TILE_SIZE_PIXELS) / 2,
+            TILE_SIZE_PIXELS, TILE_SIZE_PIXELS,
+            mpixbuf,
+            0, 0);
 
     g_object_unref(pixbuf);
     return mpixbuf;
@@ -5845,18 +5803,15 @@ pixbuf_trim(GdkPixbuf* pixbuf)
 static gchar*
 map_convert_wms_to_wms(gint tilex, gint tiley, gint zoomlevel, gchar* uri)
 {
-    gchar cmd[BUFFER_SIZE];
+    gchar cmd[BUFFER_SIZE], srs[BUFFER_SIZE];
+    gchar *ret = NULL;
     FILE* in;
-    gfloat lon1, lat1, lon2, lat2, dummy;
-    gchar slat1[16], slon1[16], slat2[16], slon2[16];
-
-    gchar srs[256];
+    gfloat lon1, lat1, lon2, lat2;
 
     gchar *widthstr   = strcasestr(uri,"WIDTH=");
     gchar *heightstr  = strcasestr(uri,"HEIGHT=");
     gchar *srsstr     = strcasestr(uri,"SRS=EPSG");
     gchar *srsstre    = strchr(srsstr,'&');
-
 
     /* missing: test if found */
     strcpy(srs,"epsg");
@@ -5868,51 +5823,42 @@ map_convert_wms_to_wms(gint tilex, gint tiley, gint zoomlevel, gchar* uri)
     gint dwidth  = widthstr ? atoi(widthstr+6) - TILE_SIZE_PIXELS : 0;
     gint dheight = heightstr ? atoi(heightstr+7) - TILE_SIZE_PIXELS : 0;
 
-    unit2latlon(tile2zunit(tilex,zoomlevel) 
-		- pixel2zunit(dwidth/2,zoomlevel),
-		tile2zunit(tiley+1,zoomlevel) 
-		+ pixel2zunit((dheight+1)/2,zoomlevel),
-		lat1, lon1);
+    unit2latlon(tile2zunit(tilex,zoomlevel)
+            - pixel2zunit(dwidth/2,zoomlevel),
+            tile2zunit(tiley+1,zoomlevel)
+            + pixel2zunit((dheight+1)/2,zoomlevel),
+            lat1, lon1);
 
-    unit2latlon(tile2zunit(tilex+1,zoomlevel) 
-		+ pixel2zunit((dwidth+1)/2,zoomlevel),
-		tile2zunit(tiley,zoomlevel) 
-		- pixel2zunit(dheight/2,zoomlevel),
-		lat2, lon2);
+    unit2latlon(tile2zunit(tilex+1,zoomlevel)
+            + pixel2zunit((dwidth+1)/2,zoomlevel),
+            tile2zunit(tiley,zoomlevel)
+            - pixel2zunit(dheight/2,zoomlevel),
+            lat2, lon2);
 
-    g_ascii_dtostr(slat1, sizeof(slat1), lat1);
-    g_ascii_dtostr(slat2, sizeof(slat2), lat2);
-    g_ascii_dtostr(slon1, sizeof(slon1), lon1);
-    g_ascii_dtostr(slon2, sizeof(slon2), lon2);
+    setlocale(LC_NUMERIC, "C");
 
-    snprintf(cmd,BUFFER_SIZE,
-	     "(echo \"%s %s\"; echo \"%s %s\") | "
-	     "/usr/bin/cs2cs +proj=longlat +datum=WGS84 +to +init=%s -f %%.6f "
-	     " > /tmp/tmpcs2cs ",
-             slon1, slat1, slon2, slat2, srs);
+    snprintf(cmd, sizeof(cmd),
+            "(echo \"%.6f %.6f\"; echo \"%.6f %.6f\") | "
+            "/usr/bin/cs2cs +proj=longlat +datum=WGS84 +to +init=%s -f %%.6f "
+            " > /tmp/tmpcs2cs ",
+             lon1, lat1, lon2, lat2, srs);
     system(cmd);
 
     if(!(in = g_fopen("/tmp/tmpcs2cs","r")))
+        fprintf(stderr, "Cannot open results of conversion\n");
+    else if(5 != fscanf(in,"%f %f %s %f %f", &lon1, &lat1, cmd, &lon2, &lat2))
     {
-	fprintf(stderr,"cannot open results of conversion\n");
-	return NULL;
-    }
-    
-    if(5 != fscanf(in,"%f %f %f %f %f", &lon1, &lat1, &dummy, &lon2, &lat2))
-    {
-	fprintf(stderr,"wrong conversion\n");
+        fprintf(stderr, "Wrong conversion\n");
         fclose(in);
-	return NULL;
     }
-    fclose(in);
-
+    else
     {
-        gchar *ret;
-        setlocale(LC_NUMERIC, "C");
+        fclose(in);
         ret = g_strdup_printf(uri, lon1, lat1, lon2, lat2);
-        setlocale(LC_NUMERIC, "");
-        return ret;
     }
+
+    setlocale(LC_NUMERIC, "");
+    return ret;
 }
 
 
@@ -5979,8 +5925,8 @@ map_initiate_download(guint tilex, guint tiley, guint zoom, gint retries)
     pui->tilex = tilex;
     pui->tiley = tiley;
     pui->zoom = zoom;
-    pui->priority =  (abs((gint)tilex - unit2tile(_center.unitx))
-                + abs((gint)tiley - unit2tile(_center.unity)));
+    pui->priority = (abs((gint)tilex - unit2tile(_center.unitx))
+            + abs((gint)tiley - unit2tile(_center.unity)));
     if(!retries)
         pui->priority = -pui->priority; /* "Negative" makes them lowest pri. */
     pui->retries = retries;
@@ -6137,9 +6083,10 @@ map_render_tile(guint tilex, guint tiley, guint destx, guint desty,
                     -INITIAL_DOWNLOAD_RETRIES);
             fast_fail = TRUE;
         }
-        else if (pixbuf)
+        /* Check if we need to trim. */
+        else if(pixbuf && (gdk_pixbuf_get_width(pixbuf) != TILE_SIZE_PIXELS
+                    || gdk_pixbuf_get_height(pixbuf) != TILE_SIZE_PIXELS))
             pixbuf = pixbuf_trim(pixbuf);
-
 
         for(zoff = 1; !pixbuf && (_zoom + zoff) <= MAX_ZOOM
                 && zoff <= TILE_SIZE_P2; zoff += 1)
@@ -6156,7 +6103,10 @@ map_render_tile(guint tilex, guint tiley, guint destx, guint desty,
             }
             if(pixbuf)
             {
-		pixbuf = pixbuf_trim(pixbuf);
+                /* Check if we need to trim. */
+                if(gdk_pixbuf_get_width(pixbuf) != TILE_SIZE_PIXELS
+                        || gdk_pixbuf_get_height(pixbuf) != TILE_SIZE_PIXELS)
+                    pixbuf = pixbuf_trim(pixbuf);
                 map_pixbuf_scale_inplace(pixbuf, zoff,
                     (tilex - ((tilex>>zoff) << zoff)) << (TILE_SIZE_P2-zoff),
                     (tiley - ((tiley>>zoff) << zoff)) << (TILE_SIZE_P2-zoff));
@@ -6448,8 +6398,8 @@ curl_download_timeout()
                 /* Unable to download file. */
                 gchar buffer[BUFFER_SIZE];
                 snprintf(buffer, sizeof(buffer), "%s:\n%s",
-                        "Failed to open file for reading", pui->dest_str);
-                popup_error(_window, buffer);
+                        _("Failed to open file for writing"), pui->dest_str);
+                MACRO_BANNER_SHOW_INFO(_window, buffer);
                 g_idle_add_full(G_PRIORITY_HIGH_IDLE,
                         (GSourceFunc)map_download_idle_refresh, pui, NULL);
                 continue;
@@ -6976,7 +6926,7 @@ maemo_mapper_destroy(void)
         /* Finish up all downloads. */
         while(CURLM_CALL_MULTI_PERFORM
                 == curl_multi_perform(_curl_multi, &num_transfers)
-                || num_transfers) { fprintf(stderr, "curl_multi_perform()\n"); }
+                || num_transfers) { fprintf(stderr, "curl_multi_perform()\n");}
 
         /* Close all finished files. */
         while((msg = curl_multi_info_read(_curl_multi, &num_msgs)))
