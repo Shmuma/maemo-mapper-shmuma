@@ -9,6 +9,7 @@ Package: maemo-mapper
 Architecture: armel arm i386
 Pre-Depends: maemo-select-menu-location
 Depends: ${shlibs:Depends}
+Suggests: flite, proj
 Description: Geographical mapping softare specifically designed
  for the Maemo platform and the Nokia 770 form factor.  It includes support for
  visualizing GPS input, but is functional and useful without GPS hardware.  It

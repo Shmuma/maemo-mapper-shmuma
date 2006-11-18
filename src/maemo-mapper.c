@@ -50,6 +50,7 @@
 #include <hildon-widgets/hildon-banner.h>
 #include <hildon-widgets/hildon-system-sound.h>
 #include <libgnomevfs/gnome-vfs.h>
+#include <curl/multi.h>
 #include <gconf/gconf-client.h>
 #include <libxml/parser.h>
 
@@ -138,9 +139,6 @@
 
 #define leadx2unit() (_pos.unitx + (_lead_ratio) * pixel2unit(_vel_offsetx))
 #define leady2unit() (_pos.unity + (0.6f*_lead_ratio)*pixel2unit(_vel_offsety))
-
-#define tile2punit(tile, zoom) ((((tile) << 1) + 1) << (6 + zoom))
-#define unit2ptile(unit) ((unit) >> (6 + _zoom))
 
 /* Pans are done two "grids" at a time, or 64 pixels. */
 #define PAN_UNITS (grid2unit(2))
@@ -600,31 +598,6 @@ struct _DeletePOI {
     guint id;
 };
 
-/** Data used during the asynchronous progress update phase of automatic map
- * downloading. */
-typedef struct _ProgressUpdateInfo ProgressUpdateInfo;
-struct _ProgressUpdateInfo
-{
-    GnomeVFSAsyncHandle *handle;
-    GList *src_list;
-    GList *dest_list;
-    guint tilex, tiley, zoom; /* for refresh. */
-    gint retries_left; /* if equal to zero, it means we're DELETING maps. */
-    guint hash;
-};
-
-/** Data used during the asynchronous automatic route downloading operation. */
-typedef struct _AutoRouteDownloadData AutoRouteDownloadData;
-struct _AutoRouteDownloadData {
-    gboolean enabled;
-    gboolean in_progress;
-    gchar *dest;
-    GnomeVFSAsyncHandle *handle;
-    gchar *bytes;
-    guint bytes_read;
-    guint bytes_maxsize;
-};
-
 /** Data regarding a map repository. */
 typedef struct _RepoData RepoData;
 struct _RepoData {
@@ -664,6 +637,32 @@ struct _GpsSatelliteData {
     guint elevation;
     guint azimuth;
     guint snr;
+};
+
+/** Data used during the asynchronous progress update phase of automatic map
+ * downloading. */
+typedef struct _ProgressUpdateInfo ProgressUpdateInfo;
+struct _ProgressUpdateInfo
+{
+    gchar *src_str;
+    gchar *dest_str;
+    RepoData *repo;
+    guint tilex, tiley, zoom; /* for refresh. */
+    gint retries; /* if equal to zero, it means we're DELETING maps. */
+    guint priority;
+    FILE *file;
+};
+
+/** Data used during the asynchronous automatic route downloading operation. */
+typedef struct _AutoRouteDownloadData AutoRouteDownloadData;
+struct _AutoRouteDownloadData {
+    gboolean enabled;
+    gboolean in_progress;
+    gchar *dest;
+    CURL *curl_easy;
+    gchar *src_str;
+    gchar *bytes;
+    guint bytes_read;
 };
 
 /****************************************************************************
@@ -730,7 +729,8 @@ static guint _error_sid = 0;
 static guint _input_sid = 0;
 /** The Source ID of the "Connect Later" idle. */
 static guint _clater_sid = 0;
-
+/** The Source ID of the CURL Multi Download timeout. */
+static guint _curl_sid = 0;
 
 /** GPS data. */
 static Point _pos = {0, 0};
@@ -893,9 +893,13 @@ GtkWidget *_fix_banner = NULL;
 GtkWidget *_download_banner = NULL;
 
 /** DOWNLOAD PROGRESS. */
+static CURLM *_curl_multi = NULL;
+static GQueue *_curl_easy_queue = NULL;
 static guint _num_downloads = 0;
 static guint _curr_download = 0;
-static GHashTable *_downloads_hash = NULL;
+static GTree *_pui_tree = NULL;
+static GTree *_downloading_tree = NULL;
+static GHashTable *_pui_by_easy = NULL;
 
 /** CONFIGURATION INFORMATION. */
 static struct sockaddr_rc _rcvr_addr = { 0 };
@@ -1081,12 +1085,9 @@ menu_cb_settings(GtkAction *action);
 static gboolean
 menu_cb_help(GtkAction *action);
 
-static gint
-map_download_cb_async(GnomeVFSAsyncHandle *handle,
-        GnomeVFSXferProgressInfo *info, ProgressUpdateInfo *pui);
-
 static gboolean
-auto_route_dl_idle_refresh();
+curl_download_timeout();
+
 static gboolean
 auto_route_dl_idle();
 
@@ -4741,6 +4742,52 @@ settings_dialog()
     return rcvr_changed;
 }
 
+static gint
+download_comparefunc(const ProgressUpdateInfo *a,
+        const ProgressUpdateInfo *b, gpointer user_data)
+{
+    gint diff = (a->priority - b->priority);
+    if(diff)
+        return diff;
+    diff = (a->tilex - b->tilex);
+    if(diff)
+        return diff;
+    diff = (a->tiley - b->tiley);
+    if(diff)
+        return diff;
+    diff = (a->zoom - b->zoom);
+    if(diff)
+        return diff;
+    diff = (a->repo - b->repo);
+    if(diff)
+        return diff;
+    /* Otherwise, deletes are "greatest" (least priority). */
+    if(!a->retries)
+        return (b->retries ? -1 : 0);
+    else if(!b->retries)
+        return (a->retries ? 1 : 0);
+    /* Do updates after non-updates (because they'll both be done anyway). */
+    return (a->retries - b->retries);
+}
+
+/**
+ * Free a ProgressUpdateInfo data structure that was allocated during the
+ * auto-map-download process.
+ */
+static void
+progress_update_info_free(ProgressUpdateInfo *pui)
+{
+    vprintf("%s()\n", __PRETTY_FUNCTION__);
+
+    g_free(pui->src_str);
+    g_free(pui->dest_str);
+
+    g_slice_free(ProgressUpdateInfo, pui);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+
 /**
  * Initialize all configuration from GCONF.  This should not be called more
  * than once during execution.
@@ -5599,9 +5646,6 @@ window_present()
         /* Set connection state first, to avoid going into this if twice. */
         if(_rcvr_mac || !_enable_gps || settings_dialog())
         {
-            gtk_widget_show_all(_window);
-            gps_show_info();
-
             /* Connect to receiver. */
             if(_enable_gps)
                 rcvr_connect_now();
@@ -5609,7 +5653,9 @@ window_present()
         else
             gtk_main_quit();
     }
+    printf("PRE\n");
     gtk_window_present(GTK_WINDOW(_window));
+    printf("POST\n");
 
     /* Re-enable any banners that might have been up. */
     {
@@ -5620,34 +5666,6 @@ window_present()
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return FALSE;
-}
-
-/**
- * Get the hash value of a ProgressUpdateInfo object.  This is trivial, since
- * the hash is generated and stored when the object is created.
- */
-static guint
-download_hashfunc(ProgressUpdateInfo *pui)
-{
-    vprintf("%s()\n", __PRETTY_FUNCTION__);
-
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return pui->hash;
-}
-
-/**
- * Return whether or not two ProgressUpdateInfo objects are equal.  They
- * are equal if they are downloading the same tile.
- */
-static gboolean
-download_equalfunc(
-        ProgressUpdateInfo *pui1, ProgressUpdateInfo *pui2)
-{
-    vprintf("%s()\n", __PRETTY_FUNCTION__);
-
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return pui1->tilex == pui2->tilex && pui1->tiley == pui2->tiley
-        && pui1->zoom == pui2->zoom;
 }
 
 /**
@@ -5705,10 +5723,13 @@ static void map_set_mark()
  * this method, but I guess it's not general-purpose enough.
  */
 static void
-map_pixbuf_scale_inplace(guchar *pixels, guint ratio_p2,
+map_pixbuf_scale_inplace(GdkPixbuf* pixbuf, guint ratio_p2,
         guint src_x, guint src_y)
 {
     guint dest_x = 0, dest_y = 0, dest_dim = TILE_SIZE_PIXELS;
+    guint rowstride = gdk_pixbuf_get_rowstride(pixbuf);
+    guint n_channels = gdk_pixbuf_get_n_channels(pixbuf);
+    guchar* pixels = gdk_pixbuf_get_pixels(pixbuf);
     vprintf("%s(%d, %d, %d)\n", __PRETTY_FUNCTION__, ratio_p2, src_x, src_y);
 
     /* Sweep through the entire dest area, copying as necessary, but
@@ -5720,17 +5741,23 @@ map_pixbuf_scale_inplace(guchar *pixels, guint ratio_p2,
         for(y = dest_dim - 1; y >= 0; y--)
         {
             guint src_offset_y, dest_offset_y;
-            src_offset_y = (src_y + (y >> ratio_p2)) * TILE_PIXBUF_STRIDE;
-            dest_offset_y = (dest_y + y) * TILE_PIXBUF_STRIDE;
+            src_offset_y = (src_y + (y >> ratio_p2)) * rowstride;
+            dest_offset_y = (dest_y + y) * rowstride;
             x = dest_dim - 1;
             if((unsigned)(dest_y + y - src_y) < src_dim
                     && (unsigned)(dest_x + x - src_x) < src_dim)
                 x -= src_dim;
             for(; x >= 0; x--)
             {
-                guint src_offset, dest_offset;
-                src_offset = src_offset_y + (src_x + (x >> ratio_p2)) * 3;
-                dest_offset = dest_offset_y + (dest_x + x) * 3;
+                guint src_offset, dest_offset, i;
+                src_offset = src_offset_y + (src_x + (x >> ratio_p2)) 
+		    * n_channels;
+                dest_offset = dest_offset_y + (dest_x + x) 
+		    * n_channels;
+		for ( i = 0; i < n_channels; ++i ) 
+		{
+		    pixels[dest_offset + i] = pixels[src_offset + i];
+		}
                 pixels[dest_offset + 0] = pixels[src_offset + 0];
                 pixels[dest_offset + 1] = pixels[src_offset + 1];
                 pixels[dest_offset + 2] = pixels[src_offset + 2];
@@ -5752,38 +5779,159 @@ map_pixbuf_scale_inplace(guchar *pixels, guint ratio_p2,
 }
 
 /**
- * Free a ProgressUpdateInfo data structure that was allocated during the
- * auto-map-download process.
+ * Trim pixbufs that are bigger than tiles. (Those pixbufs result, when
+ * captions should be cut off.)
  */
-static void
-progress_update_info_free(ProgressUpdateInfo *pui)
+static GdkPixbuf*
+pixbuf_trim(GdkPixbuf* pixbuf)
 {
-    vprintf("%s()\n", __PRETTY_FUNCTION__);
+    gint width       = gdk_pixbuf_get_width(pixbuf);
+    gint height      = gdk_pixbuf_get_height(pixbuf);
+    gint n_channels  = 3;
+    gint srowstride  = 0;
+    gint drowstride  = 0;
+    gint x0 = 0;
+    gint y0 = 0;
+    gint x, y, c;
 
-    gnome_vfs_uri_unref((GnomeVFSURI*)pui->src_list->data);
-    g_list_free(pui->src_list);
-    gnome_vfs_uri_unref((GnomeVFSURI*)pui->dest_list->data);
-    g_list_free(pui->dest_list);
-    g_free(pui);
+    g_assert (gdk_pixbuf_get_bits_per_sample (pixbuf) == 8);
 
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    if ( width == TILE_SIZE_PIXELS && height == TILE_SIZE_PIXELS ) 
+    {
+	return pixbuf;
+    }
+
+    n_channels  = gdk_pixbuf_get_n_channels(pixbuf);
+    srowstride  = gdk_pixbuf_get_rowstride(pixbuf);
+
+    x0 = (width - TILE_SIZE_PIXELS)/2;
+    y0 = (height - TILE_SIZE_PIXELS)/2;
+
+    g_assert (gdk_pixbuf_get_bits_per_sample (pixbuf) == 8);
+
+    guchar* spixels = gdk_pixbuf_get_pixels(pixbuf);
+    
+    GdkPixbuf* mpixbuf = gdk_pixbuf_new(
+	GDK_COLORSPACE_RGB, gdk_pixbuf_get_has_alpha(pixbuf),
+	8, TILE_SIZE_PIXELS, TILE_SIZE_PIXELS);
+
+    drowstride  = gdk_pixbuf_get_rowstride(mpixbuf);
+    guchar* dpixels = gdk_pixbuf_get_pixels(mpixbuf);
+
+
+    for ( x = 0; x < TILE_SIZE_PIXELS; ++x ) 
+    {
+	for ( y = 0; y < TILE_SIZE_PIXELS; ++y ) 
+	{
+	    guchar* sp = spixels + (y+y0) * srowstride + (x+x0) * n_channels;
+	    guchar* dp = dpixels + (y) * drowstride    + (x) * n_channels;
+	    for ( c = 0; c < n_channels; ++c ) 
+	    {
+		dp[c] = sp[c];
+	    }
+	}
+    }
+
+    g_object_unref(pixbuf);
+    return mpixbuf;
 }
+
+
+/**
+ * Given a wms uri pattern, compute the coordinate transformation and
+ * trimming.
+ * 'proj' is used for the conversion
+ */
+static gchar*
+map_convert_wms_to_wms(gint tilex, gint tiley, gint zoomlevel, gchar* uri)
+{
+    gchar cmd[BUFFER_SIZE];
+    FILE* in;
+    gfloat lon1, lat1, lon2, lat2, dummy;
+    gchar slat1[16], slon1[16], slat2[16], slon2[16];
+
+    gchar srs[256];
+
+    gchar *widthstr   = strcasestr(uri,"WIDTH=");
+    gchar *heightstr  = strcasestr(uri,"HEIGHT=");
+    gchar *srsstr     = strcasestr(uri,"SRS=EPSG");
+    gchar *srsstre    = strchr(srsstr,'&');
+
+
+    /* missing: test if found */
+    strcpy(srs,"epsg");
+    strncpy(srs+4,srsstr+8,256);
+    /* missing: test srsstre-srsstr < 526 */
+    srs[srsstre-srsstr-4] = 0;
+    /* convert to lower, as WMC is EPSG and cs2cs is epsg */
+
+    gint dwidth  = widthstr ? atoi(widthstr+6) - TILE_SIZE_PIXELS : 0;
+    gint dheight = heightstr ? atoi(heightstr+7) - TILE_SIZE_PIXELS : 0;
+
+    unit2latlon(tile2zunit(tilex,zoomlevel) 
+		- pixel2zunit(dwidth/2,zoomlevel),
+		tile2zunit(tiley+1,zoomlevel) 
+		+ pixel2zunit((dheight+1)/2,zoomlevel),
+		lat1, lon1);
+
+    unit2latlon(tile2zunit(tilex+1,zoomlevel) 
+		+ pixel2zunit((dwidth+1)/2,zoomlevel),
+		tile2zunit(tiley,zoomlevel) 
+		- pixel2zunit(dheight/2,zoomlevel),
+		lat2, lon2);
+
+    g_ascii_dtostr(slat1, sizeof(slat1), lat1);
+    g_ascii_dtostr(slat2, sizeof(slat2), lat2);
+    g_ascii_dtostr(slon1, sizeof(slon1), lon1);
+    g_ascii_dtostr(slon2, sizeof(slon2), lon2);
+
+    snprintf(cmd,BUFFER_SIZE,
+	     "(echo \"%s %s\"; echo \"%s %s\") | "
+	     "/usr/bin/cs2cs +proj=longlat +datum=WGS84 +to +init=%s -f %%.6f "
+	     " > /tmp/tmpcs2cs ",
+             slon1, slat1, slon2, slat2, srs);
+    system(cmd);
+
+    if(!(in = g_fopen("/tmp/tmpcs2cs","r")))
+    {
+	fprintf(stderr,"cannot open results of conversion\n");
+	return NULL;
+    }
+    
+    if(5 != fscanf(in,"%f %f %f %f %f", &lon1, &lat1, &dummy, &lon2, &lat2))
+    {
+	fprintf(stderr,"wrong conversion\n");
+        fclose(in);
+	return NULL;
+    }
+    fclose(in);
+
+    {
+        gchar *ret;
+        setlocale(LC_NUMERIC, "C");
+        ret = g_strdup_printf(uri, lon1, lat1, lon2, lat2);
+        setlocale(LC_NUMERIC, "");
+        return ret;
+    }
+}
+
 
 /**
  * Given the xyz coordinates of our map coordinate system, write the qrst
  * quadtree coordinates to buffer.
  */
 static void
-map_convert_coords_to_quadtree_string(int x, int y, int zoomlevel,gchar *buffer)
+map_convert_coords_to_quadtree_string(
+        gint x, gint y, gint zoomlevel, gchar *buffer)
 {
     static const gchar *const quadrant = "qrts";
     gchar *ptr = buffer;
-    int n;
+    gint n;
     *ptr++ = 't';
     for(n = 16 - zoomlevel; n >= 0; n--)
     {
-        int xbit = (x >> n) & 1;
-        int ybit = (y >> n) & 1;
+        gint xbit = (x >> n) & 1;
+        gint ybit = (y >> n) & 1;
         *ptr++ = quadrant[xbit + 2 * ybit];
     }
     *ptr++ = '\0';
@@ -5795,126 +5943,69 @@ map_convert_coords_to_quadtree_string(int x, int y, int zoomlevel,gchar *buffer)
  * the URI format, since that would indicate a quadtree-based map coordinate
  * system.
  */
-static void
-map_construct_url(gchar *buffer, guint tilex, guint tiley, guint zoom)
+static gchar*
+map_construct_url(guint tilex, guint tiley, guint zoom)
 {
     if(strstr(_curr_repo->url, "%s"))
     {
         /* This is a satellite-map URI. */
         gchar location[MAX_ZOOM + 2];
         map_convert_coords_to_quadtree_string(tilex, tiley, zoom, location);
-        sprintf(buffer, _curr_repo->url, location);
+        return g_strdup_printf(_curr_repo->url, location);
+    }
+    else if(strstr(_curr_repo->url, "SERVICE=WMS"))
+    {
+        /* This is a wms-map URI. */
+        return map_convert_wms_to_wms(tilex, tiley, zoom, _curr_repo->url);
     }
     else
         /* This is a street-map URI. */
-        sprintf(buffer, _curr_repo->url, tilex, tiley, zoom);
+        return g_strdup_printf(_curr_repo->url, tilex, tiley, zoom);
 }
-
 
 /**
  * Initiate a download of the given xyz coordinates using the given buffer
  * as the URL.  If the map already exists on disk, or if we are already
  * downloading the map, then this method does nothing.
  */
-static gboolean
+static void
 map_initiate_download(guint tilex, guint tiley, guint zoom, gint retries)
 {
-    gchar buffer[1024];
-    GnomeVFSURI *src, *dest;
-    GList *src_list, *dest_list;
-    gint priority;
     ProgressUpdateInfo *pui;
     vprintf("%s(%u, %u, %u, %d)\n", __PRETTY_FUNCTION__, tilex, tiley, zoom,
             retries);
 
-    pui = g_new(ProgressUpdateInfo, 1);
-    pui->hash = tilex + (tiley << 12) + (zoom << 24);
+    pui = g_slice_new(ProgressUpdateInfo);
     pui->tilex = tilex;
     pui->tiley = tiley;
     pui->zoom = zoom;
-    if(g_hash_table_lookup(_downloads_hash, pui))
+    pui->priority =  (abs((gint)tilex - unit2tile(_center.unitx))
+                + abs((gint)tiley - unit2tile(_center.unity)));
+    if(!retries)
+        pui->priority = -pui->priority; /* "Negative" makes them lowest pri. */
+    pui->retries = retries;
+    pui->repo = _curr_repo;
+
+    if(g_tree_lookup(_pui_tree, pui) || g_tree_lookup(_downloading_tree, pui))
     {
-        /* Already downloading - return FALSE. */
-        g_free(pui);
-        return FALSE;
+        /* Already downloading. */
+        g_slice_free(ProgressUpdateInfo, pui);
+        return;
     }
-    sprintf(buffer, "%s/%u/%u/%u.jpg", _curr_repo->cache_dir,
-            zoom, tilex, tiley);
-    dest = gnome_vfs_uri_new(buffer);
-    if(retries > 0 && gnome_vfs_uri_exists(dest))
-    {
-        /* Already downloaded and not overwriting - return FALSE. */
-        gnome_vfs_uri_unref(dest);
-        g_free(pui);
-        return FALSE;
-    }
+    pui->src_str = NULL;
+    pui->dest_str = NULL;
+    pui->file = NULL;
 
-    /* Priority is based on proximity to _center.unitx - lower number means
-     * higher priority, so the further we are, the higher the number. */
-    priority = GNOME_VFS_PRIORITY_MIN
-        + unit2ptile(abs(tile2punit(tilex, zoom) - _center.unitx)
-                + abs(tile2punit(tiley, zoom) - _center.unity));
-    BOUND(priority, GNOME_VFS_PRIORITY_MIN, GNOME_VFS_PRIORITY_MAX);
+    g_tree_insert(_pui_tree, pui, pui);
+    if(!_curl_sid)
+        _curl_sid = g_timeout_add(100,
+                (GSourceFunc)curl_download_timeout, NULL);
 
-    map_construct_url(buffer, tilex, tiley, zoom);
-    src = gnome_vfs_uri_new(buffer);
-
-    src_list = g_list_prepend(src_list = NULL, src);
-    dest_list = g_list_prepend(dest_list = NULL, dest);
-
-    pui->src_list = src_list;
-    pui->dest_list = dest_list;
-    pui->retries_left = retries;
-
-    /* Initiate asynchronous download. */
-    if(retries)
-    {
-        /* This is a download; if retries < 0, then this is an overwrite */
-        if(GNOME_VFS_OK != gnome_vfs_async_xfer(
-                    &pui->handle,
-                    src_list, dest_list,
-                    retries < 0 ? GNOME_VFS_XFER_DEFAULT
-                                : GNOME_VFS_XFER_USE_UNIQUE_NAMES,
-                    GNOME_VFS_XFER_ERROR_MODE_QUERY,
-                    retries < 0 ? GNOME_VFS_XFER_OVERWRITE_MODE_REPLACE
-                                : GNOME_VFS_XFER_OVERWRITE_MODE_QUERY,
-                    priority,
-                    (GnomeVFSAsyncXferProgressCallback)map_download_cb_async,
-                    pui,
-                    (GnomeVFSXferProgressCallback)gtk_true,
-                    NULL))
-        {
-            progress_update_info_free(pui);
-            return FALSE;
-        }
-    }
-    else
-    {
-        /* This is a deletion. */
-        if(GNOME_VFS_OK != gnome_vfs_async_xfer(
-                    &pui->handle,
-                    dest_list, NULL,
-                    GNOME_VFS_XFER_DELETE_ITEMS,
-                    GNOME_VFS_XFER_ERROR_MODE_QUERY,
-                    GNOME_VFS_XFER_OVERWRITE_MODE_QUERY,
-                    priority,
-                    (GnomeVFSAsyncXferProgressCallback)map_download_cb_async,
-                    pui,
-                    (GnomeVFSXferProgressCallback)gtk_true,
-                    NULL))
-        {
-            progress_update_info_free(pui);
-            return FALSE;
-        }
-    }
-
-    g_hash_table_insert(_downloads_hash, pui, pui);
     if(!_num_downloads++ && !_download_banner)
         _download_banner = hildon_banner_show_progress(
                 _window, NULL, _("Downloading maps"));
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return TRUE;
 }
 
 static void
@@ -5973,15 +6064,16 @@ map_render_poi()
                 poiy = unit2bufy(unity);
 
                 /* Try to get icon for specific POI first. */
-                sprintf(buffer, "%s/poi/%s.jpg", _curr_repo->cache_dir,
-                    pszResult[row*nColumn+2]);
+                snprintf(buffer, sizeof(buffer), "%s/poi/%s.jpg",
+                        _curr_repo->cache_dir,
+                        pszResult[row*nColumn+2]);
                 pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
                 if(error)
                 {
                     /* No icon for specific POI - try for category. */
                     error = NULL;
-                    sprintf(buffer, "%s/poi/%s.jpg", _curr_repo->cache_dir,
-                        pszResult[row*nColumn+3]);
+                    snprintf(buffer, sizeof(buffer), "%s/poi/%s.jpg",
+                            _curr_repo->cache_dir, pszResult[row*nColumn+3]);
                     pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
                 }
                 if(error)
@@ -5989,8 +6081,8 @@ map_render_poi()
                     /* No icon for POI or for category - draw default. */
                     error = NULL;
                     gdk_draw_rectangle(_map_pixmap, _gc_poi, TRUE,
-                        poix - (int)(0.5f * _draw_line_width),
-                        poiy - (int)(0.5f * _draw_line_width),
+                        poix - (gint)(0.5f * _draw_line_width),
+                        poiy - (gint)(0.5f * _draw_line_width),
                         3 * _draw_line_width,
                         3 * _draw_line_width);
                 }
@@ -6018,7 +6110,7 @@ map_render_poi()
 static void
 map_render_tile(guint tilex, guint tiley, guint destx, guint desty,
         gboolean fast_fail) {
-    gchar buffer[1024];
+    gchar buffer[BUFFER_SIZE];
     GdkPixbuf *pixbuf = NULL;
     GError *error = NULL;
     guint zoff;
@@ -6028,7 +6120,7 @@ map_render_tile(guint tilex, guint tiley, guint destx, guint desty,
         /* The tile is possible. */
         vprintf("%s(%u, %u, %u, %u)\n", __PRETTY_FUNCTION__,
                 tilex, tiley, destx, desty);
-        sprintf(buffer, "%s/%u/%u/%u.jpg",
+        snprintf(buffer, sizeof(buffer), "%s/%u/%u/%u.jpg",
             _curr_repo->cache_dir, _zoom, tilex, tiley);
         pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
 
@@ -6045,12 +6137,15 @@ map_render_tile(guint tilex, guint tiley, guint destx, guint desty,
                     -INITIAL_DOWNLOAD_RETRIES);
             fast_fail = TRUE;
         }
+        else if (pixbuf)
+            pixbuf = pixbuf_trim(pixbuf);
+
 
         for(zoff = 1; !pixbuf && (_zoom + zoff) <= MAX_ZOOM
                 && zoff <= TILE_SIZE_P2; zoff += 1)
         {
             /* Attempt to blit a wider map. */
-            sprintf(buffer, "%s/%u/%u/%u.jpg",
+            snprintf(buffer, sizeof(buffer), "%s/%u/%u/%u.jpg",
                     _curr_repo->cache_dir, _zoom + zoff,
                     (tilex >> zoff), (tiley >> zoff));
             pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
@@ -6061,9 +6156,10 @@ map_render_tile(guint tilex, guint tiley, guint destx, guint desty,
             }
             if(pixbuf)
             {
-                map_pixbuf_scale_inplace(gdk_pixbuf_get_pixels(pixbuf), zoff,
-                  (tilex - ((tilex >> zoff) << zoff)) << (TILE_SIZE_P2 - zoff),
-                  (tiley - ((tiley >> zoff) << zoff)) << (TILE_SIZE_P2 - zoff));
+		pixbuf = pixbuf_trim(pixbuf);
+                map_pixbuf_scale_inplace(pixbuf, zoff,
+                    (tilex - ((tilex>>zoff) << zoff)) << (TILE_SIZE_P2-zoff),
+                    (tiley - ((tiley>>zoff) << zoff)) << (TILE_SIZE_P2-zoff));
             }
             else
             {
@@ -6101,6 +6197,85 @@ map_render_tile(guint tilex, guint tiley, guint destx, guint desty,
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
+static gboolean
+map_download_idle_refresh(ProgressUpdateInfo *pui)
+{
+    vprintf("%s(%p)\n", __PRETTY_FUNCTION__, pui);
+
+    /* Test if download succeeded (only if retries != 0). */
+    if(!pui->retries || g_file_test(pui->dest_str, G_FILE_TEST_EXISTS))
+    {
+        gint zoom_diff = pui->zoom - _zoom;
+        /* Only refresh at same or "lower" (more detailed) zoom level. */
+        if(zoom_diff >= 0)
+        {
+            /* If zoom has changed since we first put in the request for
+             * this tile, then we may have to update more than one tile. */
+            guint tilex, tiley, tilex_end, tiley_end;
+            for(tilex = pui->tilex << zoom_diff,
+                    tilex_end = tilex + (1 << zoom_diff);
+                    tilex < tilex_end; tilex++)
+            {
+                for(tiley = pui->tiley<<zoom_diff,
+                        tiley_end = tiley + (1 << zoom_diff);
+                        tiley < tiley_end; tiley++)
+                {
+                    if((tilex-_base_tilex) < 4 && (tiley-_base_tiley) < 3)
+                    {
+                        map_render_tile(
+                                tilex, tiley,
+                                ((tilex - _base_tilex) << TILE_SIZE_P2),
+                                ((tiley - _base_tiley) << TILE_SIZE_P2),
+                                TRUE);
+                        map_render_paths();
+                        map_render_poi();
+                        gtk_widget_queue_draw_area(
+                            _map_widget,
+                            ((tilex-_base_tilex)<<TILE_SIZE_P2) - _offsetx,
+                            ((tiley-_base_tiley)<<TILE_SIZE_P2) - _offsety,
+                            TILE_SIZE_PIXELS, TILE_SIZE_PIXELS);
+                    }
+                }
+            }
+        }
+    }
+    /* Else the download failed. Update retries and maybe try again. */
+    else
+    {
+        if(pui->retries > 0)
+            --pui->retries;
+        else if(pui->retries < 0)
+            ++pui->retries;
+        if(pui->retries)
+        {
+            /* removal automatically calls progress_update_info_free(). */
+            g_tree_steal(_downloading_tree, pui);
+            g_tree_insert(_pui_tree, pui, pui);
+            if(!_curl_sid)
+                _curl_sid = g_timeout_add(100,
+                        (GSourceFunc)curl_download_timeout, NULL);
+            /* Don't do anything else. */
+            return FALSE;
+        }
+    }
+
+    /* removal automatically calls progress_update_info_free(). */
+    g_tree_remove(_downloading_tree, pui);
+
+    if(++_curr_download == _num_downloads)
+    {
+        gtk_widget_destroy(_download_banner);
+        _download_banner = NULL;
+        _num_downloads = _curr_download = 0;
+    }
+    else
+        hildon_banner_set_fraction(HILDON_BANNER(_download_banner),
+                _curr_download / (double)_num_downloads);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    return FALSE;
+}
+
 /**
  * Force a redraw of the entire _map_pixmap, including fetching the
  * background maps from disk and redrawing the tracks on top of them.
@@ -6126,6 +6301,204 @@ map_force_redraw()
     MACRO_QUEUE_DRAW_AREA();
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static gboolean
+get_next_pui(gpointer key, gpointer value, ProgressUpdateInfo **data)
+{
+    *data = key;
+    return TRUE;
+}
+
+static gboolean
+curl_download_timeout()
+{
+    static guint destroy_counter = 50;
+    gint num_transfers = 0, num_msgs = 0;
+    gint deletes_left = 50; /* only do 50 deletes at a time. */
+    CURLMsg *msg;
+    vprintf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_curl_multi && CURLM_CALL_MULTI_PERFORM
+            == curl_multi_perform(_curl_multi, &num_transfers))
+        return TRUE; /* Give UI a chance first. */
+
+    while(_curl_multi && (msg = curl_multi_info_read(_curl_multi, &num_msgs)))
+    {
+        if(msg->msg == CURLMSG_DONE)
+        {
+            if(msg->easy_handle == _autoroute_data.curl_easy)
+            {
+                /* This is the autoroute download. */
+                /* First, clean up the easy handle. */
+                curl_multi_remove_handle(_curl_multi,
+                        _autoroute_data.curl_easy);
+                curl_easy_cleanup(_autoroute_data.curl_easy);
+                _autoroute_data.curl_easy = NULL;
+
+                /* Now, parse the autoroute and update the display. */
+                if(_autoroute_data.enabled && parse_route_gpx(
+                       _autoroute_data.bytes, _autoroute_data.bytes_read, 0))
+                {
+                    /* Find the nearest route point, if we're connected. */
+                    route_find_nearest_point();
+                    map_force_redraw();
+                }
+                g_free(_autoroute_data.src_str);
+                _autoroute_data.src_str = NULL;
+                _autoroute_data.in_progress = FALSE;
+            }
+            else
+            {
+                ProgressUpdateInfo *pui = g_hash_table_lookup(
+                        _pui_by_easy, msg->easy_handle);
+                g_queue_push_head(_curl_easy_queue, msg->easy_handle);
+                g_hash_table_remove(_pui_by_easy, msg->easy_handle);
+                fclose(pui->file);
+                if(msg->data.result != CURLE_OK)
+                {
+                    MACRO_BANNER_SHOW_INFO(_window,
+                            _("Error in download.  Check internet connection"
+                                " and/or URL Format."));
+                    g_unlink(pui->dest_str); /* Delete so we try again. */
+                }
+                curl_multi_remove_handle(_curl_multi, msg->easy_handle);
+                g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                        (GSourceFunc)map_download_idle_refresh, pui, NULL);
+            }
+        }
+    }
+
+    /* Up to 1 transfer per tile. */
+    while(num_transfers < (BUF_WIDTH_TILES * BUF_HEIGHT_TILES)
+            && g_tree_nnodes(_pui_tree))
+    {
+        ProgressUpdateInfo *pui;
+        g_tree_foreach(_pui_tree, (GTraverseFunc)get_next_pui, &pui);
+
+        if(pui->retries)
+        {
+            /* This is a download. */
+            FILE *f;
+            g_tree_steal(_pui_tree, pui);
+            g_tree_insert(_downloading_tree, pui, pui);
+
+            pui->src_str = map_construct_url(pui->tilex, pui->tiley,pui->zoom);
+            pui->dest_str = g_strdup_printf("%s/%u/%u/%u.jpg",
+                    pui->repo->cache_dir, pui->zoom, pui->tilex, pui->tiley);
+
+            /* Check to see if we need to overwrite. */
+            if(pui->retries > 0)
+            {
+                /* We're not updating - check if file already exists. */
+                if(g_file_test(pui->dest_str, G_FILE_TEST_EXISTS))
+                {
+                    g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                            (GSourceFunc)map_download_idle_refresh, pui, NULL);
+                    continue;
+                }
+            }
+
+            /* Attempt to open the file for writing. */
+            if(!(f = g_fopen(pui->dest_str, "w")) && errno == ENOENT)
+            {
+                /* Directory doesn't exist yet - create it, then we'll retry */
+                gchar buffer[BUFFER_SIZE];
+                snprintf(buffer, sizeof(buffer), "%s/%u",
+                        pui->repo->cache_dir, pui->zoom);
+                gnome_vfs_make_directory(buffer, 0775);
+                snprintf(buffer, sizeof(buffer), "%s/%u/%u",
+                        pui->repo->cache_dir, pui->zoom, pui->tilex);
+                gnome_vfs_make_directory(buffer, 0775);
+                f = g_fopen(pui->dest_str, "w");
+            }
+
+            if(f)
+            {
+                CURL *curl_easy;
+                pui->file = f;
+                curl_easy = g_queue_pop_tail(_curl_easy_queue);
+                if(!curl_easy)
+                {
+                    /* Need a new curl_easy. */
+                    curl_easy = curl_easy_init();
+                    curl_easy_setopt(curl_easy, CURLOPT_NOPROGRESS, 1);
+                    curl_easy_setopt(curl_easy, CURLOPT_FOLLOWLOCATION, 1);
+                    curl_easy_setopt(curl_easy, CURLOPT_FAILONERROR, 1);
+                    curl_easy_setopt(curl_easy, CURLOPT_USERAGENT,
+                            "Mozilla/5.0 (X11; U; Linux i686; en-US; "
+                            "rv:1.8.0.4) Gecko/20060701 Firefox/1.5.0.4");
+                    curl_easy_setopt(curl_easy, CURLOPT_TIMEOUT, 60);
+                    curl_easy_setopt(curl_easy, CURLOPT_CONNECTTIMEOUT, 10);
+                }
+                curl_easy_setopt(curl_easy, CURLOPT_URL, pui->src_str);
+                curl_easy_setopt(curl_easy, CURLOPT_WRITEDATA, f);
+                g_hash_table_insert(_pui_by_easy, curl_easy, pui);
+                if(!_curl_multi)
+                {
+                    /* Initialize CURL. */
+                    _curl_multi = curl_multi_init();
+                    /*curl_multi_setopt(_curl_multi, CURLMOPT_PIPELINING, 1);*/
+                }
+                curl_multi_add_handle(_curl_multi, curl_easy);
+                num_transfers++;
+            }
+            else
+            {
+                /* Unable to download file. */
+                gchar buffer[BUFFER_SIZE];
+                snprintf(buffer, sizeof(buffer), "%s:\n%s",
+                        "Failed to open file for reading", pui->dest_str);
+                popup_error(_window, buffer);
+                g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                        (GSourceFunc)map_download_idle_refresh, pui, NULL);
+                continue;
+            }
+        }
+        else if(--deletes_left)
+        {
+            /* This is a delete. */
+            gchar buffer[BUFFER_SIZE];
+            g_tree_steal(_pui_tree, pui);
+            g_tree_insert(_downloading_tree, pui, pui);
+
+            snprintf(buffer, sizeof(buffer), "%s/%u/%u/%u.jpg",
+                    pui->repo->cache_dir, pui->zoom, pui->tilex, pui->tiley);
+            g_unlink(buffer);
+            g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                    (GSourceFunc)map_download_idle_refresh, pui, NULL);
+        }
+        else
+            break;
+    }
+
+    if(!(num_transfers || g_tree_nnodes(_pui_tree)))
+    {
+        /* Destroy curl after 50 counts (5 seconds). */
+        if(--destroy_counter)
+        {
+            /* Clean up curl. */
+            CURL *curr;
+            while((curr = g_queue_pop_tail(_curl_easy_queue)))
+            {
+                fprintf(stderr, "curl_easy_cleanup()\n");
+                curl_easy_cleanup(curr);
+            }
+
+            curl_multi_cleanup(_curl_multi);
+            _curl_multi = NULL;
+
+            _curl_sid = 0;
+            vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+            return FALSE;
+        }
+    }
+    else
+        destroy_counter = 50;
+
+    vprintf("%s(): return TRUE (%d, %d)\n", __PRETTY_FUNCTION__,
+            num_transfers, g_tree_nnodes(_pui_tree));
+    return TRUE;
 }
 
 /**
@@ -6458,87 +6831,22 @@ open_file(gchar **bytes_out, GnomeVFSHandle **handle_out, gint *size_out,
 }
 
 /**
- * Refresh the view based on the fact that the route has been automatically
- * updated.
- */
-static gboolean
-auto_route_dl_idle_refresh()
-{
-    /* Make sure we're still supposed to do work. */
-    vprintf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(!_autoroute_data.enabled)
-        _autoroute_data.handle = NULL;
-    else
-    {
-        if(parse_route_gpx(_autoroute_data.bytes, _autoroute_data.bytes_read,0))
-        {
-            /* Find the nearest route point, if we're connected. */
-            route_find_nearest_point();
-
-            map_force_redraw();
-        }
-    }
-
-    _autoroute_data.in_progress = FALSE;
-
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return FALSE;
-}
-
-/**
  * Read the data provided by the given handle as GPX data, updating the
  * auto-route with that data.
  */
-static void
-auto_route_dl_cb_read(GnomeVFSAsyncHandle *handle,
-        GnomeVFSResult result,
-        gpointer bytes,
-        GnomeVFSFileSize bytes_requested,
-        GnomeVFSFileSize bytes_read)
+static size_t
+auto_route_dl_cb_read(void *ptr, size_t size, size_t nmemb, void *stream)
 {
-    vprintf("%s(%s)\n", __PRETTY_FUNCTION__,gnome_vfs_result_to_string(result));
+    size_t old_size = _autoroute_data.bytes_read;
+    vprintf("%s(%s)\n", __PRETTY_FUNCTION__,
+            gnome_vfs_result_to_string(result));
 
-    _autoroute_data.bytes_read += bytes_read;
-    if(result == GNOME_VFS_OK)
-    {
-        /* Expand bytes and continue reading. */
-        if(_autoroute_data.bytes_read * 2 > _autoroute_data.bytes_maxsize)
-        {
-            _autoroute_data.bytes = g_renew(gchar, _autoroute_data.bytes,
-                    2 * _autoroute_data.bytes_read);
-            _autoroute_data.bytes_maxsize = 2 * _autoroute_data.bytes_read;
-        }
-        gnome_vfs_async_read(_autoroute_data.handle,
-                _autoroute_data.bytes + _autoroute_data.bytes_read,
-                _autoroute_data.bytes_maxsize - _autoroute_data.bytes_read,
-                (GnomeVFSAsyncReadCallback)auto_route_dl_cb_read, NULL);
-    }
-    else
-        g_idle_add((GSourceFunc)auto_route_dl_idle_refresh, NULL);
+    _autoroute_data.bytes_read += size * nmemb;
+    _autoroute_data.bytes = g_renew(gchar, _autoroute_data.bytes,
+            _autoroute_data.bytes_read);
+    g_memmove(_autoroute_data.bytes + old_size, ptr, size * nmemb);
 
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-}
-
-/**
- * Open the given handle in preparation for reading GPX data.
- */
-static void
-auto_route_dl_cb_open(GnomeVFSAsyncHandle *handle, GnomeVFSResult result)
-{
-    vprintf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(result == GNOME_VFS_OK)
-        gnome_vfs_async_read(_autoroute_data.handle,
-                _autoroute_data.bytes,
-                _autoroute_data.bytes_maxsize,
-                (GnomeVFSAsyncReadCallback)auto_route_dl_cb_read, NULL);
-    else
-    {
-        _autoroute_data.in_progress = FALSE;
-        _autoroute_data.handle = NULL;
-    }
-
+    return (size * nmemb);
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
@@ -6549,21 +6857,41 @@ auto_route_dl_cb_open(GnomeVFSAsyncHandle *handle, GnomeVFSResult result)
 static gboolean
 auto_route_dl_idle()
 {
-    gchar buffer[1024], latstr[32], lonstr[32];
+    gchar latstr[32], lonstr[32];
     vprintf("%s(%f, %f, %s)\n", __PRETTY_FUNCTION__,
             _gps.latitude, _gps.longitude, _autoroute_data.dest);
 
-
     g_ascii_dtostr(latstr, 32, _gps.latitude);
     g_ascii_dtostr(lonstr, 32, _gps.longitude);
-    sprintf(buffer,"http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s,%s&daddr=%s",
+    _autoroute_data.src_str = g_strdup_printf(
+            "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s,%s&daddr=%s",
             latstr, lonstr, _autoroute_data.dest);
     _autoroute_data.bytes_read = 0;
 
-    gnome_vfs_async_open(&_autoroute_data.handle,
-            buffer, GNOME_VFS_OPEN_READ,
-            GNOME_VFS_PRIORITY_DEFAULT,
-            (GnomeVFSAsyncOpenCallback)auto_route_dl_cb_open, NULL);
+    _autoroute_data.curl_easy = curl_easy_init();
+    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_NOPROGRESS, 1);
+    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_FAILONERROR, 1);
+    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_USERAGENT,
+            "Mozilla/5.0 (X11; U; Linux i686; en-US; "
+            "rv:1.8.0.4) Gecko/20060701 Firefox/1.5.0.4");
+    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_TIMEOUT, 60);
+    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_CONNECTTIMEOUT, 10);
+    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_URL,
+            _autoroute_data.src_str);
+    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_WRITEFUNCTION,
+            auto_route_dl_cb_read);
+    if(!_curl_multi)
+    {
+        /* Initialize CURL. */
+        _curl_multi = curl_multi_init();
+        /*curl_multi_setopt(_curl_multi, CURLMOPT_PIPELINING, 1);*/
+    }
+    curl_multi_add_handle(_curl_multi, _autoroute_data.curl_easy);
+    if(!_curl_sid)
+        _curl_sid = g_timeout_add(100,
+                (GSourceFunc)curl_download_timeout, NULL);
+    _autoroute_data.in_progress = TRUE;
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return FALSE;
@@ -6585,16 +6913,25 @@ cancel_autoroute()
             g_free(_autoroute_data.dest);
             _autoroute_data.dest = NULL;
         }
-        if(_autoroute_data.handle)
+        if(_autoroute_data.src_str)
         {
-            gnome_vfs_async_cancel(_autoroute_data.handle);
-            _autoroute_data.handle = NULL;
+            g_free(_autoroute_data.src_str);
+            _autoroute_data.src_str = NULL;
+        }
+        if(_autoroute_data.curl_easy)
+        {
+            if(_curl_multi)
+                curl_multi_remove_handle(_curl_multi,
+                        _autoroute_data.curl_easy);
+            curl_easy_cleanup(_autoroute_data.curl_easy);
+            _autoroute_data.curl_easy = NULL;
         }
         if(_autoroute_data.bytes)
         {
             g_free(_autoroute_data.bytes);
             _autoroute_data.bytes = NULL;
         }
+        _autoroute_data.bytes_read = 0;
         _autoroute_data.in_progress = FALSE;
     }
 
@@ -6610,6 +6947,11 @@ maemo_mapper_destroy(void)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    if(_curl_sid)
+    {
+        g_source_remove(_curl_sid);
+        _curl_sid = 0;
+    }
     config_save();
     rcvr_disconnect();
     /* _program and widgets have already been destroyed. */
@@ -6620,6 +6962,50 @@ maemo_mapper_destroy(void)
     MACRO_CLEAR_TRACK(_track);
     if(_route.head)
         MACRO_CLEAR_TRACK(_route);
+
+    /* Clean up CURL. */
+    if(_curl_multi)
+    {
+        CURL *curr;
+        CURLMsg *msg;
+        gint num_transfers, num_msgs;
+
+        /* First, remove all downloads from _pui_tree. */
+        g_tree_destroy(_pui_tree);
+
+        /* Finish up all downloads. */
+        while(CURLM_CALL_MULTI_PERFORM
+                == curl_multi_perform(_curl_multi, &num_transfers)
+                || num_transfers) { fprintf(stderr, "curl_multi_perform()\n"); }
+
+        /* Close all finished files. */
+        while((msg = curl_multi_info_read(_curl_multi, &num_msgs)))
+        {
+            if(msg->msg == CURLMSG_DONE)
+            {
+                /* This is a map download. */
+                ProgressUpdateInfo *pui = g_hash_table_lookup(
+                        _pui_by_easy, msg->easy_handle);
+                g_queue_push_head(_curl_easy_queue, msg->easy_handle);
+                g_hash_table_remove(_pui_by_easy, msg->easy_handle);
+                fclose(pui->file);
+                curl_multi_remove_handle(_curl_multi, msg->easy_handle);
+            }
+        }
+
+        while((curr = g_queue_pop_tail(_curl_easy_queue)))
+        {
+            fprintf(stderr, "curl_easy_cleanup()\n");
+            curl_easy_cleanup(curr);
+        }
+
+        curl_multi_cleanup(_curl_multi);
+        _curl_multi = NULL;
+
+        g_queue_free(_curl_easy_queue);
+        g_tree_destroy(_downloading_tree);
+        g_hash_table_destroy(_pui_by_easy);
+    }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -6730,12 +7116,26 @@ maemo_mapper_init(gint argc, gchar **argv)
     _map_widget = gtk_drawing_area_new();
     gtk_box_pack_start(GTK_BOX(hbox), _map_widget, TRUE, TRUE, 0);
 
+    gtk_widget_show_all(hbox);
+    gps_show_info(); /* hides info, if necessary. */
+
     gtk_widget_realize(_map_widget);
 
     _map_pixmap = gdk_pixmap_new(
                 _map_widget->window,
                 BUF_WIDTH_PIXELS, BUF_HEIGHT_PIXELS,
                 -1); /* -1: use bit depth of widget->window. */
+
+    _curl_easy_queue = g_queue_new();
+
+    _pui_tree = g_tree_new_full(
+            (GCompareDataFunc)download_comparefunc, NULL,
+            (GDestroyNotify)progress_update_info_free, NULL);
+    _downloading_tree = g_tree_new_full(
+            (GCompareDataFunc)download_comparefunc, NULL,
+            (GDestroyNotify)progress_update_info_free, NULL);
+
+    _pui_by_easy = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     /* Connect signals. */
     g_signal_connect(G_OBJECT(_sat_panel), "expose_event",
@@ -6770,8 +7170,6 @@ maemo_mapper_init(gint argc, gchar **argv)
 
     osso_hw_set_event_cb(_osso, NULL, osso_cb_hw_state, NULL);
 
-    gnome_vfs_async_set_job_limit(24);
-
     /* Initialize data. */
 
     /* set XML_TZONE */
@@ -6780,15 +7178,13 @@ maemo_mapper_init(gint argc, gchar **argv)
         struct tm time2;
         time1 = time(NULL);
         localtime_r(&time1, &time2);
-        sprintf(XML_TZONE, "%+03ld:%02ld",
+        snprintf(XML_TZONE, sizeof(XML_TZONE), "%+03ld:%02ld",
                 (time2.tm_gmtoff / 60 / 60), (time2.tm_gmtoff / 60) % 60);
         _gmtoffset = time2.tm_gmtoff;
     }
 
     _last_spoken_phrase = g_strdup("");
 
-    _downloads_hash = g_hash_table_new((GHashFunc)download_hashfunc,
-            (GEqualFunc)download_equalfunc);
     memset(&_autoroute_data, 0, sizeof(_autoroute_data));
 
     integerize_data();
@@ -6878,7 +7274,11 @@ main(gint argc, gchar *argv[])
     g_type_init();
     gconf_init(argc, argv, NULL);
 
+    /* Init Gnome-VFS. */
     gnome_vfs_init();
+
+    /* Init libcurl. */
+    curl_global_init(CURL_GLOBAL_NOTHING);
 
     maemo_mapper_init(argc, argv);
 
@@ -6933,19 +7333,27 @@ osso_cb_hw_state(osso_hw_state_t *state, gpointer data)
     {
         if(_must_save_data)
             _must_save_data = FALSE;
-        else if(_conn_state > RCVR_OFF)
+        else
         {
-            GConfClient *gconf_client = gconf_client_get_default();
-            if(!gconf_client || gconf_client_get_bool(
-                        gconf_client, GCONF_KEY_DISCONNECT_ON_COVER, NULL))
+            if(_conn_state > RCVR_OFF)
             {
-                g_object_unref(gconf_client);
-                set_conn_state(RCVR_OFF);
-                rcvr_disconnect();
-                track_add(0, FALSE);
-                /* Pretend the autoroute is in progress to avoid download. */
-                if(_autoroute_data.enabled)
-                    _autoroute_data.in_progress = TRUE;
+                GConfClient *gconf_client = gconf_client_get_default();
+                if(!gconf_client || gconf_client_get_bool(
+                            gconf_client, GCONF_KEY_DISCONNECT_ON_COVER, NULL))
+                {
+                    g_object_unref(gconf_client);
+                    set_conn_state(RCVR_OFF);
+                    rcvr_disconnect();
+                    track_add(0, FALSE);
+                    /* Pretend autoroute is in progress to avoid download. */
+                    if(_autoroute_data.enabled)
+                        _autoroute_data.in_progress = TRUE;
+                }
+            }
+            if(_curl_sid)
+            {
+                g_source_remove(_curl_sid);
+                _curl_sid = 0;
             }
         }
     }
@@ -6954,12 +7362,20 @@ osso_cb_hw_state(osso_hw_state_t *state, gpointer data)
         config_save();
         _must_save_data = TRUE;
     }
-    else if(_conn_state == RCVR_OFF && _enable_gps)
+    else
     {
-        set_conn_state(RCVR_DOWN);
-        rcvr_connect_later();
-        if(_autoroute_data.enabled)
-            _autoroute_data.in_progress = TRUE;
+        if(_conn_state == RCVR_OFF && _enable_gps)
+        {
+            set_conn_state(RCVR_DOWN);
+            rcvr_connect_later();
+            if(_autoroute_data.enabled)
+                _autoroute_data.in_progress = TRUE;
+        }
+
+        /* Start curl in case there are downloads pending. */
+        if(!_curl_sid)
+            _curl_sid = g_timeout_add(100,
+                    (GSourceFunc)curl_download_timeout, NULL);
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -8159,8 +8575,7 @@ route_download(gchar *from, gchar *to, gboolean from_here)
                     /* Kick off a timeout to start the first update. */
                     _autoroute_data.dest = gnome_vfs_escape_string(to);
                     _autoroute_data.enabled = TRUE;
-                    _autoroute_data.bytes_maxsize = 2 * size;
-                    _autoroute_data.bytes = g_new(gchar, 2 * size);
+                    _autoroute_data.bytes = g_new(gchar, 0);
                 }
 
                 /* Save Origin in Route Locations list if not from GPS. */
@@ -8924,19 +9339,10 @@ menu_cb_maps_repoman(GtkAction *action)
         if(!verified)
             continue;
 
-        /* We're good to replace.  Delete old _repo_list */
+        /* We're good to replace.  Remove old _repo_list menu items. */
         menu_maps_remove_repos();
-        while(_repo_list)
-        {
-            if(_repo_list->data == _curr_repo)
-                old_curr_repo_name = g_strdup(
-                        ((RepoData*)_repo_list->data)->name);
-            g_free(((RepoData*)_repo_list->data)->name);
-            g_free(((RepoData*)_repo_list->data)->url);
-            g_free(((RepoData*)_repo_list->data)->cache_dir);
-            g_free(_repo_list->data);
-            _repo_list = g_list_delete_link(_repo_list, _repo_list);
-        }
+        /* But keep the repo list in memory, in case downloads are using it. */
+        _repo_list = NULL;
 
         /* Write new _repo_list. */
         _curr_repo = NULL;
@@ -9695,112 +10101,6 @@ menu_cb_help(GtkAction *action)
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
-
-static gboolean
-map_download_idle_refresh(ProgressUpdateInfo *pui)
-{
-    vprintf("%s(%p)\n", __PRETTY_FUNCTION__, pui);
-
-    /* Remove pui from hash now in case we need to retry. */
-    g_hash_table_remove(_downloads_hash, pui);
-
-    /* Test if download succeeded (only if retries_left != 0). */
-    if(!pui->retries_left
-            || gnome_vfs_uri_exists((GnomeVFSURI*)pui->dest_list->data))
-    {
-        gint zoom_diff = pui->zoom - _zoom;
-        /* Only refresh at same or "lower" (more detailed) zoom level. */
-        if(zoom_diff >= 0)
-        {
-            /* If zoom has changed since we first put in the request for this
-             * tile, then we may have to update more than one tile. */
-            guint tilex, tiley, tilex_end, tiley_end;
-            for(tilex = pui->tilex << zoom_diff,
-                    tilex_end = tilex + (1 << zoom_diff);
-                    tilex < tilex_end; tilex++)
-            {
-                for(tiley = pui->tiley<<zoom_diff,
-                        tiley_end = tiley + (1 << zoom_diff);
-                        tiley < tiley_end; tiley++)
-                {
-                    if((tilex - _base_tilex) < 4 && (tiley - _base_tiley) < 3)
-                    {
-                        map_render_tile(
-                                tilex, tiley,
-                                ((tilex - _base_tilex) << TILE_SIZE_P2),
-                                ((tiley - _base_tiley) << TILE_SIZE_P2),
-                                TRUE);
-                        map_render_paths();
-                        map_render_poi();
-                        gtk_widget_queue_draw_area(
-                                _map_widget,
-                                ((tilex-_base_tilex)<<TILE_SIZE_P2) - _offsetx,
-                                ((tiley-_base_tiley)<<TILE_SIZE_P2) - _offsety,
-                                TILE_SIZE_PIXELS, TILE_SIZE_PIXELS);
-                    }
-                }
-            }
-        }
-    }
-    /* Else the download failed. Update retries_left and maybe try again. */
-    else
-    {
-        if(pui->retries_left > 0)
-            --pui->retries_left;
-        else if(pui->retries_left < 0)
-            ++pui->retries_left;
-        if(pui->retries_left)
-            map_initiate_download(pui->tilex, pui->tiley,
-                    pui->zoom, pui->retries_left);
-    }
-
-    progress_update_info_free(pui);
-
-    if(++_curr_download == _num_downloads)
-    {
-        gtk_widget_destroy(_download_banner);
-        _download_banner = NULL;
-        _num_downloads = _curr_download = 0;
-    }
-    else
-        hildon_banner_set_fraction(HILDON_BANNER(_download_banner),
-                _curr_download / (double)_num_downloads);
-
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return FALSE;
-}
-
-static gint
-map_download_cb_async(GnomeVFSAsyncHandle *handle,
-        GnomeVFSXferProgressInfo *info, ProgressUpdateInfo*pui)
-{
-    vprintf("%s(%p, %d, %d, %d, %s)\n", __PRETTY_FUNCTION__, pui->handle,
-            info->status, info->vfs_status, info->phase,
-            info->target_name ? info->target_name + 7 : info->target_name);
-
-    if(info->phase == GNOME_VFS_XFER_PHASE_COMPLETED)
-        g_idle_add_full(G_PRIORITY_HIGH_IDLE,
-                (GSourceFunc)map_download_idle_refresh, pui, NULL);
-    else if(info->status != GNOME_VFS_XFER_PROGRESS_STATUS_OK)
-    {
-        if(info->vfs_status == GNOME_VFS_ERROR_NOT_FOUND)
-        {
-            /* Directory doesn't exist yet - create it, then we'll retry */
-            gchar buffer[1024];
-            sprintf(buffer, "%s/%u", _curr_repo->cache_dir, pui->zoom);
-            gnome_vfs_make_directory(buffer, 0775);
-            sprintf(buffer, "%s/%u/%u",
-                    _curr_repo->cache_dir, pui->zoom, pui->tilex);
-            gnome_vfs_make_directory(buffer, 0775);
-        }
-        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-        return FALSE;
-    }
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
 
 static gboolean
 cmenu_cb_loc_show_latlon(GtkAction *action)
