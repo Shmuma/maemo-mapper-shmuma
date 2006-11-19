@@ -26,5 +26,3 @@ maemo_mapper_LDADD = $(GTK_LIBS) $(OSSO_LIBS) $(HILDON_LIBS) $(GNOME_VFS_LIBS) $
 
 maemo_mapper_SOURCES = maemo-mapper.c
 
-bin_SCRIPTS = maemo-mapper.sh
-

@@ -19,7 +19,7 @@
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 1.3.1)
+AM_INIT_AUTOMAKE(maemo-mapper, 1.3.2)
 
 AC_PROG_CPP
 AC_CONFIG_HEADERS(src/config.h)
@@ -30,7 +30,7 @@ PKG_CHECK_MODULES(GTK, gtk+-2.0)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 
-PKG_CHECK_MODULES(OSSO, libosso >= 1 libossohelp)
+PKG_CHECK_MODULES(OSSO, libosso >= 1 libossohelp osso-ic)
 AC_SUBST(OSSO_LIBS)
 AC_SUBST(OSSO_CFLAGS)
 

@@ -41,6 +41,8 @@
 #include <gdk/gdkkeysyms.h>
 #include <libosso.h>
 #include <osso-helplib.h>
+#include <osso-ic-dbus.h>
+#include <osso-ic.h>
 #include <hildon-widgets/hildon-program.h>
 #include <hildon-widgets/hildon-controlbar.h>
 #include <hildon-widgets/hildon-note.h>
@@ -200,6 +202,11 @@
 
 #define GCONF_KEY_DISCONNECT_ON_COVER \
   "/system/osso/connectivity/IAP/disconnect_on_cover"
+
+#define GCONF_KEY_HTTP_PROXY_PREFIX "/system/http_proxy"
+#define GCONF_KEY_HTTP_PROXY_ON GCONF_KEY_HTTP_PROXY_PREFIX"/use_http_proxy"
+#define GCONF_KEY_HTTP_PROXY_HOST GCONF_KEY_HTTP_PROXY_PREFIX"/host"
+#define GCONF_KEY_HTTP_PROXY_PORT GCONF_KEY_HTTP_PROXY_PREFIX"/port"
 
 #define CONFIG_DIR_NAME "~/.maemo-mapper/"
 #define CONFIG_FILE_ROUTE "route.gpx"
@@ -364,6 +371,24 @@
 
 #define g_timeout_add(I, F, D) g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE, \
           (I), (F), (D), NULL)
+
+#define MACRO_CURL_EASY_INIT(C) { \
+    C = curl_easy_init(); \
+    curl_easy_setopt(C, CURLOPT_NOPROGRESS, 1); \
+    curl_easy_setopt(C, CURLOPT_FOLLOWLOCATION, 1); \
+    curl_easy_setopt(C, CURLOPT_FAILONERROR, 1); \
+    curl_easy_setopt(C, CURLOPT_USERAGENT, \
+            "Mozilla/5.0 (X11; U; Linux i686; en-US; " \
+            "rv:1.8.0.4) Gecko/20060701 Firefox/1.5.0.4"); \
+    curl_easy_setopt(C, CURLOPT_TIMEOUT, 30); \
+    curl_easy_setopt(C, CURLOPT_CONNECTTIMEOUT, 10); \
+    if(_iap_http_proxy_host) \
+    { \
+        curl_easy_setopt(C, CURLOPT_PROXY, _iap_http_proxy_host); \
+        if(_iap_http_proxy_port) \
+            curl_easy_setopt(C, CURLOPT_PROXYPORT, _iap_http_proxy_port); \
+    } \
+}
 
 #define MACRO_BANNER_SHOW_INFO(A, S) { \
     gchar *my_macro_buffer = g_strdup_printf("<span size='%s'>%s</span>", \
@@ -652,6 +677,12 @@ struct _ProgressUpdateInfo
     FILE *file;
 };
 
+typedef struct _RouteDownloadData RouteDownloadData;
+struct _RouteDownloadData {
+    gchar *bytes;
+    guint bytes_read;
+};
+
 /** Data used during the asynchronous automatic route downloading operation. */
 typedef struct _AutoRouteDownloadData AutoRouteDownloadData;
 struct _AutoRouteDownloadData {
@@ -660,8 +691,7 @@ struct _AutoRouteDownloadData {
     gchar *dest;
     CURL *curl_easy;
     gchar *src_str;
-    gchar *bytes;
-    guint bytes_read;
+    RouteDownloadData rdl_data;
 };
 
 /****************************************************************************
@@ -745,6 +775,11 @@ gboolean _satdetails_on = FALSE;
 /** The current connection state. */
 static ConnState _conn_state = RCVR_OFF;
 
+/** VARIABLES PERTAINING TO THE INTERNET CONNECTION. */
+static gboolean _iap_connected = FALSE;
+static gboolean _iap_connecting = FALSE;
+static gchar *_iap_http_proxy_host = NULL;
+static gint _iap_http_proxy_port = 0;
 
 /** VARIABLES FOR MAINTAINING STATE OF THE CURRENT VIEW. */
 
@@ -3821,6 +3856,7 @@ config_save()
     gconf_client_set_int(gconf_client,
             GCONF_KEY_POI_ZOOM, _poi_zoom, NULL);
 
+    gconf_client_clear_cache(gconf_client);
     g_object_unref(gconf_client);
 
     /* Save route. */
@@ -4787,6 +4823,35 @@ progress_update_info_free(ProgressUpdateInfo *pui)
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
+static void
+config_update_proxy()
+{
+    GConfClient *gconf_client = gconf_client_get_default();
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_iap_http_proxy_host)
+        g_free(_iap_http_proxy_host);
+
+    /* Get proxy data and register for updates. */
+    if(gconf_client_get_bool(gconf_client,
+                GCONF_KEY_HTTP_PROXY_ON, NULL))
+    {
+        /* HTTP Proxy is on. */
+        _iap_http_proxy_host = gconf_client_get_string(gconf_client,
+                GCONF_KEY_HTTP_PROXY_HOST, NULL);
+        _iap_http_proxy_port = gconf_client_get_int(gconf_client,
+                GCONF_KEY_HTTP_PROXY_PORT, NULL);
+    }
+    else
+    {
+        /* HTTP Proxy is off. */
+        _iap_http_proxy_host = NULL;
+        _iap_http_proxy_port = 0;
+    }
+    g_object_unref(gconf_client);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
 
 /**
  * Initialize all configuration from GCONF.  This should not be called more
@@ -5271,7 +5336,10 @@ config_init()
     if(!str || !gdk_color_parse(str, &_color_poi))
         _color_poi = DEFAULT_COLOR_POI;
 
+    /* Get current proxy settings. */
+    config_update_proxy();
 
+    gconf_client_clear_cache(gconf_client);
     g_object_unref(gconf_client);
 
     /* GPS data init */
@@ -5653,9 +5721,7 @@ window_present()
         else
             gtk_main_quit();
     }
-    printf("PRE\n");
     gtk_window_present(GTK_WINDOW(_window));
-    printf("POST\n");
 
     /* Re-enable any banners that might have been up. */
     {
@@ -5921,6 +5987,12 @@ map_initiate_download(guint tilex, guint tiley, guint zoom, gint retries)
     vprintf("%s(%u, %u, %u, %d)\n", __PRETTY_FUNCTION__, tilex, tiley, zoom,
             retries);
 
+    if(!_iap_connected && !_iap_connecting)
+    {
+        _iap_connecting = TRUE;
+        osso_iap_connect(OSSO_IAP_ANY, OSSO_IAP_REQUESTED_CONNECT, NULL);
+    }
+
     pui = g_slice_new(ProgressUpdateInfo);
     pui->tilex = tilex;
     pui->tiley = tiley;
@@ -5943,7 +6015,7 @@ map_initiate_download(guint tilex, guint tiley, guint zoom, gint retries)
     pui->file = NULL;
 
     g_tree_insert(_pui_tree, pui, pui);
-    if(!_curl_sid)
+    if(_iap_connected && !_curl_sid)
         _curl_sid = g_timeout_add(100,
                 (GSourceFunc)curl_download_timeout, NULL);
 
@@ -6201,7 +6273,7 @@ map_download_idle_refresh(ProgressUpdateInfo *pui)
             /* removal automatically calls progress_update_info_free(). */
             g_tree_steal(_downloading_tree, pui);
             g_tree_insert(_pui_tree, pui, pui);
-            if(!_curl_sid)
+            if(_iap_connected && !_curl_sid)
                 _curl_sid = g_timeout_add(100,
                         (GSourceFunc)curl_download_timeout, NULL);
             /* Don't do anything else. */
@@ -6260,6 +6332,43 @@ get_next_pui(gpointer key, gpointer value, ProgressUpdateInfo **data)
     return TRUE;
 }
 
+/**
+ * Cancel the current auto-route.
+ */
+static void
+cancel_autoroute()
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_autoroute_data.enabled)
+    {
+        _autoroute_data.enabled = FALSE;
+
+        g_free(_autoroute_data.dest);
+        _autoroute_data.dest = NULL;
+
+        g_free(_autoroute_data.src_str);
+        _autoroute_data.src_str = NULL;
+
+        if(_autoroute_data.curl_easy)
+        {
+            if(_curl_multi)
+                curl_multi_remove_handle(_curl_multi,
+                        _autoroute_data.curl_easy);
+            curl_easy_cleanup(_autoroute_data.curl_easy);
+            _autoroute_data.curl_easy = NULL;
+        }
+
+        g_free(_autoroute_data.rdl_data.bytes);
+        _autoroute_data.rdl_data.bytes = NULL;
+        _autoroute_data.rdl_data.bytes_read = 0;
+
+        _autoroute_data.in_progress = FALSE;
+    }
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
 static gboolean
 curl_download_timeout()
 {
@@ -6280,23 +6389,16 @@ curl_download_timeout()
             if(msg->easy_handle == _autoroute_data.curl_easy)
             {
                 /* This is the autoroute download. */
-                /* First, clean up the easy handle. */
-                curl_multi_remove_handle(_curl_multi,
-                        _autoroute_data.curl_easy);
-                curl_easy_cleanup(_autoroute_data.curl_easy);
-                _autoroute_data.curl_easy = NULL;
-
                 /* Now, parse the autoroute and update the display. */
                 if(_autoroute_data.enabled && parse_route_gpx(
-                       _autoroute_data.bytes, _autoroute_data.bytes_read, 0))
+                       _autoroute_data.rdl_data.bytes,
+                       _autoroute_data.rdl_data.bytes_read, 0))
                 {
                     /* Find the nearest route point, if we're connected. */
                     route_find_nearest_point();
                     map_force_redraw();
                 }
-                g_free(_autoroute_data.src_str);
-                _autoroute_data.src_str = NULL;
-                _autoroute_data.in_progress = FALSE;
+                cancel_autoroute(); /* We're done. Clean up. */
             }
             else
             {
@@ -6371,15 +6473,7 @@ curl_download_timeout()
                 if(!curl_easy)
                 {
                     /* Need a new curl_easy. */
-                    curl_easy = curl_easy_init();
-                    curl_easy_setopt(curl_easy, CURLOPT_NOPROGRESS, 1);
-                    curl_easy_setopt(curl_easy, CURLOPT_FOLLOWLOCATION, 1);
-                    curl_easy_setopt(curl_easy, CURLOPT_FAILONERROR, 1);
-                    curl_easy_setopt(curl_easy, CURLOPT_USERAGENT,
-                            "Mozilla/5.0 (X11; U; Linux i686; en-US; "
-                            "rv:1.8.0.4) Gecko/20060701 Firefox/1.5.0.4");
-                    curl_easy_setopt(curl_easy, CURLOPT_TIMEOUT, 60);
-                    curl_easy_setopt(curl_easy, CURLOPT_CONNECTTIMEOUT, 10);
+                    MACRO_CURL_EASY_INIT(curl_easy);
                 }
                 curl_easy_setopt(curl_easy, CURLOPT_URL, pui->src_str);
                 curl_easy_setopt(curl_easy, CURLOPT_WRITEDATA, f);
@@ -6430,10 +6524,7 @@ curl_download_timeout()
             /* Clean up curl. */
             CURL *curr;
             while((curr = g_queue_pop_tail(_curl_easy_queue)))
-            {
-                fprintf(stderr, "curl_easy_cleanup()\n");
                 curl_easy_cleanup(curr);
-            }
 
             curl_multi_cleanup(_curl_multi);
             _curl_multi = NULL;
@@ -6785,19 +6876,19 @@ open_file(gchar **bytes_out, GnomeVFSHandle **handle_out, gint *size_out,
  * auto-route with that data.
  */
 static size_t
-auto_route_dl_cb_read(void *ptr, size_t size, size_t nmemb, void *stream)
+route_dl_cb_read(void *ptr, size_t size, size_t nmemb,
+        RouteDownloadData *rdl_data)
 {
-    size_t old_size = _autoroute_data.bytes_read;
-    vprintf("%s(%s)\n", __PRETTY_FUNCTION__,
-            gnome_vfs_result_to_string(result));
+    size_t old_size = rdl_data->bytes_read;
+    vprintf("%s()\n", __PRETTY_FUNCTION__);
 
-    _autoroute_data.bytes_read += size * nmemb;
-    _autoroute_data.bytes = g_renew(gchar, _autoroute_data.bytes,
-            _autoroute_data.bytes_read);
-    g_memmove(_autoroute_data.bytes + old_size, ptr, size * nmemb);
+    rdl_data->bytes_read += size * nmemb;
+    rdl_data->bytes = g_renew(gchar, rdl_data->bytes,
+            rdl_data->bytes_read);
+    g_memmove(rdl_data->bytes + old_size, ptr, size * nmemb);
 
+    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, size * nmemb);
     return (size * nmemb);
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 /**
@@ -6816,21 +6907,14 @@ auto_route_dl_idle()
     _autoroute_data.src_str = g_strdup_printf(
             "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s,%s&daddr=%s",
             latstr, lonstr, _autoroute_data.dest);
-    _autoroute_data.bytes_read = 0;
 
-    _autoroute_data.curl_easy = curl_easy_init();
-    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_NOPROGRESS, 1);
-    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_FOLLOWLOCATION, 1);
-    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_FAILONERROR, 1);
-    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_USERAGENT,
-            "Mozilla/5.0 (X11; U; Linux i686; en-US; "
-            "rv:1.8.0.4) Gecko/20060701 Firefox/1.5.0.4");
-    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_TIMEOUT, 60);
-    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_CONNECTTIMEOUT, 10);
+    MACRO_CURL_EASY_INIT(_autoroute_data.curl_easy);
     curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_URL,
             _autoroute_data.src_str);
     curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_WRITEFUNCTION,
-            auto_route_dl_cb_read);
+            route_dl_cb_read);
+    curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_WRITEDATA,
+            &_autoroute_data.rdl_data);
     if(!_curl_multi)
     {
         /* Initialize CURL. */
@@ -6838,54 +6922,13 @@ auto_route_dl_idle()
         /*curl_multi_setopt(_curl_multi, CURLMOPT_PIPELINING, 1);*/
     }
     curl_multi_add_handle(_curl_multi, _autoroute_data.curl_easy);
-    if(!_curl_sid)
+    if(_iap_connected && !_curl_sid)
         _curl_sid = g_timeout_add(100,
                 (GSourceFunc)curl_download_timeout, NULL);
     _autoroute_data.in_progress = TRUE;
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return FALSE;
-}
-
-/**
- * Cancel the current auto-route.
- */
-static void
-cancel_autoroute()
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(_autoroute_data.enabled)
-    {
-        _autoroute_data.enabled = FALSE;
-        if(_autoroute_data.dest)
-        {
-            g_free(_autoroute_data.dest);
-            _autoroute_data.dest = NULL;
-        }
-        if(_autoroute_data.src_str)
-        {
-            g_free(_autoroute_data.src_str);
-            _autoroute_data.src_str = NULL;
-        }
-        if(_autoroute_data.curl_easy)
-        {
-            if(_curl_multi)
-                curl_multi_remove_handle(_curl_multi,
-                        _autoroute_data.curl_easy);
-            curl_easy_cleanup(_autoroute_data.curl_easy);
-            _autoroute_data.curl_easy = NULL;
-        }
-        if(_autoroute_data.bytes)
-        {
-            g_free(_autoroute_data.bytes);
-            _autoroute_data.bytes = NULL;
-        }
-        _autoroute_data.bytes_read = 0;
-        _autoroute_data.in_progress = FALSE;
-    }
-
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 /**
@@ -6926,7 +6969,7 @@ maemo_mapper_destroy(void)
         /* Finish up all downloads. */
         while(CURLM_CALL_MULTI_PERFORM
                 == curl_multi_perform(_curl_multi, &num_transfers)
-                || num_transfers) { fprintf(stderr, "curl_multi_perform()\n");}
+                || num_transfers) { }
 
         /* Close all finished files. */
         while((msg = curl_multi_info_read(_curl_multi, &num_msgs)))
@@ -6944,10 +6987,7 @@ maemo_mapper_destroy(void)
         }
 
         while((curr = g_queue_pop_tail(_curl_easy_queue)))
-        {
-            fprintf(stderr, "curl_easy_cleanup()\n");
             curl_easy_cleanup(curr);
-        }
 
         curl_multi_cleanup(_curl_multi);
         _curl_multi = NULL;
@@ -6958,6 +6998,67 @@ maemo_mapper_destroy(void)
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static DBusHandlerResult
+get_connection_status_signal_cb(DBusConnection *connection,
+        DBusMessage *message, void *user_data)
+{
+    gchar *iap_name = NULL, *iap_nw_type = NULL, *iap_state = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* check signal */
+    if(!dbus_message_is_signal(message,
+                ICD_DBUS_INTERFACE,
+                ICD_STATUS_CHANGED_SIG))
+        return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+
+    if(!dbus_message_get_args(message, NULL,
+                DBUS_TYPE_STRING, &iap_name,
+                DBUS_TYPE_STRING, &iap_nw_type,
+                DBUS_TYPE_STRING, &iap_state,
+                DBUS_TYPE_INVALID))
+    {
+        return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    }
+
+    printf("  > iap_state = %s\n", iap_state);
+    if(!strcmp(iap_state, "CONNECTED"))
+    {
+        if(!_iap_connected)
+        {
+            _iap_connected = TRUE;
+            config_update_proxy();
+            if(!_curl_sid)
+                _curl_sid = g_timeout_add(100,
+                        (GSourceFunc)curl_download_timeout, NULL);
+        }
+    }
+    else if(_iap_connected)
+    {
+        _iap_connected = FALSE;
+        if(_curl_sid)
+        {
+            g_source_remove(_curl_sid);
+            _curl_sid = 0;
+        }
+    }
+
+    return DBUS_HANDLER_RESULT_HANDLED;
+}
+
+static void
+iap_callback(struct iap_event_t *event, void *arg)
+{
+    _iap_connecting = FALSE;
+    if(event->type == OSSO_IAP_CONNECTED && !_iap_connected)
+    {
+        _iap_connected = TRUE;
+        config_update_proxy();
+        if(!_curl_sid)
+            _curl_sid = g_timeout_add(100,
+                    (GSourceFunc)curl_download_timeout, NULL);
+    }
 }
 
 /**
@@ -7182,6 +7283,26 @@ maemo_mapper_init(gint argc, gchar **argv)
     if(_route.head)
         route_find_nearest_point();
 
+    /* Add D-BUS signal handler for 'status_changed' */
+    {
+        DBusConnection *dbus_conn = dbus_bus_get(DBUS_BUS_SYSTEM, NULL);
+        gchar *filter_string = g_strdup_printf(
+                "interface=%s", ICD_DBUS_INTERFACE);
+        /* add match */
+        dbus_bus_add_match(dbus_conn, filter_string, NULL);
+
+        g_free (filter_string);
+
+        /* add the callback */
+        dbus_connection_add_filter(dbus_conn,
+                    get_connection_status_signal_cb,
+                    NULL, NULL);
+    }
+    osso_iap_cb(iap_callback);
+#ifdef DEBUG
+    _iap_connected = TRUE;
+#endif
+
     gtk_idle_add((GSourceFunc)window_present, NULL);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -7291,6 +7412,7 @@ osso_cb_hw_state(osso_hw_state_t *state, gpointer data)
                 if(!gconf_client || gconf_client_get_bool(
                             gconf_client, GCONF_KEY_DISCONNECT_ON_COVER, NULL))
                 {
+                    gconf_client_clear_cache(gconf_client);
                     g_object_unref(gconf_client);
                     set_conn_state(RCVR_OFF);
                     rcvr_disconnect();
@@ -7323,7 +7445,7 @@ osso_cb_hw_state(osso_hw_state_t *state, gpointer data)
         }
 
         /* Start curl in case there are downloads pending. */
-        if(!_curl_sid)
+        if(_iap_connected && !_curl_sid)
             _curl_sid = g_timeout_add(100,
                     (GSourceFunc)curl_download_timeout, NULL);
     }
@@ -7609,8 +7731,8 @@ sat_panel_expose(GtkWidget *widget, GdkEventExpose *event)
         layout);
     g_free(tmp);
 
-    pango_font_description_free (fontdesc);
-    g_object_unref (layout);
+    pango_font_description_free(fontdesc);
+    g_object_unref(layout);
 
     return TRUE;
 }
@@ -8385,9 +8507,14 @@ route_download(gchar *from, gchar *to, gboolean from_here)
     GtkWidget *hbox;
     GtkEntryCompletion *from_comp;
     GtkEntryCompletion *to_comp;
-    gchar *bytes = NULL;
-    gint size;
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Connect to the internet pre-emptively to prevent lack thereof. */
+    if(!_iap_connected && !_iap_connecting)
+    {
+        _iap_connecting = TRUE;
+        osso_iap_connect(OSSO_IAP_ANY, OSSO_IAP_REQUESTED_CONNECT, NULL);
+    }
 
     dialog = gtk_dialog_new_with_buttons(_("Download Route"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
@@ -8455,10 +8582,10 @@ route_download(gchar *from, gchar *to, gboolean from_here)
 
     gtk_widget_show_all(dialog);
 
-    while(!bytes
-            && GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
-        GnomeVFSResult vfs_result;
+        CURL *curl_easy;
+        RouteDownloadData rdl_data = {0, 0};
         gchar buffer[BUFFER_SIZE];
         const gchar *from, *to;
         gchar *from_escaped, *to_escaped;
@@ -8480,82 +8607,89 @@ route_download(gchar *from, gchar *to, gboolean from_here)
         from_escaped = gnome_vfs_escape_string(from);
         to_escaped = gnome_vfs_escape_string(to);
         snprintf(buffer, sizeof(buffer),
-                "http://gnuite.com:8080/cgi-bin/gpx.cgi?saddr=%s&daddr=%s",
+                "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s&daddr=%s",
                 from_escaped, to_escaped);
         g_free(from_escaped);
         g_free(to_escaped);
 
-        if(GNOME_VFS_OK != (vfs_result = gnome_vfs_read_entire_file(
-                        buffer, &size, &bytes)))
+        /* Attempt to download the route from the server. */
+        MACRO_CURL_EASY_INIT(curl_easy);
+        curl_easy_setopt(curl_easy, CURLOPT_URL, buffer);
+        curl_easy_setopt(curl_easy, CURLOPT_WRITEFUNCTION,
+                route_dl_cb_read);
+        curl_easy_setopt(curl_easy, CURLOPT_WRITEDATA, &rdl_data);
+        if(CURLE_OK != curl_easy_perform(curl_easy))
         {
-            gchar buffer[BUFFER_SIZE];
-            snprintf(buffer, sizeof(buffer), "%s:\n%s",
-                    _("Failed to connect to GPX Directions server"),
-                    gnome_vfs_result_to_string(vfs_result));
-            popup_error(dialog, buffer);
+            popup_error(dialog,
+                    _("Failed to connect to GPX Directions server"));
+            curl_easy_cleanup(curl_easy);
+            g_free(rdl_data.bytes);
+            /* Let them try again */
+            continue;
         }
-        else if(strncmp(bytes, "<?xml", strlen("<?xml")))
+        curl_easy_cleanup(curl_easy);
+
+        if(strncmp(rdl_data.bytes, "<?xml", strlen("<?xml")))
         {
             /* Not an XML document - must be bad locations. */
             popup_error(dialog,
                     _("Could not generate directions. Make sure your "
                     "source and destination are valid."));
-            g_free(bytes);
-            bytes = NULL;
+            g_free(rdl_data.bytes);
+            /* Let them try again. */
+        }
+        /* Else, if GPS is enabled, append the route, otherwise replace it. */
+        else if(parse_route_gpx(rdl_data.bytes, rdl_data.bytes_read,
+                    (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chk_gps))
+                        ? 0 : 1)))
+        {
+            GtkTreeIter iter;
+
+            /* Find the nearest route point, if we're connected. */
+            route_find_nearest_point();
+
+            /* Cancel any autoroute that might be occurring. */
+            cancel_autoroute();
+
+            map_force_redraw();
+
+            if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chk_auto)))
+            {
+                /* Kick off a timeout to start the first update. */
+                _autoroute_data.dest = gnome_vfs_escape_string(to);
+                _autoroute_data.enabled = TRUE;
+            }
+
+            /* Save Origin in Route Locations list if not from GPS. */
+            if(!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chk_gps))
+                && !g_slist_find_custom(_loc_list, from,
+                            (GCompareFunc)strcmp))
+            {
+                _loc_list = g_slist_prepend(_loc_list, g_strdup(from));
+                gtk_list_store_insert_with_values(_loc_model, &iter,
+                        INT_MAX, 0, from, -1);
+            }
+
+            /* Save Destination in Route Locations list. */
+            if(!g_slist_find_custom(_loc_list, to,
+                        (GCompareFunc)strcmp))
+            {
+                _loc_list = g_slist_prepend(_loc_list, g_strdup(to));
+                gtk_list_store_insert_with_values(_loc_model, &iter,
+                        INT_MAX, 0, to, -1);
+            }
+
+            MACRO_BANNER_SHOW_INFO(_window, _("Route Downloaded"));
+            g_free(rdl_data.bytes);
+
+            /* Success! Get out of the while loop. */
+            break;
         }
         else
         {
-            /* If GPS is enabled, append the route, otherwise replace it. */
-            if(parse_route_gpx(bytes, size,
-                    (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chk_gps))
-                        ? 0 : 1)))
-            {
-                GtkTreeIter iter;
-
-                /* Find the nearest route point, if we're connected. */
-                route_find_nearest_point();
-
-                /* Cancel any autoroute that might be occurring. */
-                cancel_autoroute();
-
-                map_force_redraw();
-
-                if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chk_auto)))
-                {
-                    /* Kick off a timeout to start the first update. */
-                    _autoroute_data.dest = gnome_vfs_escape_string(to);
-                    _autoroute_data.enabled = TRUE;
-                    _autoroute_data.bytes = g_new(gchar, 0);
-                }
-
-                /* Save Origin in Route Locations list if not from GPS. */
-                if(!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chk_gps))
-                    && !g_slist_find_custom(_loc_list, from,
-                                (GCompareFunc)strcmp))
-                {
-                    _loc_list = g_slist_prepend(_loc_list, g_strdup(from));
-                    gtk_list_store_insert_with_values(_loc_model, &iter,
-                            INT_MAX, 0, from, -1);
-                }
-
-                /* Save Destination in Route Locations list. */
-                if(!g_slist_find_custom(_loc_list, to,
-                            (GCompareFunc)strcmp))
-                {
-                    _loc_list = g_slist_prepend(_loc_list, g_strdup(to));
-                    gtk_list_store_insert_with_values(_loc_model, &iter,
-                            INT_MAX, 0, to, -1);
-                }
-
-                MACRO_BANNER_SHOW_INFO(_window, _("Route Downloaded"));
-                g_free(bytes);
-            }
-            else
-            {
-                popup_error(dialog, _("Error parsing GPX file."));
-                g_free(bytes);
-                bytes = NULL; /* Let them try again. */
-            }
+            popup_error(dialog, _("Error parsing GPX file."));
+            g_free(rdl_data.bytes);
+            /* Let them try again. */
         }
     }
 
