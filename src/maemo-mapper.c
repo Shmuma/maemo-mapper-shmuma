@@ -10189,7 +10189,7 @@ menu_cb_help(GtkAction *action)
 static gboolean
 cmenu_cb_loc_show_latlon(GtkAction *action)
 {
-    gchar buffer[80];
+    gchar buffer[80], tmp1[15], tmp2[15];
     guint unitx, unity;
     gfloat lat, lon;
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -10197,12 +10197,14 @@ cmenu_cb_loc_show_latlon(GtkAction *action)
     unitx = x2unit(_cmenu_position_x);
     unity = y2unit(_cmenu_position_y);
     unit2latlon(unitx, unity, lat, lon);
+    deg_format(lat, tmp1);
+    deg_format(lon, tmp2);
 
     snprintf(buffer, sizeof(buffer),
-            "%s: %.06f\n"
-            "%s: %.06f",
-            _("Latitude"), lat,
-            _("Longitude"), lon);
+            "%s: %s\n"
+            "%s: %s",
+            _("Latitude"), tmp1,
+            _("Longitude"), tmp2);
 
     MACRO_BANNER_SHOW_INFO(_window, buffer);
 
@@ -10213,7 +10215,7 @@ cmenu_cb_loc_show_latlon(GtkAction *action)
 static gboolean
 cmenu_cb_loc_clip_latlon(GtkAction *action)
 {
-    gchar buffer[80];
+    gchar buffer[80], tmp1[15], tmp2[15];
     guint unitx, unity;
     gfloat lat, lon;
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -10221,8 +10223,10 @@ cmenu_cb_loc_clip_latlon(GtkAction *action)
     unitx = x2unit(_cmenu_position_x);
     unity = y2unit(_cmenu_position_y);
     unit2latlon(unitx, unity, lat, lon);
+    deg_format(lat, tmp1);
+    deg_format(lon, tmp2);
 
-    snprintf(buffer, sizeof(buffer), "%.06f, %.06f", lat, lon);
+    snprintf(buffer, sizeof(buffer), "%s, %s", tmp1, tmp2);
 
     gtk_clipboard_set_text(
             gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), buffer, -1);
@@ -11016,6 +11020,7 @@ poi_list(gchar **pszResult, gint nRow, gint nColumn)
     GtkListStore *store;
     GtkTreeIter iter;
     guint i, row = -1;
+    gchar tmp1[15], tmp2[15];
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     dialog = gtk_dialog_new_with_buttons(_("Select POI"),
@@ -11026,18 +11031,22 @@ poi_list(gchar **pszResult, gint nRow, gint nColumn)
 
     store = gtk_list_store_new(POI_NUM_COLUMNS,
                                G_TYPE_INT,
-                               G_TYPE_FLOAT,
-                               G_TYPE_FLOAT,
+                               G_TYPE_STRING,
+                               G_TYPE_STRING,
                                G_TYPE_STRING,
                                G_TYPE_STRING);
 
     for(i = 1; i < nRow + 1; i++)
     {
         gtk_list_store_append(store, &iter);
+        deg_format(g_ascii_strtod(pszResult[i * nColumn + 0], NULL),
+                tmp1);
+        deg_format(g_ascii_strtod(pszResult[i * nColumn + 1], NULL),
+                tmp2);
         gtk_list_store_set(store, &iter,
                 POI_INDEX, i,
-                POI_LATITUDE, atof(pszResult[i * nColumn + 0]),
-                POI_LONGITUDE, atof(pszResult[i * nColumn + 1]),
+                POI_LATITUDE, tmp1,
+                POI_LONGITUDE, tmp2,
                 POI_LABEL, pszResult[i * nColumn + 2],
                 POI_CATEGORY, pszResult[i * nColumn + 6],
                 -1);
@@ -11166,7 +11175,7 @@ poi_dialog(guint action)
     guint unitx, unity, cat_id = 0, poi_id = 0;
     gfloat lat, lon, lat1, lon1, lat2, lon2, tmp;
     gchar slat1[10], slon1[10];
-    gchar slat2[10], slon2[10];
+    gchar slat2[10], slon2[10], tmp1[15], tmp2[15];
     gchar *p_latlon, *p_label = NULL, *p_desc = NULL;
     GtkWidget *dialog;
     GtkWidget *table;
@@ -11242,9 +11251,13 @@ poi_dialog(guint action)
         else
             rowindex = 1;
 
-        p_latlon = g_strdup_printf("%s, %s",
-            pszResult[rowindex * nColumn + 0],
-            pszResult[rowindex * nColumn + 1]);
+        deg_format(
+            g_ascii_strtod(pszResult[rowindex * nColumn + 0], NULL),
+            tmp1);
+        deg_format(
+            g_ascii_strtod(pszResult[rowindex * nColumn + 1], NULL),
+            tmp2);
+        p_latlon = g_strdup_printf("%s, %s", tmp1, tmp2);
         p_label = g_strdup(pszResult[rowindex * nColumn + 2]);
         p_desc = g_strdup(pszResult[rowindex * nColumn + 3]);
         cat_id = atoi(pszResult[rowindex * nColumn + 4]);
@@ -11271,7 +11284,9 @@ poi_dialog(guint action)
     }
     else
     {
-        p_latlon = g_strdup_printf("%.06f, %.06f", lat, lon);
+        deg_format(lat, tmp1);
+        deg_format(lon, tmp2);
+        p_latlon = g_strdup_printf("%s, %s", tmp1, tmp2);
 
         if(SQLITE_OK == sqlite_get_table(_db,
                     "select ifnull(max(poi_id) + 1,1) from poi",
