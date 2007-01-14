@@ -559,7 +559,7 @@ typedef struct _TrackPoint TrackPoint;
 struct _TrackPoint {
     Point point;
     time_t time;
-    gint altitude;
+    gfloat altitude;
 };
 
 /** A WayPoint, which is a Point with a description. */
@@ -645,7 +645,7 @@ struct _GpsData {
     gchar slongitude[15];
     gfloat speed;    /* in knots */
     gfloat maxspeed;    /* in knots */
-    gint altitude; /* in meters */
+    gfloat altitude; /* in meters */
     gfloat heading;
     gfloat hdop;
     gfloat pdop;
@@ -764,7 +764,7 @@ static guint _curl_sid = 0;
 /** GPS data. */
 static Point _pos = {0, 0};
 static const Point _pos_null = {0, 0};
-static const TrackPoint _track_null = { { 0, 0 }, 0};
+static const TrackPoint _track_null = { { 0, 0 }, NAN};
 static gint _vel_offsetx = 0;
 static gint _vel_offsety = 0;
 
@@ -1259,16 +1259,16 @@ write_track_gpx(GnomeVFSHandle *handle)
             g_ascii_formatd(strlat, 80, "%.06f", lat);
             g_ascii_formatd(strlon, 80, "%.06f", lon);
             snprintf(buffer, sizeof(buffer),
-                    "      <trkpt lat=\"%s\" lon=\"%s\">",
+                    "      <trkpt lat=\"%s\" lon=\"%s\">\n",
                     strlat, strlon);
             WRITE_STRING(buffer);
 
             /* write the elevation */
-            if(curr->altitude)
+            if(!isnan(curr->altitude))
             {
                 WRITE_STRING("        <ele>");
                 {
-                    g_ascii_dtostr(buffer, 80, curr->altitude);
+                    g_ascii_formatd(buffer, 80, "%.2f", curr->altitude);
                     WRITE_STRING(buffer);
                 }
                 WRITE_STRING("</ele>\n");
@@ -1287,7 +1287,7 @@ write_track_gpx(GnomeVFSHandle *handle)
                 }
                 WRITE_STRING("</time>\n");
             }
-            WRITE_STRING("      </trkpt>");
+            WRITE_STRING("      </trkpt>\n");
         }
         else
             trkseg_break = TRUE;
@@ -1533,6 +1533,7 @@ gpx_start_element(SaxData *data, const xmlChar *name, const xmlChar **attrs)
                                 data->path.path.track.tail->point.unitx,
                                 data->path.path.track.tail->point.unity);
                         data->path.path.track.tail->time = 0;
+                        data->path.path.track.tail->altitude = NAN;
                     }
                     else
                     {
@@ -1636,8 +1637,18 @@ gpx_end_element(SaxData *data, const xmlChar *name)
         case INSIDE_PATH_POINT_ELE:
             /* only parse time for tracks */
             if(!strcmp((gchar*)name, "ele"))
+            {
+                gchar *error_check;
                 data->path.path.track.tail->altitude
-                    = g_ascii_strtod(data->chars->str, NULL);
+                    = g_ascii_strtod(data->chars->str, &error_check);
+                if(error_check == data->chars->str)
+                    data->path.path.track.tail->altitude = NAN;
+                printf("str: %s\n", data->chars->str);
+                printf("alt: %f\n", data->path.path.track.tail->altitude);
+                data->state = INSIDE_PATH_POINT;
+                g_string_free(data->chars, TRUE);
+                data->chars = g_string_new("");
+            }
             else
                 data->state = ERROR;
             break;
@@ -1747,6 +1758,7 @@ gpx_chars(SaxData *data, const xmlChar *ch, int len)
         case ERROR:
         case UNKNOWN:
             break;
+        case INSIDE_PATH_POINT_ELE:
         case INSIDE_PATH_POINT_TIME:
         case INSIDE_PATH_POINT_DESC:
             for(i = 0; i < len; i++)
@@ -2065,11 +2077,11 @@ gps_display_details(void)
         {
             case UNITS_MI:
             case UNITS_NM:
-                buffer = g_strdup_printf("%d ft",
-                        (guint)(_gps.altitude * 3.2808399f));
+                buffer = g_strdup_printf("%.1f ft",
+                        _gps.altitude * 3.2808399f);
                 break;
             default:
-                buffer = g_strdup_printf("%d m", _gps.altitude);
+                buffer = g_strdup_printf("%.1f m", _gps.altitude);
                 break;
         }
         gtk_label_set_label(GTK_LABEL(_sdi_alt), buffer);
@@ -2202,11 +2214,11 @@ gps_display_data(void)
         {
             case UNITS_MI:
             case UNITS_NM:
-                buffer = g_strdup_printf("Alt: %d ft",
-                        (guint)(_gps.altitude * 3.2808399f));
+                buffer = g_strdup_printf("Alt: %.1f ft",
+                        _gps.altitude * 3.2808399f);
                 break;
             default:
-                buffer = g_strdup_printf("Alt: %d m", _gps.altitude);
+                buffer = g_strdup_printf("Alt: %.1f m", _gps.altitude);
         }
         gtk_label_set_label(GTK_LABEL(_text_alt), buffer);
         g_free(buffer);
@@ -8220,7 +8232,11 @@ channel_parse_gga(gchar *sentence)
     /* Altitude */
     token = strsep(&sentence, DELIM);
     if(*token)
-        MACRO_PARSE_INT(_gps.altitude, token);
+    {
+        MACRO_PARSE_FLOAT(_gps.altitude, token);
+    }
+    else
+        _gps.altitude = NAN;
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
