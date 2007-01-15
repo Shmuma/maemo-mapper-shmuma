@@ -43,6 +43,8 @@
 #include <osso-helplib.h>
 #include <osso-ic-dbus.h>
 #include <osso-ic.h>
+#include <dbus/dbus-glib.h>
+#include <bt-dbus.h>
 #include <hildon-widgets/hildon-program.h>
 #include <hildon-widgets/hildon-controlbar.h>
 #include <hildon-widgets/hildon-note.h>
@@ -58,13 +60,6 @@
 
 #include <libintl.h>
 #include <locale.h>
-
-/* BELOW: for getting input from the GPS receiver. */
-#include <sys/socket.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/hci_lib.h>
-#include <bluetooth/rfcomm.h>
 
 #include <sqlite.h>
 
@@ -401,6 +396,120 @@
  * ABOVE: DEFINES ***********************************************************
  ****************************************************************************/
 
+/****************************************************************************
+ * BELOW: MARSHALLERS *******************************************************
+ ****************************************************************************/
+
+
+#ifndef __g_cclosure_user_marshal_MARSHAL_H__
+#define __g_cclosure_user_marshal_MARSHAL_H__
+
+#include	<glib-object.h>
+
+G_BEGIN_DECLS
+
+#ifdef G_ENABLE_DEBUG
+#define g_marshal_value_peek_boolean(v)  g_value_get_boolean (v)
+#define g_marshal_value_peek_char(v)     g_value_get_char (v)
+#define g_marshal_value_peek_uchar(v)    g_value_get_uchar (v)
+#define g_marshal_value_peek_int(v)      g_value_get_int (v)
+#define g_marshal_value_peek_uint(v)     g_value_get_uint (v)
+#define g_marshal_value_peek_long(v)     g_value_get_long (v)
+#define g_marshal_value_peek_ulong(v)    g_value_get_ulong (v)
+#define g_marshal_value_peek_int64(v)    g_value_get_int64 (v)
+#define g_marshal_value_peek_uint64(v)   g_value_get_uint64 (v)
+#define g_marshal_value_peek_enum(v)     g_value_get_enum (v)
+#define g_marshal_value_peek_flags(v)    g_value_get_flags (v)
+#define g_marshal_value_peek_float(v)    g_value_get_float (v)
+#define g_marshal_value_peek_double(v)   g_value_get_double (v)
+#define g_marshal_value_peek_string(v)   (char*) g_value_get_string (v)
+#define g_marshal_value_peek_param(v)    g_value_get_param (v)
+#define g_marshal_value_peek_boxed(v)    g_value_get_boxed (v)
+#define g_marshal_value_peek_pointer(v)  g_value_get_pointer (v)
+#define g_marshal_value_peek_object(v)   g_value_get_object (v)
+#else /* !G_ENABLE_DEBUG */
+/* WARNING: This code accesses GValues directly, which is UNSUPPORTED API.
+ *          Do not access GValues directly in your code. Instead, use the
+ *          g_value_get_*() functions
+ */
+#define g_marshal_value_peek_boolean(v)  (v)->data[0].v_int
+#define g_marshal_value_peek_char(v)     (v)->data[0].v_int
+#define g_marshal_value_peek_uchar(v)    (v)->data[0].v_uint
+#define g_marshal_value_peek_int(v)      (v)->data[0].v_int
+#define g_marshal_value_peek_uint(v)     (v)->data[0].v_uint
+#define g_marshal_value_peek_long(v)     (v)->data[0].v_long
+#define g_marshal_value_peek_ulong(v)    (v)->data[0].v_ulong
+#define g_marshal_value_peek_int64(v)    (v)->data[0].v_int64
+#define g_marshal_value_peek_uint64(v)   (v)->data[0].v_uint64
+#define g_marshal_value_peek_enum(v)     (v)->data[0].v_long
+#define g_marshal_value_peek_flags(v)    (v)->data[0].v_ulong
+#define g_marshal_value_peek_float(v)    (v)->data[0].v_float
+#define g_marshal_value_peek_double(v)   (v)->data[0].v_double
+#define g_marshal_value_peek_string(v)   (v)->data[0].v_pointer
+#define g_marshal_value_peek_param(v)    (v)->data[0].v_pointer
+#define g_marshal_value_peek_boxed(v)    (v)->data[0].v_pointer
+#define g_marshal_value_peek_pointer(v)  (v)->data[0].v_pointer
+#define g_marshal_value_peek_object(v)   (v)->data[0].v_pointer
+#endif /* !G_ENABLE_DEBUG */
+
+
+/* VOID:STRING,STRING,POINTER,UCHAR,UINT (marshal.list:1) */
+extern void g_cclosure_user_marshal_VOID__STRING_STRING_POINTER_UCHAR_UINT (GClosure     *closure,
+                                                                            GValue       *return_value,
+                                                                            guint         n_param_values,
+                                                                            const GValue *param_values,
+                                                                            gpointer      invocation_hint,
+                                                                            gpointer      marshal_data);
+void
+g_cclosure_user_marshal_VOID__STRING_STRING_POINTER_UCHAR_UINT (GClosure     *closure,
+                                                                GValue       *return_value,
+                                                                guint         n_param_values,
+                                                                const GValue *param_values,
+                                                                gpointer      invocation_hint,
+                                                                gpointer      marshal_data)
+{
+  typedef void (*GMarshalFunc_VOID__STRING_STRING_POINTER_UCHAR_UINT) (gpointer     data1,
+                                                                       gpointer     arg_1,
+                                                                       gpointer     arg_2,
+                                                                       gpointer     arg_3,
+                                                                       guchar       arg_4,
+                                                                       guint        arg_5,
+                                                                       gpointer     data2);
+  register GMarshalFunc_VOID__STRING_STRING_POINTER_UCHAR_UINT callback;
+  register GCClosure *cc = (GCClosure*) closure;
+  register gpointer data1, data2;
+
+  g_return_if_fail (n_param_values == 6);
+
+  if (G_CCLOSURE_SWAP_DATA (closure))
+    {
+      data1 = closure->data;
+      data2 = g_value_peek_pointer (param_values + 0);
+    }
+  else
+    {
+      data1 = g_value_peek_pointer (param_values + 0);
+      data2 = closure->data;
+    }
+  callback = (GMarshalFunc_VOID__STRING_STRING_POINTER_UCHAR_UINT) (marshal_data ? marshal_data : cc->callback);
+
+  callback (data1,
+            g_marshal_value_peek_string (param_values + 1),
+            g_marshal_value_peek_string (param_values + 2),
+            g_marshal_value_peek_pointer (param_values + 3),
+            g_marshal_value_peek_uchar (param_values + 4),
+            g_marshal_value_peek_uint (param_values + 5),
+            data2);
+}
+
+G_END_DECLS
+
+#endif /* __g_cclosure_user_marshal_MARSHAL_H__ */
+
+
+/****************************************************************************
+ * ABOVE: MARSHALLERS *******************************************************
+ ****************************************************************************/
 
 
 /****************************************************************************
@@ -745,6 +854,7 @@ static gint _fd = -1;
 static gchar _gps_read_buf[GPS_READ_BUF_SIZE];
 static gchar *_gps_read_buf_curr = _gps_read_buf;
 static gchar *_gps_read_buf_last = _gps_read_buf + GPS_READ_BUF_SIZE - 1;
+static DBusGProxy *_rfcomm_req_proxy = NULL;
 
 /** The GIOChannel through which communication with the GPS receiver is
  * performed. */
@@ -764,7 +874,7 @@ static guint _curl_sid = 0;
 /** GPS data. */
 static Point _pos = {0, 0};
 static const Point _pos_null = {0, 0};
-static const TrackPoint _track_null = { { 0, 0 }, NAN};
+static const TrackPoint _track_null = { { 0, 0 }, FP_NAN};
 static gint _vel_offsetx = 0;
 static gint _vel_offsety = 0;
 
@@ -936,7 +1046,6 @@ static GTree *_downloading_tree = NULL;
 static GHashTable *_pui_by_easy = NULL;
 
 /** CONFIGURATION INFORMATION. */
-static struct sockaddr_rc _rcvr_addr = { 0 };
 static gchar *_rcvr_mac = NULL;
 static gchar *_route_dir_uri = NULL;
 static gchar *_track_file_uri = NULL;
@@ -1306,6 +1415,7 @@ write_route_gpx(GnomeVFSHandle *handle)
     Point *curr = NULL;
     WayPoint *wcurr = NULL;
     gboolean trkseg_break = FALSE;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     /* Find first non-zero point. */
     if(_route.head)
@@ -1364,12 +1474,14 @@ write_route_gpx(GnomeVFSHandle *handle)
 static gboolean
 speed_excess(void)
 {
+    printf("%s()\n", __PRETTY_FUNCTION__);
     if(!_speed_excess)
         return FALSE;
 
     hildon_play_system_sound(
         "/usr/share/sounds/ui-information_note.wav");
 
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
@@ -1384,7 +1496,6 @@ speed_limit(void)
     gfloat cur_speed;
     gchar *buffer;
     static guint x = 0, y = 0, width = 0, height = 0;
-
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     cur_speed = _gps.speed * UNITS_CONVERT[_units];
@@ -1922,7 +2033,7 @@ parse_route_gpx(gchar *buffer, gint size, gint policy_old)
 
     if(data.state != FINISH)
     {
-        printf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
     }
 
@@ -2011,6 +2122,7 @@ deg_format(gfloat coor, gchar scoor[15])
 {
     gint deg;
     gfloat min, sec;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     switch(_degformat)
     {
@@ -2028,6 +2140,7 @@ deg_format(gfloat coor, gchar scoor[15])
             sprintf(scoor, "%.5f\u00b0", coor);
             break;
     }
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 static gboolean
@@ -2288,6 +2401,7 @@ draw_sat_info(GtkWidget *widget, guint x0, guint y0,
     guint step, i, j, snr_height, bymargin, xoffset, yoffset;
     guint x, y, x1, y1;
     gchar *tmp = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     xoffset = x0;
     yoffset = y0;
@@ -2390,6 +2504,7 @@ draw_sat_info(GtkWidget *widget, guint x0, guint y0,
     pango_font_description_free (fontdesc);
     g_object_unref (layout);
 
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return;
 }
 
@@ -2406,6 +2521,7 @@ draw_sat_details(GtkWidget *widget, guint x0, guint y0,
     PangoLayout *layout = NULL;
     PangoFontDescription *fontdesc = NULL;
     gchar *buffer = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     size = MIN(width, height);
     halfsize = size/2;
@@ -2567,6 +2683,7 @@ draw_sat_details(GtkWidget *widget, guint x0, guint y0,
     pango_font_description_free (fontdesc);
     g_object_unref (layout);
 
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return;
 }
 
@@ -2579,6 +2696,7 @@ sat_details_panel_expose(GtkWidget *widget, GdkEventExpose *event)
     PangoLayout *layout = NULL;
     PangoFontDescription *fontdesc = NULL;
     gchar *buffer = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     width = widget->allocation.width;
     height = widget->allocation.height * 0.9;
@@ -2639,6 +2757,7 @@ sat_details_panel_expose(GtkWidget *widget, GdkEventExpose *event)
     pango_font_description_free (fontdesc);
     g_object_unref (layout);
 
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
@@ -2805,6 +2924,7 @@ calculate_distance(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2)
     slon = sinf(dlon / 2.f);
     a = (slat * slat) + (cosf(lat1) * cosf(lat2) * slon * slon);
 
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return ((2.f * atan2f(sqrtf(a), sqrtf(1.f - a))) * EARTH_RADIUS)
         * UNITS_CONVERT[_units];
 }
@@ -2816,6 +2936,7 @@ db_connect()
     gchar *perror;
     gchar **pszResult;
     guint nRow, nColumn;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     _dbconn = FALSE;
 
@@ -2893,6 +3014,7 @@ db_connect()
         sqlite_free_table(pszResult);
 
     _dbconn = TRUE;
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 /**
@@ -3355,6 +3477,7 @@ track_add(time_t time, gboolean newly_fixed)
 static void
 rcvr_disconnect()
 {
+    GError *error = NULL;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     /* Remove watches. */
@@ -3394,10 +3517,103 @@ rcvr_disconnect()
         _fd = -1;
     }
 
+    if(_rfcomm_req_proxy)
+    {
+        dbus_g_proxy_call(_rfcomm_req_proxy, BTCOND_RFCOMM_CANCEL_CONNECT_REQ,
+                    &error,
+                    G_TYPE_STRING, _rcvr_mac,
+                    G_TYPE_STRING, "SPP",
+                    G_TYPE_INVALID,
+                    G_TYPE_INVALID);
+        dbus_g_proxy_call(_rfcomm_req_proxy, BTCOND_RFCOMM_DISCONNECT_REQ,
+                    &error,
+                    G_TYPE_STRING, _rcvr_mac,
+                    G_TYPE_STRING, "SPP",
+                    G_TYPE_INVALID,
+                    G_TYPE_INVALID);
+    }
+
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 static void rcvr_connect_later(); /* Forward declaration. */
+
+static void
+rcvr_connect_fd(gchar *fdpath)
+{
+    printf("%s(%s)\n", __PRETTY_FUNCTION__, fdpath);
+
+    /* Create the file descriptor. */
+
+    /* If file descriptor creation failed, try again later. */
+    if(-1 == (_fd = open(fdpath, O_RDONLY)))
+    {
+        rcvr_disconnect();
+        rcvr_connect_later();
+    }
+    else
+    {
+        /* Reset GPS read buffer */
+        _gps_read_buf_curr = _gps_read_buf;
+        *_gps_read_buf_curr = '\0';
+
+        /* Create channel and add watches. */
+        _channel = g_io_channel_unix_new(_fd);
+        g_io_channel_set_flags(_channel, G_IO_FLAG_NONBLOCK, NULL);
+        _error_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
+                G_IO_ERR | G_IO_HUP, channel_cb_error, NULL, NULL);
+        _connect_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
+                G_IO_OUT, channel_cb_connect, NULL, NULL);
+    }
+    g_free(fdpath);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+rcvr_connect_response(DBusGProxy *proxy, DBusGProxyCall *call_id)
+{
+    GError *error = NULL;
+    gchar *fdpath = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_conn_state == RCVR_DOWN && _rcvr_mac)
+    {
+        if(!dbus_g_proxy_end_call(_rfcomm_req_proxy, call_id, &error, 
+                    G_TYPE_STRING, &fdpath, G_TYPE_INVALID))
+        {
+            if(error->domain == DBUS_GERROR
+                    && error->code == DBUS_GERROR_REMOTE_EXCEPTION)
+            {
+                /* If we're already connected, it's not an error, unless
+                 * they don't give us the file descriptor path, in which
+                 * case we re-connect.*/
+                if(!strcmp(BTCOND_ERROR_CONNECTED,
+                            dbus_g_error_get_name(error)) || !fdpath)
+                {
+                    g_printerr("Caught remote method exception %s: %s",
+                            dbus_g_error_get_name(error),
+                            error->message);
+                    rcvr_disconnect();
+                    rcvr_connect_later(); /* Try again later. */
+                    return;
+                }
+            }
+            else
+            {
+                /* Unknown error. */
+                g_printerr("Error: %s\n", error->message);
+                rcvr_disconnect();
+                rcvr_connect_later(); /* Try again later. */
+                return;
+            }
+        }
+        rcvr_connect_fd(fdpath);
+    }
+    /* else { Looks like the middle of a disconnect.  Do nothing. } */
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
 
 /**
  * Connect to the receiver.
@@ -3411,43 +3627,26 @@ rcvr_connect_now()
 {
     printf("%s(%d)\n", __PRETTY_FUNCTION__, _conn_state);
 
-    if(_conn_state == RCVR_DOWN && _rcvr_mac) {
+    if(_conn_state == RCVR_DOWN && _rcvr_mac)
+    {
 #ifndef DEBUG
-        /* Create the file descriptor. */
-        if(*_rcvr_mac == '/')
-            _fd = open(_rcvr_mac, O_RDONLY);
-        else
-            _fd = socket(AF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
-
-        /* If file descriptor creation failed, try again later.  Note that
-         * there is no need to call rcvr_disconnect() because the file
-         * descriptor creation is the first step, so if it fails, there's
-         * nothing to clean up. */
-        if(_fd == -1)
-            rcvr_connect_later();
-        else
+        if(*_rcvr_mac != '/')
         {
-            /* Reset GPS read buffer */
-            _gps_read_buf_curr = _gps_read_buf;
-            *_gps_read_buf_curr = '\0';
-
-            /* Create channel and add watches. */
-            _channel = g_io_channel_unix_new(_fd);
-            g_io_channel_set_flags(_channel, G_IO_FLAG_NONBLOCK, NULL);
-            _error_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
-                    G_IO_ERR | G_IO_HUP, channel_cb_error, NULL, NULL);
-            _connect_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
-                    G_IO_OUT, channel_cb_connect, NULL, NULL);
-            if(*_rcvr_mac != '/'
-                    && connect(_fd, (struct sockaddr*)&_rcvr_addr,
-                        sizeof(_rcvr_addr))
-                    && errno != EAGAIN)
+            if(_rfcomm_req_proxy)
             {
-                /* Connection failed.  Disconnect and try again later. */
-                rcvr_disconnect();
-                rcvr_connect_later();
+                gint mybool = TRUE;
+                dbus_g_proxy_begin_call(
+                        _rfcomm_req_proxy, BTCOND_RFCOMM_CONNECT_REQ,
+                        (DBusGProxyCallNotify)rcvr_connect_response, NULL, NULL,
+                        G_TYPE_STRING, _rcvr_mac,
+                        G_TYPE_STRING, "SPP",
+                        G_TYPE_BOOLEAN, &mybool,
+                        G_TYPE_INVALID);
             }
         }
+        else
+            rcvr_connect_fd(g_strdup(_rcvr_mac));
+
 #else
         /* We're in DEBUG mode, so instead of connecting, skip to FIXED. */
         set_conn_state(RCVR_FIXED);
@@ -3616,10 +3815,6 @@ config_save()
     else
         gconf_client_unset(gconf_client,
                 GCONF_KEY_RCVR_MAC, NULL);
-
-    /* Save Receiver Channel to GConf. */
-    gconf_client_set_int(gconf_client,
-            GCONF_KEY_RCVR_CHAN, _rcvr_addr.rc_channel, NULL);
 
     /* Save Map Download URI Format. */
     gconf_client_set_string(gconf_client,
@@ -3908,10 +4103,12 @@ static void
 force_min_visible_bars(HildonControlbar *control_bar, gint num_bars)
 {
     GValue val;
+    printf("%s()\n", __PRETTY_FUNCTION__);
     memset(&val, 0, sizeof(val));
     g_value_init(&val, G_TYPE_INT);
     g_value_set_int(&val, num_bars);
     g_object_set_property(G_OBJECT(control_bar), "minimum-visible-bars", &val);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 
@@ -3923,60 +4120,116 @@ struct _ScanInfo {
     GtkWidget *banner;
     GtkListStore *store;
     guint sid;
+    DBusGProxy *req_proxy;
+    DBusGProxy *sig_proxy;
 };
 
-static gboolean
-scan_bluetooth_idle(ScanInfo *scan_info)
+
+static void
+scan_cb_dev_found(DBusGProxy *sig_proxy, const gchar *bda,
+        const gchar *name, gpointer *class, guchar rssi, gint coff,
+        ScanInfo *scan_info)
 {
-    gint devid, num_rsp;
     GtkTreeIter iter;
-    inquiry_info *ii = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    gtk_list_store_append(scan_info->store, &iter);
+    gtk_list_store_set(scan_info->store, &iter,
+            0, g_strdup(bda),
+            1, g_strdup(name),
+            -1);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
 
-    devid = hci_get_route(NULL);
+static void
+scan_cb_search_complete(DBusGProxy *sig_proxy, ScanInfo *scan_info)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    gtk_widget_destroy(scan_info->banner);
+    dbus_g_proxy_disconnect_signal(sig_proxy, BTSEARCH_DEV_FOUND_SIG,
+            G_CALLBACK(scan_cb_dev_found), scan_info);
+    dbus_g_proxy_disconnect_signal(sig_proxy, BTSEARCH_SEARCH_COMPLETE_SIG,
+            G_CALLBACK(scan_cb_search_complete), scan_info);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
 
-    ii = (inquiry_info*)malloc(255 * sizeof(inquiry_info));
-    num_rsp = hci_inquiry(devid, 4, 255, NULL, &ii, IREQ_CACHE_FLUSH);
+static gint
+scan_start_search(ScanInfo *scan_info)
+{
+    GError *error = NULL;
+    DBusGConnection *dbus_conn;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(num_rsp < 0)
+    /* Initialize D-Bus. */
+    if(NULL == (dbus_conn = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error)))
     {
-        gtk_widget_destroy(scan_info->banner);
-        gtk_widget_hide(scan_info->scan_dialog);
-        popup_error(scan_info->settings_dialog,
-                _("An error occurred while scanning."));
+        g_printerr("Failed to open connection to D-Bus: %s.\n",
+                error->message);
+        return 1;
     }
-    else if(num_rsp == 0)
+
+    if(NULL == (scan_info->req_proxy = dbus_g_proxy_new_for_name(dbus_conn,
+            BTSEARCH_SERVICE,
+            BTSEARCH_REQ_PATH,
+            BTSEARCH_REQ_INTERFACE)))
     {
-        gtk_widget_destroy(scan_info->banner);
-        gtk_widget_hide(scan_info->scan_dialog);
-        popup_error(scan_info->settings_dialog,
-                _("No bluetooth devices found."));
+        g_printerr("Failed to create D-Bus request proxy for btsearch.");
+        return 2;
     }
-    else
+
+    if(NULL == (scan_info->sig_proxy = dbus_g_proxy_new_for_name(dbus_conn,
+            BTSEARCH_SERVICE,
+            BTSEARCH_SIG_PATH,
+            BTSEARCH_SIG_INTERFACE)))
     {
-        guint i;
-        gint sock = hci_open_dev(devid);
-        for(i = 0; i < num_rsp; i++)
+        g_printerr("Failed to create D-Bus signal proxy for btsearch.");
+        return 2;
+    }
+
+    dbus_g_object_register_marshaller(
+            g_cclosure_user_marshal_VOID__STRING_STRING_POINTER_UCHAR_UINT,
+            G_TYPE_NONE,
+            G_TYPE_STRING,
+            G_TYPE_STRING,
+            DBUS_TYPE_G_UCHAR_ARRAY,
+            G_TYPE_UCHAR,
+            G_TYPE_UINT,
+            G_TYPE_INVALID);
+
+    dbus_g_proxy_add_signal(scan_info->sig_proxy,
+            BTSEARCH_DEV_FOUND_SIG,
+            G_TYPE_STRING,
+            G_TYPE_STRING,
+            DBUS_TYPE_G_UCHAR_ARRAY,
+            G_TYPE_UCHAR,
+            G_TYPE_UINT,
+            G_TYPE_INVALID);
+    dbus_g_proxy_connect_signal(scan_info->sig_proxy, BTSEARCH_DEV_FOUND_SIG,
+            G_CALLBACK(scan_cb_dev_found), scan_info, NULL);
+
+    dbus_g_proxy_add_signal(scan_info->sig_proxy,
+            BTSEARCH_SEARCH_COMPLETE_SIG,
+            G_TYPE_INVALID);
+    dbus_g_proxy_connect_signal(scan_info->sig_proxy,
+            BTSEARCH_SEARCH_COMPLETE_SIG,
+            G_CALLBACK(scan_cb_search_complete), scan_info, NULL);
+
+    if(!dbus_g_proxy_call(scan_info->req_proxy, BTSEARCH_START_SEARCH_REQ,
+                &error, G_TYPE_INVALID, G_TYPE_INVALID))
+    {
+        if(error->domain == DBUS_GERROR
+                && error->code == DBUS_GERROR_REMOTE_EXCEPTION)
         {
-            gchar addr[19] = { 0 };
-            gchar name[256] = { 0 };
-
-            ba2str(&ii[i].bdaddr, addr);
-            memset(name, 0, sizeof(name));
-            if(hci_read_remote_name(sock, &ii[i].bdaddr, sizeof(name), name,0))
-                strcpy(name, _("Unknown"));
-
-            gtk_list_store_append(scan_info->store, &iter);
-            gtk_list_store_set(scan_info->store, &iter,
-                    0, g_strdup(addr),
-                    1, g_strdup(name),
-                    -1);
+            g_printerr("Caught remote method exception %s: %s",
+                    dbus_g_error_get_name(error),
+                    error->message);
         }
-        close(sock);
-        gtk_widget_destroy(scan_info->banner);
+        else
+            g_printerr("Error: %s\n", error->message);
+        return 3;
     }
-    free(ii);
-    scan_info->sid = 0;
-    return FALSE;
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    return 0;
 }
 
 /**
@@ -3986,7 +4239,7 @@ scan_bluetooth_idle(ScanInfo *scan_info)
 static gboolean
 scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
 {
-    /* Do an hci_inquiry for our boy. */
+    GError *error = NULL;
     GtkWidget *dialog;
     GtkWidget *lst_devices;
     GtkTreeViewColumn *column;
@@ -4001,12 +4254,7 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
 
     scan_info->scan_dialog = dialog;
 
-    scan_info->banner = hildon_banner_show_animation(dialog, NULL,
-            _("Scanning Bluetooth Devices"));
-
     scan_info->store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
-
-    scan_info->sid = g_idle_add((GSourceFunc)scan_bluetooth_idle, scan_info);
 
     gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 300);
 
@@ -4033,7 +4281,17 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
 
     gtk_widget_show_all(dialog);
 
-    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    scan_info->banner = hildon_banner_show_animation(dialog, NULL,
+            _("Scanning Bluetooth Devices"));
+
+    if(scan_start_search(scan_info))
+    {
+        gtk_widget_destroy(scan_info->banner);
+        popup_error(scan_info->settings_dialog,
+                "An error occurred while attempting to scan for "
+                "bluetooth devices.");
+    }
+    else while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
         GtkTreeIter iter;
         if(gtk_tree_selection_get_selected(
@@ -4051,9 +4309,13 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
                     _("Please select a bluetooth device from the list."));
     }
 
-    if(scan_info->sid)
-        g_source_remove(scan_info->sid);
     gtk_widget_destroy(dialog);
+
+    /* Clean up D-Bus. */
+    dbus_g_proxy_call(scan_info->req_proxy, BTSEARCH_STOP_SEARCH_REQ,
+                &error, G_TYPE_INVALID, G_TYPE_INVALID);
+    g_object_unref(scan_info->req_proxy);
+    g_object_unref(scan_info->sig_proxy);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -4110,6 +4372,7 @@ struct _ColorsDialogInfo {
 static gboolean
 settings_dialog_colors_reset(GtkWidget *widget, ColorsDialogInfo *cdi)
 {
+    printf("%s()\n", __PRETTY_FUNCTION__);
     hildon_color_button_set_color(
             HILDON_COLOR_BUTTON(cdi->col_mark),
             &DEFAULT_COLOR_MARK);
@@ -4137,6 +4400,7 @@ settings_dialog_colors_reset(GtkWidget *widget, ColorsDialogInfo *cdi)
     hildon_color_button_set_color(
             HILDON_COLOR_BUTTON(cdi->col_poi),
             &DEFAULT_COLOR_POI);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
@@ -4301,7 +4565,6 @@ settings_dialog()
     GtkWidget *hbox2;
     GtkWidget *label;
     GtkWidget *txt_rcvr_mac;
-    GtkWidget *num_rcvr_chan;
     GtkWidget *num_center_ratio;
     GtkWidget *num_lead_ratio;
     GtkWidget *num_announce_notice;
@@ -4364,22 +4627,12 @@ settings_dialog()
             btn_scan = gtk_button_new_with_label(_("Scan...")),
             FALSE, FALSE, 0);
 
-    /* Receiver Channel. */
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Channel")),
-            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-            1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-    gtk_container_add(GTK_CONTAINER(label),
-            num_rcvr_chan = hildon_number_editor_new(0, 255));
-
     /* Note!. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(
-                _("Note: \"Channel\" refers to the device side!")),
-            0, 2, 2, 3, GTK_FILL, 0, 2, 4);
+                _("Note: For rfcomm, enter the device path "
+                    "(e.g. \"/dev/rfcomm0\") as the MAC")),
+            0, 2, 1, 2, GTK_FILL, 0, 2, 4);
     gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
     gtk_misc_set_alignment(GTK_MISC(label), 0.5f, 0.5f);
 
@@ -4636,8 +4889,6 @@ settings_dialog()
     /* Initialize fields. */
     if(_rcvr_mac)
         gtk_entry_set_text(GTK_ENTRY(txt_rcvr_mac), _rcvr_mac);
-    hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_rcvr_chan),
-            _rcvr_addr.rc_channel);
     if(_poi_db)
         gtk_entry_set_text(GTK_ENTRY(txt_poi_db), _poi_db);
     hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_poi_zoom),
@@ -4705,15 +4956,6 @@ settings_dialog()
             /* User specified a new rcvr mac. */
             g_free(_rcvr_mac);
             _rcvr_mac = g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_rcvr_mac)));
-            str2ba(_rcvr_mac, &_rcvr_addr.rc_bdaddr);
-            rcvr_changed = TRUE;
-        }
-
-        if(_rcvr_addr.rc_channel != hildon_number_editor_get_value(
-                    HILDON_NUMBER_EDITOR(num_rcvr_chan)))
-        {
-            _rcvr_addr.rc_channel = hildon_number_editor_get_value(
-                    HILDON_NUMBER_EDITOR(num_rcvr_chan));
             rcvr_changed = TRUE;
         }
 
@@ -4924,16 +5166,7 @@ config_init()
     {
         _rcvr_mac = gconf_client_get_string(
                 gconf_client, GCONF_KEY_RCVR_MAC, NULL);
-        if(_rcvr_mac)
-            str2ba(_rcvr_mac, &_rcvr_addr.rc_bdaddr);
     }
-
-    /* Get Receiver Channel from GConf.  Default is 1. */
-    _rcvr_addr.rc_family = AF_BLUETOOTH;
-    _rcvr_addr.rc_channel = gconf_client_get_int(gconf_client,
-            GCONF_KEY_RCVR_CHAN, NULL);
-    if(_rcvr_addr.rc_channel < 1)
-        _rcvr_addr.rc_channel = 1;
 
     /* Get Auto-Download.  Default is FALSE. */
     _auto_download = gconf_client_get_bool(gconf_client,
@@ -5857,6 +6090,7 @@ map_pixbuf_scale_inplace(GdkPixbuf* pixbuf, guint ratio_p2,
 static GdkPixbuf*
 pixbuf_trim(GdkPixbuf* pixbuf)
 {
+    vprintf("%s()\n", __PRETTY_FUNCTION__);
     GdkPixbuf* mpixbuf = gdk_pixbuf_new(
             GDK_COLORSPACE_RGB, gdk_pixbuf_get_has_alpha(pixbuf),
             8, TILE_SIZE_PIXELS, TILE_SIZE_PIXELS);
@@ -5869,6 +6103,7 @@ pixbuf_trim(GdkPixbuf* pixbuf)
             0, 0);
 
     g_object_unref(pixbuf);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return mpixbuf;
 }
 
@@ -5890,6 +6125,7 @@ map_convert_wms_to_wms(gint tilex, gint tiley, gint zoomlevel, gchar* uri)
     gchar *heightstr  = strcasestr(uri,"HEIGHT=");
     gchar *srsstr     = strcasestr(uri,"SRS=EPSG");
     gchar *srsstre    = strchr(srsstr,'&');
+    vprintf("%s()\n", __PRETTY_FUNCTION__);
 
     /* missing: test if found */
     strcpy(srs,"epsg");
@@ -5923,10 +6159,10 @@ map_convert_wms_to_wms(gint tilex, gint tiley, gint zoomlevel, gchar* uri)
     system(cmd);
 
     if(!(in = g_fopen("/tmp/tmpcs2cs","r")))
-        fprintf(stderr, "Cannot open results of conversion\n");
+        g_printerr("Cannot open results of conversion\n");
     else if(5 != fscanf(in,"%f %f %s %f %f", &lon1, &lat1, cmd, &lon2, &lat2))
     {
-        fprintf(stderr, "Wrong conversion\n");
+        g_printerr("Wrong conversion\n");
         fclose(in);
     }
     else
@@ -5936,6 +6172,8 @@ map_convert_wms_to_wms(gint tilex, gint tiley, gint zoomlevel, gchar* uri)
     }
 
     setlocale(LC_NUMERIC, "");
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return ret;
 }
 
@@ -5951,6 +6189,8 @@ map_convert_coords_to_quadtree_string(
     static const gchar *const quadrant = "qrts";
     gchar *ptr = buffer;
     gint n;
+    vprintf("%s()\n", __PRETTY_FUNCTION__);
+
     *ptr++ = 't';
     for(n = 16 - zoomlevel; n >= 0; n--)
     {
@@ -5959,6 +6199,7 @@ map_convert_coords_to_quadtree_string(
         *ptr++ = quadrant[xbit + 2 * ybit];
     }
     *ptr++ = '\0';
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 /**
@@ -5970,6 +6211,7 @@ map_convert_coords_to_quadtree_string(
 static gchar*
 map_construct_url(guint tilex, guint tiley, guint zoom)
 {
+    vprintf("%s()\n", __PRETTY_FUNCTION__);
     if(strstr(_curr_repo->url, "%s"))
     {
         /* This is a satellite-map URI. */
@@ -5985,6 +6227,7 @@ map_construct_url(guint tilex, guint tiley, guint zoom)
     else
         /* This is a street-map URI. */
         return g_strdup_printf(_curr_repo->url, tilex, tiley, zoom);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 /**
@@ -6049,6 +6292,7 @@ map_render_poi()
     gint nRow, nColumn, row, poix, poiy;
     GdkPixbuf *pixbuf = NULL;
     GError *error = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(_db && _poi_zoom > _zoom)
     {
@@ -6421,9 +6665,13 @@ curl_download_timeout()
                 fclose(pui->file);
                 if(msg->data.result != CURLE_OK)
                 {
-                    MACRO_BANNER_SHOW_INFO(_window,
+                    if(!pui->retries)
+                    {
+                        /* No more retries left - something must be wrong. */
+                        MACRO_BANNER_SHOW_INFO(_window,
                             _("Error in download.  Check internet connection"
                                 " and/or URL Format."));
+                    }
                     g_unlink(pui->dest_str); /* Delete so we try again. */
                 }
                 curl_multi_remove_handle(_curl_multi, msg->easy_handle);
@@ -7023,7 +7271,11 @@ get_connection_status_signal_cb(DBusConnection *connection,
     if(!dbus_message_is_signal(message,
                 ICD_DBUS_INTERFACE,
                 ICD_STATUS_CHANGED_SIG))
+    {
+        vprintf("%s(): return DBUS_HANDLER_RESULT_NOT_YET_HANDLED\n",
+                __PRETTY_FUNCTION__);
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+    }
 
     if(!dbus_message_get_args(message, NULL,
                 DBUS_TYPE_STRING, &iap_name,
@@ -7031,6 +7283,8 @@ get_connection_status_signal_cb(DBusConnection *connection,
                 DBUS_TYPE_STRING, &iap_state,
                 DBUS_TYPE_INVALID))
     {
+        vprintf("%s(): return DBUS_HANDLER_RESULT_NOT_YET_HANDLED\n",
+                __PRETTY_FUNCTION__);
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
     }
 
@@ -7056,12 +7310,15 @@ get_connection_status_signal_cb(DBusConnection *connection,
         }
     }
 
+    vprintf("%s(): return DBUS_HANDLER_RESULT_HANDLED\n",
+            __PRETTY_FUNCTION__);
     return DBUS_HANDLER_RESULT_HANDLED;
 }
 
 static void
 iap_callback(struct iap_event_t *event, void *arg)
 {
+    printf("%s()\n", __PRETTY_FUNCTION__);
     _iap_connecting = FALSE;
     if(event->type == OSSO_IAP_CONNECTED && !_iap_connected)
     {
@@ -7071,6 +7328,7 @@ iap_callback(struct iap_event_t *event, void *arg)
             _curl_sid = g_timeout_add(100,
                     (GSourceFunc)curl_download_timeout, NULL);
     }
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 /**
@@ -7311,6 +7569,31 @@ maemo_mapper_init(gint argc, gchar **argv)
                     NULL, NULL);
     }
     osso_iap_cb(iap_callback);
+
+    {
+        DBusGConnection *dbus_conn;
+        GError *error = NULL;
+
+        /* Initialize D-Bus. */
+        if(NULL == (dbus_conn = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error)))
+        {
+            g_printerr("Failed to open connection to D-Bus: %s.\n",
+                    error->message);
+            set_conn_state(RCVR_DOWN);
+        }
+
+        if(NULL == (_rfcomm_req_proxy = dbus_g_proxy_new_for_name(
+                        dbus_conn,
+                        BTCOND_SERVICE,
+                        BTCOND_REQ_PATH,
+                        BTCOND_REQ_INTERFACE)))
+        {
+            g_printerr("Failed to open connection to D-Bus: %s.\n",
+                    error->message);
+            set_conn_state(RCVR_DOWN);
+        }
+    }
+
 #ifdef DEBUG
     _iap_connected = TRUE;
 #endif
@@ -7347,7 +7630,7 @@ main(gint argc, gchar *argv[])
     _osso = osso_initialize("com.gnuite.maemo_mapper", VERSION, TRUE, NULL);
     if(!_osso)
     {
-        fprintf(stderr, "osso_initialize failed.\n");
+        g_printerr("osso_initialize failed.\n");
         return 1;
     }
 
@@ -7367,7 +7650,7 @@ main(gint argc, gchar *argv[])
 
     if(OSSO_OK != osso_rpc_set_default_cb_f(_osso, dbus_cb_default, NULL))
     {
-        fprintf(stderr, "osso_rpc_set_default_cb_f failed.\n");
+        g_printerr("osso_rpc_set_default_cb_f failed.\n");
         return 1;
     }
 
@@ -7468,6 +7751,7 @@ osso_cb_hw_state(osso_hw_state_t *state, gpointer data)
 static gboolean
 key_zoom_timeout()
 {
+    printf("%s()\n", __PRETTY_FUNCTION__);
     if(_key_zoom_new < _zoom)
     {
         /* We're currently zooming in (_zoom is decreasing). */
@@ -7498,12 +7782,14 @@ key_zoom_timeout()
                 "%s %d", _("Zoom to Level"), _key_zoom_new);
         MACRO_BANNER_SHOW_INFO(_window, buffer);
     }
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
 static void
 reset_bluetooth()
 {
+    printf("%s()\n", __PRETTY_FUNCTION__);
     if(system("/usr/bin/sudo -l | grep -q '/usr/sbin/hciconfig  *hci0  *reset'"
             " && sudo /usr/sbin/hciconfig hci0 reset"))
         popup_error(_window,
@@ -7513,8 +7799,9 @@ reset_bluetooth()
     else if(_conn_state > RCVR_OFF)
     {
         set_conn_state(RCVR_DOWN);
-        rcvr_connect_now();
+        rcvr_connect_later();
     }
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 static gboolean
@@ -7647,6 +7934,7 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
         default:
             return FALSE;
     }
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 static gboolean
@@ -7669,6 +7957,7 @@ window_cb_key_release(GtkWidget* widget, GdkEventKey *event)
         default:
             return FALSE;
     }
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 static gboolean
@@ -7704,6 +7993,7 @@ sat_panel_expose(GtkWidget *widget, GdkEventExpose *event)
     PangoFontDescription *fontdesc = NULL;
     gchar *tmp = NULL;
     guint x, y;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     draw_sat_info(widget,
         0, 0,
@@ -7746,6 +8036,7 @@ sat_panel_expose(GtkWidget *widget, GdkEventExpose *event)
     pango_font_description_free(fontdesc);
     g_object_unref(layout);
 
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
@@ -7759,6 +8050,7 @@ heading_panel_expose(GtkWidget *widget, GdkEventExpose *event)
     PangoContext            *context=NULL;
     PangoLayout             *layout=NULL;
     PangoFontDescription    *fontdesc=NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     size = MIN(widget->allocation.width, widget->allocation.height);
     if(widget->allocation.width > widget->allocation.height)
@@ -7887,6 +8179,7 @@ heading_panel_expose(GtkWidget *widget, GdkEventExpose *event)
     pango_font_description_free (fontdesc);
     g_object_unref (layout);
 
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
@@ -7969,7 +8262,7 @@ channel_cb_error(GIOChannel *src, GIOCondition condition, gpointer data)
     {
         set_conn_state(RCVR_DOWN);
         gps_hide_text();
-        rcvr_connect_now();
+        rcvr_connect_later();
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -7979,26 +8272,11 @@ channel_cb_error(GIOChannel *src, GIOCondition condition, gpointer data)
 static gboolean
 channel_cb_connect(GIOChannel *src, GIOCondition condition, gpointer data)
 {
-    gint error, size = sizeof(error);
     printf("%s(%d)\n", __PRETTY_FUNCTION__, condition);
 
-    if(*_rcvr_mac != '/'
-            && (getsockopt(_fd, SOL_SOCKET, SO_ERROR, &error, &size) || error))
-    {
-        printf("%s(): Error connecting to receiver; retrying...\n",
-                __PRETTY_FUNCTION__);
-        /* Try again. */
-        rcvr_disconnect();
-        rcvr_connect_later();
-    }
-    else
-    {
-        printf("%s(): Connected to receiver!\n",
-                __PRETTY_FUNCTION__);
-        set_conn_state(RCVR_UP);
-        _input_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
-                G_IO_IN | G_IO_PRI, channel_cb_input, NULL, NULL);
-    }
+    set_conn_state(RCVR_UP);
+    _input_sid = g_io_add_watch_full(_channel, G_PRIORITY_HIGH_IDLE,
+            G_IO_IN | G_IO_PRI, channel_cb_input, NULL, NULL);
 
     _connect_sid = 0;
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -8010,7 +8288,7 @@ channel_cb_connect(GIOChannel *src, GIOCondition condition, gpointer data)
     (tofill) = strtol((str), &error_check, 10); \
     if(error_check == (str)) \
     { \
-        fprintf(stderr, "Line %d: Failed to parse string as int: %s\n", \
+        g_printerr("Line %d: Failed to parse string as int: %s\n", \
                 __LINE__, str); \
         MACRO_BANNER_SHOW_INFO(_window, \
                 _("Invalid NMEA input from receiver!")); \
@@ -8022,7 +8300,7 @@ channel_cb_connect(GIOChannel *src, GIOCondition condition, gpointer data)
     (tofill) = g_ascii_strtod((str), &error_check); \
     if(error_check == (str)) \
     { \
-        fprintf(stderr, "Failed to parse string as float: %s\n", str); \
+        g_printerr("Failed to parse string as float: %s\n", str); \
         MACRO_BANNER_SHOW_INFO(_window, \
                 _("Invalid NMEA input from receiver!")); \
         return; \
@@ -8442,7 +8720,7 @@ channel_cb_input(GIOChannel *src, GIOCondition condition, gpointer data)
                 else
                 {
                     /* There was a checksum, and it was bad. */
-                    fprintf(stderr, "%s: Bad checksum in NMEA sentence:\n%s\n",
+                    g_printerr("%s: Bad checksum in NMEA sentence:\n%s\n",
                             __PRETTY_FUNCTION__, _gps_read_buf);
                 }
             }
@@ -8718,7 +8996,9 @@ route_download(gchar *from, gchar *to, gboolean from_here)
 static gboolean
 menu_cb_route_download(GtkAction *action)
 {
+    printf("%s()\n", __PRETTY_FUNCTION__);
     route_download(NULL, NULL, FALSE);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
@@ -9749,6 +10029,7 @@ static void mapman_update_state(GtkWidget *widget, MapmanInfo *mapman_info)
     gtk_widget_set_sensitive(mapman_info->num_route_radius,
             gtk_toggle_button_get_active(
                 GTK_TOGGLE_BUTTON(mapman_info->rad_by_route)));
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 static gboolean
@@ -10303,6 +10584,7 @@ find_nearest_visible_waypoint(guint unitx, guint unity)
     WayPoint *wnear;
     guint nearest_squared;
     Point pos = { unitx, unity };
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     wcurr = wnear = _visible_way_first;
     if(wcurr && wcurr != _visible_way_last)
@@ -10319,6 +10601,7 @@ find_nearest_visible_waypoint(guint unitx, guint unity)
             }
         }
     }
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return wnear;
 }
 
@@ -10540,6 +10823,7 @@ category_delete(GtkWidget *widget, DeletePOI *dpoi)
     GtkWidget *dialog;
     guint i;
     gchar *buffer;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     buffer = g_strdup_printf("%s\n\t%s\n%s",
             _("Delete category?"),
@@ -10609,7 +10893,7 @@ category_dialog(guint cat_id)
                     &pszResult, &nRow, &nColumn, NULL,
                     cat_id))
         {
-            printf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+            vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
             return FALSE;
         }
 
@@ -10809,6 +11093,7 @@ generate_store()
     GtkListStore *store;
     gchar **pszResult;
     gint nRow, nColumn;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(SQLITE_OK != sqlite_get_table(_db,
                 "select c.cat_id, c.enabled, c.label, c.desc"
@@ -10816,7 +11101,7 @@ generate_store()
                 " order by c.label",
                 &pszResult, &nRow, &nColumn, NULL))
     {
-        printf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return NULL;
     }
 
@@ -11143,7 +11428,10 @@ poi_populate_cat_combo(GtkWidget *cmb_category, guint cat_id)
     gchar **pszResult;
     gint nRow, nColumn, row;
     guint i, catindex = 0;
-    gint n_children = gtk_tree_model_iter_n_children(
+    gint n_children;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    n_children = gtk_tree_model_iter_n_children(
             gtk_combo_box_get_model(GTK_COMBO_BOX(cmb_category)), NULL);
 
     for(i = 0; i < n_children; i++)
@@ -11163,6 +11451,7 @@ poi_populate_cat_combo(GtkWidget *cmb_category, guint cat_id)
         sqlite_free_table(pszResult);
     }
     gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_category), catindex);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 typedef struct _PoiCategoryEditInfo PoiCategoryEditInfo;
@@ -11175,8 +11464,10 @@ struct _PoiCategoryEditInfo
 static gboolean
 poi_edit_cat(GtkWidget *widget, PoiCategoryEditInfo *data)
 {
+    printf("%s()\n", __PRETTY_FUNCTION__);
     if(category_list())
         poi_populate_cat_combo(data->cmb_category, data->cat_id);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
@@ -11251,7 +11542,7 @@ poi_dialog(guint action)
                     &pszResult, &nRow, &nColumn, NULL,
                     slat1, slat2, slon1, slon2))
         {
-            printf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+            vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
             return FALSE;
         }
 
