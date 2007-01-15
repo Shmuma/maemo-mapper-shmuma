@@ -4631,7 +4631,7 @@ settings_dialog()
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(
                 _("Note: For rfcomm, enter the device path "
-                    "(e.g. \"/dev/rfcomm0\") as the MAC")),
+                    "(e.g. \"/dev/rfcomm0\").")),
             0, 2, 1, 2, GTK_FILL, 0, 2, 4);
     gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
     gtk_misc_set_alignment(GTK_MISC(label), 0.5f, 0.5f);
