@@ -3525,6 +3525,7 @@ rcvr_disconnect()
                     G_TYPE_STRING, "SPP",
                     G_TYPE_INVALID,
                     G_TYPE_INVALID);
+        error = NULL;
         dbus_g_proxy_call(_rfcomm_req_proxy, BTCOND_RFCOMM_DISCONNECT_REQ,
                     &error,
                     G_TYPE_STRING, _rcvr_mac,
@@ -4213,6 +4214,7 @@ scan_start_search(ScanInfo *scan_info)
             BTSEARCH_SEARCH_COMPLETE_SIG,
             G_CALLBACK(scan_cb_search_complete), scan_info, NULL);
 
+    error = NULL;
     if(!dbus_g_proxy_call(scan_info->req_proxy, BTSEARCH_START_SEARCH_REQ,
                 &error, G_TYPE_INVALID, G_TYPE_INVALID))
     {
@@ -7579,7 +7581,7 @@ maemo_mapper_init(gint argc, gchar **argv)
         {
             g_printerr("Failed to open connection to D-Bus: %s.\n",
                     error->message);
-            set_conn_state(RCVR_DOWN);
+            error = NULL;
         }
 
         if(NULL == (_rfcomm_req_proxy = dbus_g_proxy_new_for_name(
@@ -7588,9 +7590,8 @@ maemo_mapper_init(gint argc, gchar **argv)
                         BTCOND_REQ_PATH,
                         BTCOND_REQ_INTERFACE)))
         {
-            g_printerr("Failed to open connection to D-Bus: %s.\n",
-                    error->message);
-            set_conn_state(RCVR_DOWN);
+            g_printerr("Failed to open connection to %s.\n",
+                    BTCOND_REQ_INTERFACE);
         }
     }
 
