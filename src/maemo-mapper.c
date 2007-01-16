@@ -2242,7 +2242,7 @@ gps_display_details(void)
             case 4 : buffer = g_strdup_printf(_("Real Time Kinematic")); break;
             case 5 : buffer = g_strdup_printf(_("Float RTK")); break;
             case 6 : buffer = g_strdup_printf(_("Estimated")); break;
-            case 7 : buffer = g_strdup_printf(_("Manual)")); break;
+            case 7 : buffer = g_strdup_printf(_("Manual")); break;
             case 8 : buffer = g_strdup_printf(_("Simulation")); break;
             default : buffer = g_strdup_printf(_("none")); break;
         }
@@ -4284,7 +4284,7 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
     gtk_widget_show_all(dialog);
 
     scan_info->banner = hildon_banner_show_animation(dialog, NULL,
-            _("Scanning Bluetooth Devices"));
+            _("Scanning for Bluetooth Devices"));
 
     if(scan_start_search(scan_info))
     {
@@ -4632,7 +4632,7 @@ settings_dialog()
     /* Note!. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(
-                _("Note: For rfcomm, enter the device path "
+                _("Note: For manual rfcomm, enter a device path\n"
                     "(e.g. \"/dev/rfcomm0\").")),
             0, 2, 1, 2, GTK_FILL, 0, 2, 4);
     gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
@@ -10144,7 +10144,7 @@ menu_cb_mapman(GtkAction *action)
             FALSE, FALSE, GTK_PACK_START);
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(
-                _("Zoom Levels to Download: (0 -> most detail)")),
+                _("Zoom Levels to Download: (0 = most detail)")),
             0, 4, 0, 1, GTK_FILL, 0, 4, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
     for(i = 0; i < MAX_ZOOM; i++)
