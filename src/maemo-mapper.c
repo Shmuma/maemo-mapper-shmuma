@@ -192,6 +192,7 @@
 #define GCONF_KEY_REPOSITORIES GCONF_KEY_PREFIX"/repositories"
 #define GCONF_KEY_CURRREPO GCONF_KEY_PREFIX"/curr_repo"
 #define GCONF_KEY_GPS_INFO GCONF_KEY_PREFIX"/gps_info"
+#define GCONF_KEY_ROUTE_DL_URL GCONF_KEY_PREFIX"/route_dl_url"
 #define GCONF_KEY_ROUTE_DL_RADIUS GCONF_KEY_PREFIX"/route_dl_radius"
 #define GCONF_KEY_DEG_FORMAT GCONF_KEY_PREFIX"/deg_format"
 
@@ -1053,6 +1054,7 @@ static CenterMode _center_mode = CENTER_LEAD;
 static gboolean _fullscreen = FALSE;
 static gboolean _enable_gps = FALSE;
 static gboolean _gps_info = FALSE;
+static gchar *_route_dl_url = NULL;
 static guint _route_dl_radius = 4;
 static gint _show_tracks = 0;
 static gboolean _show_velvec = TRUE;
@@ -1754,8 +1756,6 @@ gpx_end_element(SaxData *data, const xmlChar *name)
                     = g_ascii_strtod(data->chars->str, &error_check);
                 if(error_check == data->chars->str)
                     data->path.path.track.tail->altitude = NAN;
-                printf("str: %s\n", data->chars->str);
-                printf("alt: %f\n", data->path.path.track.tail->altitude);
                 data->state = INSIDE_PATH_POINT;
                 g_string_free(data->chars, TRUE);
                 data->chars = g_string_new("");
@@ -3392,6 +3392,7 @@ map_render_paths()
 static void
 track_add(time_t time, gboolean newly_fixed)
 {
+    gboolean show_directions = TRUE;
     Point pos = (time == 0 ? _pos_null : _pos);
     printf("%s(%u, %u)\n", __PRETTY_FUNCTION__, pos.unitx, pos.unity);
 
@@ -3435,7 +3436,10 @@ track_add(time_t time, gboolean newly_fixed)
         if(_autoroute_data.enabled && !_autoroute_data.in_progress
                 && _near_point_dist_rough > 400)
         {
+            MACRO_BANNER_SHOW_INFO(_window,
+                    "Recalculating directions...");
             _autoroute_data.in_progress = TRUE;
+            show_directions = FALSE;
             g_idle_add((GSourceFunc)auto_route_dl_idle, NULL);
         }
 
@@ -3444,7 +3448,7 @@ track_add(time_t time, gboolean newly_fixed)
     }
 
     /* Check if we should announce upcoming waypoints. */
-    if(time && _next_way_dist_rough
+    if(show_directions && time && _next_way_dist_rough
             < (20 + (guint)_gps.speed) * _announce_notice_ratio * 3)
     {
         if(_enable_voice && strcmp(_next_way->desc, _last_spoken_phrase))
@@ -3817,7 +3821,7 @@ config_save()
         gconf_client_unset(gconf_client,
                 GCONF_KEY_RCVR_MAC, NULL);
 
-    /* Save Map Download URI Format. */
+    /* Save Map Download URL Format. */
     gconf_client_set_string(gconf_client,
             GCONF_KEY_MAP_URI_FORMAT, _curr_repo->url, NULL);
 
@@ -3984,6 +3988,10 @@ config_save()
     /* Save GPS Info flag. */
     gconf_client_set_bool(gconf_client,
             GCONF_KEY_GPS_INFO, _gps_info, NULL);
+
+    /* Save Route Download URL Format. */
+    gconf_client_set_string(gconf_client,
+            GCONF_KEY_ROUTE_DL_URL, _route_dl_url, NULL);
 
     /* Save Route Download Radius. */
     gconf_client_set_int(gconf_client,
@@ -5391,7 +5399,7 @@ config_init()
             repo->cache_dir = gnome_vfs_expand_initial_tilde(
                     "~/MyDocs/.documents/Maps");
 
-        /* Get Map Download URI Format.  Default is "". */
+        /* Get Map Download URL Format.  Default is "". */
         repo->url = gconf_client_get_string(gconf_client,
                 GCONF_KEY_MAP_URI_FORMAT, NULL);
         if(!repo->url)
@@ -5526,6 +5534,14 @@ config_init()
     }
     else
         _gps_info = FALSE;
+
+    /* Get Route Download URL.  Default is:
+     * "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s&daddr=%s" */
+    _route_dl_url = gconf_client_get_string(gconf_client,
+            GCONF_KEY_ROUTE_DL_URL, NULL);
+    if(_route_dl_url == NULL)
+        _route_dl_url = g_strdup(
+                "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s&daddr=%s");
 
     /* Get Route Download Radius.  Default is 4. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ROUTE_DL_RADIUS, NULL);
@@ -6185,15 +6201,17 @@ map_convert_wms_to_wms(gint tilex, gint tiley, gint zoomlevel, gchar* uri)
  * quadtree coordinates to buffer.
  */
 static void
-map_convert_coords_to_quadtree_string(
-        gint x, gint y, gint zoomlevel, gchar *buffer)
+map_convert_coords_to_quadtree_string(gint x, gint y, gint zoomlevel,
+                                      gchar *buffer, const gchar initial,
+                                      const gchar *const quadrant)
 {
-    static const gchar *const quadrant = "qrts";
     gchar *ptr = buffer;
     gint n;
     vprintf("%s()\n", __PRETTY_FUNCTION__);
 
-    *ptr++ = 't';
+    if (initial)
+        *ptr++ = initial;
+
     for(n = 16 - zoomlevel; n >= 0; n--)
     {
         gint xbit = (x >> n) & 1;
@@ -6216,9 +6234,18 @@ map_construct_url(guint tilex, guint tiley, guint zoom)
     vprintf("%s()\n", __PRETTY_FUNCTION__);
     if(strstr(_curr_repo->url, "%s"))
     {
-        /* This is a satellite-map URI. */
+        /* This is a qrts-based quadtree URI. */
         gchar location[MAX_ZOOM + 2];
-        map_convert_coords_to_quadtree_string(tilex, tiley, zoom, location);
+        map_convert_coords_to_quadtree_string(tilex, tiley, zoom, location,
+                                              't', "qrts");
+        return g_strdup_printf(_curr_repo->url, location);
+    }
+    else if(strstr(_curr_repo->url, "%0s"))
+    {
+        /* This is a zero-based quadtree URI. */
+        gchar location[MAX_ZOOM + 2];
+        map_convert_coords_to_quadtree_string(tilex, tiley, zoom, location,
+                                              '\0', "0123");
         return g_strdup_printf(_curr_repo->url, location);
     }
     else if(strstr(_curr_repo->url, "SERVICE=WMS"))
@@ -6227,7 +6254,7 @@ map_construct_url(guint tilex, guint tiley, guint zoom)
         return map_convert_wms_to_wms(tilex, tiley, zoom, _curr_repo->url);
     }
     else
-        /* This is a street-map URI. */
+        /* This is a standard x/y/z URI. */
         return g_strdup_printf(_curr_repo->url, tilex, tiley, zoom);
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -6537,6 +6564,13 @@ map_download_idle_refresh(ProgressUpdateInfo *pui)
             /* Don't do anything else. */
             return FALSE;
         }
+        else
+        {
+            /* No more retries left - something must be wrong. */
+            MACRO_BANNER_SHOW_INFO(_window,
+                    _("Error in download.  Check internet connection"
+                        " and/or Map Repository URL Format."));
+        }
     }
 
     /* removal automatically calls progress_update_info_free(). */
@@ -6594,19 +6628,22 @@ get_next_pui(gpointer key, gpointer value, ProgressUpdateInfo **data)
  * Cancel the current auto-route.
  */
 static void
-cancel_autoroute()
+cancel_autoroute(gboolean temporary)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(_autoroute_data.enabled)
     {
-        _autoroute_data.enabled = FALSE;
+        if(!temporary)
+        {
+            _autoroute_data.enabled = FALSE;
 
-        g_free(_autoroute_data.dest);
-        _autoroute_data.dest = NULL;
+            g_free(_autoroute_data.dest);
+            _autoroute_data.dest = NULL;
 
-        g_free(_autoroute_data.src_str);
-        _autoroute_data.src_str = NULL;
+            g_free(_autoroute_data.src_str);
+            _autoroute_data.src_str = NULL;
+        }
 
         if(_autoroute_data.curl_easy)
         {
@@ -6656,7 +6693,7 @@ curl_download_timeout()
                     route_find_nearest_point();
                     map_force_redraw();
                 }
-                cancel_autoroute(); /* We're done. Clean up. */
+                cancel_autoroute(TRUE); /* We're done. Clean up. */
             }
             else
             {
@@ -6666,16 +6703,7 @@ curl_download_timeout()
                 g_hash_table_remove(_pui_by_easy, msg->easy_handle);
                 fclose(pui->file);
                 if(msg->data.result != CURLE_OK)
-                {
-                    if(!pui->retries)
-                    {
-                        /* No more retries left - something must be wrong. */
-                        MACRO_BANNER_SHOW_INFO(_window,
-                            _("Error in download.  Check internet connection"
-                                " and/or URL Format."));
-                    }
                     g_unlink(pui->dest_str); /* Delete so we try again. */
-                }
                 curl_multi_remove_handle(_curl_multi, msg->easy_handle);
                 g_idle_add_full(G_PRIORITY_HIGH_IDLE,
                         (GSourceFunc)map_download_idle_refresh, pui, NULL);
@@ -7160,15 +7188,16 @@ route_dl_cb_read(void *ptr, size_t size, size_t nmemb,
 static gboolean
 auto_route_dl_idle()
 {
-    gchar latstr[32], lonstr[32];
-    vprintf("%s(%f, %f, %s)\n", __PRETTY_FUNCTION__,
+    gchar latstr[32], lonstr[32], *latlonstr;
+    printf("%s(%f, %f, %s)\n", __PRETTY_FUNCTION__,
             _gps.latitude, _gps.longitude, _autoroute_data.dest);
 
     g_ascii_dtostr(latstr, 32, _gps.latitude);
     g_ascii_dtostr(lonstr, 32, _gps.longitude);
+    latlonstr = g_strdup_printf("%s,%s", latstr, lonstr);
     _autoroute_data.src_str = g_strdup_printf(
-            "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s,%s&daddr=%s",
-            latstr, lonstr, _autoroute_data.dest);
+            _route_dl_url, latlonstr, _autoroute_data.dest);
+    g_free(latlonstr);
 
     MACRO_CURL_EASY_INIT(_autoroute_data.curl_easy);
     curl_easy_setopt(_autoroute_data.curl_easy, CURLOPT_URL,
@@ -8795,6 +8824,7 @@ route_download(gchar *from, gchar *to, gboolean from_here)
     GtkWidget *dialog;
     GtkWidget *table;
     GtkWidget *label;
+    GtkWidget *txt_source_url;
     GtkWidget *chk_gps;
     GtkWidget *chk_auto;
     GtkWidget *txt_from;
@@ -8827,10 +8857,20 @@ route_download(gchar *from, gchar *to, gboolean from_here)
     gtk_entry_completion_set_model(to_comp, GTK_TREE_MODEL(_loc_model));
     gtk_entry_completion_set_text_column(to_comp, 0);
 
+    /* Origin. */
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Source URL")),
+            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            txt_source_url = gtk_entry_new(),
+            1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_entry_set_width_chars(GTK_ENTRY(txt_source_url), 25);
+
     /* Auto. */
     gtk_table_attach(GTK_TABLE(table),
             hbox = gtk_hbox_new(FALSE, 6),
-            0, 2, 0, 1, 0, 0, 2, 4);
+            0, 2, 1, 2, 0, 0, 2, 4);
     gtk_box_pack_start(GTK_BOX(hbox),
             chk_gps = gtk_check_button_new_with_label(
                 _("Use GPS Location")),
@@ -8844,22 +8884,22 @@ route_download(gchar *from, gchar *to, gboolean from_here)
     /* Origin. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(_("Origin")),
-            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+            0, 1, 2, 3, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
             txt_from = gtk_entry_new(),
-            1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+            1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     gtk_entry_set_completion(GTK_ENTRY(txt_from), from_comp);
     gtk_entry_set_width_chars(GTK_ENTRY(txt_from), 25);
 
     /* Destination. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(_("Destination")),
-            0, 1, 2, 3, GTK_FILL, 0, 2, 4);
+            0, 1, 3, 4, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
             txt_to = gtk_entry_new(),
-            1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+            1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     gtk_entry_set_completion(GTK_ENTRY(txt_to), to_comp);
     gtk_entry_set_width_chars(GTK_ENTRY(txt_to), 25);
 
@@ -8869,8 +8909,10 @@ route_download(gchar *from, gchar *to, gboolean from_here)
                       G_CALLBACK(gps_toggled_auto), chk_auto);
 
     /* Initialize fields. */
+    gtk_entry_set_text(GTK_ENTRY(txt_source_url), _route_dl_url);
     gtk_entry_set_text(GTK_ENTRY(txt_from), (from ? from : ""));
     gtk_entry_set_text(GTK_ENTRY(txt_to), (to ? to : ""));
+    gtk_widget_grab_focus(txt_from);
 
     if(from_here)
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_gps), TRUE);
@@ -8882,8 +8924,20 @@ route_download(gchar *from, gchar *to, gboolean from_here)
         CURL *curl_easy;
         RouteDownloadData rdl_data = {0, 0};
         gchar buffer[BUFFER_SIZE];
-        const gchar *from, *to;
+        const gchar *source_url, *from, *to;
         gchar *from_escaped, *to_escaped;
+
+        source_url = gtk_entry_get_text(GTK_ENTRY(txt_source_url));
+        if(!strlen(source_url))
+        {
+            popup_error(dialog, _("Please specify a source URL."));
+            continue;
+        }
+        else
+        {
+            g_free(_route_dl_url);
+            _route_dl_url = g_strdup(source_url);
+        }
 
         from = gtk_entry_get_text(GTK_ENTRY(txt_from));
         if(!strlen(from))
@@ -8901,9 +8955,7 @@ route_download(gchar *from, gchar *to, gboolean from_here)
 
         from_escaped = gnome_vfs_escape_string(from);
         to_escaped = gnome_vfs_escape_string(to);
-        snprintf(buffer, sizeof(buffer),
-                "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s&daddr=%s",
-                from_escaped, to_escaped);
+        snprintf(buffer, sizeof(buffer), source_url, from_escaped, to_escaped);
         g_free(from_escaped);
         g_free(to_escaped);
 
@@ -8944,7 +8996,7 @@ route_download(gchar *from, gchar *to, gboolean from_here)
             route_find_nearest_point();
 
             /* Cancel any autoroute that might be occurring. */
-            cancel_autoroute();
+            cancel_autoroute(FALSE);
 
             map_force_redraw();
 
@@ -9016,7 +9068,7 @@ menu_cb_route_open(GtkAction *action)
         /* If auto is enabled, append the route, otherwise replace it. */
         if(parse_route_gpx(buffer, size, _autoroute_data.enabled ? 0 : 1))
         {
-            cancel_autoroute();
+            cancel_autoroute(FALSE);
 
             /* Find the nearest route point, if we're connected. */
             route_find_nearest_point();
@@ -9056,7 +9108,7 @@ menu_cb_route_clear(GtkAction *action)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     _next_way_dist_rough = -1; /* to avoid announcement attempts. */
-    cancel_autoroute();
+    cancel_autoroute(FALSE);
     MACRO_CLEAR_TRACK(_route);
     map_force_redraw();
 
@@ -9470,7 +9522,7 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
 
     /* Map download URI. */
     gtk_table_attach(GTK_TABLE(rei->page_table),
-            label = gtk_label_new(_("URI Format")),
+            label = gtk_label_new(_("URL Format")),
             0, 1, 0, 1, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(rei->page_table),
