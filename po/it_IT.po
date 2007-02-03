@@ -92,9 +92,9 @@ msgid "Auto-Update"
 msgstr "Aggiornamento automatico"
 
 #: po/../src/maemo-mapper.c:7395
-#, fuzzy
 msgid "Bottom-Left"
-msgstr "Inferiore destra"
+msgstr "Inferiore sinistro"
+
 
 #: po/../src/maemo-mapper.c:7394 po/../src/maemo-mapper.c:10272
 msgid "Bottom-Right"
@@ -349,9 +349,8 @@ msgid "Failed to open file for"
 msgstr "Impossibile aprire il file per"
 
 #: po/../src/maemo-mapper.c:6780
-#, fuzzy
 msgid "Failed to open file for writing"
-msgstr "Impossibile aprire il file per"
+msgstr "Impossibile aprire il file in scrittura"
 
 #: po/../src/maemo-mapper.c:3009
 msgid "Failed to open or create database"
@@ -406,9 +405,8 @@ msgid "Help"
 msgstr "Aiuto"
 
 #: po/../src/maemo-mapper.c:4842
-#, fuzzy
 msgid "Information Font Size"
-msgstr "Informazioni GPS"
+msgstr "Dimensione catattere Informazioni"
 
 #: po/../src/maemo-mapper.c:5714
 msgid "Insert Breakpoint"
@@ -523,9 +521,8 @@ msgid "Misc."
 msgstr "Varie"
 
 #: po/../src/maemo-mapper.c:4774
-#, fuzzy
 msgid "Misc. 2"
-msgstr "Varie"
+msgstr "Varie 2"
 
 #: po/../src/maemo-mapper.c:10334 po/../src/maemo-mapper.c:10468
 msgid ""
@@ -632,9 +629,8 @@ msgid "Please specify a name for the category."
 msgstr "Specifica un nome per la categoria."
 
 #: po/../src/maemo-mapper.c:8927
-#, fuzzy
 msgid "Please specify a source URL."
-msgstr "Specifica un nome per il POI."
+msgstr "Specifica un URL."
 
 #: po/../src/maemo-mapper.c:8939
 msgid "Please specify a start location."
@@ -715,11 +711,11 @@ msgstr "Rotta salvata"
 
 #: po/../src/maemo-mapper.c:9278
 msgid "Routes are now hidden"
-msgstr "Adesso le rotte sono nascoste"
+msgstr "Le rotte sono nascoste"
 
 #: po/../src/maemo-mapper.c:9272
 msgid "Routes are now shown"
-msgstr "Le rotte non sono mostrate"
+msgstr "Le rotte sono visibili"
 
 #: po/../src/maemo-mapper.c:2241
 msgid "SPS"
@@ -750,7 +746,6 @@ msgid "Scan..."
 msgstr "Cerca..."
 
 #: po/../src/maemo-mapper.c:4293
-#, fuzzy
 msgid "Scanning for Bluetooth Devices"
 msgstr "Sto cercando i dispositivi bluetooth"
 
@@ -815,9 +810,8 @@ msgid "Speed"
 msgstr "Velocità"
 
 #: po/../src/maemo-mapper.c:4816
-#, fuzzy
 msgid "Speed Limit"
-msgstr "Velocità"
+msgstr "Limite di velocità"
 
 #: po/../src/maemo-mapper.c:7384
 msgid "Toggle GPS"
@@ -840,9 +834,8 @@ msgid "Top-Left"
 msgstr "Superiore sinistra"
 
 #: po/../src/maemo-mapper.c:7393
-#, fuzzy
 msgid "Top-Right"
-msgstr "Inferiore destra"
+msgstr "Superiore destro"
 
 #: po/../src/maemo-mapper.c:4464 po/../src/maemo-mapper.c:5706
 #: po/../src/maemo-mapper.c:5749
@@ -859,16 +852,15 @@ msgstr "Percorso salvato"
 
 #: po/../src/maemo-mapper.c:9254
 msgid "Tracks are now hidden"
-msgstr "Adesso i percorsi sono nascosti"
+msgstr "I percorsi sono nascosti"
 
 #: po/../src/maemo-mapper.c:9248
 msgid "Tracks are now shown"
-msgstr "I percorsi non sono mostrati"
+msgstr "I percorsi sono visibili"
 
 #: po/../src/maemo-mapper.c:9519
-#, fuzzy
 msgid "URL Format"
-msgstr "Formato URI"
+msgstr "Formato URL"
 
 #: po/../src/maemo-mapper.c:9760
 msgid "Unable to create cache directory for repository"
