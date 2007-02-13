@@ -1,3 +1,15 @@
+maemo-mapper (1.4) unstable; urgency=low
+
+  * First build from the new maemo3 SDK.  Although the code is the same, there
+    are different builds depending on the target (770 or N800).  "-1" is a
+    generic build with no arm-model-specific optimizations.  "-2" is optimized
+    for 770 (arm926ej-s).  "-3" is optimized for N800 (arm1136jf-s).
+  * Changed from sqlite0 to sqlite3.
+  * Added ability to download repository information from the web.
+  * Changed track data to use GPS timestamps instead of Nokia's slow clock.
+
+ -- John Costigan <gnuite@gmail.com>  Mon, 12 Feb 2007 23:35:00 -0500
+
 maemo-mapper (1.3.5) unstable; urgency=low
 
   * Fixed "Bad Repository" detection and notification.
