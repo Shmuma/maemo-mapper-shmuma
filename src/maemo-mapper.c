@@ -61,7 +61,7 @@
 #include <libintl.h>
 #include <locale.h>
 
-#include <sqlite.h>
+#include <sqlite3.h>
 
 /****************************************************************************
  * BELOW: DEFINES ***********************************************************
@@ -578,18 +578,19 @@ typedef enum
     CAT_ID,
     CAT_ENABLED,
     CAT_LABEL,
-    CAT_DESCRIPTION,
+    CAT_DESC,
     CAT_NUM_COLUMNS
 } CategoryList;
 
 /** POI list **/
 typedef enum
 {
-    POI_INDEX,
-    POI_LATITUDE,
-    POI_LONGITUDE,
+    POI_POIID,
+    POI_CATID,
+    POI_LATLON,
     POI_LABEL,
-    POI_CATEGORY,
+    POI_DESC,
+    POI_CATLAB,
     POI_NUM_COLUMNS
 } POIList;
 
@@ -748,7 +749,7 @@ typedef struct _GpsData GpsData;
 struct _GpsData {
     guint fix;
     guint fixquality;
-    struct tm timeloc;    /* local time */
+    time_t timeloc; /* local time */
     gfloat latitude;
     gfloat longitude;
     gchar slatitude[15];
@@ -1085,9 +1086,22 @@ static RepoData *_curr_repo = NULL;
 
 /** POI */
 static gchar *_poi_db = NULL;
-static sqlite *_db = NULL;
+static sqlite3 *_db = NULL;
 static guint _poi_zoom = 6;
-static gboolean _dbconn = FALSE;
+
+static sqlite3_stmt *_stmt_select_poi = NULL;
+static sqlite3_stmt *_stmt_insert_poi = NULL;
+static sqlite3_stmt *_stmt_update_poi = NULL;
+static sqlite3_stmt *_stmt_delete_poi = NULL;
+static sqlite3_stmt *_stmt_delete_poi_by_catid = NULL;
+static sqlite3_stmt *_stmt_nextlabel_poi = NULL;
+
+static sqlite3_stmt *_stmt_select_cat = NULL;
+static sqlite3_stmt *_stmt_insert_cat = NULL;
+static sqlite3_stmt *_stmt_update_cat = NULL;
+static sqlite3_stmt *_stmt_delete_cat = NULL;
+static sqlite3_stmt *_stmt_toggle_cat = NULL;
+static sqlite3_stmt *_stmt_selall_cat = NULL;
 
 /** The singleton auto-route-download data. */
 static AutoRouteDownloadData _autoroute_data;
@@ -1171,6 +1185,8 @@ static gboolean
 menu_cb_maps_select(GtkAction *action, gpointer new_repo);
 static gboolean
 menu_cb_mapman(GtkAction *action);
+static gboolean
+repoman_dialog();
 static gboolean
 menu_cb_maps_repoman(GtkAction *action);
 static gboolean
@@ -2206,7 +2222,11 @@ gps_display_details(void)
         g_free(buffer);
 
         /* local time */
-        strftime(strtime, 15, "%X", &_gps.timeloc);
+        {
+            struct tm time;
+            localtime_r(&_gps.timeloc, &time);
+            strftime(strtime, 15, "%X", &time);
+        }
         gtk_label_set_label(GTK_LABEL(_sdi_tim), strtime);
     }
 
@@ -2337,7 +2357,11 @@ gps_display_data(void)
         g_free(buffer);
 
         /* local time */
-        strftime(strtime, 15, "%X", &_gps.timeloc);
+        {
+            struct tm time;
+            localtime_r(&_gps.timeloc, &time);
+            strftime(strtime, 15, "%X", &time);
+        }
         gtk_label_set_label(GTK_LABEL(_text_time), strtime);
     }
 
@@ -2938,25 +2962,31 @@ db_connect()
     guint nRow, nColumn;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    _dbconn = FALSE;
+    if(_db)
+    {
+        sqlite3_close(_db);
+        _db = NULL;
+    }
 
     if(!_poi_db)
         return;
 
-    if(NULL == (_db = sqlite_open(_poi_db, 0666, &perror)))
+    if(SQLITE_OK != (sqlite3_open(_poi_db, &_db)))
     {
         gchar buffer2[200];
         snprintf(buffer2, sizeof(buffer2),
-                "%s: %s", _("Problem with POI database"), perror);
+                "%s: %s", _("Problem with POI database"),
+                sqlite3_errmsg(_db));
+        sqlite3_close(_db);
+        _db = NULL;
         popup_error(_window, buffer2);
-        g_free(perror);
         return;
     }
 
-    if(SQLITE_OK != sqlite_get_table(_db, "select label from poi limit 1",
+    if(SQLITE_OK != sqlite3_get_table(_db, "select label from poi limit 1",
         &pszResult, &nRow, &nColumn, NULL))
     {
-        if(SQLITE_OK != sqlite_exec(_db,
+        if(SQLITE_OK != sqlite3_exec(_db,
                 /* Create the necessary tables... */
                 "create table poi (poi_id integer PRIMARY KEY, lat real, "
                 "lon real, label text, desc text, cat_id integer);"
@@ -2999,21 +3029,85 @@ db_connect()
                 NULL,
                 NULL,
                 &perror)
-                && (SQLITE_OK != sqlite_get_table(_db,
+                && (SQLITE_OK != sqlite3_get_table(_db,
                             "select label from poi limit 1",
                             &pszResult, &nRow, &nColumn, NULL)))
         {
             snprintf(buffer, sizeof(buffer), "%s:\n%s",
-                    _("Failed to open or create database"), _poi_db);
+                    _("Failed to open or create database"),
+                    sqlite3_errmsg(_db));
+            sqlite3_close(_db);
+            _db = NULL;
             popup_error(_window, buffer);
-            sqlite_close(_db);
             return;
         }
     }
     else
-        sqlite_free_table(pszResult);
+        sqlite3_free_table(pszResult);
 
-    _dbconn = TRUE;
+    /* Prepare our SQL statements. */
+    /* select from poi */
+    sqlite3_prepare(_db, 
+                    "select p.lat, p.lon, p.poi_id, p.label, p.desc,"
+                    " p.cat_id, c.label, c.desc"
+                    " from poi p, category c "
+                    " where p.lat between ? and ? "
+                    " and p.lon between ? and ? "
+                    " and c.enabled = 1 and p.cat_id = c.cat_id",
+                    -1, &_stmt_select_poi, NULL);
+    /* insert poi */
+    sqlite3_prepare(_db,
+                        "insert into poi (lat, lon, label, desc, cat_id)"
+                        " values (?, ?, ?, ?, ?)",
+                    -1, &_stmt_insert_poi, NULL);
+    /* update poi */
+    sqlite3_prepare(_db,
+                        "update poi set label = ?, desc = ?, "
+                        "cat_id = ? where poi_id = ?",
+                    -1, &_stmt_update_poi, NULL);
+    /* delete from poi */
+    sqlite3_prepare(_db,
+                    " delete from poi where poi_id = ?",
+                    -1, &_stmt_delete_poi, NULL);
+    /* delete from poi by cat_id */
+    sqlite3_prepare(_db, 
+                    "delete from poi where cat_id = ?",
+                    -1, &_stmt_delete_poi_by_catid, NULL);
+    /* get next poilabel */
+    sqlite3_prepare(_db,
+                    "select ifnull(max(poi_id) + 1,1) from poi",
+                    -1, &_stmt_nextlabel_poi, NULL);
+
+    /* select from category */
+    sqlite3_prepare(_db, 
+                    "select c.label, c.desc, c.enabled"
+                    " from category c where c.cat_id = ?",
+                    -1, &_stmt_select_cat, NULL);
+    /* insert into category */
+    sqlite3_prepare(_db,
+                    "insert into category (label, desc, enabled)"
+                    " values (?, ?, ?)",
+                    -1, &_stmt_insert_cat, NULL);
+    /* update category */
+    sqlite3_prepare(_db,
+                    "update category set label = ?, desc = ?,"
+                    " enabled = ? where poi_id = ?",
+                    -1, &_stmt_update_cat, NULL);
+    /* delete from category */
+    sqlite3_prepare(_db, 
+                    "delete from category where cat_id = ?",
+                    -1, &_stmt_delete_cat, NULL);
+    /* enable category */
+    sqlite3_prepare(_db,
+                    "update category set enabled = ?"
+                    " where cat_id = ?",
+                    -1, &_stmt_toggle_cat, NULL);
+    /* select all category */
+    sqlite3_prepare(_db,
+                    "select c.cat_id, c.label, c.desc, c.enabled"
+                    " from category c "
+                    " order by c.label",
+                    -1, &_stmt_selall_cat, NULL);
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
@@ -3596,7 +3690,7 @@ rcvr_connect_response(DBusGProxy *proxy, DBusGProxyCall *call_id)
                 if(!strcmp(BTCOND_ERROR_CONNECTED,
                             dbus_g_error_get_name(error)) || !fdpath)
                 {
-                    g_printerr("Caught remote method exception %s: %s",
+                    printf("Caught remote method exception %s: %s",
                             dbus_g_error_get_name(error),
                             error->message);
                     rcvr_disconnect();
@@ -3654,6 +3748,7 @@ rcvr_connect_now()
 
 #else
         /* We're in DEBUG mode, so instead of connecting, skip to FIXED. */
+        printf("FIXED!\n");
         set_conn_state(RCVR_FIXED);
 #endif
     }
@@ -3940,7 +4035,7 @@ config_save()
             RepoData *rd = curr->data;
             gchar buffer[BUFFER_SIZE];
             snprintf(buffer, sizeof(buffer),
-                    "%s\n%s\n%s\n%d\n%d\n",
+                    "%s\t%s\t%s\t%d\t%d",
                     rd->name,
                     rd->url,
                     rd->cache_dir,
@@ -4281,12 +4376,12 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            _("MAC"), renderer, "text", 0);
+            _("MAC"), renderer, "text", 0, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(lst_devices), column);
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            _("Description"), renderer, "text", 1);
+            _("Description"), renderer, "text", 1, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(lst_devices), column);
 
     gtk_widget_show_all(dialog);
@@ -5007,10 +5102,10 @@ settings_dialog()
         _enable_voice = gtk_toggle_button_get_active(
                 GTK_TOGGLE_BUTTON(chk_enable_voice));
 
-        if(_dbconn)
+        if(_db)
         {
-            sqlite_close(_db);
-            _dbconn = FALSE;
+            sqlite3_close(_db);
+            _db = NULL;
             gtk_widget_set_sensitive(_cmenu_add_poi, FALSE);
             gtk_widget_set_sensitive(_cmenu_edit_poi, FALSE);
             gtk_widget_set_sensitive(_menu_poi_item, FALSE);
@@ -5020,9 +5115,9 @@ settings_dialog()
         {
             _poi_db = g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_poi_db)));
             db_connect();
-            gtk_widget_set_sensitive(_cmenu_add_poi, _dbconn);
-            gtk_widget_set_sensitive(_cmenu_edit_poi, _dbconn);
-            gtk_widget_set_sensitive(_menu_poi_item, _dbconn);
+            gtk_widget_set_sensitive(_cmenu_add_poi, _db != NULL);
+            gtk_widget_set_sensitive(_cmenu_edit_poi, _db != NULL);
+            gtk_widget_set_sensitive(_menu_poi_item, _db != NULL);
         }
         else
             _poi_db = NULL;
@@ -5115,6 +5210,30 @@ config_update_proxy()
     g_object_unref(gconf_client);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static RepoData*
+config_parse_repo(gchar *str)
+{
+    /* Parse each part of a repo, delimited by newline characters:
+     * 1. name
+     * 2. url
+     * 3. cache_dir
+     * 4. dl_zoom_steps
+     * 5. view_zoom_steps
+     */
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    RepoData *rd = g_new(RepoData, 1);
+    rd->name = g_strdup(strsep(&str, "\n\t"));
+    rd->url = g_strdup(strsep(&str, "\n\t"));
+    rd->cache_dir = g_strdup(strsep(&str, "\n\t"));
+    if(!(rd->dl_zoom_steps = atoi(strsep(&str, "\n\t"))))
+        rd->dl_zoom_steps = 2;
+    if(!(rd->view_zoom_steps = atoi(strsep(&str, "\n\t"))))
+        rd->view_zoom_steps = 1;
+
+    vprintf("%s(): return %p\n", __PRETTY_FUNCTION__, rd);
+    return rd;
 }
 
 /**
@@ -5350,6 +5469,7 @@ config_init()
         latlon2unit(center_lat, center_lon, _center.unitx, _center.unity);
     }
 
+
     /* Load the repositories. */
     {
         GSList *list, *curr;
@@ -5360,22 +5480,7 @@ config_init()
 
         for(curr = list; curr != NULL; curr = curr->next)
         {
-            /* Parse each part of a repo, delimited by newline characters:
-             * 1. url
-             * 2. cache_dir
-             * 3. dl_zoom_steps
-             * 4. view_zoom_steps
-             */
-            gchar *str = curr->data;
-            RepoData *rd = g_new(RepoData, 1);
-            rd->name = g_strdup(strsep(&str, "\n"));
-            rd->url = g_strdup(strsep(&str, "\n"));
-            rd->cache_dir = g_strdup(strsep(&str, "\n"));
-            if(!(rd->dl_zoom_steps = atoi(strsep(&str, "\n"))))
-                rd->dl_zoom_steps = 2;
-            if(!(rd->view_zoom_steps = atoi(strsep(&str, "\n"))))
-                rd->view_zoom_steps = 1;
-
+            RepoData *rd = config_parse_repo(curr->data);
             _repo_list = g_list_append(_repo_list, rd);
             if(!curr_repo_index--)
                 _curr_repo = rd;
@@ -5383,6 +5488,7 @@ config_init()
         }
         g_slist_free(list);
     }
+
 
     if(_repo_list == NULL)
     {
@@ -5758,7 +5864,7 @@ menu_init()
             GTK_CHECK_MENU_ITEM(_menu_show_velvec_item), _show_velvec);
     gtk_menu_append(submenu, _menu_poi_item
             = gtk_menu_item_new_with_label(_("POI Categories...")));
-    gtk_widget_set_sensitive(_menu_poi_item, _dbconn);
+    gtk_widget_set_sensitive(_menu_poi_item, _db != NULL);
 
 
     gtk_menu_append(menu, menu_item
@@ -5899,10 +6005,10 @@ menu_init()
     gtk_menu_append(submenu, gtk_separator_menu_item_new());
     gtk_menu_append(submenu, _cmenu_add_poi
                 = gtk_menu_item_new_with_label(_("Add POI")));
-    gtk_widget_set_sensitive(_cmenu_add_poi, _dbconn);
+    gtk_widget_set_sensitive(_cmenu_add_poi, _db != NULL);
     gtk_menu_append(submenu, _cmenu_edit_poi
                 = gtk_menu_item_new_with_label(_("Edit POI")));
-    gtk_widget_set_sensitive(_cmenu_edit_poi, _dbconn);
+    gtk_widget_set_sensitive(_cmenu_edit_poi, _db != NULL);
 
     /* Setup the waypoint context menu. */
     gtk_menu_append(menu, menu_item
@@ -5975,14 +6081,22 @@ window_present()
     if(!been_here++)
     {
         /* Set connection state first, to avoid going into this if twice. */
-        if(_rcvr_mac || !_enable_gps || settings_dialog())
+        if(!_rcvr_mac && _enable_gps)
         {
-            /* Connect to receiver. */
-            if(_enable_gps)
-                rcvr_connect_now();
+            if(settings_dialog())
+            {
+                popup_error(_window,
+                        _("Now you must set up at least one Map Repository.  "
+                        "You can download a sample set from the internet "
+                        "by using the \"Download...\" button."));
+                repoman_dialog();
+            }
+            else
+                gtk_main_quit();
         }
-        else
-            gtk_main_quit();
+        /* Connect to receiver. */
+        if(_enable_gps)
+            rcvr_connect_now();
     }
     gtk_window_present(GTK_WINDOW(_window));
 
@@ -6315,10 +6429,8 @@ map_render_poi()
 {
     guint unitx, unity;
     gfloat lat1, lat2, lon1, lon2, tmp;
-    gchar slat1[10], slat2[10], slon1[10], slon2[10];
     gchar buffer[100];
-    gchar **pszResult;
-    gint nRow, nColumn, row, poix, poiy;
+    gint poix, poiy;
     GdkPixbuf *pixbuf = NULL;
     GError *error = NULL;
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -6344,67 +6456,68 @@ map_render_poi()
             lon1 = tmp;
         }
 
-        g_ascii_dtostr(slat1, sizeof(slat1), lat1);
-        g_ascii_dtostr(slat2, sizeof(slat2), lat2);
-        g_ascii_dtostr(slon1, sizeof(slon1), lon1);
-        g_ascii_dtostr(slon2, sizeof(slon2), lon2);
-
-        if(SQLITE_OK == sqlite_get_table_printf(_db,
-                    "select p.lat, p.lon, lower(p.label), lower(c.label)"
-                    " from poi p, category c "
-                    " where p.lat between %s and %s "
-                    " and p.lon  between %s and %s "
-                    " and c.enabled = 1 and p.cat_id = c.cat_id",
-                    &pszResult, &nRow, &nColumn, NULL,
-                    slat1, slat2, slon1, slon2))
+        if(SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 1, lat1) ||
+           SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 2, lat2) ||
+           SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 3, lon1) ||
+           SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 4, lon2))
         {
-            for(row=1; row<nRow+1; row++)
-            {
-                lat1 = g_ascii_strtod(pszResult[row*nColumn+0], NULL);
-                lon1 = g_ascii_strtod(pszResult[row*nColumn+1], NULL);
-                latlon2unit(lat1, lon1, unitx, unity);
-                poix = unit2bufx(unitx);
-                poiy = unit2bufy(unity);
-
-                /* Try to get icon for specific POI first. */
-                snprintf(buffer, sizeof(buffer), "%s/poi/%s.jpg",
-                        _curr_repo->cache_dir,
-                        pszResult[row*nColumn+2]);
-                pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
-                if(error)
-                {
-                    /* No icon for specific POI - try for category. */
-                    error = NULL;
-                    snprintf(buffer, sizeof(buffer), "%s/poi/%s.jpg",
-                            _curr_repo->cache_dir, pszResult[row*nColumn+3]);
-                    pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
-                }
-                if(error)
-                {
-                    /* No icon for POI or for category - draw default. */
-                    error = NULL;
-                    gdk_draw_rectangle(_map_pixmap, _gc_poi, TRUE,
-                        poix - (gint)(0.5f * _draw_line_width),
-                        poiy - (gint)(0.5f * _draw_line_width),
-                        3 * _draw_line_width,
-                        3 * _draw_line_width);
-                }
-                else
-                {
-                    gdk_draw_pixbuf(
-                            _map_pixmap,
-                            _gc_poi,
-                            pixbuf,
-                            0, 0,
-                            poix - gdk_pixbuf_get_width(pixbuf) / 2,
-                            poiy - gdk_pixbuf_get_height(pixbuf) / 2,
-                            -1,-1,
-                            GDK_RGB_DITHER_NONE, 0, 0);
-                    g_object_unref(pixbuf);
-                }
-             }
-            sqlite_free_table(pszResult);
+            g_printerr("Failed to bind values for _stmt_select_poi");
+            return;
         }
+
+        while(SQLITE_ROW == sqlite3_step(_stmt_select_poi))
+        {
+            lat1 = sqlite3_column_double(_stmt_select_poi, 0);
+            lon1 = sqlite3_column_double(_stmt_select_poi, 1);
+            gchar *poi_label = g_utf8_strdown(sqlite3_column_text(
+                    _stmt_select_poi, 2), -1);
+            gchar *cat_label = g_utf8_strdown(sqlite3_column_text(
+                    _stmt_select_poi, 5), -1);
+
+            latlon2unit(lat1, lon1, unitx, unity);
+            poix = unit2bufx(unitx);
+            poiy = unit2bufy(unity);
+
+            /* Try to get icon for specific POI first. */
+            snprintf(buffer, sizeof(buffer), "%s/poi/%s.jpg",
+                    _curr_repo->cache_dir, poi_label);
+            pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
+            if(error)
+            {
+                /* No icon for specific POI - try for category. */
+                error = NULL;
+                snprintf(buffer, sizeof(buffer), "%s/poi/%s.jpg",
+                        _curr_repo->cache_dir, cat_label);
+                pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
+            }
+            if(error)
+            {
+                /* No icon for POI or for category - draw default. */
+                error = NULL;
+                gdk_draw_rectangle(_map_pixmap, _gc_poi, TRUE,
+                    poix - (gint)(0.5f * _draw_line_width),
+                    poiy - (gint)(0.5f * _draw_line_width),
+                    3 * _draw_line_width,
+                    3 * _draw_line_width);
+            }
+            else
+            {
+                gdk_draw_pixbuf(
+                        _map_pixmap,
+                        _gc_poi,
+                        pixbuf,
+                        0, 0,
+                        poix - gdk_pixbuf_get_width(pixbuf) / 2,
+                        poiy - gdk_pixbuf_get_height(pixbuf) / 2,
+                        -1,-1,
+                        GDK_RGB_DITHER_NONE, 0, 0);
+                g_object_unref(pixbuf);
+            }
+
+            g_free(poi_label);
+            g_free(cat_label);
+        }
+        sqlite3_reset(_stmt_select_poi);
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -7105,7 +7218,7 @@ open_file(gchar **bytes_out, GnomeVFSHandle **handle_out, gint *size_out,
         }
     }
 
-    gtk_widget_show_all(GTK_WIDGET(dialog));
+    gtk_widget_show_all(dialog);
 
     while(!success && gtk_dialog_run(GTK_DIALOG(dialog))==GTK_RESPONSE_OK)
     {
@@ -7240,8 +7353,11 @@ maemo_mapper_destroy(void)
     rcvr_disconnect();
     /* _program and widgets have already been destroyed. */
 
-    if(_dbconn)
-        sqlite_close(_db);
+    if(_db)
+    {
+        sqlite3_close(_db);
+        _db = NULL;
+    }
 
     MACRO_CLEAR_TRACK(_track);
     if(_route.head)
@@ -8452,16 +8568,14 @@ channel_parse_rmc(gchar *sentence)
     token = strsep(&sentence, DELIM);
     if(*token)
     {
-        time_t timeloc;
         struct tm time;
         gpsdate = g_strdup_printf("%s%s", token, gpstime);
         strptime(gpsdate, "%d%m%y%H%M%S", &time);
         if(time.tm_year >= 0 && time.tm_year <= 68)
             time.tm_year += 100; /* year 2000 */
         time.tm_mon -= 1;
-        timeloc = mktime(&time);
-        timeloc += _gmtoffset;
-        localtime_r(&timeloc, &_gps.timeloc);
+        _gps.timeloc = mktime(&time);
+        _gps.timeloc += _gmtoffset;
         g_free(gpstime);
         g_free(gpsdate);
     }
@@ -9359,7 +9473,6 @@ menu_cb_ac_none(GtkAction *action)
     return TRUE;
 }
 
-
 typedef struct _RepoManInfo RepoManInfo;
 struct _RepoManInfo {
     GtkWidget *dialog;
@@ -9638,13 +9751,78 @@ repoman_dialog_new(GtkWidget *widget, RepoManInfo *rmi)
 }
 
 static gboolean
-menu_cb_maps_repoman(GtkAction *action)
+repoman_download(GtkWidget *widget, RepoManInfo *rmi)
+{
+    GtkWidget *confirm;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    confirm = hildon_note_new_confirmation(
+            GTK_WINDOW(rmi->dialog),
+            _("Maemo Mapper will now download and add a list of "
+                "possibly-duplicate repositories from the internet.  "
+                "Continue?"));
+
+    if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
+    {
+        gchar *bytes;
+        gchar *head;
+        gchar *tail;
+        gint size;
+        GnomeVFSResult vfs_result;
+        printf("%s()\n", __PRETTY_FUNCTION__);
+
+        /* Get repo config file from www.gnuite.com. */
+        if(GNOME_VFS_OK != (vfs_result = gnome_vfs_read_entire_file(
+                    "http://www.gnuite.com/nokia770/maemo-mapper/repos.txt",
+                    &size, &bytes)))
+        {
+            popup_error(rmi->dialog,
+                    _("An error occurred while retrieving the repositories.  "
+                        "The web service may be temporarily down."));
+            g_printerr("Error while download repositories: %s\n",
+                    gnome_vfs_result_to_string(vfs_result));
+        }
+        /* Parse each line as a reposotory. */
+        else
+        {
+            for(head = bytes; head && *head; head = tail)
+            {
+                RepoData *rd;
+                RepoEditInfo *rei;
+                tail = strchr(head, '\n') + 1;
+                printf("head: %s\n", head);
+                rd = config_parse_repo(head);
+                rei = repoman_dialog_add_repo(
+                        rmi, g_strdup(rd->name));
+                /* Initialize fields with data from the RepoData object. */
+                gtk_entry_set_text(GTK_ENTRY(rei->txt_url), rd->url);
+                gtk_entry_set_text(GTK_ENTRY(rei->txt_cache_dir),
+                        rd->cache_dir);
+                hildon_controlbar_set_value(
+                        HILDON_CONTROLBAR(rei->num_dl_zoom_steps),
+                        rd->dl_zoom_steps);
+                hildon_controlbar_set_value(
+                        HILDON_CONTROLBAR(rei->num_view_zoom_steps),
+                        rd->view_zoom_steps);
+            }
+            g_free(bytes);
+        }
+    }
+    gtk_widget_destroy(confirm);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+repoman_dialog()
 {
     RepoManInfo rmi;
     GtkWidget *hbox;
     GtkWidget *btn_rename;
     GtkWidget *btn_delete;
     GtkWidget *btn_new;
+    GtkWidget *btn_download;
     guint i, curr_repo_index = 0;
     GList *curr;
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -9652,8 +9830,17 @@ menu_cb_maps_repoman(GtkAction *action)
     rmi.dialog = gtk_dialog_new_with_buttons(_("Repositories"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
             NULL);
+
+    /* Retrieve button. */
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(rmi.dialog)->action_area),
+            btn_download = gtk_button_new_with_label(_("Download...")));
+    g_signal_connect(G_OBJECT(btn_download), "clicked",
+                      G_CALLBACK(repoman_download), &rmi);
+
+    /* Cancel button. */
+    gtk_dialog_add_button(GTK_DIALOG(rmi.dialog),
+            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT);
 
     hbox = gtk_hbox_new(FALSE, 4);
 
@@ -9799,6 +9986,8 @@ menu_cb_maps_repoman(GtkAction *action)
         if(!_curr_repo)
             _curr_repo = (RepoData*)g_list_first(_repo_list)->data;
         menu_maps_add_repos();
+
+        config_save();
         break;
     }
 
@@ -9806,6 +9995,15 @@ menu_cb_maps_repoman(GtkAction *action)
 
     map_set_zoom(_zoom); /* make sure we're at an appropriate zoom level. */
 
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_maps_repoman(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    repoman_dialog();
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -10119,12 +10317,13 @@ menu_cb_mapman(GtkAction *action)
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
             NULL);
 
+    /* Clear button. */
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
             button = gtk_button_new_with_label(_("Clear")));
     g_signal_connect(G_OBJECT(button), "clicked",
                       G_CALLBACK(mapman_clear), &mapman_info);
 
-    /* Clear button. */
+    /* Cancel button. */
     gtk_dialog_add_button(GTK_DIALOG(dialog),
             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT);
 
@@ -10890,23 +11089,24 @@ category_delete(GtkWidget *widget, DeletePOI *dpoi)
     if(i == GTK_RESPONSE_OK)
     {
         /* delete dpoi->poi_id */
-        if(SQLITE_OK != sqlite_exec_printf(_db,
-                    "delete from poi where cat_id = %d",
-                    NULL, NULL, NULL,
-                    dpoi->id))
+        if(SQLITE_OK != sqlite3_bind_int(_stmt_delete_poi_by_catid, 1,
+                    dpoi->id) ||
+           SQLITE_DONE != sqlite3_step(_stmt_delete_poi_by_catid))
         {
             MACRO_BANNER_SHOW_INFO(_window, _("Problem deleting POI"));
+            sqlite3_reset(_stmt_delete_poi_by_catid);
             return FALSE;
         }
+        sqlite3_reset(_stmt_delete_poi_by_catid);
 
-        if(SQLITE_OK != sqlite_exec_printf(_db,
-                    "delete from category where cat_id = %d",
-                    NULL, NULL, NULL,
-                    dpoi->id))
+        if(SQLITE_OK != sqlite3_bind_int(_stmt_delete_cat, 1, dpoi->id) ||
+           SQLITE_DONE != sqlite3_step(_stmt_delete_cat))
         {
             MACRO_BANNER_SHOW_INFO(_window, _("Problem deleting category"));
+            sqlite3_reset(_stmt_delete_cat);
             return FALSE;
         }
+        sqlite3_reset(_stmt_delete_cat);
 
         gtk_widget_hide_all(dpoi->dialog);
         map_force_redraw();
@@ -10919,8 +11119,6 @@ category_delete(GtkWidget *widget, DeletePOI *dpoi)
 static gboolean
 category_dialog(guint cat_id)
 {
-    gchar **pszResult;
-    gint nRow, nColumn;
     gchar *cat_label = NULL, *cat_desc = NULL;
     guint cat_enabled;
     GtkWidget *dialog;
@@ -10939,24 +11137,19 @@ category_dialog(guint cat_id)
 
     if(cat_id > 0)
     {
-        if(SQLITE_OK != sqlite_get_table_printf(_db,
-                    "select c.label, c.desc, c.enabled"
-                    " from category c"
-                    " where c.cat_id = %d",
-                    &pszResult, &nRow, &nColumn, NULL,
-                    cat_id))
+        if(SQLITE_OK != sqlite3_bind_double(_stmt_select_cat, 1, cat_id) ||
+           SQLITE_ROW != sqlite3_step(_stmt_select_cat))
         {
             vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+            sqlite3_reset(_stmt_select_cat);
             return FALSE;
         }
 
-        if(nRow == 0)
-            return FALSE;
+        cat_label = g_strdup(sqlite3_column_text(_stmt_select_cat, 0));
+        cat_desc = g_strdup(sqlite3_column_text(_stmt_select_cat, 1));
+        cat_enabled = sqlite3_column_int(_stmt_select_cat, 2);
 
-        cat_label = g_strdup(pszResult[1 * nColumn + 0]);
-        cat_desc  = g_strdup(pszResult[1 * nColumn + 1]);
-        cat_enabled = atoi(pszResult[1 * nColumn + 2]);
-        sqlite_free_table(pszResult);
+        sqlite3_reset(_stmt_select_cat);
 
         dialog = gtk_dialog_new_with_buttons(_("Edit Category"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
@@ -11067,34 +11260,37 @@ category_dialog(guint cat_id)
         if(cat_id > 0)
         {
             /* edit category */
-            if(SQLITE_OK != sqlite_exec_printf(_db,
-                        "update category set label = %Q, desc = %Q, "
-                        "enabled = %d where poi_id = %d",
-                        NULL, NULL, NULL,
-                        cat_label, cat_desc, cat_enabled, cat_id))
+            if(SQLITE_OK != sqlite3_bind_text(_stmt_update_cat, 1, cat_label,
+                        -1, g_free) ||
+               SQLITE_OK != sqlite3_bind_text(_stmt_update_cat, 2, cat_desc,
+                        -1, g_free) ||
+               SQLITE_OK != sqlite3_bind_int(_stmt_update_cat, 3,cat_enabled)||
+               SQLITE_OK != sqlite3_bind_int(_stmt_update_cat, 4, cat_id) ||
+               SQLITE_DONE != sqlite3_step(_stmt_update_cat))
             {
                 MACRO_BANNER_SHOW_INFO(_window,_("Problem updating category"));
                 results = FALSE;
             }
+            sqlite3_reset(_stmt_update_cat);
         }
         else
         {
             /* add category */
-            if(SQLITE_OK != sqlite_exec_printf(_db,
-                        "insert into category (label, desc, enabled) "
-                        "values (%Q, %Q, %d)",
-                        NULL, NULL, NULL,
-                        cat_label, cat_desc, cat_enabled))
+            if(SQLITE_OK != sqlite3_bind_text(_stmt_insert_cat, 1, cat_label,
+                        -1, g_free) ||
+               SQLITE_OK != sqlite3_bind_text(_stmt_insert_cat, 2, cat_desc,
+                        -1, g_free) ||
+               SQLITE_OK != sqlite3_bind_int(_stmt_insert_cat, 3,cat_enabled)||
+               SQLITE_DONE != sqlite3_step(_stmt_insert_cat))
             {
                 MACRO_BANNER_SHOW_INFO(_window, _("Problem adding category"));
                 results = FALSE;
             }
+            sqlite3_reset(_stmt_insert_cat);
         }
         break;
     }
 
-    g_free(cat_label);
-    g_free(cat_desc);
     g_free(dpoi.txt_label);
 
     g_object_unref (desc_txt);
@@ -11124,10 +11320,9 @@ category_toggled (GtkCellRendererToggle *cell,
 
     cat_enabled ^= 1;
 
-    if(SQLITE_OK != sqlite_exec_printf(_db,
-                "update category set enabled = %d where cat_id = %d",
-                NULL, NULL, NULL,
-                (cat_enabled ? 1 : 0), cat_id))
+    if(SQLITE_OK != sqlite3_bind_int(_stmt_toggle_cat, 1, cat_enabled) ||
+       SQLITE_OK != sqlite3_bind_int(_stmt_toggle_cat, 2, cat_id) ||
+       SQLITE_DONE != sqlite3_step(_stmt_toggle_cat))
     {
         MACRO_BANNER_SHOW_INFO(_window, _("Problem updating Category"));
     }
@@ -11135,28 +11330,17 @@ category_toggled (GtkCellRendererToggle *cell,
         gtk_list_store_set(GTK_LIST_STORE(model), &iter,
                    CAT_ENABLED, cat_enabled, -1);
 
+    sqlite3_reset(_stmt_toggle_cat);
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
 }
 
 static GtkListStore*
 generate_store()
 {
-    guint i;
     GtkTreeIter iter;
     GtkListStore *store;
-    gchar **pszResult;
-    gint nRow, nColumn;
     printf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(SQLITE_OK != sqlite_get_table(_db,
-                "select c.cat_id, c.enabled, c.label, c.desc"
-                " from category c "
-                " order by c.label",
-                &pszResult, &nRow, &nColumn, NULL))
-    {
-        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-        return NULL;
-    }
 
     store = gtk_list_store_new(CAT_NUM_COLUMNS,
                                G_TYPE_UINT,
@@ -11164,19 +11348,18 @@ generate_store()
                                G_TYPE_STRING,
                                G_TYPE_STRING);
 
-    for(i = 1; i < nRow + 1; i++)
+    while(SQLITE_ROW == sqlite3_step(_stmt_selall_cat))
     {
         gtk_list_store_append(store, &iter);
         gtk_list_store_set(store, &iter,
-                CAT_ID, atoi(pszResult[i * nColumn + 0]),
-                CAT_ENABLED,
-                (atoi(pszResult[i * nColumn + 1]) == 1 ? TRUE : FALSE),
-                CAT_LABEL, pszResult[i * nColumn + 2],
-                CAT_DESCRIPTION, pszResult[i * nColumn + 3],
+                CAT_ID, sqlite3_column_int(_stmt_selall_cat, 0),
+                CAT_ENABLED, sqlite3_column_int(_stmt_selall_cat, 3),
+                CAT_LABEL, sqlite3_column_text(_stmt_selall_cat, 1),
+                CAT_DESC, sqlite3_column_text(_stmt_selall_cat, 2),
                 -1);
     }
+    sqlite3_reset(_stmt_selall_cat);
 
-    sqlite_free_table(pszResult);
     vprintf("%s(): return %p\n", __PRETTY_FUNCTION__, store);
     return store;
 }
@@ -11275,7 +11458,7 @@ category_list()
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            "ID", renderer, "text", CAT_ID);
+            "ID", renderer, "text", CAT_ID, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
     gtk_tree_view_column_set_max_width (column, 1);
 
@@ -11283,19 +11466,19 @@ category_list()
     g_signal_connect (renderer, "toggled",
             G_CALLBACK (category_toggled), store);
     column = gtk_tree_view_column_new_with_attributes(
-            _("Enabled"), renderer, "active", CAT_ENABLED);
+            _("Enabled"), renderer, "active", CAT_ENABLED, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
     g_object_unref(G_OBJECT(store));
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            _("Label"), renderer, "text", CAT_LABEL);
+            _("Label"), renderer, "text", CAT_LABEL, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            _("Desc."), renderer, "text", CAT_DESCRIPTION);
+            _("Desc."), renderer, "text", CAT_DESC, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
     gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 300);
@@ -11345,10 +11528,8 @@ poi_delete(GtkWidget *widget, DeletePOI *dpoi)
 
     if(i == GTK_RESPONSE_OK)
     {
-        if(SQLITE_OK != sqlite_exec_printf(_db,
-                    "delete from poi where poi_id = %d",
-                    NULL, NULL, NULL,
-                    dpoi->id))
+        if(SQLITE_OK != sqlite3_bind_int(_stmt_delete_poi, 1, dpoi->id) ||
+           SQLITE_DONE != sqlite3_step(_stmt_delete_poi))
         {
             MACRO_BANNER_SHOW_INFO(_window, _("Problem deleting POI"));
         }
@@ -11357,14 +11538,17 @@ poi_delete(GtkWidget *widget, DeletePOI *dpoi)
             gtk_widget_hide_all(dpoi->dialog);
             map_force_redraw();
         }
+        sqlite3_reset(_stmt_delete_poi);
     }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
-static guint
-poi_list(gchar **pszResult, gint nRow, gint nColumn)
+static gboolean
+select_poi(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2,
+        guint *poi_id, guint *cat_id,
+        gchar **latlon, gchar **label, gchar **desc)
 {
     GtkWidget *dialog;
     GtkWidget *list;
@@ -11373,38 +11557,78 @@ poi_list(gchar **pszResult, gint nRow, gint nColumn)
     GtkCellRenderer *renderer;
     GtkListStore *store;
     GtkTreeIter iter;
-    guint i, row = -1;
+    gboolean selected = FALSE;
     gchar tmp1[15], tmp2[15];
+    guint num_cats = 0;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    store = gtk_list_store_new(POI_NUM_COLUMNS,
+                               G_TYPE_INT,    /* POI ID */
+                               G_TYPE_INT,    /* Category ID */
+                               G_TYPE_STRING, /* Lat/Lon */
+                               G_TYPE_STRING, /* POI Label */
+                               G_TYPE_STRING, /* POI Desc. */
+                               G_TYPE_STRING);/* Category Label */
+
+    if(SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 1, lat1) ||
+          SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 2, lat2) ||
+          SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 3, lon1) ||
+          SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 4, lon2))
+    {
+        g_printerr("Failed to bind values for _stmt_select_poi");
+        return FALSE;
+    }
+
+    while(SQLITE_ROW == sqlite3_step(_stmt_select_poi))
+    {
+        printf("Found POI: %f, %f, %s, %s, %s\n",
+                sqlite3_column_double(_stmt_select_poi, 0),
+                sqlite3_column_double(_stmt_select_poi, 1),
+                sqlite3_column_text(_stmt_select_poi, 3),
+                sqlite3_column_text(_stmt_select_poi, 4),
+                sqlite3_column_text(_stmt_select_poi, 6));
+        deg_format(sqlite3_column_double(_stmt_select_poi, 0), tmp1);
+        deg_format(sqlite3_column_double(_stmt_select_poi, 1), tmp2);
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter,
+                POI_POIID, sqlite3_column_int(_stmt_select_poi, 2),
+                POI_CATID, sqlite3_column_int(_stmt_select_poi, 5),
+                POI_LATLON, g_strdup_printf("%s, %s", tmp1, tmp2),
+                POI_LABEL, sqlite3_column_text(_stmt_select_poi, 3),
+                POI_DESC, sqlite3_column_text(_stmt_select_poi, 4),
+                POI_CATLAB, sqlite3_column_text(_stmt_select_poi, 6),
+                -1);
+        num_cats++;
+    }
+    sqlite3_reset(_stmt_select_poi);
+
+    switch(num_cats)
+    {
+        case 0:
+            g_object_unref(G_OBJECT(store));
+            return FALSE;
+            break;
+        case 1:
+            /* iter is still set to the most-recently added POI. */
+            gtk_tree_model_get(GTK_TREE_MODEL(store),
+                &iter,
+                POI_POIID, poi_id,
+                POI_CATID, cat_id,
+                POI_LATLON, latlon,
+                POI_LABEL, label,
+                POI_DESC, desc,
+                -1);
+            g_object_unref(G_OBJECT(store));
+            return TRUE;
+            break;
+    }
+
+    /* There are at least 2 matching POI's - let the user select one. */
     dialog = gtk_dialog_new_with_buttons(_("Select POI"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
             NULL);
-
-    store = gtk_list_store_new(POI_NUM_COLUMNS,
-                               G_TYPE_INT,
-                               G_TYPE_STRING,
-                               G_TYPE_STRING,
-                               G_TYPE_STRING,
-                               G_TYPE_STRING);
-
-    for(i = 1; i < nRow + 1; i++)
-    {
-        gtk_list_store_append(store, &iter);
-        deg_format(g_ascii_strtod(pszResult[i * nColumn + 0], NULL),
-                tmp1);
-        deg_format(g_ascii_strtod(pszResult[i * nColumn + 1], NULL),
-                tmp2);
-        gtk_list_store_set(store, &iter,
-                POI_INDEX, i,
-                POI_LATITUDE, tmp1,
-                POI_LONGITUDE, tmp2,
-                POI_LABEL, pszResult[i * nColumn + 2],
-                POI_CATEGORY, pszResult[i * nColumn + 6],
-                -1);
-    }
 
     gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 300);
 
@@ -11428,41 +11652,38 @@ poi_list(gchar **pszResult, gint nRow, gint nColumn)
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            "POI_INDEX", renderer, "text", POI_INDEX);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
-    gtk_tree_view_column_set_max_width (column, 1);
-
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes(
-            _("Latitude"), renderer, "text", POI_LATITUDE);
+            _("Location"), renderer, "text", POI_LATLON, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            _("Longitude"), renderer, "text", POI_LONGITUDE);
+            _("Label"), renderer, "text", POI_LABEL, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            _("Label"), renderer, "text", POI_LABEL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
-
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes(
-            _("Category"), renderer, "text", POI_CATEGORY);
+            _("Category"), renderer, "text", POI_CATLAB, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
 
     gtk_widget_show_all(dialog);
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
-        GtkTreeIter iter;
         if(gtk_tree_selection_get_selected(
                     gtk_tree_view_get_selection(GTK_TREE_VIEW(list)),
                     NULL, &iter))
         {
             gtk_tree_model_get(GTK_TREE_MODEL(store),
-                &iter, 0, &row, -1);
+                &iter, POI_POIID, poi_id, -1);
+            gtk_tree_model_get(GTK_TREE_MODEL(store),
+                &iter, POI_CATID, cat_id, -1);
+            gtk_tree_model_get(GTK_TREE_MODEL(store),
+                &iter, POI_LATLON, latlon, -1);
+            gtk_tree_model_get(GTK_TREE_MODEL(store),
+                &iter, POI_LABEL, label, -1);
+            gtk_tree_model_get(GTK_TREE_MODEL(store),
+                &iter, POI_DESC, desc, -1);
+            selected = TRUE;
             break;
         }
         else
@@ -11471,39 +11692,44 @@ poi_list(gchar **pszResult, gint nRow, gint nColumn)
 
     gtk_widget_destroy(dialog);
 
-    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, row);
-    return row;
+    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__);
+    return selected;
 }
 
 static void
 poi_populate_cat_combo(GtkWidget *cmb_category, guint cat_id)
 {
-    gchar **pszResult;
-    gint nRow, nColumn, row;
-    guint i, catindex = 0;
-    gint n_children;
+    GtkTreeIter active;
+    GtkListStore *store;
+    gboolean has_active = FALSE;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    n_children = gtk_tree_model_iter_n_children(
-            gtk_combo_box_get_model(GTK_COMBO_BOX(cmb_category)), NULL);
+    store = GTK_LIST_STORE(gtk_combo_box_get_model(
+                GTK_COMBO_BOX(cmb_category)));
+    gtk_list_store_clear(store);
 
-    for(i = 0; i < n_children; i++)
-        gtk_combo_box_remove_text(GTK_COMBO_BOX(cmb_category), 0);
-
-    if(SQLITE_OK == sqlite_get_table(_db,
-                "select c.label, c.cat_id from category c order by c.label",
-                &pszResult, &nRow, &nColumn, NULL))
+    while(SQLITE_ROW == sqlite3_step(_stmt_selall_cat))
     {
-        for(row=1; row<nRow+1; row++)
+        GtkTreeIter iter;
+        guint cid = sqlite3_column_int(_stmt_selall_cat, 0);
+        gtk_list_store_append(store, &iter);
+        gtk_list_store_set(store, &iter,
+                0, cid,
+                1, sqlite3_column_text(_stmt_selall_cat, 1),
+                -1);
+        if(cid == cat_id)
         {
-            gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_category),
-                pszResult[row*nColumn]);
-            if(atoi(pszResult[row*nColumn+1]) == cat_id)
-                catindex = row - 1;
+            active = iter;
+            has_active = TRUE;
         }
-        sqlite_free_table(pszResult);
     }
-    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_category), catindex);
+    sqlite3_reset(_stmt_selall_cat);
+
+    if(!has_active)
+        gtk_tree_model_get_iter_first(GTK_TREE_MODEL(store), &active);
+
+    gtk_combo_box_set_active_iter(GTK_COMBO_BOX(cmb_category), &active);
+
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
@@ -11527,15 +11753,11 @@ poi_edit_cat(GtkWidget *widget, PoiCategoryEditInfo *data)
 static gboolean
 poi_dialog(guint action)
 {
-    gchar **pszResult;
-    gint nRow, nColumn, rowindex;
     gchar *poi_label = NULL;
-    gchar *poi_category = NULL;
     gchar *poi_desc = NULL;
     guint unitx, unity, cat_id = 0, poi_id = 0;
     gfloat lat, lon, lat1, lon1, lat2, lon2, tmp;
     gchar slat1[10], slon1[10];
-    gchar slat2[10], slon2[10], tmp1[15], tmp2[15];
     gchar *p_latlon, *p_label = NULL, *p_desc = NULL;
     GtkWidget *dialog;
     GtkWidget *table;
@@ -11580,49 +11802,9 @@ poi_dialog(guint action)
             lon1 = tmp;
         }
 
-        g_ascii_dtostr(slat1, sizeof(slat1), lat1);
-        g_ascii_dtostr(slon1, sizeof(slon1), lon1);
-        g_ascii_dtostr(slat2, sizeof(slat2), lat2);
-        g_ascii_dtostr(slon2, sizeof(slon2), lon2);
-
-        if(SQLITE_OK != sqlite_get_table_printf(_db,
-                    "select p.lat, p.lon, p.label, p.desc, p.cat_id,"
-                    " p.poi_id, c.label"
-                    " from poi p, category c "
-                    " where p.lat between %s and %s "
-                    " and p.lon between %s and %s "
-                    " and c.enabled = 1 and p.cat_id = c.cat_id",
-                    &pszResult, &nRow, &nColumn, NULL,
-                    slat1, slat2, slon1, slon2))
-        {
-            vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        if(!select_poi(lat1, lon1, lat2, lon2,
+                    &poi_id, &cat_id, &p_latlon, &p_label, &p_desc))
             return FALSE;
-        }
-
-        if(nRow == 0)
-            return FALSE;
-
-        if(nRow > 1)
-        {
-            rowindex = poi_list(pszResult, nRow, nColumn);
-            if(rowindex == -1)
-                return FALSE;
-        }
-        else
-            rowindex = 1;
-
-        deg_format(
-            g_ascii_strtod(pszResult[rowindex * nColumn + 0], NULL),
-            tmp1);
-        deg_format(
-            g_ascii_strtod(pszResult[rowindex * nColumn + 1], NULL),
-            tmp2);
-        p_latlon = g_strdup_printf("%s, %s", tmp1, tmp2);
-        p_label = g_strdup(pszResult[rowindex * nColumn + 2]);
-        p_desc = g_strdup(pszResult[rowindex * nColumn + 3]);
-        cat_id = atoi(pszResult[rowindex * nColumn + 4]);
-        poi_id = atoi(pszResult[rowindex * nColumn + 5]);
-        sqlite_free_table(pszResult);
 
         dialog = gtk_dialog_new_with_buttons(_("Edit POI"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
@@ -11644,17 +11826,15 @@ poi_dialog(guint action)
     }
     else
     {
+        gchar tmp1[15], tmp2[15];
         deg_format(lat, tmp1);
         deg_format(lon, tmp2);
         p_latlon = g_strdup_printf("%s, %s", tmp1, tmp2);
 
-        if(SQLITE_OK == sqlite_get_table(_db,
-                    "select ifnull(max(poi_id) + 1,1) from poi",
-            &pszResult, &nRow, &nColumn, NULL))
-        {
-            p_label = g_strdup_printf("Point%06d", atoi(pszResult[nColumn]));
-            sqlite_free_table(pszResult);
-        }
+        if(SQLITE_ROW == sqlite3_step(_stmt_nextlabel_poi))
+            p_label = g_strdup_printf("Point%06d",
+                    sqlite3_column_int(_stmt_nextlabel_poi, 0));
+        sqlite3_reset(_stmt_nextlabel_poi);
 
         p_desc = g_strdup("");
         cat_id = 0;
@@ -11695,8 +11875,21 @@ poi_dialog(guint action)
             hbox = gtk_hbox_new(FALSE, 4),
             1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
     gtk_box_pack_start(GTK_BOX(hbox),
-            cmb_category = gtk_combo_box_new_text(),
+            cmb_category = gtk_combo_box_new_with_model(
+                GTK_TREE_MODEL(gtk_list_store_new(2,
+                        G_TYPE_INT, /* Category ID */
+                        G_TYPE_STRING))), /* Category Label */
             FALSE, FALSE, 4);
+    /* Set up the view for the combo box. */
+    {
+        GtkCellRenderer *renderer;
+        renderer = gtk_cell_renderer_text_new();
+        gtk_cell_layout_pack_start(
+                GTK_CELL_LAYOUT(cmb_category), renderer, TRUE);
+        gtk_cell_layout_set_attributes(
+                GTK_CELL_LAYOUT(cmb_category), renderer, "text", 1, NULL);
+    }
+
     gtk_box_pack_start(GTK_BOX(hbox),
             btn_catedit = gtk_button_new_with_label(_("Edit Categories...")),
             FALSE, FALSE, 4);
@@ -11743,6 +11936,8 @@ poi_dialog(guint action)
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
+        GtkTreeIter iter;
+
         if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_label))))
             poi_label = g_strdup(gtk_entry_get_text(
                         GTK_ENTRY(txt_label)));
@@ -11756,55 +11951,62 @@ poi_dialog(guint action)
         gtk_text_buffer_get_end_iter (desc_txt, &end);
         poi_desc = gtk_text_buffer_get_text(desc_txt, &begin, &end, TRUE);
 
-        poi_category = gtk_combo_box_get_active_text(
-                GTK_COMBO_BOX(cmb_category));
-
-        if(SQLITE_OK == sqlite_get_table_printf(_db,
-                    "select cat_id from category where label = %Q",
-                    &pszResult, &nRow, &nColumn, NULL,
-                    poi_category))
+        if(!gtk_combo_box_get_active_iter(
+                GTK_COMBO_BOX(cmb_category), &iter))
         {
-            if(action == ACTION_EDIT_POI)
+            popup_error(dialog, _("Please specify a category for the POI."));
+            continue;
+        }
+
+        gtk_tree_model_get(
+                gtk_combo_box_get_model(GTK_COMBO_BOX(cmb_category)),
+                &iter, 0, &cat_id, -1);
+
+        if(action == ACTION_EDIT_POI)
+        {
+            /* edit poi */
+            printf("Updating: %s, %s, %d, %d\n", poi_label, poi_desc, cat_id, poi_id);
+            if(SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 1, poi_label,
+                        -1, g_free) ||
+               SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 2, poi_desc,
+                        -1, g_free) ||
+               SQLITE_OK != sqlite3_bind_int(_stmt_update_poi, 3, cat_id) ||
+               SQLITE_OK != sqlite3_bind_int(_stmt_update_poi, 4, poi_id) ||
+               SQLITE_DONE != sqlite3_step(_stmt_update_poi))
             {
-                /* edit poi */
-                if(SQLITE_OK != sqlite_exec_printf(_db,
-                            "update poi set label = %Q, desc = %Q, "
-                            "cat_id = %s where poi_id = %d",
-                            NULL, NULL, NULL,
-                            poi_label, poi_desc, pszResult[nColumn], poi_id))
-                {
-                    MACRO_BANNER_SHOW_INFO(_window, _("Problem updating POI"));
-                }
-                else
-                    map_render_poi();
+                MACRO_BANNER_SHOW_INFO(_window, _("Problem updating POI"));
             }
             else
+                map_render_poi();
+            sqlite3_reset(_stmt_update_poi);
+        }
+        else
+        {
+            /* add poi */
+            printf("Adding POI: %f, %f, %s, %s, %d\n", lat, lon, poi_label,
+                    poi_desc, cat_id);
+            g_ascii_dtostr(slat1, sizeof(slat1), lat);
+            g_ascii_dtostr(slon1, sizeof(slon1), lon);
+            if(
+               SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 1, lat) ||
+               SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 2, lon) ||
+               SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 3, poi_label,
+                        -1, g_free) ||
+               SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 4, poi_desc,
+                        -1, g_free) ||
+               SQLITE_OK != sqlite3_bind_int(_stmt_insert_poi, 5, cat_id) ||
+               SQLITE_DONE != sqlite3_step(_stmt_insert_poi))
             {
-                /* add poi */
-                g_ascii_dtostr(slat1, sizeof(slat1), lat);
-                g_ascii_dtostr(slon1, sizeof(slon1), lon);
-                if(SQLITE_OK != sqlite_exec_printf(_db,
-                            "insert into poi (lat, lon, label, desc, cat_id)"
-                            " values (%s, %s, %Q, %Q, %s)",
-                            NULL, NULL, NULL,
-                            slat1, slon1, poi_label, poi_desc,
-                            pszResult[nColumn]))
-                {
-                    MACRO_BANNER_SHOW_INFO(_window, _("Problem adding POI"));
-                }
-                else
-                    map_render_poi();
+                MACRO_BANNER_SHOW_INFO(_window, _("Problem adding POI"));
             }
-
-            sqlite_free_table(pszResult);
+            else
+                map_render_poi();
+            sqlite3_reset(_stmt_insert_poi);
         }
         break;
     }
 
     g_object_unref (desc_txt);
-    g_free(poi_label);
-    g_free(poi_category);
-    g_free(poi_desc);
 
     g_free(p_latlon);
     g_free(p_label);
