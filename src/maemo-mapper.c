@@ -579,6 +579,7 @@ typedef enum
     CAT_ENABLED,
     CAT_LABEL,
     CAT_DESC,
+    CAT_POI_CNT,
     CAT_NUM_COLUMNS
 } CategoryList;
 
@@ -3104,8 +3105,9 @@ db_connect()
                     -1, &_stmt_toggle_cat, NULL);
     /* select all category */
     sqlite3_prepare(_db,
-                    "select c.cat_id, c.label, c.desc, c.enabled"
-                    " from category c "
+                    "select c.cat_id, c.label, c.desc, c.enabled, count(p.poi_id)"
+                    " from category c left outer join poi p on c.cat_id = p.cat_id"
+                    " group by c.cat_id, c.label, c.desc, c.enabled "
                     " order by c.label",
                     -1, &_stmt_selall_cat, NULL);
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -11346,7 +11348,8 @@ generate_store()
                                G_TYPE_UINT,
                                G_TYPE_BOOLEAN,
                                G_TYPE_STRING,
-                               G_TYPE_STRING);
+                               G_TYPE_STRING,
+                               G_TYPE_UINT);
 
     while(SQLITE_ROW == sqlite3_step(_stmt_selall_cat))
     {
@@ -11356,6 +11359,7 @@ generate_store()
                 CAT_ENABLED, sqlite3_column_int(_stmt_selall_cat, 3),
                 CAT_LABEL, sqlite3_column_text(_stmt_selall_cat, 1),
                 CAT_DESC, sqlite3_column_text(_stmt_selall_cat, 2),
+                CAT_POI_CNT, sqlite3_column_int(_stmt_selall_cat, 4),
                 -1);
     }
     sqlite3_reset(_stmt_selall_cat);
@@ -11479,6 +11483,11 @@ category_list()
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
             _("Desc."), renderer, "text", CAT_DESC, NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("POI cnt"), renderer, "text", CAT_POI_CNT, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
     gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 300);
