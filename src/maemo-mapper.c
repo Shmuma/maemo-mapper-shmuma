@@ -6470,9 +6470,9 @@ map_render_poi()
             lat1 = sqlite3_column_double(_stmt_select_poi, 0);
             lon1 = sqlite3_column_double(_stmt_select_poi, 1);
             gchar *poi_label = g_utf8_strdown(sqlite3_column_text(
-                    _stmt_select_poi, 2), -1);
+                    _stmt_select_poi, 3), -1);
             gchar *cat_label = g_utf8_strdown(sqlite3_column_text(
-                    _stmt_select_poi, 5), -1);
+                    _stmt_select_poi, 6), -1);
 
             latlon2unit(lat1, lon1, unitx, unity);
             poix = unit2bufx(unitx);
