@@ -53,6 +53,7 @@
 #include <hildon-widgets/hildon-number-editor.h>
 #include <hildon-widgets/hildon-banner.h>
 #include <hildon-widgets/hildon-system-sound.h>
+#include <hildon-widgets/hildon-input-mode-hint.h>
 #include <libgnomevfs/gnome-vfs.h>
 #include <curl/multi.h>
 #include <gconf/gconf-client.h>
@@ -150,7 +151,7 @@
 #define GCONF_KEY_AUTO_DOWNLOAD GCONF_KEY_PREFIX"/auto_download"
 #define GCONF_KEY_CENTER_SENSITIVITY GCONF_KEY_PREFIX"/center_sensitivity"
 #define GCONF_KEY_ANNOUNCE_NOTICE GCONF_KEY_PREFIX"/announce_notice"
-#define GCONF_KEY_DRAW_LINE_WIDTH GCONF_KEY_PREFIX"/draw_line_width"
+#define GCONF_KEY_draw_width GCONF_KEY_PREFIX"/draw_line_width"
 #define GCONF_KEY_ENABLE_VOICE GCONF_KEY_PREFIX"/enable_voice"
 #define GCONF_KEY_VOICE_SPEED GCONF_KEY_PREFIX"/voice_speed"
 #define GCONF_KEY_VOICE_PITCH GCONF_KEY_PREFIX"/voice_pitch"
@@ -187,6 +188,7 @@
 #define GCONF_KEY_SHOWTRACKS GCONF_KEY_PREFIX"/show_tracks"
 #define GCONF_KEY_SHOWROUTES GCONF_KEY_PREFIX"/show_routes"
 #define GCONF_KEY_SHOWVELVEC GCONF_KEY_PREFIX"/show_velocity_vector"
+#define GCONF_KEY_SHOWPOIS GCONF_KEY_PREFIX"/show_poi"
 #define GCONF_KEY_ENABLE_GPS GCONF_KEY_PREFIX"/enable_gps"
 #define GCONF_KEY_ROUTE_LOCATIONS GCONF_KEY_PREFIX"/route_locations"
 #define GCONF_KEY_REPOSITORIES GCONF_KEY_PREFIX"/repositories"
@@ -212,7 +214,7 @@
 
 #define XML_TRKSEG_HEADER ( \
   "<?xml version=\"1.0\"?>\n" \
-  "<gpx version=\"1.0\" creator=\"Maemo Mapper\" " \
+  "<gpx version=\"1.0\" creator=\"maemo-mapper\" " \
       "xmlns=\"http://www.topografix.com/GPX/1/0\">\n" \
   "  <trk>\n" \
   "    <trkseg>\n" \
@@ -226,6 +228,11 @@
 
 #define HELP_ID_PREFIX "help_maemomapper_"
 #define HELP_ID_INTRO HELP_ID_PREFIX"intro"
+#define HELP_ID_SETTINGS HELP_ID_PREFIX"settings"
+#define HELP_ID_REPOMAN HELP_ID_PREFIX"repoman"
+#define HELP_ID_MAPMAN HELP_ID_PREFIX"mapman"
+#define HELP_ID_DOWNROUTE HELP_ID_PREFIX"downroute"
+#define HELP_ID_POICAT HELP_ID_PREFIX"poicat"
 
 #define MACRO_RECALC_CENTER(center_unitx, center_unity) { \
     switch(_center_mode) \
@@ -298,9 +305,9 @@
     (track).cap = (track).head + ARRAY_CHUNK_SIZE; \
 }
 
-#define MACRO_CLEAR_TRACK(track) if((track).head) { \
-    g_free((track).head); \
-    (track).head = (track).tail = (track).cap = NULL; \
+#define MACRO_FREE_TRACK(path) if((path).head) { \
+    g_free((path).head); \
+    (path).head = (path).tail = (path).cap = NULL; \
 }
 
 #define MACRO_INIT_ROUTE(route) { \
@@ -312,7 +319,7 @@
     (route).wcap = (route).whead + ARRAY_CHUNK_SIZE; \
 }
 
-#define MACRO_CLEAR_ROUTE(route) if((route).head) { \
+#define MACRO_FREE_ROUTE(route) if((route).head) { \
     WayPoint *curr; \
     g_free((route).head); \
     (route).head = (route).tail = (route).cap = NULL; \
@@ -323,12 +330,8 @@
 }
 
 #define DISTANCE_SQUARED(a, b) \
-    ((((gint)((b).unitx) - (a).unitx) * ((gint)((b).unitx) - (a).unitx)) \
-     + (((gint)((b).unity) - (a).unity) * ((gint)((b).unity) - (a).unity)))
-
-#define DISTANCE_ROUGH(a, b) \
-    (abs((gint)((b).unitx) - (a).unitx) \
-     + abs((gint)((b).unity) - (a).unity))
+   ((guint64)((((gint64)(b).unitx)-(a).unitx)*(((gint64)(b).unitx)-(a).unitx))\
+  + (guint64)((((gint64)(b).unity)-(a).unity)*(((gint64)(b).unity)-(a).unity)))
 
 #define MACRO_QUEUE_DRAW_AREA() \
     gtk_widget_queue_draw_area( \
@@ -336,6 +339,14 @@
             0, 0, \
             _screen_width_pixels, \
             _screen_height_pixels)
+
+/* Render all on-map metadata an annotations, including POI and paths. */
+#define MACRO_MAP_RENDER_DATA() { \
+    if(_show_poi) \
+        map_render_poi(); \
+    if(_show_tracks > 0) \
+        map_render_paths(); \
+}
 
 #define KEEP_DISPLAY_ON() { \
     /* Note that the flag means keep on ONLY when fullscreen. */ \
@@ -538,6 +549,15 @@ typedef enum
     RCVR_FIXED
 } ConnState;
 
+/** This enumerated type defines the supported types of repositories. */
+typedef enum
+{
+    REPOTYPE_XYZ, /* x=%d, y=%d, and zoom=%d */
+    REPOTYPE_QUAD_QRST, /* t=%s   (%s = {qrst}*) */
+    REPOTYPE_QUAD_ZERO, /* t=%0s  (%0s = {0123}*) */
+    REPOTYPE_WMS        /* "service=wms" */
+} RepoType;
+
 /** Possible center modes.  The "WAS" modes imply no current center mode;
  * they only hint at what the last center mode was, so that it can be
  * recalled. */
@@ -588,6 +608,8 @@ typedef enum
 {
     POI_POIID,
     POI_CATID,
+    POI_LAT,
+    POI_LON,
     POI_LATLON,
     POI_LABEL,
     POI_DESC,
@@ -631,11 +653,17 @@ gchar *INFO_FONT_TEXT[INFO_FONT_ENUM_COUNT];
 typedef enum
 {
     ESCAPE_KEY_TOGGLE_TRACKS,
+    ESCAPE_KEY_TOGGLE_POI,
     ESCAPE_KEY_CHANGE_REPO,
-    ESCAPE_KEY_RESET_BLUETOOTH,
+    ESCAPE_KEY_ROUTE_DISTNEXT,
+    ESCAPE_KEY_ROUTE_DISTLAST,
+    ESCAPE_KEY_TRACK_WAYPOINT,
+    ESCAPE_KEY_TRACK_DISTLAST,
+    ESCAPE_KEY_TRACK_DISTFIRST,
     ESCAPE_KEY_TOGGLE_GPS,
     ESCAPE_KEY_TOGGLE_GPSINFO,
     ESCAPE_KEY_TOGGLE_SPEEDLIMIT,
+    ESCAPE_KEY_RESET_BLUETOOTH,
     ESCAPE_KEY_ENUM_COUNT
 } EscapeKeyAction;
 gchar *ESCAPE_KEY_TEXT[ESCAPE_KEY_ENUM_COUNT];
@@ -742,6 +770,7 @@ struct _RepoData {
     gchar *cache_dir;
     guint dl_zoom_steps;
     guint view_zoom_steps;
+    RepoType type;
     GtkWidget *menu_item;
 };
 
@@ -751,10 +780,10 @@ struct _GpsData {
     guint fix;
     guint fixquality;
     time_t timeloc; /* local time */
-    gfloat latitude;
-    gfloat longitude;
-    gchar slatitude[15];
-    gchar slongitude[15];
+    gfloat lat;
+    gfloat lon;
+    gchar slat[15];
+    gchar slon[15];
     gfloat speed;    /* in knots */
     gfloat maxspeed;    /* in knots */
     gfloat altitude; /* in meters */
@@ -804,6 +833,17 @@ struct _AutoRouteDownloadData {
     CURL *curl_easy;
     gchar *src_str;
     RouteDownloadData rdl_data;
+};
+
+/** Data to describe a POI. */
+typedef struct _PoiInfo PoiInfo;
+struct _PoiInfo {
+    guint poi_id;
+    guint cat_id;
+    gfloat lat;
+    gfloat lon;
+    gchar *label;
+    gchar *desc;
 };
 
 /****************************************************************************
@@ -941,14 +981,14 @@ static Route _route;
 /** Data for tracking waypoints for the purpose of announcement. */
 /* _near_point is the route point to which we are closest. */
 static Point *_near_point = NULL;
-static guint _near_point_dist_rough = -1;
+static guint64 _near_point_dist_squared = -1;
 /* _next_way is what we currently interpret to be the next waypoint. */
 static WayPoint *_next_way = NULL;
-static guint _next_way_dist_rough = -1;
+static guint64 _next_way_dist_squared = -1;
 static gchar *_last_spoken_phrase = NULL;
 /* _next_wpt is the route point immediately following _next_way. */
 static Point *_next_wpt = NULL;
-static guint _next_wpt_dist_rough = -1;
+static guint64 _next_wpt_dist_squared = -1;
 
 static WayPoint *_visible_way_first = NULL;
 static WayPoint *_visible_way_last = NULL;
@@ -985,33 +1025,56 @@ static GdkColor DEFAULT_COLOR_ROUTE_WAY = {0, 0x0000, 0x8000, 0x0000};
 static GdkColor DEFAULT_COLOR_ROUTE_NEXTWAY = {0, 0x0000, 0x6000, 0x0000};
 static GdkColor DEFAULT_COLOR_POI = {0, 0xa000, 0x0000, 0xa000};
 
-/** MAIN MENU ITEMS. */
+/* Menu items for the "Route" submenu. */
 static GtkWidget *_menu_route_download_item = NULL;
 static GtkWidget *_menu_route_open_item = NULL;
 static GtkWidget *_menu_route_save_item = NULL;
+static GtkWidget *_menu_route_distnext_item = NULL;
+static GtkWidget *_menu_route_distlast_item = NULL;
 static GtkWidget *_menu_route_reset_item = NULL;
 static GtkWidget *_menu_route_clear_item = NULL;
+
+/* Menu items for the "Track" submenu. */
 static GtkWidget *_menu_track_open_item = NULL;
 static GtkWidget *_menu_track_save_item = NULL;
-static GtkWidget *_menu_track_mark_way_item = NULL;
+static GtkWidget *_menu_track_insert_mark_item = NULL;
+static GtkWidget *_menu_track_distlast_item = NULL;
+static GtkWidget *_menu_track_distfirst_item = NULL;
 static GtkWidget *_menu_track_clear_item = NULL;
+
+/* Menu items for the "Maps" submenu. */
 static GtkWidget *_menu_maps_submenu = NULL;
 static GtkWidget *_menu_maps_mapman_item = NULL;
 static GtkWidget *_menu_maps_repoman_item = NULL;
 static GtkWidget *_menu_auto_download_item = NULL;
+
+/* Menu items for the "View" submenu. */
+static GtkWidget *_menu_fullscreen_item = NULL;
 static GtkWidget *_menu_show_tracks_item = NULL;
 static GtkWidget *_menu_show_routes_item = NULL;
 static GtkWidget *_menu_show_velvec_item = NULL;
+static GtkWidget *_menu_show_poi_item = NULL;
+static GtkWidget *_menu_poi_item = NULL;
+
+/* Menu items for the "Auto-Center" submenu. */
 static GtkWidget *_menu_ac_latlon_item = NULL;
 static GtkWidget *_menu_ac_lead_item = NULL;
 static GtkWidget *_menu_ac_none_item = NULL;
-static GtkWidget *_menu_fullscreen_item = NULL;
+
+/* Menu items for the "Go to" submenu. */
+static GtkWidget *_menu_goto_latlon = NULL;
+static GtkWidget *_menu_goto_gps = NULL;
+static GtkWidget *_menu_goto_nextway = NULL;
+static GtkWidget *_menu_goto_nearpoi = NULL;
+
+/* Menu items for the "GPS" submenu. */
 static GtkWidget *_menu_enable_gps_item = NULL;
 static GtkWidget *_menu_gps_show_info_item = NULL;
 static GtkWidget *_menu_gps_details_item = NULL;
 static GtkWidget *_menu_gps_reset_item = NULL;
+
+/* Menu items for the other menu items. */
 static GtkWidget *_menu_settings_item = NULL;
-static GtkWidget *_menu_poi_item = NULL;
 static GtkWidget *_menu_help_item = NULL;
 static GtkWidget *_menu_close_item = NULL;
 
@@ -1019,13 +1082,17 @@ static GtkWidget *_menu_close_item = NULL;
 static guint _cmenu_position_x;
 static guint _cmenu_position_y;
 
+/* Menu items for the "Location" context menu. */
 static GtkWidget *_cmenu_loc_show_latlon_item = NULL;
 static GtkWidget *_cmenu_loc_clip_latlon_item = NULL;
 static GtkWidget *_cmenu_loc_route_to_item = NULL;
 static GtkWidget *_cmenu_loc_distance_to_item = NULL;
-static GtkWidget *_cmenu_add_poi = NULL;
-static GtkWidget *_cmenu_edit_poi = NULL;
+static GtkWidget *_cmenu_loc_add_route = NULL;
+static GtkWidget *_cmenu_loc_add_way = NULL;
+static GtkWidget *_cmenu_loc_add_poi = NULL;
+static GtkWidget *_cmenu_loc_set_gps = NULL;
 
+/* Menu items for the "Waypoint" context menu. */
 static GtkWidget *_cmenu_way_show_latlon_item = NULL;
 static GtkWidget *_cmenu_way_show_desc_item = NULL;
 static GtkWidget *_cmenu_way_clip_latlon_item = NULL;
@@ -1033,6 +1100,17 @@ static GtkWidget *_cmenu_way_clip_desc_item = NULL;
 static GtkWidget *_cmenu_way_route_to_item = NULL;
 static GtkWidget *_cmenu_way_distance_to_item = NULL;
 static GtkWidget *_cmenu_way_delete_item = NULL;
+static GtkWidget *_cmenu_way_add_poi = NULL;
+static GtkWidget *_cmenu_way_goto_nextway = NULL;
+
+/* Menu items for the "POI" context menu. */
+static GtkWidget *_cmenu_poi = NULL;
+static GtkWidget *_cmenu_poi_edit_poi = NULL;
+static GtkWidget *_cmenu_poi_route_to_item = NULL;
+static GtkWidget *_cmenu_poi_distance_to_item = NULL;
+static GtkWidget *_cmenu_poi_add_route = NULL;
+static GtkWidget *_cmenu_poi_add_way = NULL;
+static GtkWidget *_cmenu_poi_goto_nearpoi = NULL;
 
 /** BANNERS. */
 GtkWidget *_connect_banner = NULL;
@@ -1060,10 +1138,11 @@ static gchar *_route_dl_url = NULL;
 static guint _route_dl_radius = 4;
 static gint _show_tracks = 0;
 static gboolean _show_velvec = TRUE;
+static gboolean _show_poi = TRUE;
 static gboolean _auto_download = FALSE;
 static guint _lead_ratio = 5;
 static guint _center_ratio = 7;
-static guint _draw_line_width = 5;
+static guint _draw_width = 5;
 static guint _announce_notice_ratio = 8;
 static gboolean _enable_voice = TRUE;
 static gboolean _always_keep_on = FALSE;
@@ -1091,6 +1170,7 @@ static sqlite3 *_db = NULL;
 static guint _poi_zoom = 6;
 
 static sqlite3_stmt *_stmt_select_poi = NULL;
+static sqlite3_stmt *_stmt_select_nearest_poi = NULL;
 static sqlite3_stmt *_stmt_insert_poi = NULL;
 static sqlite3_stmt *_stmt_update_poi = NULL;
 static sqlite3_stmt *_stmt_delete_poi = NULL;
@@ -1152,6 +1232,7 @@ channel_cb_connect(GIOChannel *src, GIOCondition condition, gpointer data);
 static gboolean
 channel_cb_input(GIOChannel *src, GIOCondition condition, gpointer data);
 
+/* Callbacks for the "Route" submenu. */
 static gboolean
 menu_cb_route_download(GtkAction *action);
 static gboolean
@@ -1159,29 +1240,29 @@ menu_cb_route_open(GtkAction *action);
 static gboolean
 menu_cb_route_save(GtkAction *action);
 static gboolean
+menu_cb_route_distnext(GtkAction *action);
+static gboolean
+menu_cb_route_distlast(GtkAction *action);
+static gboolean
 menu_cb_route_reset(GtkAction *action);
 static gboolean
 menu_cb_route_clear(GtkAction *action);
 
+/* Callbacks for the "Track" submenu. */
 static gboolean
 menu_cb_track_open(GtkAction *action);
 static gboolean
 menu_cb_track_save(GtkAction *action);
 static gboolean
-menu_cb_track_mark_way(GtkAction *action);
+menu_cb_track_insert_mark(GtkAction *action);
+static gboolean
+menu_cb_track_distlast(GtkAction *action);
+static gboolean
+menu_cb_track_distfirst(GtkAction *action);
 static gboolean
 menu_cb_track_clear(GtkAction *action);
 
-static gboolean
-menu_cb_show_tracks(GtkAction *action);
-static gboolean
-menu_cb_show_routes(GtkAction *action);
-static gboolean
-menu_cb_show_velvec(GtkAction *action);
-static gboolean
-menu_cb_category(GtkAction *action);
-
-
+/* Callbacks for the "Maps" submenu. */
 static gboolean
 menu_cb_maps_select(GtkAction *action, gpointer new_repo);
 static gboolean
@@ -1193,6 +1274,21 @@ menu_cb_maps_repoman(GtkAction *action);
 static gboolean
 menu_cb_auto_download(GtkAction *action);
 
+/* Callbacks for the "View" submenu. */
+static gboolean
+menu_cb_fullscreen(GtkAction *action);
+static gboolean
+menu_cb_show_tracks(GtkAction *action);
+static gboolean
+menu_cb_show_routes(GtkAction *action);
+static gboolean
+menu_cb_show_velvec(GtkAction *action);
+static gboolean
+menu_cb_show_poi(GtkAction *action);
+static gboolean
+menu_cb_category(GtkAction *action);
+
+/* Callbacks for the "Auto-Center" submenu. */
 static gboolean
 menu_cb_ac_latlon(GtkAction *action);
 static gboolean
@@ -1200,7 +1296,34 @@ menu_cb_ac_lead(GtkAction *action);
 static gboolean
 menu_cb_ac_none(GtkAction *action);
 
+/* Callbacks for the "Go to" submenu. */
+static gboolean
+menu_cb_goto_latlon(GtkAction *action);
+static gboolean
+menu_cb_goto_gps(GtkAction *action);
+static gboolean
+menu_cb_goto_nextway(GtkAction *action);
+static gboolean
+menu_cb_goto_nearpoi(GtkAction *action);
 
+/* Callbacks for the "GPS" submenu. */
+static gboolean
+menu_cb_enable_gps(GtkAction *action);
+static gboolean
+menu_cb_gps_show_info(GtkAction *action);
+static gboolean
+menu_cb_gps_details(GtkAction *action);
+static gboolean
+menu_cb_gps_reset(GtkAction *action);
+
+/* Callbacks for the other menu items. */
+static gboolean
+menu_cb_settings(GtkAction *action);
+static gboolean
+menu_cb_help(GtkAction *action);
+
+
+/* Callbacks for the "Location" context menu. */
 static gboolean
 cmenu_cb_loc_show_latlon(GtkAction *action);
 static gboolean
@@ -1210,10 +1333,15 @@ cmenu_cb_loc_route_to(GtkAction *action);
 static gboolean
 cmenu_cb_loc_distance_to(GtkAction *action);
 static gboolean
-cmenu_cb_add_poi(GtkAction *action);
+cmenu_cb_loc_add_route(GtkAction *action);
 static gboolean
-cmenu_cb_edit_poi(GtkAction *action);
+cmenu_cb_loc_add_way(GtkAction *action);
+static gboolean
+cmenu_cb_loc_add_poi(GtkAction *action);
+static gboolean
+cmenu_cb_loc_set_gps(GtkAction *action);
 
+/* Callbacks for the "Waypoint" context menu. */
 static gboolean
 cmenu_cb_way_show_latlon(GtkAction *action);
 static gboolean
@@ -1228,24 +1356,21 @@ static gboolean
 cmenu_cb_way_distance_to(GtkAction *action);
 static gboolean
 cmenu_cb_way_delete(GtkAction *action);
+static gboolean
+cmenu_cb_way_add_poi(GtkAction *action);
 
+/* Callbacks for the "POI" context menu. */
+static gboolean
+cmenu_cb_poi_route_to(GtkAction *action);
+static gboolean
+cmenu_cb_poi_distance_to(GtkAction *action);
+static gboolean
+cmenu_cb_poi_edit_poi(GtkAction *action);
+static gboolean
+cmenu_cb_poi_add_route(GtkAction *action);
+static gboolean
+cmenu_cb_poi_add_way(GtkAction *action);
 
-static gboolean
-menu_cb_fullscreen(GtkAction *action);
-static gboolean
-menu_cb_enable_gps(GtkAction *action);
-static gboolean
-menu_cb_gps_show_info(GtkAction *action);
-static gboolean
-menu_cb_gps_details(GtkAction *action);
-static gboolean
-menu_cb_gps_reset(GtkAction *action);
-
-static gboolean
-menu_cb_settings(GtkAction *action);
-
-static gboolean
-menu_cb_help(GtkAction *action);
 
 static gboolean
 curl_download_timeout();
@@ -1437,51 +1562,49 @@ write_route_gpx(GnomeVFSHandle *handle)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     /* Find first non-zero point. */
-    if(_route.head)
-        for(curr = _route.head-1, wcurr = _route.whead; curr++ != _route.tail;)
-        {
-            if(curr->unity)
-                break;
-            else if(wcurr && curr == wcurr->point)
-                wcurr++;
-        }
+    for(curr = _route.head - 1, wcurr = _route.whead; curr++ != _route.tail; )
+    {
+        if(curr->unity)
+            break;
+        else if(wcurr && curr == wcurr->point)
+            wcurr++;
+    }
 
     /* Write the header. */
     WRITE_STRING(XML_TRKSEG_HEADER);
 
     /* Curr points to first non-zero point. */
-    if(_route.head)
-        for(curr--; curr++ != _route.tail; )
+    for(curr--; curr++ != _route.tail; )
+    {
+        gfloat lat, lon;
+        if(curr->unity)
         {
-            gfloat lat, lon;
-            if(curr->unity)
+            gchar buffer[BUFFER_SIZE];
+            gchar strlat[80], strlon[80];
+            if(trkseg_break)
             {
-                gchar buffer[BUFFER_SIZE];
-                gchar strlat[80], strlon[80];
-                if(trkseg_break)
-                {
-                    /* First trkpt of the segment - write trkseg header. */
-                    WRITE_STRING("    </trkseg>\n"
-                                 "    <trkseg>\n");
-                    trkseg_break = FALSE;
-                }
-                unit2latlon(curr->unitx, curr->unity, lat, lon);
-                g_ascii_formatd(strlat, 80, "%.06f", lat);
-                g_ascii_formatd(strlon, 80, "%.06f", lon);
-                snprintf(buffer, sizeof(buffer),
-                        "      <trkpt lat=\"%s\" lon=\"%s\"",
-                        strlat, strlon);
-                if(wcurr && curr == wcurr->point)
-                    snprintf(buffer + strlen(buffer),
-                            BUFFER_SIZE - strlen(buffer),
-                            "><desc>%s</desc></trkpt>\n", wcurr++->desc);
-                else
-                    strcat(buffer, "/>\n");
-                WRITE_STRING(buffer);
+                /* First trkpt of the segment - write trkseg header. */
+                WRITE_STRING("    </trkseg>\n"
+                             "    <trkseg>\n");
+                trkseg_break = FALSE;
             }
+            unit2latlon(curr->unitx, curr->unity, lat, lon);
+            g_ascii_formatd(strlat, 80, "%.06f", lat);
+            g_ascii_formatd(strlon, 80, "%.06f", lon);
+            snprintf(buffer, sizeof(buffer),
+                    "      <trkpt lat=\"%s\" lon=\"%s\"",
+                    strlat, strlon);
+            if(wcurr && curr == wcurr->point)
+                snprintf(buffer + strlen(buffer),
+                        BUFFER_SIZE - strlen(buffer),
+                        "><desc>%s</desc></trkpt>\n", wcurr++->desc);
             else
-                trkseg_break = TRUE;
+                strcat(buffer, "/>\n");
+            WRITE_STRING(buffer);
         }
+        else
+            trkseg_break = TRUE;
+    }
 
     /* Write the footer. */
     WRITE_STRING(XML_TRKSEG_FOOTER);
@@ -2007,13 +2130,13 @@ parse_track_gpx(gchar *buffer, gint size, gint policy_old)
             dest->tail += num_src_points;
         }
 
-        MACRO_CLEAR_TRACK(*src);
+        MACRO_FREE_TRACK(*src);
         if(policy_old < 0)
             _track = *dest;
     }
     else
     {
-        MACRO_CLEAR_TRACK(_track);
+        MACRO_FREE_TRACK(_track);
         /* Overwrite with data.track. */
         _track = data.path.path.track;
         track_resize(&_track,
@@ -2054,14 +2177,19 @@ parse_route_gpx(gchar *buffer, gint size, gint policy_old)
         return FALSE;
     }
 
-    if(policy_old && _route.head)
+    if(policy_old && _route.head != _route.tail)
     {
         Point *src_first;
         Route *src, *dest;
 
         if(policy_old > 0)
         {
-            /* Append to current route. */
+            /* Append to current route. Make sure last route point is zero. */
+            if(_route.tail->unity != 0)
+            {
+                MACRO_ROUTE_INCREMENT_TAIL(_route);
+                *_route.tail = _pos_null;
+            }
             src = &data.path.path.route;
             dest = &_route;
         }
@@ -2105,7 +2233,7 @@ parse_route_gpx(gchar *buffer, gint size, gint policy_old)
 
         }
 
-        /* Kill old route - don't use MACRO_CLEAR_ROUTE(), because that
+        /* Kill old route - don't use MACRO_FREE_ROUTE(), because that
          * would free the string desc's that we just moved to data.route. */
         g_free(src->head);
         g_free(src->whead);
@@ -2114,7 +2242,7 @@ parse_route_gpx(gchar *buffer, gint size, gint policy_old)
     }
     else
     {
-        MACRO_CLEAR_ROUTE(_route);
+        MACRO_FREE_ROUTE(_route);
         /* Overwrite with data.route. */
         _route = data.path.path.route;
         route_resize(&_route, _route.tail - _route.head + 1);
@@ -2144,17 +2272,17 @@ deg_format(gfloat coor, gchar scoor[15])
     switch(_degformat)
     {
         case DD_MMPMMM:
-            sprintf(scoor, "%d\u00b0%06.3f'",
+            sprintf(scoor, "%d°%06.3f'",
                     (int)coor, (coor - (int)coor)*60.0);
             break;
         case DD_MM_SSPS:
             deg = (int)coor;
             min = (coor - (int)coor)*60.0;
             sec = (min - (int)min)*60.0;
-            sprintf(scoor, "%d\u00b0%02d'%04.1f\"", deg, (int) min, sec);
+            sprintf(scoor, "%d°%02d'%04.1f\"", deg, (int) min, sec);
             break;
         default:
-            sprintf(scoor, "%.5f\u00b0", coor);
+            sprintf(scoor, "%.5f°", coor);
             break;
     }
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -2181,10 +2309,10 @@ gps_display_details(void)
         gfloat speed = _gps.speed * UNITS_CONVERT[_units];
 
         /* latitude */
-        gtk_label_set_label(GTK_LABEL(_sdi_lat), _gps.slatitude);
+        gtk_label_set_label(GTK_LABEL(_sdi_lat), _gps.slat);
 
         /* longitude */
-        gtk_label_set_label(GTK_LABEL(_sdi_lon), _gps.slongitude);
+        gtk_label_set_label(GTK_LABEL(_sdi_lon), _gps.slon);
 
         /* speed */
         switch(_units)
@@ -2218,7 +2346,7 @@ gps_display_details(void)
         g_free(buffer);
 
         /* heading */
-        buffer = g_strdup_printf("%0.0f\u00b0", _gps.heading);
+        buffer = g_strdup_printf("%0.0f°", _gps.heading);
         gtk_label_set_label(GTK_LABEL(_sdi_hea), buffer);
         g_free(buffer);
 
@@ -2322,10 +2450,10 @@ gps_display_data(void)
         gfloat speed = _gps.speed * UNITS_CONVERT[_units];
 
         /* latitude */
-        gtk_label_set_label(GTK_LABEL(_text_lat), _gps.slatitude);
+        gtk_label_set_label(GTK_LABEL(_text_lat), _gps.slat);
 
         /* longitude */
-        gtk_label_set_label(GTK_LABEL(_text_lon), _gps.slongitude);
+        gtk_label_set_label(GTK_LABEL(_text_lon), _gps.slon);
 
         /* speed */
         switch(_units)
@@ -2614,7 +2742,7 @@ draw_sat_details(GtkWidget *widget, guint x0, guint y0,
         if(line[i] == 0)
             buffer = g_strdup_printf("N");
         else
-            buffer = g_strdup_printf("%d\u00b0", line[i]);
+            buffer = g_strdup_printf("%d°", line[i]);
         pango_layout_set_text(layout, buffer, strlen(buffer));
         pango_layout_get_pixel_size(layout, &x, &y);
         gdk_draw_layout(widget->window,
@@ -2627,7 +2755,7 @@ draw_sat_details(GtkWidget *widget, guint x0, guint y0,
 
     /* elevation 30 */
     tmp = (30 * (1.f / 180.f)) * PI;
-    buffer = g_strdup_printf("30\u00b0");
+    buffer = g_strdup_printf("30°");
     pango_layout_set_text(layout, buffer, strlen(buffer));
     pango_layout_get_pixel_size(layout, &x, &y);
     gdk_draw_layout(widget->window,
@@ -2639,7 +2767,7 @@ draw_sat_details(GtkWidget *widget, guint x0, guint y0,
 
     /* elevation 60 */
     tmp = (30 * (1.f / 180.f)) * PI;
-    buffer = g_strdup_printf("60\u00b0");
+    buffer = g_strdup_printf("60°");
     pango_layout_set_text(layout, buffer, strlen(buffer));
     pango_layout_get_pixel_size(layout, &x, &y);
     gdk_draw_layout(widget->window,
@@ -2931,6 +3059,10 @@ gps_details(void)
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
+/**
+ * Calculate the distance between two lat/lon pairs.  The distance is returned
+ * in kilometers and should be converted using UNITS_CONVERT[_units].
+ */
 static gfloat
 calculate_distance(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2)
 {
@@ -2950,8 +3082,7 @@ calculate_distance(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2)
     a = (slat * slat) + (cosf(lat1) * cosf(lat2) * slon * slon);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return ((2.f * atan2f(sqrtf(a), sqrtf(1.f - a))) * EARTH_RADIUS)
-        * UNITS_CONVERT[_units];
+    return ((2.f * atan2f(sqrtf(a), sqrtf(1.f - a))) * EARTH_RADIUS);
 }
 
 static void
@@ -3056,6 +3187,16 @@ db_connect()
                     " and p.lon between ? and ? "
                     " and c.enabled = 1 and p.cat_id = c.cat_id",
                     -1, &_stmt_select_poi, NULL);
+
+    /* select nearest pois */
+    sqlite3_prepare(_db,
+                    "select p.lat, p.lon, p.label, c.label"
+                    " from poi p, category c "
+                    " where c.enabled = 1 and p.cat_id = c.cat_id"
+                    " order by (($LAT - p.lat) * ($LAT - p.lat) "
+                             "+ ($LON - p.lon) * ($LON - p.lon)) limit 1",
+                    -1, &_stmt_select_nearest_poi, NULL);
+
     /* insert poi */
     sqlite3_prepare(_db,
                         "insert into poi (lat, lon, label, desc, cat_id)"
@@ -3105,11 +3246,14 @@ db_connect()
                     -1, &_stmt_toggle_cat, NULL);
     /* select all category */
     sqlite3_prepare(_db,
-                    "select c.cat_id, c.label, c.desc, c.enabled, count(p.poi_id)"
-                    " from category c left outer join poi p on c.cat_id = p.cat_id"
+                    "select c.cat_id, c.label, c.desc, c.enabled,"
+                    " count(p.poi_id)"
+                    " from category c"
+                    " left outer join poi p on c.cat_id = p.cat_id"
                     " group by c.cat_id, c.label, c.desc, c.enabled "
                     " order by c.label",
                     -1, &_stmt_selall_cat, NULL);
+
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
@@ -3175,7 +3319,7 @@ route_update_nears(gboolean quick)
     gboolean ret = FALSE;
     Point *curr, *near;
     WayPoint *wcurr, *wnext;
-    guint near_dist_rough;
+    guint64 near_dist_squared;
     printf("%s(%d)\n", __PRETTY_FUNCTION__, quick);
 
     /* If we have waypoints (_next_way != NULL), then determine the "next
@@ -3184,9 +3328,10 @@ route_update_nears(gboolean quick)
      * that waypoint becomes the "next" waypoint. */
     if(_next_way)
     {
-        /* First, set near_dist_rough with the new distance from _near_point.*/
+        /* First, set near_dist_squared with the new distance from
+         * _near_point. */
         near = _near_point;
-        near_dist_rough = DISTANCE_ROUGH(_pos, *near);
+        near_dist_squared = DISTANCE_SQUARED(_pos, *near);
 
         /* Now, search _route for a closer point.  If quick is TRUE, then we'll
          * only search forward, only as long as we keep finding closer points.
@@ -3195,11 +3340,11 @@ route_update_nears(gboolean quick)
         {
             if(curr->unity)
             {
-                guint dist_rough = DISTANCE_ROUGH(_pos, *curr);
-                if(dist_rough <= near_dist_rough)
+                guint dist_squared = DISTANCE_SQUARED(_pos, *curr);
+                if(dist_squared <= near_dist_squared)
                 {
                     near = curr;
-                    near_dist_rough = dist_rough;
+                    near_dist_squared = dist_squared;
                 }
                 else if(quick)
                     break;
@@ -3208,7 +3353,7 @@ route_update_nears(gboolean quick)
 
         /* Update _near_point. */
         _near_point = near;
-        _near_point_dist_rough = near_dist_rough;
+        _near_point_dist_squared = near_dist_squared;
 
         for(wnext = wcurr = _next_way; wcurr != _route.wtail; wcurr++)
         {
@@ -3223,9 +3368,9 @@ route_update_nears(gboolean quick)
              * there is no next waypoint, so we do not skip it in that case. */
                 || (wcurr->point == near && quick
                     && (_next_wpt
-                     && (DISTANCE_ROUGH(_pos, *near) > _next_way_dist_rough
-                      && DISTANCE_ROUGH(_pos, *_next_wpt)
-                                                     < _next_wpt_dist_rough))))
+                     && (DISTANCE_SQUARED(_pos, *near) > _next_way_dist_squared
+                      && DISTANCE_SQUARED(_pos, *_next_wpt)
+                                                   < _next_wpt_dist_squared))))
                 wnext = wcurr + 1;
             else
                 break;
@@ -3233,15 +3378,15 @@ route_update_nears(gboolean quick)
 
         if(wnext == _route.wtail && (wnext->point < near
                 || (wnext->point == near && quick
-                    && (!_next_wpt
-                     || (DISTANCE_ROUGH(_pos, *near) > _next_way_dist_rough
-                      &&DISTANCE_ROUGH(_pos, *_next_wpt)
-                                                 < _next_wpt_dist_rough)))))
+                    && (_next_wpt
+                     && (DISTANCE_SQUARED(_pos, *near) > _next_way_dist_squared
+                      &&DISTANCE_SQUARED(_pos, *_next_wpt)
+                                                 < _next_wpt_dist_squared)))))
         {
             _next_way = NULL;
             _next_wpt = NULL;
-            _next_way_dist_rough = -1;
-            _next_wpt_dist_rough = -1;
+            _next_way_dist_squared = -1;
+            _next_wpt_dist_squared = -1;
             ret = TRUE;
         }
         /* Only update _next_way (and consequently _next_wpt) if _next_way is
@@ -3267,9 +3412,9 @@ route_update_nears(gboolean quick)
                 }
                 ret = TRUE;
             }
-            _next_way_dist_rough = DISTANCE_ROUGH(_pos, *wnext->point);
+            _next_way_dist_squared = DISTANCE_SQUARED(_pos, *wnext->point);
             if(_next_wpt)
-                _next_wpt_dist_rough = DISTANCE_ROUGH(_pos, *_next_wpt);
+                _next_wpt_dist_squared = DISTANCE_SQUARED(_pos, *_next_wpt);
         }
     }
 
@@ -3286,7 +3431,7 @@ route_find_nearest_point()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    /* Initialize _near_point. */
+    /* Initialize _near_point to first non-zero point. */
     _near_point = _route.head;
     while(!_near_point->unity && _near_point != _route.tail)
         _near_point++;
@@ -3298,16 +3443,179 @@ route_find_nearest_point()
     else
         /* We have at least one waypoint. */
         _next_way = (_autoroute_data.enabled ? _route.whead+1 : _route.whead);
-    _next_way_dist_rough = -1;
+    _next_way_dist_squared = -1;
 
     /* Initialize _next_wpt. */
     _next_wpt = NULL;
-    _next_wpt_dist_rough = -1;
+    _next_wpt_dist_squared = -1;
 
     route_update_nears(FALSE);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
+
+/**
+ * Show the distance from the current GPS location to the given point,
+ * following the route.  If point is NULL, then the distance is shown to the
+ * next waypoint.
+ */
+static gboolean
+route_show_distance_to(Point *point)
+{
+    gchar buffer[80];
+    gfloat lat1, lon1, lat2, lon2;
+    gdouble sum = 0.0;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* If point is NULL, use the next waypoint. */
+    if(point == NULL && _next_way)
+        point = _next_way->point;
+
+    /* If point is still NULL, return an error. */
+    if(point == NULL)
+    {
+        printf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    unit2latlon(_pos.unitx, _pos.unity, lat1, lon1);
+    if(point > _near_point)
+    {
+        Point *curr;
+        /* Skip _near_point in case we have already passed it. */
+        for(curr = _near_point + 1; curr <= point; ++curr)
+        {
+            if(curr->unity)
+            {
+                unit2latlon(curr->unitx, curr->unity, lat2, lon2);
+                sum += calculate_distance(lat1, lon1, lat2, lon2);
+                lat1 = lat2;
+                lon1 = lon2;
+            }
+        }
+    }
+    else if(point < _near_point)
+    {
+        Point *curr;
+        /* Skip _near_point in case we have already passed it. */
+        for(curr = _near_point - 1; curr >= point; --curr)
+        {
+            if(curr->unity)
+            {
+                unit2latlon(curr->unitx, curr->unity, lat2, lon2);
+                sum += calculate_distance(lat1, lon1, lat2, lon2);
+                lat1 = lat2;
+                lon1 = lon2;
+            }
+        }
+    }
+    else
+    {
+        /* Waypoint _is_ the nearest point. */
+        unit2latlon(_near_point->unitx, _near_point->unity, lat2, lon2);
+        sum += calculate_distance(lat1, lon1, lat2, lon2);
+    }
+
+    snprintf(buffer, sizeof(buffer), "%s: %.02f %s", _("Distance"),
+            sum * UNITS_CONVERT[_units], UNITS_TEXT[_units]);
+    MACRO_BANNER_SHOW_INFO(_window, buffer);
+
+    return TRUE;
+    printf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+}
+
+static void
+route_show_distance_to_next()
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(!route_show_distance_to(NULL))
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("There is no next waypoint."));
+    }
+    printf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+route_show_distance_to_last()
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_route.head != _route.tail)
+    {
+        /* Find last non-zero point. */
+        Point *p;
+        for(p = _route.tail; !p->unity; p--) { }
+        route_show_distance_to(p);
+    }
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("The current route is empty."));
+    }
+    printf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+track_show_distance_from(TrackPoint *point)
+{
+    gchar buffer[80];
+    gfloat lat1, lon1, lat2, lon2;
+    gdouble sum = 0.0;
+    TrackPoint *curr;
+    unit2latlon(_pos.unitx, _pos.unity, lat1, lon1);
+
+    /* Skip _track.tail because that should be _pos. */
+    for(curr = _track.tail; curr > point; --curr)
+    {
+        if(curr->point.unity)
+        {
+            unit2latlon(curr->point.unitx, curr->point.unity, lat2, lon2);
+            sum += calculate_distance(lat1, lon1, lat2, lon2);
+            lat1 = lat2;
+            lon1 = lon2;
+        }
+    }
+
+    snprintf(buffer, sizeof(buffer), "%s: %.02f %s", _("Distance"),
+            sum * UNITS_CONVERT[_units], UNITS_TEXT[_units]);
+    MACRO_BANNER_SHOW_INFO(_window, buffer);
+}
+
+static void
+track_show_distance_from_last()
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Find last zero point. */
+    if(_track.head != _track.tail)
+    {
+        TrackPoint *point;
+        /* Find last zero point. */
+        for(point = _track.tail; point->point.unity; point--) { }
+        track_show_distance_from(point);
+    }
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("The current track is empty."));
+    }
+    printf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+track_show_distance_from_first()
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Find last zero point. */
+    if(_track.head != _track.tail)
+        track_show_distance_from(_track.head);
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("The current track is empty."));
+    }
+    printf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
 
 /**
  * Render a single track line to _map_pixmap.  If either point on the line
@@ -3330,10 +3638,10 @@ map_render_segment(GdkGC *gc_norm, GdkGC *gc_alt,
                 && (y2 < BUF_HEIGHT_PIXELS))
             gdk_draw_arc(_map_pixmap, gc_alt,
                     FALSE, /* FALSE: not filled. */
-                    x2 - _draw_line_width,
-                    y2 - _draw_line_width,
-                    2 * _draw_line_width,
-                    2 * _draw_line_width,
+                    x2 - _draw_width,
+                    y2 - _draw_width,
+                    2 * _draw_width,
+                    2 * _draw_width,
                     0, /* start at 0 degrees. */
                     360 * 64);
     }
@@ -3347,10 +3655,10 @@ map_render_segment(GdkGC *gc_norm, GdkGC *gc_alt,
                 && ((unsigned)y1 < BUF_HEIGHT_PIXELS))
             gdk_draw_arc(_map_pixmap, gc_alt,
                     FALSE, /* FALSE: not filled. */
-                    x1 - _draw_line_width,
-                    y1 - _draw_line_width,
-                    2 * _draw_line_width,
-                    2 * _draw_line_width,
+                    x1 - _draw_width,
+                    y1 - _draw_width,
+                    2 * _draw_width,
+                    2 * _draw_width,
                     0, /* start at 0 degrees. */
                     360 * 64);
     }
@@ -3408,9 +3716,16 @@ map_render_route()
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     _visible_way_first = _visible_way_last = NULL;
-    for(curr = _route.head, wcurr = _route.whead; curr != _route.tail; curr++)
+
+    /* else there is a route to draw. */
+    for(curr = _route.head, wcurr = _route.whead; curr++ != _route.tail; )
     {
-        if(wcurr && wcurr <= _route.wtail && curr == wcurr->point)
+        /* Draw the line from (curr - 1) to (curr). */
+        map_render_segment(_gc_route, _gc_route_way,
+                curr[-1].unitx, curr[-1].unity, curr->unitx, curr->unity);
+
+        /* Now, check if curr is a waypoint. */
+        if(wcurr && wcurr <= _route.wtail && wcurr->point == curr)
         {
             guint x1 = unit2bufx(wcurr->point->unitx);
             guint y1 = unit2bufy(wcurr->point->unity);
@@ -3418,12 +3733,12 @@ map_render_route()
                     && (y1 < BUF_HEIGHT_PIXELS))
             {
                 gdk_draw_arc(_map_pixmap,
-                        (wcurr==_next_way ? _gc_route_nextway : _gc_route_way),
+                        _gc_route_way,
                         FALSE, /* FALSE: not filled. */
-                        x1 - _draw_line_width,
-                        y1 - _draw_line_width,
-                        2 * _draw_line_width,
-                        2 * _draw_line_width,
+                        x1 - _draw_width,
+                        y1 - _draw_width,
+                        2 * _draw_width,
+                        2 * _draw_width,
                         0, /* start at 0 degrees. */
                         360 * 64);
                 if(!_visible_way_first)
@@ -3431,11 +3746,27 @@ map_render_route()
                 _visible_way_last = wcurr;
             }
             wcurr++;
-            if(!curr[1].unity)
-                continue;
         }
-        map_render_segment(_gc_route, _gc_route_way,
-                curr->unitx, curr->unity, curr[1].unitx, curr[1].unity);
+    }
+
+    /* Now, draw the next waypoint on top of all other waypoints. */
+    if(_next_way)
+    {
+        guint x1 = unit2bufx(_next_way->point->unitx);
+        guint y1 = unit2bufy(_next_way->point->unity);
+        if((x1 < BUF_WIDTH_PIXELS)
+                && (y1 < BUF_HEIGHT_PIXELS))
+        {
+            gdk_draw_arc(_map_pixmap,
+                    _gc_route_nextway,
+                    FALSE, /* FALSE: not filled. */
+                    x1 - _draw_width,
+                    y1 - _draw_width,
+                    2 * _draw_width,
+                    2 * _draw_width,
+                    0, /* start at 0 degrees. */
+                    360 * 64);
+        }
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -3446,28 +3777,8 @@ map_render_paths()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if((_show_tracks & ROUTES_MASK) && _route.head)
-    {
+    if((_show_tracks & ROUTES_MASK) && _route.head != _route.tail)
         map_render_route();
-        if(_next_way == NULL)
-        {
-            guint x1 = unit2bufx(_route.tail[-1].unitx);
-            guint y1 = unit2bufy(_route.tail[-1].unity);
-            if((x1 < BUF_WIDTH_PIXELS)
-                    && (y1 < BUF_HEIGHT_PIXELS))
-            {
-                gdk_draw_arc(_map_pixmap,
-                        _gc_route_nextway,
-                        FALSE, /* FALSE: not filled. */
-                        x1 - _draw_line_width,
-                        y1 - _draw_line_width,
-                        2 * _draw_line_width,
-                        2 * _draw_line_width,
-                        0, /* start at 0 degrees. */
-                        360 * 64);
-            }
-        }
-    }
     if(_show_tracks & TRACKS_MASK)
         map_render_track();
 
@@ -3492,13 +3803,15 @@ track_add(time_t time, gboolean newly_fixed)
     Point pos = (time == 0 ? _pos_null : _pos);
     printf("%s(%u, %u)\n", __PRETTY_FUNCTION__, pos.unitx, pos.unity);
 
-    if(abs((gint)pos.unitx - _track.tail->point.unitx) > _draw_line_width
-    || abs((gint)pos.unity - _track.tail->point.unity) > _draw_line_width)
+    if(abs((gint)pos.unitx - _track.tail->point.unitx) > _draw_width
+    || abs((gint)pos.unity - _track.tail->point.unity) > _draw_width)
     {
-        if(time && _route.head
+        /* If time != 0, update the nearest-waypoint data. */
+        if(time && _route.head != _route.tail
                 && (newly_fixed ? (route_find_nearest_point(), TRUE)
                                 : route_update_nears(TRUE)))
         {
+            /* Nearest waypoint has changed - re-render paths. */
             map_render_paths();
             MACRO_QUEUE_DRAW_AREA();
         }
@@ -3517,10 +3830,10 @@ track_add(time_t time, gboolean newly_fixed)
                 tx2 = unit2x(pos.unitx);
                 ty2 = unit2y(pos.unity);
                 gtk_widget_queue_draw_area(_map_widget,
-                        MIN(tx1, tx2) - _draw_line_width,
-                        MIN(ty1, ty2) - _draw_line_width,
-                        abs(tx1 - tx2) + (2 * _draw_line_width),
-                        abs(ty1 - ty2) + (2 * _draw_line_width));
+                        MIN(tx1, tx2) - _draw_width,
+                        MIN(ty1, ty2) - _draw_width,
+                        abs(tx1 - tx2) + (2 * _draw_width),
+                        abs(ty1 - ty2) + (2 * _draw_width));
             }
         }
         MACRO_TRACK_INCREMENT_TAIL(_track);
@@ -3530,10 +3843,10 @@ track_add(time_t time, gboolean newly_fixed)
         _track.tail->altitude = _gps.altitude;
 
         if(_autoroute_data.enabled && !_autoroute_data.in_progress
-                && _near_point_dist_rough > 400)
+                && _near_point_dist_squared > 400)
         {
             MACRO_BANNER_SHOW_INFO(_window,
-                    "Recalculating directions...");
+                    _("Recalculating directions..."));
             _autoroute_data.in_progress = TRUE;
             show_directions = FALSE;
             g_idle_add((GSourceFunc)auto_route_dl_idle, NULL);
@@ -3544,7 +3857,7 @@ track_add(time_t time, gboolean newly_fixed)
     }
 
     /* Check if we should announce upcoming waypoints. */
-    if(show_directions && time && _next_way_dist_rough
+    if(show_directions && time && _next_way_dist_squared
             < (20 + (guint)_gps.speed) * _announce_notice_ratio * 3)
     {
         if(_enable_voice && strcmp(_next_way->desc, _last_spoken_phrase))
@@ -3565,6 +3878,46 @@ track_add(time_t time, gboolean newly_fixed)
             }
         }
         MACRO_BANNER_SHOW_INFO(_window, _next_way->desc);
+    }
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+track_insert_mark()
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_track.tail->point.unity)
+    {
+        guint x1, y1;
+
+        /* To mark a "waypoint" in a track, we'll add a (0, 0) point and then
+         * another instance of the most recent track point. */
+        MACRO_TRACK_INCREMENT_TAIL(_track);
+        *_track.tail = _track_null;
+        MACRO_TRACK_INCREMENT_TAIL(_track);
+        *_track.tail = _track.tail[-2];
+
+        /** Instead of calling map_render_paths(), we'll just add the waypoint
+         * ourselves. */
+        x1 = unit2bufx(_track.tail->point.unitx);
+        y1 = unit2bufy(_track.tail->point.unity);
+        /* Make sure this circle will be visible. */
+        if((x1 < BUF_WIDTH_PIXELS)
+                && ((unsigned)y1 < BUF_HEIGHT_PIXELS))
+            gdk_draw_arc(_map_pixmap, _gc_track_break,
+                    FALSE, /* FALSE: not filled. */
+                    x1 - _draw_width,
+                    y1 - _draw_width,
+                    2 * _draw_width,
+                    2 * _draw_width,
+                    0, /* start at 0 degrees. */
+                    360 * 64);
+    }
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("Mark already inserted."));
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -3692,11 +4045,20 @@ rcvr_connect_response(DBusGProxy *proxy, DBusGProxyCall *call_id)
                 if(!strcmp(BTCOND_ERROR_CONNECTED,
                             dbus_g_error_get_name(error)) || !fdpath)
                 {
+                    GtkWidget *confirm;
                     printf("Caught remote method exception %s: %s",
                             dbus_g_error_get_name(error),
                             error->message);
                     rcvr_disconnect();
-                    rcvr_connect_later(); /* Try again later. */
+
+                    /* Ask user to re-connect. */
+                    confirm = hildon_note_new_confirmation(GTK_WINDOW(_window),
+                            _("Failed to connect to GPS receiver.  Retry?"));
+
+                    if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
+                        rcvr_connect_later(); /* Try again later. */
+
+                    gtk_widget_destroy(confirm);
                     return;
                 }
             }
@@ -3783,7 +4145,7 @@ integerize_data()
     gfloat tmp;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    latlon2unit(_gps.latitude, _gps.longitude, _pos.unitx, _pos.unity);
+    latlon2unit(_gps.lat, _gps.lon, _pos.unitx, _pos.unity);
 
     tmp = (_gps.heading * (1.f / 180.f)) * PI;
     _vel_offsetx = (gint)(floorf(_gps.speed * sinf(tmp) + 0.5f));
@@ -3793,11 +4155,11 @@ integerize_data()
 }
 
 /**
- * Update all GdkGC objects to reflect the current _draw_line_width.
+ * Update all GdkGC objects to reflect the current _draw_width.
  */
 #define UPDATE_GC(gc) \
     gdk_gc_set_line_attributes(gc, \
-            _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+            _draw_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 static void
 update_gcs()
 {
@@ -3839,56 +4201,56 @@ update_gcs()
     _gc_mark = gdk_gc_new(_map_pixmap);
     gdk_gc_set_foreground(_gc_mark, &_color_mark);
     gdk_gc_set_line_attributes(_gc_mark,
-            _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+            _draw_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 
     /* _gc_mark_old is used to draw the mark when data is old. */
     _gc_mark_old = gdk_gc_new(_map_pixmap);
     gdk_gc_set_foreground(_gc_mark_old, &_color_mark_old);
     gdk_gc_set_line_attributes(_gc_mark_old,
-            _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+            _draw_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 
     /* _gc_mark_velocity is used to draw the vel_current line. */
     _gc_mark_velocity = gdk_gc_new(_map_pixmap);
     gdk_gc_set_foreground(_gc_mark_velocity, &_color_mark_velocity);
     gdk_gc_set_line_attributes(_gc_mark_velocity,
-            _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+            _draw_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 
     /* _gc_track is used to draw the track line. */
     _gc_track = gdk_gc_new(_map_pixmap);
     gdk_gc_set_foreground(_gc_track, &_color_track);
     gdk_gc_set_line_attributes(_gc_track,
-            _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+            _draw_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 
-    /* _gc_track_break is used to draw the track_break dots. */
+    /* _gc_track_break is used to draw the track_insert_mark dots. */
     _gc_track_break = gdk_gc_new(_map_pixmap);
     gdk_gc_set_foreground(_gc_track_break, &_color_track_break);
     gdk_gc_set_line_attributes(_gc_track_break,
-            _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+            _draw_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 
     /* _gc_route is used to draw the route line. */
     _gc_route = gdk_gc_new(_map_pixmap);
     gdk_gc_set_foreground(_gc_route, &_color_route);
     gdk_gc_set_line_attributes(_gc_route,
-            _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+            _draw_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 
     /* _way_gc is used to draw the waypoint dots. */
     _gc_route_way = gdk_gc_new(_map_pixmap);
     gdk_gc_set_foreground(_gc_route_way, &_color_route_way);
     gdk_gc_set_line_attributes(_gc_route_way,
-            _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+            _draw_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 
     /* _gc_route_nextway is used to draw the next_way labels. */
     _gc_route_nextway = gdk_gc_new(_map_pixmap);
     gdk_gc_set_foreground(_gc_route_nextway, &_color_route_nextway);
     gdk_gc_set_line_attributes(_gc_route_nextway,
-            _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+            _draw_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 
     /* _gc_poi is used to draw the default POI icon. */
     _gc_poi = gdk_gc_new(_map_pixmap);
     gdk_gc_set_foreground(_gc_poi, &_color_poi);
     gdk_gc_set_background(_gc_poi, &_color_poi);
     gdk_gc_set_line_attributes(_gc_poi,
-            _draw_line_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
+            _draw_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -3945,7 +4307,7 @@ config_save()
 
     /* Save Draw Line Width. */
     gconf_client_set_int(gconf_client,
-            GCONF_KEY_DRAW_LINE_WIDTH, _draw_line_width, NULL);
+            GCONF_KEY_draw_width, _draw_width, NULL);
 
     /* Save Announce Advance Notice Ratio. */
     gconf_client_set_int(gconf_client,
@@ -3991,11 +4353,11 @@ config_save()
 
     /* Save last saved latitude. */
     gconf_client_set_float(gconf_client,
-            GCONF_KEY_LAT, _gps.latitude, NULL);
+            GCONF_KEY_LAT, _gps.lat, NULL);
 
     /* Save last saved longitude. */
     gconf_client_set_float(gconf_client,
-            GCONF_KEY_LON, _gps.longitude, NULL);
+            GCONF_KEY_LON, _gps.lon, NULL);
 
     /* Save last center point. */
     {
@@ -4073,6 +4435,10 @@ config_save()
     /* Save Show Velocity Vector flag. */
     gconf_client_set_bool(gconf_client,
             GCONF_KEY_SHOWVELVEC, _show_velvec, NULL);
+
+    /* Save Show POIs flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_SHOWPOIS, _show_poi, NULL);
 
     /* Save Enable GPS flag. */
     gconf_client_set_bool(gconf_client,
@@ -4395,8 +4761,8 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
     {
         gtk_widget_destroy(scan_info->banner);
         popup_error(scan_info->settings_dialog,
-                "An error occurred while attempting to scan for "
-                "bluetooth devices.");
+                _("An error occurred while attempting to scan for "
+                "bluetooth devices."));
     }
     else while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
@@ -4678,7 +5044,9 @@ settings_dialog()
     GtkWidget *chk_enable_voice;
     GtkWidget *num_voice_speed;
     GtkWidget *num_voice_pitch;
-    GtkWidget *num_draw_line_width;
+    GtkWidget *lbl_voice_speed;
+    GtkWidget *lbl_voice_pitch;
+    GtkWidget *num_draw_width;
     GtkWidget *chk_always_keep_on;
     GtkWidget *cmb_units;
     GtkWidget *cmb_escape_key;
@@ -4700,10 +5068,14 @@ settings_dialog()
     guint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    dialog = gtk_dialog_new_with_buttons(_("Maemo Mapper Settings"),
+    dialog = gtk_dialog_new_with_buttons(_("Settings"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
             NULL);
+
+    /* Enable the help button. */
+    ossohelp_dialog_help_enable(
+            GTK_DIALOG(dialog), HELP_ID_SETTINGS, _osso);
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
             btn_colors = gtk_button_new_with_label(_("Colors...")));
@@ -4737,7 +5109,7 @@ settings_dialog()
     /* Note!. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(
-                _("Note: For manual rfcomm, enter a device path\n"
+                _("Note: You can enter a device path\n"
                     "(e.g. \"/dev/rfcomm0\").")),
             0, 2, 1, 2, GTK_FILL, 0, 2, 4);
     gtk_label_set_justify(GTK_LABEL(label), GTK_JUSTIFY_CENTER);
@@ -4807,7 +5179,7 @@ settings_dialog()
             hbox2 = gtk_hbox_new(FALSE, 4),
             TRUE, TRUE, 4);
     gtk_box_pack_start(GTK_BOX(hbox2),
-            label = gtk_label_new(_("Speed")),
+            lbl_voice_speed = gtk_label_new(_("Speed")),
             TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(hbox2),
             num_voice_speed = hildon_controlbar_new(),
@@ -4819,7 +5191,7 @@ settings_dialog()
             hbox2 = gtk_hbox_new(FALSE, 4),
             TRUE, TRUE, 4);
     gtk_box_pack_start(GTK_BOX(hbox2),
-            label = gtk_label_new(_("Pitch")),
+            lbl_voice_pitch = gtk_label_new(_("Pitch")),
             TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(hbox2),
             num_voice_pitch = hildon_controlbar_new(),
@@ -4838,10 +5210,10 @@ settings_dialog()
             0, 1, 0, 1, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
-            num_draw_line_width = hildon_controlbar_new(),
+            num_draw_width = hildon_controlbar_new(),
             1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-    hildon_controlbar_set_range(HILDON_CONTROLBAR(num_draw_line_width), 1, 20);
-    force_min_visible_bars(HILDON_CONTROLBAR(num_draw_line_width), 1);
+    hildon_controlbar_set_range(HILDON_CONTROLBAR(num_draw_width), 1, 20);
+    force_min_visible_bars(HILDON_CONTROLBAR(num_draw_width), 1);
 
     /* Keep Display On Only When Fullscreen. */
     gtk_table_attach(GTK_TABLE(table),
@@ -5010,8 +5382,8 @@ settings_dialog()
             (gint)(_voice_speed * 3 + 0.5));
     hildon_controlbar_set_value(HILDON_CONTROLBAR(num_voice_pitch),
             _voice_pitch);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_draw_line_width),
-            _draw_line_width);
+    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_draw_width),
+            _draw_width);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_always_keep_on),
             !_always_keep_on);
     gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_units), _units);
@@ -5029,6 +5401,13 @@ settings_dialog()
             _info_font_size);
 
     gtk_widget_show_all(dialog);
+
+    /* TODO: Uncomment the following hide function calls if moimart ever
+     * releases his dbus-based flite software. */
+    gtk_widget_hide(lbl_voice_speed);
+    gtk_widget_hide(num_voice_speed);
+    gtk_widget_hide(lbl_voice_pitch);
+    gtk_widget_hide(num_voice_pitch);
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
@@ -5072,8 +5451,8 @@ settings_dialog()
         _lead_ratio = hildon_controlbar_get_value(
                 HILDON_CONTROLBAR(num_lead_ratio));
 
-        _draw_line_width = hildon_controlbar_get_value(
-                HILDON_CONTROLBAR(num_draw_line_width));
+        _draw_width = hildon_controlbar_get_value(
+                HILDON_CONTROLBAR(num_draw_width));
 
         _always_keep_on = !gtk_toggle_button_get_active(
                 GTK_TOGGLE_BUTTON(chk_always_keep_on));
@@ -5108,21 +5487,21 @@ settings_dialog()
         {
             sqlite3_close(_db);
             _db = NULL;
-            gtk_widget_set_sensitive(_cmenu_add_poi, FALSE);
-            gtk_widget_set_sensitive(_cmenu_edit_poi, FALSE);
-            gtk_widget_set_sensitive(_menu_poi_item, FALSE);
         }
         g_free(_poi_db);
         if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_poi_db))))
         {
             _poi_db = g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_poi_db)));
             db_connect();
-            gtk_widget_set_sensitive(_cmenu_add_poi, _db != NULL);
-            gtk_widget_set_sensitive(_cmenu_edit_poi, _db != NULL);
-            gtk_widget_set_sensitive(_menu_poi_item, _db != NULL);
         }
         else
             _poi_db = NULL;
+
+        /* Sensitize menus based on whether we have a POI database conn. */
+        gtk_widget_set_sensitive(_cmenu_loc_add_poi, _db != NULL);
+        gtk_widget_set_sensitive(_cmenu_way_add_poi, _db != NULL);
+        gtk_widget_set_sensitive(_cmenu_poi, _db != NULL);
+        gtk_widget_set_sensitive(_menu_poi_item, _db != NULL);
 
         _poi_zoom = hildon_number_editor_get_value(
         HILDON_NUMBER_EDITOR(num_poi_zoom));
@@ -5214,6 +5593,29 @@ config_update_proxy()
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
+static void
+set_repo_type(RepoData *repo)
+{
+    gchar *url;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    url = g_utf8_strdown(repo->url, -1);
+
+    /* Determine type of repository. */
+    if(strstr(repo->url, "%s"))
+        repo->type = REPOTYPE_QUAD_QRST;
+    else if(strstr(repo->url, "%0s"))
+        repo->type = REPOTYPE_QUAD_ZERO;
+    else if(strstr(repo->url, "service=wms"))
+        repo->type = REPOTYPE_WMS;
+    else
+        repo->type = REPOTYPE_XYZ;
+
+    g_free(url);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
 static RepoData*
 config_parse_repo(gchar *str)
 {
@@ -5233,6 +5635,7 @@ config_parse_repo(gchar *str)
         rd->dl_zoom_steps = 2;
     if(!(rd->view_zoom_steps = atoi(strsep(&str, "\n\t"))))
         rd->view_zoom_steps = 1;
+    set_repo_type(rd);
 
     vprintf("%s(): return %p\n", __PRETTY_FUNCTION__, rd);
     return rd;
@@ -5316,10 +5719,10 @@ config_init()
         _lead_ratio = 5;
 
     /* Get Draw Line Width- Default is 5. */
-    _draw_line_width = gconf_client_get_int(gconf_client,
-            GCONF_KEY_DRAW_LINE_WIDTH, NULL);
-    if(!_draw_line_width)
-        _draw_line_width = 5;
+    _draw_width = gconf_client_get_int(gconf_client,
+            GCONF_KEY_draw_width, NULL);
+    if(!_draw_width)
+        _draw_width = 5;
 
     /* Get Announce Advance Notice - Default is 30. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ANNOUNCE_NOTICE, NULL);
@@ -5438,11 +5841,11 @@ config_init()
     }
 
     /* Get last saved latitude.  Default is 0. */
-    _gps.latitude = gconf_client_get_float(gconf_client, GCONF_KEY_LAT, NULL);
+    _gps.lat = gconf_client_get_float(gconf_client, GCONF_KEY_LAT, NULL);
 
     /* Get last saved longitude.  Default is somewhere in Midwest. */
     value = gconf_client_get(gconf_client, GCONF_KEY_LON, NULL);
-    _gps.longitude = gconf_client_get_float(gconf_client, GCONF_KEY_LON, NULL);
+    _gps.lon = gconf_client_get_float(gconf_client, GCONF_KEY_LON, NULL);
 
     /* Get last center point. */
     {
@@ -5456,7 +5859,7 @@ config_init()
             gconf_value_free(value);
         }
         else
-            center_lat = _gps.latitude;
+            center_lat = _gps.lat;
 
         /* Get last saved longitude.  Default is last saved longitude. */
         value = gconf_client_get(gconf_client, GCONF_KEY_CENTER_LON, NULL);
@@ -5466,7 +5869,7 @@ config_init()
             gconf_value_free(value);
         }
         else
-            center_lon = _gps.longitude;
+            center_lon = _gps.lon;
 
         latlon2unit(center_lat, center_lon, _center.unitx, _center.unity);
     }
@@ -5522,6 +5925,8 @@ config_init()
         /* Other fields are brand new. */
         repo->name = g_strdup("Default");
         repo->view_zoom_steps = 1;
+        set_repo_type(repo);
+
         _repo_list = g_list_append(_repo_list, repo);
         _curr_repo = repo;
     }
@@ -5591,6 +5996,16 @@ config_init()
     }
     else
         _show_velvec = TRUE;
+
+    /* Get Show Velocity Vector flag.  Default is TRUE. */
+    value = gconf_client_get(gconf_client, GCONF_KEY_SHOWPOIS, NULL);
+    if(value)
+    {
+        _show_poi = gconf_value_get_bool(value);
+        gconf_value_free(value);
+    }
+    else
+        _show_poi = TRUE;
 
     /* Get Enable GPS flag.  Default is TRUE. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ENABLE_GPS, NULL);
@@ -5758,8 +6173,7 @@ menu_maps_add_repos()
             last_repo = menu_item;
         }
         gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(menu_item),
-                rd == _curr_repo);
+                GTK_CHECK_MENU_ITEM(menu_item), rd == _curr_repo);
         rd->menu_item = menu_item;
     }
 
@@ -5806,10 +6220,14 @@ menu_init()
             = gtk_menu_item_new_with_label(_("Download...")));
     gtk_menu_append(submenu, _menu_route_save_item
             = gtk_menu_item_new_with_label(_("Save...")));
+    gtk_menu_append(submenu, _menu_route_distnext_item
+        = gtk_menu_item_new_with_label(_("Show Distance to Next Waypoint")));
+    gtk_menu_append(submenu, _menu_route_distlast_item
+        = gtk_menu_item_new_with_label(_("Show Distance to End of Route")));
     gtk_menu_append(submenu, _menu_route_reset_item
-        = gtk_menu_item_new_with_label(_("Reset")));
+            = gtk_menu_item_new_with_label(_("Reset")));
     gtk_menu_append(submenu, _menu_route_clear_item
-        = gtk_menu_item_new_with_label(_("Clear")));
+            = gtk_menu_item_new_with_label(_("Clear")));
 
     /* The "Track" submenu. */
     gtk_menu_append(menu, menu_item
@@ -5820,11 +6238,16 @@ menu_init()
             = gtk_menu_item_new_with_label(_("Open...")));
     gtk_menu_append(submenu, _menu_track_save_item
             = gtk_menu_item_new_with_label(_("Save...")));
-    gtk_menu_append(submenu, _menu_track_mark_way_item
-            = gtk_menu_item_new_with_label(_("Insert Breakpoint")));
+    gtk_menu_append(submenu, _menu_track_insert_mark_item
+            = gtk_menu_item_new_with_label(_("Insert Mark")));
+    gtk_menu_append(submenu, _menu_track_distlast_item
+        = gtk_menu_item_new_with_label(_("Show Distance from Last Mark")));
+    gtk_menu_append(submenu, _menu_track_distfirst_item
+        = gtk_menu_item_new_with_label(_("Show Distance from Beginning")));
     gtk_menu_append(submenu, _menu_track_clear_item
             = gtk_menu_item_new_with_label(_("Clear")));
 
+    /* The "Maps" submenu. */
     gtk_menu_append(menu, menu_item
             = gtk_menu_item_new_with_label(_("Maps")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
@@ -5842,6 +6265,7 @@ menu_init()
 
     gtk_menu_append(menu, gtk_separator_menu_item_new());
 
+    /* The "View" submenu. */
     gtk_menu_append(menu, menu_item
             = gtk_menu_item_new_with_label(_("View")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
@@ -5864,11 +6288,15 @@ menu_init()
             = gtk_check_menu_item_new_with_label(_("Velocity Vector")));
     gtk_check_menu_item_set_active(
             GTK_CHECK_MENU_ITEM(_menu_show_velvec_item), _show_velvec);
+    gtk_menu_append(submenu, _menu_show_poi_item
+            = gtk_check_menu_item_new_with_label(_("POIs")));
+    gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(_menu_show_poi_item), _show_poi);
     gtk_menu_append(submenu, _menu_poi_item
             = gtk_menu_item_new_with_label(_("POI Categories...")));
     gtk_widget_set_sensitive(_menu_poi_item, _db != NULL);
 
-
+    /* The "Auto-Center" submenu. */
     gtk_menu_append(menu, menu_item
             = gtk_menu_item_new_with_label(_("Auto-Center")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
@@ -5891,6 +6319,21 @@ menu_init()
             GTK_CHECK_MENU_ITEM(_menu_ac_none_item),
             _center_mode < 0);
 
+    /* The "Go to" submenu. */
+    gtk_menu_append(menu, menu_item
+            = gtk_menu_item_new_with_label(_("Go to")));
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
+            submenu = gtk_menu_new());
+    gtk_menu_append(submenu, _menu_goto_latlon
+            = gtk_menu_item_new_with_label(_("Lat/Lon...")));
+    gtk_menu_append(submenu, _menu_goto_gps
+            = gtk_menu_item_new_with_label(_("GPS Location")));
+    gtk_menu_append(submenu, _menu_goto_nextway
+            = gtk_menu_item_new_with_label(_("Next Waypoint")));
+    gtk_menu_append(submenu, _menu_goto_nearpoi
+            = gtk_menu_item_new_with_label(_("Nearest POI")));
+
+    /* The "GPS" submenu. */
     gtk_menu_append(menu, menu_item
             = gtk_menu_item_new_with_label(_("GPS")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
@@ -5912,14 +6355,12 @@ menu_init()
 
     gtk_menu_append(menu, gtk_separator_menu_item_new());
 
+    /* The other menu items. */
     gtk_menu_append(menu, _menu_settings_item
         = gtk_menu_item_new_with_label(_("Settings...")));
-
     gtk_menu_append(menu, gtk_separator_menu_item_new());
-
     gtk_menu_append(menu, _menu_help_item
         = gtk_menu_item_new_with_label(_("Help")));
-
     gtk_menu_append(menu, _menu_close_item
         = gtk_menu_item_new_with_label(_("Close")));
 
@@ -5928,46 +6369,75 @@ menu_init()
 
     hildon_window_set_menu(HILDON_WINDOW(_window), menu);
 
-    /* Connect the signals. */
+    /* Connect the "Route" signals. */
     g_signal_connect(G_OBJECT(_menu_route_open_item), "activate",
                       G_CALLBACK(menu_cb_route_open), NULL);
     g_signal_connect(G_OBJECT(_menu_route_download_item), "activate",
                       G_CALLBACK(menu_cb_route_download), NULL);
     g_signal_connect(G_OBJECT(_menu_route_save_item), "activate",
                       G_CALLBACK(menu_cb_route_save), NULL);
+    g_signal_connect(G_OBJECT(_menu_route_distnext_item), "activate",
+                      G_CALLBACK(menu_cb_route_distnext), NULL);
+    g_signal_connect(G_OBJECT(_menu_route_distlast_item), "activate",
+                      G_CALLBACK(menu_cb_route_distlast), NULL);
     g_signal_connect(G_OBJECT(_menu_route_reset_item), "activate",
                       G_CALLBACK(menu_cb_route_reset), NULL);
     g_signal_connect(G_OBJECT(_menu_route_clear_item), "activate",
                       G_CALLBACK(menu_cb_route_clear), NULL);
+
+    /* Connect the "Track" signals. */
     g_signal_connect(G_OBJECT(_menu_track_open_item), "activate",
                       G_CALLBACK(menu_cb_track_open), NULL);
     g_signal_connect(G_OBJECT(_menu_track_save_item), "activate",
                       G_CALLBACK(menu_cb_track_save), NULL);
-    g_signal_connect(G_OBJECT(_menu_track_mark_way_item), "activate",
-                      G_CALLBACK(menu_cb_track_mark_way), NULL);
+    g_signal_connect(G_OBJECT(_menu_track_insert_mark_item), "activate",
+                      G_CALLBACK(menu_cb_track_insert_mark), NULL);
+    g_signal_connect(G_OBJECT(_menu_track_distlast_item), "activate",
+                      G_CALLBACK(menu_cb_track_distlast), NULL);
+    g_signal_connect(G_OBJECT(_menu_track_distfirst_item), "activate",
+                      G_CALLBACK(menu_cb_track_distfirst), NULL);
     g_signal_connect(G_OBJECT(_menu_track_clear_item), "activate",
                       G_CALLBACK(menu_cb_track_clear), NULL);
+
+    /* Connect the "Maps" signals. */
+    g_signal_connect(G_OBJECT(_menu_maps_repoman_item), "activate",
+                      G_CALLBACK(menu_cb_maps_repoman), NULL);
+    g_signal_connect(G_OBJECT(_menu_maps_mapman_item), "activate",
+                      G_CALLBACK(menu_cb_mapman), NULL);
+
+    /* Connect the "View" signals. */
+    g_signal_connect(G_OBJECT(_menu_fullscreen_item), "toggled",
+                      G_CALLBACK(menu_cb_fullscreen), NULL);
     g_signal_connect(G_OBJECT(_menu_show_tracks_item), "toggled",
                       G_CALLBACK(menu_cb_show_tracks), NULL);
     g_signal_connect(G_OBJECT(_menu_show_routes_item), "toggled",
                       G_CALLBACK(menu_cb_show_routes), NULL);
     g_signal_connect(G_OBJECT(_menu_show_velvec_item), "toggled",
                       G_CALLBACK(menu_cb_show_velvec), NULL);
+    g_signal_connect(G_OBJECT(_menu_show_poi_item), "toggled",
+                      G_CALLBACK(menu_cb_show_poi), NULL);
     g_signal_connect(G_OBJECT(_menu_poi_item), "activate",
                       G_CALLBACK(menu_cb_category), NULL);
 
-    g_signal_connect(G_OBJECT(_menu_maps_repoman_item), "activate",
-                      G_CALLBACK(menu_cb_maps_repoman), NULL);
-    g_signal_connect(G_OBJECT(_menu_maps_mapman_item), "activate",
-                      G_CALLBACK(menu_cb_mapman), NULL);
+    /* Connect the "Auto-Center" signals. */
     g_signal_connect(G_OBJECT(_menu_ac_latlon_item), "toggled",
                       G_CALLBACK(menu_cb_ac_latlon), NULL);
     g_signal_connect(G_OBJECT(_menu_ac_lead_item), "toggled",
                       G_CALLBACK(menu_cb_ac_lead), NULL);
     g_signal_connect(G_OBJECT(_menu_ac_none_item), "toggled",
                       G_CALLBACK(menu_cb_ac_none), NULL);
-    g_signal_connect(G_OBJECT(_menu_fullscreen_item), "toggled",
-                      G_CALLBACK(menu_cb_fullscreen), NULL);
+
+    /* Connect the "Go to" signals. */
+    g_signal_connect(G_OBJECT(_menu_goto_latlon), "activate",
+                      G_CALLBACK(menu_cb_goto_latlon), NULL);
+    g_signal_connect(G_OBJECT(_menu_goto_gps), "activate",
+                      G_CALLBACK(menu_cb_goto_gps), NULL);
+    g_signal_connect(G_OBJECT(_menu_goto_nextway), "activate",
+                      G_CALLBACK(menu_cb_goto_nextway), NULL);
+    g_signal_connect(G_OBJECT(_menu_goto_nearpoi), "activate",
+                      G_CALLBACK(menu_cb_goto_nearpoi), NULL);
+
+    /* Connect the "GPS" signals. */
     g_signal_connect(G_OBJECT(_menu_enable_gps_item), "toggled",
                       G_CALLBACK(menu_cb_enable_gps), NULL);
     g_signal_connect(G_OBJECT(_menu_gps_show_info_item), "toggled",
@@ -5978,6 +6448,8 @@ menu_init()
                       G_CALLBACK(menu_cb_gps_reset), NULL);
     g_signal_connect(G_OBJECT(_menu_auto_download_item), "toggled",
                       G_CALLBACK(menu_cb_auto_download), NULL);
+
+    /* Connect the other menu item signals. */
     g_signal_connect(G_OBJECT(_menu_settings_item), "activate",
                       G_CALLBACK(menu_cb_settings), NULL);
     g_signal_connect(G_OBJECT(_menu_help_item), "activate",
@@ -5998,19 +6470,23 @@ menu_init()
     gtk_menu_append(submenu, _cmenu_loc_show_latlon_item
             = gtk_menu_item_new_with_label(_("Show Lat/Lon")));
     gtk_menu_append(submenu, _cmenu_loc_clip_latlon_item
-            = gtk_menu_item_new_with_label(_("Copy Lat/Lon to Clipboard")));
+            = gtk_menu_item_new_with_label(_("Copy Lat/Lon")));
     gtk_menu_append(submenu, gtk_separator_menu_item_new());
-    gtk_menu_append(submenu, _cmenu_loc_route_to_item
-            = gtk_menu_item_new_with_label(_("Download Route to...")));
     gtk_menu_append(submenu, _cmenu_loc_distance_to_item
             = gtk_menu_item_new_with_label(_("Show Distance to")));
+    gtk_menu_append(submenu, _cmenu_loc_route_to_item
+            = gtk_menu_item_new_with_label(_("Download Route to...")));
     gtk_menu_append(submenu, gtk_separator_menu_item_new());
-    gtk_menu_append(submenu, _cmenu_add_poi
-                = gtk_menu_item_new_with_label(_("Add POI")));
-    gtk_widget_set_sensitive(_cmenu_add_poi, _db != NULL);
-    gtk_menu_append(submenu, _cmenu_edit_poi
-                = gtk_menu_item_new_with_label(_("Edit POI")));
-    gtk_widget_set_sensitive(_cmenu_edit_poi, _db != NULL);
+    gtk_menu_append(submenu, _cmenu_loc_add_route
+                = gtk_menu_item_new_with_label(_("Add Route Point")));
+    gtk_menu_append(submenu, _cmenu_loc_add_way
+                = gtk_menu_item_new_with_label(_("Add Waypoint...")));
+    gtk_menu_append(submenu, _cmenu_loc_add_poi
+                = gtk_menu_item_new_with_label(_("Add POI...")));
+    gtk_widget_set_sensitive(_cmenu_loc_add_poi, _db != NULL);
+    gtk_menu_append(submenu, gtk_separator_menu_item_new());
+    gtk_menu_append(submenu, _cmenu_loc_set_gps
+                = gtk_menu_item_new_with_label(_("Set as GPS Location")));
 
     /* Setup the waypoint context menu. */
     gtk_menu_append(menu, menu_item
@@ -6023,16 +6499,46 @@ menu_init()
     gtk_menu_append(submenu, _cmenu_way_show_desc_item
             = gtk_menu_item_new_with_label(_("Show Description")));
     gtk_menu_append(submenu, _cmenu_way_clip_latlon_item
-            = gtk_menu_item_new_with_label(_("Copy Lat/Lon to Clipboard")));
+            = gtk_menu_item_new_with_label(_("Copy Lat/Lon")));
     gtk_menu_append(submenu, _cmenu_way_clip_desc_item
-           = gtk_menu_item_new_with_label(_("Copy Description to Clipboard")));
+           = gtk_menu_item_new_with_label(_("Copy Description")));
     gtk_menu_append(submenu, gtk_separator_menu_item_new());
-    gtk_menu_append(submenu, _cmenu_way_route_to_item
-            = gtk_menu_item_new_with_label(_("Download Route to...")));
     gtk_menu_append(submenu, _cmenu_way_distance_to_item
             = gtk_menu_item_new_with_label(_("Show Distance to")));
+    gtk_menu_append(submenu, _cmenu_way_route_to_item
+            = gtk_menu_item_new_with_label(_("Download Route to...")));
     gtk_menu_append(submenu, _cmenu_way_delete_item
-            = gtk_menu_item_new_with_label(_("Delete")));
+            = gtk_menu_item_new_with_label(_("Delete...")));
+    gtk_menu_append(submenu, gtk_separator_menu_item_new());
+    gtk_menu_append(submenu, _cmenu_way_add_poi
+                = gtk_menu_item_new_with_label(_("Add POI...")));
+    gtk_widget_set_sensitive(_cmenu_way_add_poi, _db != NULL);
+    gtk_menu_append(submenu, gtk_separator_menu_item_new());
+    gtk_menu_append(submenu, _cmenu_way_goto_nextway
+                = gtk_menu_item_new_with_label(_("Go to Next")));
+
+    /* Setup the POI context menu. */
+    gtk_menu_append(menu, _cmenu_poi
+            = gtk_menu_item_new_with_label(_("POI")));
+    gtk_widget_set_sensitive(_cmenu_poi, _db != NULL);
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(_cmenu_poi),
+            submenu = gtk_menu_new());
+
+    gtk_menu_append(submenu, _cmenu_poi_edit_poi
+                = gtk_menu_item_new_with_label(_("View/Edit...")));
+    gtk_menu_append(submenu, gtk_separator_menu_item_new());
+    gtk_menu_append(submenu, _cmenu_poi_distance_to_item
+            = gtk_menu_item_new_with_label(_("Show Distance to")));
+    gtk_menu_append(submenu, _cmenu_poi_route_to_item
+            = gtk_menu_item_new_with_label(_("Download Route to...")));
+    gtk_menu_append(submenu, gtk_separator_menu_item_new());
+    gtk_menu_append(submenu, _cmenu_poi_add_route
+                = gtk_menu_item_new_with_label(_("Add Route Point")));
+    gtk_menu_append(submenu, _cmenu_poi_add_way
+                = gtk_menu_item_new_with_label(_("Add Waypoint...")));
+    gtk_menu_append(submenu, gtk_separator_menu_item_new());
+    gtk_menu_append(submenu, _cmenu_poi_goto_nearpoi
+                = gtk_menu_item_new_with_label(_("Go to Nearest")));
 
     /* Connect signals for context menu. */
     g_signal_connect(G_OBJECT(_cmenu_loc_show_latlon_item), "activate",
@@ -6043,10 +6549,15 @@ menu_init()
                       G_CALLBACK(cmenu_cb_loc_route_to), NULL);
     g_signal_connect(G_OBJECT(_cmenu_loc_distance_to_item), "activate",
                       G_CALLBACK(cmenu_cb_loc_distance_to), NULL);
-    g_signal_connect(G_OBJECT(_cmenu_add_poi), "activate",
-                        G_CALLBACK(cmenu_cb_add_poi), NULL);
-    g_signal_connect(G_OBJECT(_cmenu_edit_poi), "activate",
-                        G_CALLBACK(cmenu_cb_edit_poi), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_loc_add_route), "activate",
+                        G_CALLBACK(cmenu_cb_loc_add_route), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_loc_add_way), "activate",
+                        G_CALLBACK(cmenu_cb_loc_add_way), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_loc_add_poi), "activate",
+                        G_CALLBACK(cmenu_cb_loc_add_poi), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_loc_set_gps), "activate",
+                        G_CALLBACK(cmenu_cb_loc_set_gps), NULL);
+
     g_signal_connect(G_OBJECT(_cmenu_way_show_latlon_item), "activate",
                       G_CALLBACK(cmenu_cb_way_show_latlon), NULL);
     g_signal_connect(G_OBJECT(_cmenu_way_show_desc_item), "activate",
@@ -6061,6 +6572,23 @@ menu_init()
                       G_CALLBACK(cmenu_cb_way_distance_to), NULL);
     g_signal_connect(G_OBJECT(_cmenu_way_delete_item), "activate",
                       G_CALLBACK(cmenu_cb_way_delete), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_way_add_poi), "activate",
+                        G_CALLBACK(cmenu_cb_way_add_poi), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_way_goto_nextway), "activate",
+                        G_CALLBACK(menu_cb_goto_nextway), NULL);
+
+    g_signal_connect(G_OBJECT(_cmenu_poi_edit_poi), "activate",
+                        G_CALLBACK(cmenu_cb_poi_edit_poi), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_poi_route_to_item), "activate",
+                      G_CALLBACK(cmenu_cb_poi_route_to), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_poi_distance_to_item), "activate",
+                      G_CALLBACK(cmenu_cb_poi_distance_to), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_poi_add_route), "activate",
+                        G_CALLBACK(cmenu_cb_poi_add_route), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_poi_add_way), "activate",
+                        G_CALLBACK(cmenu_cb_poi_add_way), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_poi_goto_nearpoi), "activate",
+                        G_CALLBACK(menu_cb_goto_nearpoi), NULL);
 
     gtk_widget_show_all(GTK_WIDGET(menu));
 
@@ -6122,22 +6650,19 @@ map_draw_mark()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(_enable_gps)
-    {
-        gdk_draw_arc(
-                _map_widget->window,
-                _conn_state == RCVR_FIXED ? _gc_mark : _gc_mark_old,
-                FALSE, /* not filled. */
-                _mark_x1 - _draw_line_width, _mark_y1 - _draw_line_width,
-                2 * _draw_line_width, 2 * _draw_line_width,
-                0, 360 * 64);
-        gdk_draw_line(
-                _map_widget->window,
-                _conn_state == RCVR_FIXED
-                    ? (_show_velvec ? _gc_mark_velocity : _gc_mark)
-                    : _gc_mark_old,
-                _mark_x1, _mark_y1, _mark_x2, _mark_y2);
-    }
+    gdk_draw_arc(
+            _map_widget->window,
+            _conn_state == RCVR_FIXED ? _gc_mark : _gc_mark_old,
+            FALSE, /* not filled. */
+            _mark_x1 - _draw_width, _mark_y1 - _draw_width,
+            2 * _draw_width, 2 * _draw_width,
+            0, 360 * 64);
+    gdk_draw_line(
+            _map_widget->window,
+            _conn_state == RCVR_FIXED
+                ? (_show_velvec ? _gc_mark_velocity : _gc_mark)
+                : _gc_mark_old,
+            _mark_x1, _mark_y1, _mark_x2, _mark_y2);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -6154,10 +6679,10 @@ static void map_set_mark()
     _mark_y1 = unit2y(_pos.unity);
     _mark_x2 = _mark_x1 + (_show_velvec ? _vel_offsetx : 0);
     _mark_y2 = _mark_y1 + (_show_velvec ? _vel_offsety : 0);
-    _mark_minx = MIN(_mark_x1, _mark_x2) - (2 * _draw_line_width);
-    _mark_miny = MIN(_mark_y1, _mark_y2) - (2 * _draw_line_width);
-    _mark_width = abs(_mark_x1 - _mark_x2) + (4 * _draw_line_width);
-    _mark_height = abs(_mark_y1 - _mark_y2) + (4 * _draw_line_width);
+    _mark_minx = MIN(_mark_x1, _mark_x2) - (2 * _draw_width);
+    _mark_miny = MIN(_mark_y1, _mark_y2) - (2 * _draw_width);
+    _mark_width = abs(_mark_x1 - _mark_x2) + (4 * _draw_width);
+    _mark_height = abs(_mark_y1 - _mark_y2) + (4 * _draw_width);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -6348,31 +6873,33 @@ static gchar*
 map_construct_url(guint tilex, guint tiley, guint zoom)
 {
     vprintf("%s()\n", __PRETTY_FUNCTION__);
-    if(strstr(_curr_repo->url, "%s"))
+    switch(_curr_repo->type)
     {
-        /* This is a qrts-based quadtree URI. */
-        gchar location[MAX_ZOOM + 2];
-        map_convert_coords_to_quadtree_string(tilex, tiley, zoom, location,
-                                              't', "qrts");
-        return g_strdup_printf(_curr_repo->url, location);
+        case REPOTYPE_XYZ:
+            return g_strdup_printf(_curr_repo->url, tilex, tiley, zoom);
+
+        case REPOTYPE_QUAD_QRST:
+        {
+            gchar location[MAX_ZOOM + 2];
+            map_convert_coords_to_quadtree_string(
+                    tilex, tiley, zoom, location, 't', "qrts");
+            return g_strdup_printf(_curr_repo->url, location);
+        }
+
+        case REPOTYPE_QUAD_ZERO:
+        {
+            /* This is a zero-based quadtree URI. */
+            gchar location[MAX_ZOOM + 2];
+            map_convert_coords_to_quadtree_string(
+                    tilex, tiley, zoom, location, '\0', "0123");
+            return g_strdup_printf(_curr_repo->url, location);
+        }
+
+        case REPOTYPE_WMS:
+            return map_convert_wms_to_wms(tilex, tiley, zoom, _curr_repo->url);
     }
-    else if(strstr(_curr_repo->url, "%0s"))
-    {
-        /* This is a zero-based quadtree URI. */
-        gchar location[MAX_ZOOM + 2];
-        map_convert_coords_to_quadtree_string(tilex, tiley, zoom, location,
-                                              '\0', "0123");
-        return g_strdup_printf(_curr_repo->url, location);
-    }
-    else if(strstr(_curr_repo->url, "SERVICE=WMS"))
-    {
-        /* This is a wms-map URI. */
-        return map_convert_wms_to_wms(tilex, tiley, zoom, _curr_repo->url);
-    }
-    else
-        /* This is a standard x/y/z URI. */
-        return g_strdup_printf(_curr_repo->url, tilex, tiley, zoom);
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    vprintf("%s(): ERROR\n", __PRETTY_FUNCTION__);
+    return "";
 }
 
 /**
@@ -6426,11 +6953,14 @@ map_initiate_download(guint tilex, guint tiley, guint zoom, gint retries)
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
+/**
+ * Render all the POI data.  This should be done before rendering track data.
+ */
 static void
 map_render_poi()
 {
     guint unitx, unity;
-    gfloat lat1, lat2, lon1, lon2, tmp;
+    gfloat lat1, lat2, lon1, lon2;
     gchar buffer[100];
     gint poix, poiy;
     GdkPixbuf *pixbuf = NULL;
@@ -6439,24 +6969,12 @@ map_render_poi()
 
     if(_db && _poi_zoom > _zoom)
     {
-        unitx = x2unit(1);
-        unity = y2unit(1);
+        unitx = x2unit(0);
+        unity = y2unit(BUF_HEIGHT_PIXELS);
         unit2latlon(unitx, unity, lat1, lon1);
         unitx = x2unit(BUF_WIDTH_PIXELS);
-        unity = y2unit(BUF_HEIGHT_PIXELS);
+        unity = y2unit(0);
         unit2latlon(unitx, unity, lat2, lon2);
-        if(lat1 > lat2)
-        {
-            tmp = lat2;
-            lat2 = lat1;
-            lat1 = tmp;
-        }
-        if(lon1 > lon2)
-        {
-            tmp = lon2;
-            lon2 = lon1;
-            lon1 = tmp;
-        }
 
         if(SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 1, lat1) ||
            SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 2, lat2) ||
@@ -6497,10 +7015,10 @@ map_render_poi()
                 /* No icon for POI or for category - draw default. */
                 error = NULL;
                 gdk_draw_rectangle(_map_pixmap, _gc_poi, TRUE,
-                    poix - (gint)(0.5f * _draw_line_width),
-                    poiy - (gint)(0.5f * _draw_line_width),
-                    3 * _draw_line_width,
-                    3 * _draw_line_width);
+                    poix - (gint)(1.5f * _draw_width),
+                    poiy - (gint)(1.5f * _draw_width),
+                    3 * _draw_width,
+                    3 * _draw_width);
             }
             else
             {
@@ -6649,8 +7167,7 @@ map_download_idle_refresh(ProgressUpdateInfo *pui)
                                 ((tilex - _base_tilex) << TILE_SIZE_P2),
                                 ((tiley - _base_tiley) << TILE_SIZE_P2),
                                 TRUE);
-                        map_render_paths();
-                        map_render_poi();
+                        MACRO_MAP_RENDER_DATA();
                         gtk_widget_queue_draw_area(
                             _map_widget,
                             ((tilex-_base_tilex)<<TILE_SIZE_P2) - _offsetx,
@@ -6725,8 +7242,7 @@ map_force_redraw()
                     new_y * TILE_SIZE_PIXELS,
                     FALSE);
         }
-    map_render_paths();
-    map_render_poi();
+    MACRO_MAP_RENDER_DATA();
     MACRO_QUEUE_DRAW_AREA();
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -7096,8 +7612,7 @@ map_center_unit(guint new_center_unitx, guint new_center_unity)
                 }
             }
         }
-        map_render_paths();
-        map_render_poi();
+        MACRO_MAP_RENDER_DATA();
     }
 
     MACRO_RECALC_OFFSET();
@@ -7240,9 +7755,9 @@ open_file(gchar **bytes_out, GnomeVFSHandle **handle_out, gint *size_out,
         {
             gchar buffer[BUFFER_SIZE];
             snprintf(buffer, sizeof(buffer),
-                    "%s %s:\n%s", _("Failed to open file for"),
-                    chooser_action == GTK_FILE_CHOOSER_ACTION_OPEN
-                    ? _("reading") : _("writing"),
+                    "%s:\n%s", chooser_action == GTK_FILE_CHOOSER_ACTION_OPEN
+                                ? _("Failed to open file for reading")
+                                : _("Failed to open file for writing"),
                     gnome_vfs_result_to_string(vfs_result));
             popup_error(dialog, buffer);
         }
@@ -7305,10 +7820,10 @@ auto_route_dl_idle()
 {
     gchar latstr[32], lonstr[32], *latlonstr;
     printf("%s(%f, %f, %s)\n", __PRETTY_FUNCTION__,
-            _gps.latitude, _gps.longitude, _autoroute_data.dest);
+            _gps.lat, _gps.lon, _autoroute_data.dest);
 
-    g_ascii_dtostr(latstr, 32, _gps.latitude);
-    g_ascii_dtostr(lonstr, 32, _gps.longitude);
+    g_ascii_dtostr(latstr, 32, _gps.lat);
+    g_ascii_dtostr(lonstr, 32, _gps.lon);
     latlonstr = g_strdup_printf("%s,%s", latstr, lonstr);
     _autoroute_data.src_str = g_strdup_printf(
             _route_dl_url, latlonstr, _autoroute_data.dest);
@@ -7361,9 +7876,8 @@ maemo_mapper_destroy(void)
         _db = NULL;
     }
 
-    MACRO_CLEAR_TRACK(_track);
-    if(_route.head)
-        MACRO_CLEAR_TRACK(_route);
+    MACRO_FREE_TRACK(_track);
+    MACRO_FREE_ROUTE(_route);
 
     /* Clean up CURL. */
     if(_curl_multi)
@@ -7503,15 +8017,25 @@ maemo_mapper_init(gint argc, gchar **argv)
     INFO_FONT_TEXT[INFO_FONT_XXLARGE] = "xx-large";
 
     ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_TRACKS] = _("Toggle Tracks");
-    ESCAPE_KEY_TEXT[ESCAPE_KEY_CHANGE_REPO] = _("Next Repository");
-    ESCAPE_KEY_TEXT[ESCAPE_KEY_RESET_BLUETOOTH] = _("Reset Bluetooth");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_POI] = _("Toggle POIs");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_CHANGE_REPO] = _("Select Next Repository");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_ROUTE_DISTNEXT]
+        = _("Show Distance to Next Waypoint");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_ROUTE_DISTLAST]
+        = _("Show Distance to End of Route");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_TRACK_WAYPOINT] = _("Insert Track Mark");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_TRACK_DISTLAST]
+        = _("Show Distance from Last Mark");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_TRACK_DISTFIRST]
+        = _("Show Distance from Beginning");
     ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_GPS] = _("Toggle GPS");
     ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_GPSINFO] = _("Toggle GPS Info");
     ESCAPE_KEY_TEXT[ESCAPE_KEY_TOGGLE_SPEEDLIMIT] = _("Toggle Speed Limit");
+    ESCAPE_KEY_TEXT[ESCAPE_KEY_RESET_BLUETOOTH] = _("Reset Bluetooth");
 
-    DEG_FORMAT_TEXT[DDPDDDDD] = "dd.ddddd\u00b0";
-    DEG_FORMAT_TEXT[DD_MMPMMM] = "dd\u00b0mm.mmm'";
-    DEG_FORMAT_TEXT[DD_MM_SSPS] = "dd\u00b0mm'ss.s\"";
+    DEG_FORMAT_TEXT[DDPDDDDD] = "dd.ddddd°";
+    DEG_FORMAT_TEXT[DD_MMPMMM] = "dd°mm.mmm'";
+    DEG_FORMAT_TEXT[DD_MM_SSPS] = "dd°mm'ss.s\"";
 
     SPEED_LOCATION_TEXT[SPEED_LOCATION_TOP_LEFT] = _("Top-Left");
     SPEED_LOCATION_TEXT[SPEED_LOCATION_TOP_RIGHT] = _("Top-Right");
@@ -7680,8 +8204,8 @@ maemo_mapper_init(gint argc, gchar **argv)
         {
             gchar buffer[BUFFER_SIZE];
             snprintf(buffer, sizeof(buffer),
-                    "%s %s:\n%s", _("Failed to open file for"),
-                    _("reading"), gnome_vfs_result_to_string(vfs_result));
+                    "%s:\n%s", _("Failed to open file for reading"),
+                    gnome_vfs_result_to_string(vfs_result));
             popup_error(_window, buffer);
         }
         else
@@ -7699,8 +8223,7 @@ maemo_mapper_init(gint argc, gchar **argv)
     }
 
     /* If we have a route, calculate the next point. */
-    if(_route.head)
-        route_find_nearest_point();
+    route_find_nearest_point();
 
     /* Add D-BUS signal handler for 'status_changed' */
     {
@@ -8020,6 +8543,11 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
         case HILDON_HARDKEY_ESC:
             switch(_escape_key)
             {
+                case ESCAPE_KEY_TOGGLE_POI:
+                    gtk_check_menu_item_set_active(
+                            GTK_CHECK_MENU_ITEM(_menu_show_poi_item),
+                            !_show_poi);
+                    break;
                 case ESCAPE_KEY_CHANGE_REPO:
                     {
                         GList *curr = g_list_find(_repo_list, _curr_repo);
@@ -8036,6 +8564,21 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                 case ESCAPE_KEY_RESET_BLUETOOTH:
                     reset_bluetooth();
                     break;
+                case ESCAPE_KEY_ROUTE_DISTNEXT:
+                    route_show_distance_to_next();
+                    break;
+                case ESCAPE_KEY_ROUTE_DISTLAST:
+                    route_show_distance_to_last();
+                    break;
+                case ESCAPE_KEY_TRACK_WAYPOINT:
+                    track_insert_mark();
+                    break;
+                case ESCAPE_KEY_TRACK_DISTLAST:
+                    track_show_distance_from_last();
+                    break;
+                case ESCAPE_KEY_TRACK_DISTFIRST:
+                    track_show_distance_from_first();
+                    break;
                 case ESCAPE_KEY_TOGGLE_GPS:
                     gtk_check_menu_item_set_active(
                             GTK_CHECK_MENU_ITEM(_menu_enable_gps_item),
@@ -8049,7 +8592,7 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                 case ESCAPE_KEY_TOGGLE_SPEEDLIMIT:
                     _speed_limit_on ^= 1;
                     break;
-                default:
+                default: /* ESCAPE_KEY_TOGGLE_TRACKS */
                     switch(_show_tracks)
                     {
                         case 0:
@@ -8069,12 +8612,12 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                              * clear. */
                             _show_tracks = _show_tracks << 16;
                     }
-                    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                                _menu_show_routes_item),
+                    gtk_check_menu_item_set_active(
+                            GTK_CHECK_MENU_ITEM(_menu_show_routes_item),
                             _show_tracks & ROUTES_MASK);
 
-                    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                                _menu_show_tracks_item),
+                    gtk_check_menu_item_set_active(
+                            GTK_CHECK_MENU_ITEM(_menu_show_tracks_item),
                             _show_tracks & TRACKS_MASK);
             }
             return TRUE;
@@ -8219,7 +8762,7 @@ heading_panel_expose(GtkWidget *widget, GdkEventExpose *event)
     pango_layout_set_font_description (layout, fontdesc);
     pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
 
-    text = g_strdup_printf("%3.0f\u00b0", _gps.heading);
+    text = g_strdup_printf("%3.0f°", _gps.heading);
     pango_layout_set_text(layout, text, -1);
     pango_layout_get_pixel_size(layout, &x, &y);
 
@@ -8374,7 +8917,7 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
     {
         _pos.unitx = x2unit((gint)(event->x + 0.5));
         _pos.unity = y2unit((gint)(event->y + 0.5));
-        unit2latlon(_pos.unitx, _pos.unity, _gps.latitude, _gps.longitude);
+        unit2latlon(_pos.unitx, _pos.unity, _gps.lat, _gps.lon);
         _gps.speed = 20.f;
         integerize_data();
         track_add(time(NULL), FALSE);
@@ -8384,8 +8927,8 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
 #endif
     {
         if(_center_mode > 0)
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                        _menu_ac_none_item), TRUE);
+            gtk_check_menu_item_set_active(
+                    GTK_CHECK_MENU_ITEM(_menu_ac_none_item), TRUE);
         map_center_unit(
                 x2unit((gint)(event->x + 0.5)),
                 y2unit((gint)(event->y + 0.5)));
@@ -8514,18 +9057,18 @@ channel_parse_rmc(gchar *sentence)
         MACRO_PARSE_FLOAT(tmpd, dpoint - 2);
         dpoint[-2] = '\0';
         MACRO_PARSE_INT(tmpi, token);
-        _gps.latitude = tmpi + (tmpd * (1.0 / 60.0));
+        _gps.lat = tmpi + (tmpd * (1.0 / 60.0));
     }
 
     /* Parse N or S. */
     token = strsep(&sentence, DELIM);
     if(*token)
     {
-        deg_format(_gps.latitude, tmp);
-        snprintf(_gps.slatitude, sizeof(_gps.slatitude),
+        deg_format(_gps.lat, tmp);
+        snprintf(_gps.slat, sizeof(_gps.slat),
                 "%c %s", token[0], tmp);
         if(token[0] == 'S')
-            _gps.latitude = -_gps.latitude;
+            _gps.lat = -_gps.lat;
     }
 
     /* Parse the longitude. */
@@ -8536,18 +9079,18 @@ channel_parse_rmc(gchar *sentence)
         MACRO_PARSE_FLOAT(tmpd, dpoint - 2);
         dpoint[-2] = '\0';
         MACRO_PARSE_INT(tmpi, token);
-        _gps.longitude = tmpi + (tmpd * (1.0 / 60.0));
+        _gps.lon = tmpi + (tmpd * (1.0 / 60.0));
     }
 
     /* Parse E or W. */
     token = strsep(&sentence, DELIM);
     if(*token)
     {
-        deg_format(_gps.longitude, tmp);
-        snprintf(_gps.slongitude, sizeof(_gps.slongitude),
+        deg_format(_gps.lon, tmp);
+        snprintf(_gps.slon, sizeof(_gps.slon),
                 "%c %s", token[0], tmp);
         if(*token && token[0] == 'W')
-            _gps.longitude = -_gps.longitude;
+            _gps.lon = -_gps.lon;
     }
 
     /* Parse speed over ground, knots. */
@@ -8893,33 +9436,55 @@ channel_cb_input(GIOChannel *src, GIOCondition condition, gpointer data)
     return TRUE;
 }
 
-static gboolean
-gps_toggled_from(GtkToggleButton *chk_gps,
-        GtkWidget *txt_from)
-{
-    gchar buffer[80];
-    gchar strlat[32];
-    gchar strlon[32];
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    g_ascii_formatd(strlat, 32, "%.06f", _gps.latitude);
-    g_ascii_formatd(strlon, 32, "%.06f", _gps.longitude);
-    snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
-    gtk_widget_set_sensitive(txt_from, !gtk_toggle_button_get_active(chk_gps));
-    gtk_entry_set_text(GTK_ENTRY(txt_from), buffer);
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
+typedef struct _OriginToggleInfo OriginToggleInfo;
+struct _OriginToggleInfo {
+    GtkWidget *rad_use_gps;
+    GtkWidget *rad_use_route;
+    GtkWidget *rad_use_text;
+    GtkWidget *chk_auto;
+    GtkWidget *txt_from;
+    GtkWidget *txt_to;
+};
 
 static gboolean
-gps_toggled_auto(GtkToggleButton *chk_gps,
-        GtkWidget *chk_auto)
+origin_type_selected(GtkWidget *toggle,
+        OriginToggleInfo *oti)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    gtk_widget_set_sensitive(chk_auto, gtk_toggle_button_get_active(chk_gps));
+    if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle)))
+    {
+        if(toggle == oti->rad_use_gps)
+        {
+            gchar buffer[80];
+            gchar strlat[32];
+            gchar strlon[32];
+            g_ascii_formatd(strlat, 32, "%.06f", _gps.lat);
+            g_ascii_formatd(strlon, 32, "%.06f", _gps.lon);
+            snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
+            gtk_entry_set_text(GTK_ENTRY(oti->txt_from), buffer);
+        }
+        else if(toggle == oti->rad_use_route)
+        {
+            gchar buffer[80];
+            gchar strlat[32];
+            gchar strlon[32];
+            Point *p;
+            gfloat lat, lon;
 
+            /* Use last non-zero route point. */
+            for(p = _route.tail; !p->unity; p--) { }
+
+            unit2latlon(p->unitx, p->unity, lat, lon);
+            g_ascii_formatd(strlat, 32, "%.06f", lat);
+            g_ascii_formatd(strlon, 32, "%.06f", lon);
+            snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
+            gtk_entry_set_text(GTK_ENTRY(oti->txt_from), buffer);
+        }
+
+        gtk_widget_set_sensitive(oti->txt_from, toggle == oti->rad_use_text);
+        gtk_widget_set_sensitive(oti->chk_auto, toggle == oti->rad_use_gps);
+    }
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -8935,17 +9500,14 @@ gps_toggled_auto(GtkToggleButton *chk_gps,
  * safe to free either string as soon as this function returns.
  */
 static gboolean
-route_download(gchar *from, gchar *to, gboolean from_here)
+route_download(gchar *to)
 {
     GtkWidget *dialog;
     GtkWidget *table;
     GtkWidget *label;
     GtkWidget *txt_source_url;
-    GtkWidget *chk_gps;
-    GtkWidget *chk_auto;
-    GtkWidget *txt_from;
-    GtkWidget *txt_to;
     GtkWidget *hbox;
+    OriginToggleInfo oti;
     GtkEntryCompletion *from_comp;
     GtkEntryCompletion *to_comp;
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -8963,8 +9525,12 @@ route_download(gchar *from, gchar *to, gboolean from_here)
             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
             NULL);
 
+    /* Enable the help button. */
+    ossohelp_dialog_help_enable(
+            GTK_DIALOG(dialog), HELP_ID_DOWNROUTE, _osso);
+
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-            table = gtk_table_new(2, 4, FALSE), TRUE, TRUE, 0);
+            table = gtk_table_new(2, 5, FALSE), TRUE, TRUE, 0);
 
     from_comp = gtk_entry_completion_new();
     gtk_entry_completion_set_model(from_comp, GTK_TREE_MODEL(_loc_model));
@@ -8973,7 +9539,7 @@ route_download(gchar *from, gchar *to, gboolean from_here)
     gtk_entry_completion_set_model(to_comp, GTK_TREE_MODEL(_loc_model));
     gtk_entry_completion_set_text_column(to_comp, 0);
 
-    /* Origin. */
+    /* Source URL. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(_("Source URL")),
             0, 1, 0, 1, GTK_FILL, 0, 2, 4);
@@ -8986,52 +9552,86 @@ route_download(gchar *from, gchar *to, gboolean from_here)
     /* Auto. */
     gtk_table_attach(GTK_TABLE(table),
             hbox = gtk_hbox_new(FALSE, 6),
-            0, 2, 1, 2, 0, 0, 2, 4);
+            0, 2, 1, 2, GTK_FILL, 0, 2, 4);
     gtk_box_pack_start(GTK_BOX(hbox),
-            chk_gps = gtk_check_button_new_with_label(
+            oti.rad_use_gps = gtk_radio_button_new_with_label(NULL,
                 _("Use GPS Location")),
             TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(hbox),
-            chk_auto = gtk_check_button_new_with_label(
+            oti.chk_auto = gtk_check_button_new_with_label(
                 _("Auto-Update")),
             TRUE, TRUE, 0);
-    gtk_widget_set_sensitive(chk_auto, FALSE);
+    gtk_widget_set_sensitive(oti.chk_auto, FALSE);
+
+    /* Use End of Route. */
+    gtk_table_attach(GTK_TABLE(table),
+            hbox = gtk_hbox_new(FALSE, 6),
+            0, 2, 2, 3, GTK_FILL, 0, 2, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            oti.rad_use_route = gtk_radio_button_new_with_label_from_widget(
+                GTK_RADIO_BUTTON(oti.rad_use_gps), _("Use End of Route")),
+            TRUE, TRUE, 0);
+    gtk_widget_set_sensitive(oti.rad_use_route, _route.head != _route.tail);
 
     /* Origin. */
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Origin")),
-            0, 1, 2, 3, GTK_FILL, 0, 2, 4);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+            oti.rad_use_text = gtk_radio_button_new_with_label_from_widget(
+                GTK_RADIO_BUTTON(oti.rad_use_gps), _("Origin")),
+            0, 1, 3, 4, GTK_FILL, 0, 2, 4);
     gtk_table_attach(GTK_TABLE(table),
-            txt_from = gtk_entry_new(),
-            1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-    gtk_entry_set_completion(GTK_ENTRY(txt_from), from_comp);
-    gtk_entry_set_width_chars(GTK_ENTRY(txt_from), 25);
+            oti.txt_from = gtk_entry_new(),
+            1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_entry_set_completion(GTK_ENTRY(oti.txt_from), from_comp);
+    gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_from), 25);
+    g_object_set(G_OBJECT(oti.txt_from), HILDON_AUTOCAP, FALSE, NULL);
 
     /* Destination. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(_("Destination")),
-            0, 1, 3, 4, GTK_FILL, 0, 2, 4);
+            0, 1, 4, 5, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
-            txt_to = gtk_entry_new(),
-            1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-    gtk_entry_set_completion(GTK_ENTRY(txt_to), to_comp);
-    gtk_entry_set_width_chars(GTK_ENTRY(txt_to), 25);
+            oti.txt_to = gtk_entry_new(),
+            1, 2, 4, 5, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+    gtk_entry_set_completion(GTK_ENTRY(oti.txt_to), to_comp);
+    gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_to), 25);
+    g_object_set(G_OBJECT(oti.txt_to), HILDON_AUTOCAP, FALSE, NULL);
 
-    g_signal_connect(G_OBJECT(chk_gps), _("toggled"),
-                      G_CALLBACK(gps_toggled_from), txt_from);
-    g_signal_connect(G_OBJECT(chk_gps), _("toggled"),
-                      G_CALLBACK(gps_toggled_auto), chk_auto);
+    g_signal_connect(G_OBJECT(oti.rad_use_gps), "toggled",
+                      G_CALLBACK(origin_type_selected), &oti);
+    g_signal_connect(G_OBJECT(oti.rad_use_route), "toggled",
+                      G_CALLBACK(origin_type_selected), &oti);
+    g_signal_connect(G_OBJECT(oti.rad_use_text), "toggled",
+                      G_CALLBACK(origin_type_selected), &oti);
 
     /* Initialize fields. */
     gtk_entry_set_text(GTK_ENTRY(txt_source_url), _route_dl_url);
-    gtk_entry_set_text(GTK_ENTRY(txt_from), (from ? from : ""));
-    gtk_entry_set_text(GTK_ENTRY(txt_to), (to ? to : ""));
-    gtk_widget_grab_focus(txt_from);
+    gtk_entry_set_text(GTK_ENTRY(oti.txt_to), (to ? to : ""));
 
-    if(from_here)
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_gps), TRUE);
+    gtk_toggle_button_set_active(
+            GTK_TOGGLE_BUTTON(oti.rad_use_text), TRUE);
+
+    /* Use "End of Route" by default if they have a route. */
+    if(_route.head != _route.tail)
+    {
+        gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(oti.rad_use_route), TRUE);
+        gtk_widget_grab_focus(oti.rad_use_route);
+    }
+    /* Else use "GPS Location" if they have GPS enabled. */
+    else if(_enable_gps)
+    {
+        gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(oti.rad_use_gps), TRUE);
+        gtk_widget_grab_focus(oti.rad_use_gps);
+    }
+    /* Else use text. */
+    else
+    {
+        gtk_toggle_button_set_active(
+                GTK_TOGGLE_BUTTON(oti.rad_use_text), TRUE);
+        gtk_widget_grab_focus(oti.txt_from);
+    }
 
     gtk_widget_show_all(dialog);
 
@@ -9055,14 +9655,14 @@ route_download(gchar *from, gchar *to, gboolean from_here)
             _route_dl_url = g_strdup(source_url);
         }
 
-        from = gtk_entry_get_text(GTK_ENTRY(txt_from));
+        from = gtk_entry_get_text(GTK_ENTRY(oti.txt_from));
         if(!strlen(from))
         {
             popup_error(dialog, _("Please specify a start location."));
             continue;
         }
 
-        to = gtk_entry_get_text(GTK_ENTRY(txt_to));
+        to = gtk_entry_get_text(GTK_ENTRY(oti.txt_to));
         if(!strlen(to))
         {
             popup_error(dialog, _("Please specify an end location."));
@@ -9101,9 +9701,10 @@ route_download(gchar *from, gchar *to, gboolean from_here)
             g_free(rdl_data.bytes);
             /* Let them try again. */
         }
-        /* Else, if GPS is enabled, append the route, otherwise replace it. */
+        /* Else, if GPS is enabled, replace the route, otherwise append it. */
         else if(parse_route_gpx(rdl_data.bytes, rdl_data.bytes_read,
-                    (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chk_gps))
+                    (gtk_toggle_button_get_active(
+                      GTK_TOGGLE_BUTTON(oti.rad_use_gps))
                         ? 0 : 1)))
         {
             GtkTreeIter iter;
@@ -9116,7 +9717,7 @@ route_download(gchar *from, gchar *to, gboolean from_here)
 
             map_force_redraw();
 
-            if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chk_auto)))
+            if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(oti.chk_auto)))
             {
                 /* Kick off a timeout to start the first update. */
                 _autoroute_data.dest = gnome_vfs_escape_string(to);
@@ -9124,7 +9725,8 @@ route_download(gchar *from, gchar *to, gboolean from_here)
             }
 
             /* Save Origin in Route Locations list if not from GPS. */
-            if(!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(chk_gps))
+            if(!gtk_toggle_button_get_active(
+                        GTK_TOGGLE_BUTTON(oti.rad_use_gps))
                 && !g_slist_find_custom(_loc_list, from,
                             (GCompareFunc)strcmp))
             {
@@ -9156,7 +9758,7 @@ route_download(gchar *from, gchar *to, gboolean from_here)
         }
     }
 
-    gtk_widget_destroy(dialog);
+    gtk_widget_hide(dialog); /* Destroying causes a crash (!?!?!??!) */
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -9166,7 +9768,7 @@ static gboolean
 menu_cb_route_download(GtkAction *action)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
-    route_download(NULL, NULL, FALSE);
+    route_download(NULL);
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -9202,17 +9804,35 @@ menu_cb_route_open(GtkAction *action)
 }
 
 static gboolean
+menu_cb_route_distnext(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    route_show_distance_to_next();
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_route_distlast(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    route_show_distance_to_last();
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
 menu_cb_route_reset(GtkAction *action)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(_route.head)
-    {
-        route_find_nearest_point();
-        map_render_paths();
-        map_render_poi();
-        MACRO_QUEUE_DRAW_AREA();
-    }
+    route_find_nearest_point();
+    MACRO_MAP_RENDER_DATA();
+    MACRO_QUEUE_DRAW_AREA();
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -9223,9 +9843,11 @@ menu_cb_route_clear(GtkAction *action)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    _next_way_dist_rough = -1; /* to avoid announcement attempts. */
     cancel_autoroute(FALSE);
-    MACRO_CLEAR_TRACK(_route);
+    MACRO_FREE_ROUTE(_route);
+    MACRO_INIT_ROUTE(_route);
+    _visible_way_first = _visible_way_last = NULL;
+    route_find_nearest_point();
     map_force_redraw();
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -9279,37 +9901,33 @@ menu_cb_track_save(GtkAction *action)
 }
 
 static gboolean
-menu_cb_track_mark_way(GtkAction *action)
+menu_cb_track_insert_mark(GtkAction *action)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(_track.tail->point.unity)
-    {
-        guint x1, y1;
+    track_insert_mark();
 
-        /* To mark a "waypoint" in a track, we'll add a (0, 0) point and then
-         * another instance of the most recent track point. */
-        MACRO_TRACK_INCREMENT_TAIL(_track);
-        *_track.tail = _track_null;
-        MACRO_TRACK_INCREMENT_TAIL(_track);
-        *_track.tail = _track.tail[2];
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
 
-        /** Instead of calling map_render_paths(), we'll just add the waypoint
-         * ourselves. */
-        x1 = unit2bufx(_track.tail->point.unitx);
-        y1 = unit2bufy(_track.tail->point.unity);
-        /* Make sure this circle will be visible. */
-        if((x1 < BUF_WIDTH_PIXELS)
-                && ((unsigned)y1 < BUF_HEIGHT_PIXELS))
-            gdk_draw_arc(_map_pixmap, _gc_track_break,
-                    FALSE, /* FALSE: not filled. */
-                    x1 - _draw_line_width,
-                    y1 - _draw_line_width,
-                    2 * _draw_line_width,
-                    2 * _draw_line_width,
-                    0, /* start at 0 degrees. */
-                    360 * 64);
-    }
+static gboolean
+menu_cb_track_distlast(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    track_show_distance_from_last();
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_track_distfirst(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    track_show_distance_from_first();
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -9320,12 +9938,6 @@ menu_cb_route_save(GtkAction *action)
 {
     GnomeVFSHandle *handle;
     printf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(!_route.head)
-    {
-        popup_error(_window, _("No route is loaded."));
-        return TRUE;
-    }
 
     if(open_file(NULL, &handle, NULL, &_route_dir_uri, NULL,
                     GTK_FILE_CHOOSER_ACTION_SAVE))
@@ -9412,8 +10024,19 @@ menu_cb_show_velvec(GtkAction *action)
     _show_velvec = gtk_check_menu_item_get_active(
             GTK_CHECK_MENU_ITEM(_menu_show_velvec_item));
     map_move_mark();
-    gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_details_item), _enable_gps);
-    gps_show_info();
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_show_poi(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    _show_poi = gtk_check_menu_item_get_active(
+            GTK_CHECK_MENU_ITEM(_menu_show_poi_item));
+    map_force_redraw();
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -9470,6 +10093,187 @@ menu_cb_ac_none(GtkAction *action)
 
     _center_mode = -_center_mode;
     MACRO_BANNER_SHOW_INFO(_window, _("Auto-Center Off"));
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_goto_latlon(GtkAction *action)
+{
+    GtkWidget *dialog;
+    GtkWidget *table;
+    GtkWidget *label;
+    GtkWidget *txt_lat;
+    GtkWidget *txt_lon;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    dialog = gtk_dialog_new_with_buttons(_("Go to Lat/Lon"),
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+            NULL);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+            table = gtk_table_new(2, 3, FALSE), TRUE, TRUE, 0);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Latitude")),
+            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            txt_lat = gtk_entry_new(),
+            1, 2, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
+    g_object_set(G_OBJECT(txt_lat), HILDON_INPUT_MODE_HINT,
+            HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Longitude")),
+            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            txt_lon = gtk_entry_new(),
+            1, 2, 1, 2, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
+    g_object_set(G_OBJECT(txt_lon), HILDON_INPUT_MODE_HINT,
+            HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
+
+    /* Initialize with the current center position. */
+    {
+        gchar buffer[32];
+        gfloat lat, lon;
+        unit2latlon(_center.unitx, _center.unity, lat, lon);
+        snprintf(buffer, sizeof(buffer), "%.06f", lat);
+        gtk_label_set_text(GTK_LABEL(txt_lat), buffer);
+        snprintf(buffer, sizeof(buffer), "%.06f", lon);
+        gtk_label_set_text(GTK_LABEL(txt_lon), buffer);
+    }
+
+    gtk_widget_show_all(dialog);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        const gchar *text;
+        gchar *error_check;
+        gfloat lat, lon;
+        guint unitx, unity;
+
+        text = gtk_entry_get_text(GTK_ENTRY(txt_lat));
+        lat = strtof(text, &error_check);
+        if(text == error_check || lat < -90.f || lat > 90.f) {
+            popup_error(dialog, _("Invalid Latitude"));
+            continue;
+        }
+
+        text = gtk_entry_get_text(GTK_ENTRY(txt_lon));
+        lon = strtof(text, &error_check);
+        if(text == error_check || lon < -180.f || lon > 180.f) {
+            popup_error(dialog, _("Invalid Longitude"));
+            continue;
+        }
+
+        latlon2unit(lat, lon, unitx, unity);
+        if(_center_mode > 0)
+            gtk_check_menu_item_set_active(
+                    GTK_CHECK_MENU_ITEM(_menu_ac_none_item), TRUE);
+        map_center_unit(unitx, unity);
+        break;
+    }
+    gtk_widget_destroy(dialog);
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_goto_gps(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_center_mode > 0)
+        gtk_check_menu_item_set_active(
+                GTK_CHECK_MENU_ITEM(_menu_ac_none_item), TRUE);
+
+    map_center_unit(_pos.unitx, _pos.unity);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_goto_nextway(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_next_way && _next_way->point->unity)
+    {
+        if(_center_mode > 0)
+            gtk_check_menu_item_set_active(
+                    GTK_CHECK_MENU_ITEM(_menu_ac_none_item), TRUE);
+
+        map_center_unit(_next_way->point->unitx, _next_way->point->unity);
+    }
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("There is no next waypoint."));
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_goto_nearpoi(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_db)
+    {
+        gfloat lat, lon;
+
+        if(_center_mode > 0)
+        {
+            /* Auto-Center is enabled - use the GPS position. */
+            unit2latlon(_pos.unitx, _pos.unity, lat, lon);
+        }
+        else
+        {
+            /* Auto-Center is disabled - use the view center. */
+            unit2latlon(_center.unitx, _center.unity, lat, lon);
+        }
+
+        if(SQLITE_OK == sqlite3_bind_double(_stmt_select_nearest_poi, 1, lat)
+        && SQLITE_OK == sqlite3_bind_double(_stmt_select_nearest_poi, 2, lon)
+            && SQLITE_ROW == sqlite3_step(_stmt_select_nearest_poi))
+        {
+            guint unitx, unity;
+            gchar *banner;
+            const gchar *poi_label, *cat_label;
+
+            lat = sqlite3_column_double(_stmt_select_nearest_poi, 0);
+            lon = sqlite3_column_double(_stmt_select_nearest_poi, 1);
+            poi_label = sqlite3_column_text(_stmt_select_nearest_poi, 2);
+            cat_label = sqlite3_column_text(_stmt_select_nearest_poi, 3);
+
+            latlon2unit(lat, lon, unitx, unity);
+            banner = g_strdup_printf("%s (%s)", poi_label, cat_label);
+            MACRO_BANNER_SHOW_INFO(_window, banner);
+            g_free(banner);
+
+            if(_center_mode > 0)
+                gtk_check_menu_item_set_active(
+                        GTK_CHECK_MENU_ITEM(_menu_ac_none_item), TRUE);
+
+            map_center_unit(unitx, unity);
+        }
+        else
+        {
+            MACRO_BANNER_SHOW_INFO(_window, _("No POIs found."));
+        }
+        sqlite3_reset(_stmt_select_nearest_poi);
+    }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -9829,10 +10633,14 @@ repoman_dialog()
     GList *curr;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    rmi.dialog = gtk_dialog_new_with_buttons(_("Repositories"),
+    rmi.dialog = gtk_dialog_new_with_buttons(_("Manage Repositories"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
             NULL);
+
+    /* Enable the help button. */
+    ossohelp_dialog_help_enable(
+            GTK_DIALOG(rmi.dialog), HELP_ID_REPOMAN, _osso);
 
     /* Retrieve button. */
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(rmi.dialog)->action_area),
@@ -9914,7 +10722,7 @@ repoman_dialog()
         gboolean verified = TRUE;
         gint i;
         GList *curr;
-        gchar *old_curr_repo_name = NULL;
+        gchar *old_curr_repo_name = _curr_repo->name;
         for(i = 0, curr = rmi.repo_edits;
                 verified && curr; curr = curr->next, i++)
         {
@@ -9967,6 +10775,8 @@ repoman_dialog()
         _repo_list = NULL;
 
         /* Write new _repo_list. */
+        curr_repo_index = gtk_combo_box_get_active(
+                GTK_COMBO_BOX(rmi.cmb_repos));
         _curr_repo = NULL;
         for(i = 0, curr = rmi.repo_edits; curr; curr = curr->next, i++)
         {
@@ -9980,9 +10790,13 @@ repoman_dialog()
                     HILDON_CONTROLBAR(rei->num_dl_zoom_steps));
             rd->view_zoom_steps = hildon_controlbar_get_value(
                     HILDON_CONTROLBAR(rei->num_view_zoom_steps));
+            set_repo_type(rd);
+
             _repo_list = g_list_append(_repo_list, rd);
 
-            if(old_curr_repo_name && !strcmp(old_curr_repo_name, rd->name))
+            if(!_curr_repo && !strcmp(old_curr_repo_name, rd->name))
+                _curr_repo = rd;
+            if(i == curr_repo_index)
                 _curr_repo = rd;
         }
         if(!_curr_repo)
@@ -10082,7 +10896,7 @@ mapman_by_area(gfloat start_lat, gfloat start_lon,
     if(is_deleting)
     {
         snprintf(buffer, sizeof(buffer), "%s %d %s", _("Confirm DELETION of"),
-                num_maps, _("maps"));
+                num_maps, _("maps "));
     }
     else
     {
@@ -10137,12 +10951,6 @@ mapman_by_route(MapmanInfo *mapman_info,
             HILDON_NUMBER_EDITOR(mapman_info->num_route_radius));
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(!_route.head)
-    {
-        popup_error(mapman_info->dialog, "No route is loaded.");
-        return TRUE;
-    }
-
     /* First, get the number of maps to download. */
     for(i = 0; i < MAX_ZOOM; i++)
     {
@@ -10151,7 +10959,7 @@ mapman_by_route(MapmanInfo *mapman_info,
         {
             prev_tilex = 0;
             prev_tiley = 0;
-            for(curr = _route.head - 1; ++curr != _route.tail; )
+            for(curr = _route.head - 1; curr++ != _route.tail; )
             {
                 if(curr->unity)
                 {
@@ -10175,7 +10983,7 @@ mapman_by_route(MapmanInfo *mapman_info,
     {
         snprintf(buffer, sizeof(buffer), "%s %s %d %s",
                 _("Confirm DELETION of"), _("about"),
-                num_maps, _("maps"));
+                num_maps, _("maps "));
     }
     else
     {
@@ -10203,7 +11011,7 @@ mapman_by_route(MapmanInfo *mapman_info,
         {
             prev_tilex = 0;
             prev_tiley = 0;
-            for(curr = _route.head - 1; ++curr != _route.tail; )
+            for(curr = _route.head - 1; curr++ != _route.tail; )
             {
                 if(curr->unity)
                 {
@@ -10319,6 +11127,10 @@ menu_cb_mapman(GtkAction *action)
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
             NULL);
 
+    /* Enable the help button. */
+    ossohelp_dialog_help_enable(
+            GTK_DIALOG(mapman_info.dialog), HELP_ID_MAPMAN, _osso);
+
     /* Clear button. */
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
             button = gtk_button_new_with_label(_("Clear")));
@@ -10379,7 +11191,8 @@ menu_cb_mapman(GtkAction *action)
                         GTK_RADIO_BUTTON(mapman_info.rad_by_area),
                         _("Along Route - Radius (tiles):")),
             FALSE, FALSE, 0);
-    gtk_widget_set_sensitive(mapman_info.rad_by_route, _route.head != NULL);
+    gtk_widget_set_sensitive(mapman_info.rad_by_route,
+            _route.head != _route.tail);
     gtk_box_pack_start(GTK_BOX(hbox),
             mapman_info.num_route_radius = hildon_number_editor_new(0, 100),
             FALSE, FALSE, 0);
@@ -10469,10 +11282,14 @@ menu_cb_mapman(GtkAction *action)
             mapman_info.txt_topleft_lat = gtk_entry_new(),
             1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lat), 1.f);
+    g_object_set(G_OBJECT(mapman_info.txt_topleft_lat), HILDON_INPUT_MODE_HINT,
+            HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
     gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
             mapman_info.txt_topleft_lon = gtk_entry_new(),
             2, 3, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lon), 1.f);
+    g_object_set(G_OBJECT(mapman_info.txt_topleft_lon), HILDON_INPUT_MODE_HINT,
+            HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
 
     /* Bottom Right. */
     gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
@@ -10483,10 +11300,14 @@ menu_cb_mapman(GtkAction *action)
             mapman_info.txt_botright_lat = gtk_entry_new(),
             1, 2, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lat), 1.f);
+    g_object_set(G_OBJECT(mapman_info.txt_botright_lat), HILDON_INPUT_MODE_HINT,
+            HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
     gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
             mapman_info.txt_botright_lon = gtk_entry_new(),
             2, 3, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
     gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lon), 1.f);
+    g_object_set(G_OBJECT(mapman_info.txt_botright_lon), HILDON_INPUT_MODE_HINT,
+            HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
 
     /* Default action is to download by area. */
     gtk_toggle_button_set_active(
@@ -10495,9 +11316,9 @@ menu_cb_mapman(GtkAction *action)
     /* Initialize fields.  Do no use g_ascii_formatd; these strings will be
      * output (and parsed) as locale-dependent. */
 
-    snprintf(buffer, sizeof(buffer), "%.06f", _gps.latitude);
+    snprintf(buffer, sizeof(buffer), "%.06f", _gps.lat);
     gtk_label_set_text(GTK_LABEL(lbl_gps_lat), buffer);
-    snprintf(buffer, sizeof(buffer), "%.06f", _gps.longitude);
+    snprintf(buffer, sizeof(buffer), "%.06f", _gps.lon);
     gtk_label_set_text(GTK_LABEL(lbl_gps_lon), buffer);
 
     unit2latlon(_center.unitx, _center.unity, lat, lon);
@@ -10538,7 +11359,7 @@ menu_cb_mapman(GtkAction *action)
     {
         gtk_widget_set_sensitive(mapman_info.rad_download, FALSE);
         popup_error(dialog,
-                _("NOTE: You must set a Map URI in the Repository Manager in "
+                _("NOTE: You must set a Map URI in the current repository in "
                     "order to download maps."));
     }
     g_signal_connect(G_OBJECT(mapman_info.rad_delete), "clicked",
@@ -10568,28 +11389,28 @@ menu_cb_mapman(GtkAction *action)
 
             text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lat));
             start_lat = strtof(text, &error_check);
-            if(text == error_check) {
+            if(text == error_check || start_lat < -90.f || start_lat > 90.f) {
                 popup_error(dialog, _("Invalid Top-Left Latitude"));
                 continue;
             }
 
             text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lon));
             start_lon = strtof(text, &error_check);
-            if(text == error_check) {
+            if(text == error_check || start_lon < -180.f || start_lon>180.f) {
                 popup_error(dialog, _("Invalid Top-Left Longitude"));
                 continue;
             }
 
             text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_botright_lat));
             end_lat = strtof(text, &error_check);
-            if(text == error_check) {
+            if(text == error_check || end_lat < -90.f || end_lat > 90.f) {
                 popup_error(dialog, _("Invalid Bottom-Right Latitude"));
                 continue;
             }
 
             text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_botright_lon));
             end_lon = strtof(text, &error_check);
-            if(text == error_check) {
+            if(text == error_check || end_lon < -180.f || end_lon > 180.f) {
                 popup_error(dialog,_("Invalid Bottom-Right Longitude"));
                 continue;
             }
@@ -10672,7 +11493,7 @@ menu_cb_auto_download(GtkAction *action)
     {
         if(!*_curr_repo->url)
             popup_error(_window,
-                _("NOTE: You must set a Map URI in the Repository Manager in "
+                _("NOTE: You must set a Map URI in the current repository in "
                     "order to download maps."));
         map_force_redraw();
     }
@@ -10731,341 +11552,7 @@ menu_cb_help(GtkAction *action)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    ossohelp_show(_osso, HELP_ID_INTRO, OSSO_HELP_SHOW_DIALOG);
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-cmenu_cb_loc_show_latlon(GtkAction *action)
-{
-    gchar buffer[80], tmp1[15], tmp2[15];
-    guint unitx, unity;
-    gfloat lat, lon;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    unitx = x2unit(_cmenu_position_x);
-    unity = y2unit(_cmenu_position_y);
-    unit2latlon(unitx, unity, lat, lon);
-    deg_format(lat, tmp1);
-    deg_format(lon, tmp2);
-
-    snprintf(buffer, sizeof(buffer),
-            "%s: %s\n"
-            "%s: %s",
-            _("Latitude"), tmp1,
-            _("Longitude"), tmp2);
-
-    MACRO_BANNER_SHOW_INFO(_window, buffer);
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-cmenu_cb_loc_clip_latlon(GtkAction *action)
-{
-    gchar buffer[80], tmp1[15], tmp2[15];
-    guint unitx, unity;
-    gfloat lat, lon;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    unitx = x2unit(_cmenu_position_x);
-    unity = y2unit(_cmenu_position_y);
-    unit2latlon(unitx, unity, lat, lon);
-    deg_format(lat, tmp1);
-    deg_format(lon, tmp2);
-
-    snprintf(buffer, sizeof(buffer), "%s, %s", tmp1, tmp2);
-
-    gtk_clipboard_set_text(
-            gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), buffer, -1);
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-cmenu_cb_loc_route_to(GtkAction *action)
-{
-    gchar buffer[80];
-    gchar strlat[32];
-    gchar strlon[32];
-    guint unitx, unity;
-    gfloat lat, lon;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    unitx = x2unit(_cmenu_position_x);
-    unity = y2unit(_cmenu_position_y);
-    unit2latlon(unitx, unity, lat, lon);
-
-    g_ascii_formatd(strlat, 32, "%.06f", lat);
-    g_ascii_formatd(strlon, 32, "%.06f", lon);
-    snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
-
-    route_download(NULL, buffer, TRUE);
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-cmenu_cb_loc_distance_to(GtkAction *action)
-{
-    gchar buffer[80];
-    guint unitx, unity;
-    gfloat lat, lon;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    unitx = x2unit(_cmenu_position_x);
-    unity = y2unit(_cmenu_position_y);
-    unit2latlon(unitx, unity, lat, lon);
-
-    snprintf(buffer, sizeof(buffer), "%s: %.02f %s", _("Distance to Location"),
-            calculate_distance(_gps.latitude, _gps.longitude, lat, lon),
-            UNITS_TEXT[_units]);
-    MACRO_BANNER_SHOW_INFO(_window, buffer);
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static WayPoint *
-find_nearest_visible_waypoint(guint unitx, guint unity)
-{
-    WayPoint *wcurr;
-    WayPoint *wnear;
-    guint nearest_squared;
-    Point pos = { unitx, unity };
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    wcurr = wnear = _visible_way_first;
-    if(wcurr && wcurr != _visible_way_last)
-    {
-        nearest_squared = DISTANCE_SQUARED(pos, *(wcurr->point));
-
-        while(wcurr++ != _visible_way_last)
-        {
-            guint test_squared = DISTANCE_SQUARED(pos, *(wcurr->point));
-            if(test_squared < nearest_squared)
-            {
-                wnear = wcurr;
-                nearest_squared = test_squared;
-            }
-        }
-    }
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return wnear;
-}
-
-static gboolean
-cmenu_cb_way_show_latlon(GtkAction *action)
-{
-    gchar buffer[80];
-    gfloat lat, lon;
-    WayPoint *way;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    way = find_nearest_visible_waypoint(
-            x2unit(_cmenu_position_x),
-            y2unit(_cmenu_position_y));
-
-    if(way)
-    {
-        unit2latlon(way->point->unitx, way->point->unity, lat, lon);
-
-        snprintf(buffer, sizeof(buffer),
-                "%s: %.06f\n"
-                "%s: %.06f",
-                _("Latitude"), lat,
-                _("Longitude"), lon);
-
-        MACRO_BANNER_SHOW_INFO(_window, buffer);
-    }
-    else
-    {
-        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
-    }
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-cmenu_cb_way_show_desc(GtkAction *action)
-{
-    WayPoint *way;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    way = find_nearest_visible_waypoint(
-            x2unit(_cmenu_position_x),
-            y2unit(_cmenu_position_y));
-
-    if(way)
-    {
-        MACRO_BANNER_SHOW_INFO(_window, way->desc);
-    }
-    else
-    {
-        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
-    }
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-cmenu_cb_way_clip_latlon(GtkAction *action)
-{
-    gchar buffer[80];
-    gfloat lat, lon;
-    WayPoint *way;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    way = find_nearest_visible_waypoint(
-            x2unit(_cmenu_position_x),
-            y2unit(_cmenu_position_y));
-
-    if(way)
-    {
-        unit2latlon(way->point->unitx, way->point->unity, lat, lon);
-
-        snprintf(buffer, sizeof(buffer), "%.06f, %.06f", lat, lon);
-
-        gtk_clipboard_set_text(
-                gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), buffer, -1);
-    }
-    else
-    {
-        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
-    }
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-cmenu_cb_way_clip_desc(GtkAction *action)
-{
-    WayPoint *way;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    way = find_nearest_visible_waypoint(
-            x2unit(_cmenu_position_x),
-            y2unit(_cmenu_position_y));
-
-    if(way)
-        gtk_clipboard_set_text(
-                gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), way->desc, -1);
-    else
-    {
-        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
-    }
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-cmenu_cb_way_route_to(GtkAction *action)
-{
-    WayPoint *way;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    way = find_nearest_visible_waypoint(
-            x2unit(_cmenu_position_x),
-            y2unit(_cmenu_position_y));
-
-    if(way)
-    {
-        gchar buffer[80];
-        gchar strlat[32];
-        gchar strlon[32];
-        gfloat lat, lon;
-        printf("%s()\n", __PRETTY_FUNCTION__);
-
-        unit2latlon(way->point->unitx, way->point->unity, lat, lon);
-        g_ascii_formatd(strlat, 32, "%.06f", lat);
-        g_ascii_formatd(strlon, 32, "%.06f", lon);
-        snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
-
-        route_download(NULL, buffer, TRUE);
-    }
-    else
-    {
-        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
-    }
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-cmenu_cb_way_distance_to(GtkAction *action)
-{
-    WayPoint *way;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    way = find_nearest_visible_waypoint(
-            x2unit(_cmenu_position_x),
-            y2unit(_cmenu_position_y));
-
-    if(way)
-    {
-        gchar buffer[80];
-        gfloat lat, lon;
-        printf("%s()\n", __PRETTY_FUNCTION__);
-
-        unit2latlon(way->point->unitx, way->point->unity, lat, lon);
-
-        snprintf(buffer, sizeof(buffer), "%s: %.02f %s",
-                _("Distance to Waypoint"),
-                calculate_distance(_gps.latitude, _gps.longitude, lat, lon),
-                UNITS_TEXT[_units]);
-        MACRO_BANNER_SHOW_INFO(_window, buffer);
-    }
-    else
-    {
-        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
-    }
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-cmenu_cb_way_delete(GtkAction *action)
-{
-    WayPoint *way;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    way = find_nearest_visible_waypoint(
-            x2unit(_cmenu_position_x),
-            y2unit(_cmenu_position_y));
-
-    if(way)
-    {
-        gchar buffer[BUFFER_SIZE];
-        GtkWidget *confirm;
-
-        snprintf(buffer, sizeof(buffer), "%s:\n%s\n",
-                _("Confirm delete of waypoint"), way->desc);
-        confirm = hildon_note_new_confirmation(GTK_WINDOW(_window), buffer);
-
-        if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
-        {
-            while(way++ != _route.wtail)
-                way[-1] = *way;
-            _route.wtail--;
-            map_force_redraw();
-        }
-        gtk_widget_destroy(confirm);
-    }
-    else
-    {
-        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
-    }
+    ossohelp_show(_osso, HELP_ID_INTRO, 0);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -11162,7 +11649,7 @@ category_dialog(guint cat_id)
                 btn_delete = gtk_button_new_with_label(_("Delete")));
 
         dpoi.dialog = dialog;
-        dpoi.txt_label = g_strdup_printf("%s", cat_label);
+        dpoi.txt_label = g_strdup(cat_label);
         dpoi.id = cat_id;
 
         g_signal_connect(G_OBJECT(btn_delete), "clicked",
@@ -11189,7 +11676,7 @@ category_dialog(guint cat_id)
             table = gtk_table_new(6, 4, FALSE), TRUE, TRUE, 0);
 
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Label: ")),
+            label = gtk_label_new(_("Label")),
             0, 1, 0, 1, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
@@ -11197,7 +11684,7 @@ category_dialog(guint cat_id)
             1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
 
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Desc.: ")),
+            label = gtk_label_new(_("Description")),
             0, 1, 1, 2, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
 
@@ -11215,7 +11702,6 @@ category_dialog(guint cat_id)
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(txt_desc), GTK_WRAP_WORD);
 
     gtk_container_add(GTK_CONTAINER(txt_scroll), txt_desc);
-    gtk_widget_show(txt_scroll);
     gtk_widget_set_size_request(GTK_WIDGET(txt_scroll), 400, 60);
 
     desc_txt = gtk_text_view_get_buffer(GTK_TEXT_VIEW(txt_desc));
@@ -11427,10 +11913,14 @@ category_list()
     GtkListStore *store;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    dialog = gtk_dialog_new_with_buttons(_("Category List"),
+    dialog = gtk_dialog_new_with_buttons(_("POI Categories"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
             NULL);
+
+    /* Enable the help button. */
+    ossohelp_dialog_help_enable(
+            GTK_DIALOG(dialog), HELP_ID_POICAT, _osso);
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
             btn_edit = gtk_button_new_with_label(_("Edit")));
@@ -11462,7 +11952,7 @@ category_list()
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            "ID", renderer, "text", CAT_ID, NULL);
+            _("ID"), renderer, "text", CAT_ID, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
     gtk_tree_view_column_set_max_width (column, 1);
 
@@ -11482,12 +11972,12 @@ category_list()
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            _("Desc."), renderer, "text", CAT_DESC, NULL);
+            _("Description"), renderer, "text", CAT_DESC, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
     renderer = gtk_cell_renderer_text_new();
     column = gtk_tree_view_column_new_with_attributes(
-            _("POI cnt"), renderer, "text", CAT_POI_CNT, NULL);
+            _("# POIs"), renderer, "text", CAT_POI_CNT, NULL);
     gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
     gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 300);
@@ -11555,10 +12045,10 @@ poi_delete(GtkWidget *widget, DeletePOI *dpoi)
 }
 
 static gboolean
-select_poi(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2,
-        guint *poi_id, guint *cat_id,
-        gchar **latlon, gchar **label, gchar **desc)
+select_poi(guint unitx, guint unity, PoiInfo *poi)
 {
+    guint x, y;
+    gfloat lat1, lon1, lat2, lon2;
     GtkWidget *dialog;
     GtkWidget *list;
     GtkWidget *sw;
@@ -11571,9 +12061,19 @@ select_poi(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2,
     guint num_cats = 0;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    x = unitx - pixel2unit(3 * _draw_width);
+    y = unity + pixel2unit(3 * _draw_width);
+    unit2latlon(x, y, lat1, lon1);
+
+    x = unitx + pixel2unit(3 * _draw_width);
+    y = unity - pixel2unit(3 * _draw_width);
+    unit2latlon(x, y, lat2, lon2);
+
     store = gtk_list_store_new(POI_NUM_COLUMNS,
                                G_TYPE_INT,    /* POI ID */
                                G_TYPE_INT,    /* Category ID */
+                               G_TYPE_FLOAT,  /* Latitude */
+                               G_TYPE_FLOAT,  /* Longitude */
                                G_TYPE_STRING, /* Lat/Lon */
                                G_TYPE_STRING, /* POI Label */
                                G_TYPE_STRING, /* POI Desc. */
@@ -11590,18 +12090,23 @@ select_poi(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2,
 
     while(SQLITE_ROW == sqlite3_step(_stmt_select_poi))
     {
+        gfloat lat, lon;
+        lat = sqlite3_column_double(_stmt_select_poi, 0);
+        lon = sqlite3_column_double(_stmt_select_poi, 1);
         printf("Found POI: %f, %f, %s, %s, %s\n",
-                sqlite3_column_double(_stmt_select_poi, 0),
-                sqlite3_column_double(_stmt_select_poi, 1),
+                lat,
+                lon,
                 sqlite3_column_text(_stmt_select_poi, 3),
                 sqlite3_column_text(_stmt_select_poi, 4),
                 sqlite3_column_text(_stmt_select_poi, 6));
-        deg_format(sqlite3_column_double(_stmt_select_poi, 0), tmp1);
-        deg_format(sqlite3_column_double(_stmt_select_poi, 1), tmp2);
+        deg_format(lat, tmp1);
+        deg_format(lon, tmp2);
         gtk_list_store_append(store, &iter);
         gtk_list_store_set(store, &iter,
                 POI_POIID, sqlite3_column_int(_stmt_select_poi, 2),
                 POI_CATID, sqlite3_column_int(_stmt_select_poi, 5),
+                POI_LAT, lat,
+                POI_LON, lon,
                 POI_LATLON, g_strdup_printf("%s, %s", tmp1, tmp2),
                 POI_LABEL, sqlite3_column_text(_stmt_select_poi, 3),
                 POI_DESC, sqlite3_column_text(_stmt_select_poi, 4),
@@ -11615,17 +12120,19 @@ select_poi(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2,
     {
         case 0:
             g_object_unref(G_OBJECT(store));
+            MACRO_BANNER_SHOW_INFO(_window, _("No POIs found."));
             return FALSE;
             break;
         case 1:
             /* iter is still set to the most-recently added POI. */
             gtk_tree_model_get(GTK_TREE_MODEL(store),
                 &iter,
-                POI_POIID, poi_id,
-                POI_CATID, cat_id,
-                POI_LATLON, latlon,
-                POI_LABEL, label,
-                POI_DESC, desc,
+                POI_POIID, &(poi->poi_id),
+                POI_CATID, &(poi->cat_id),
+                POI_LAT, &(poi->lat),
+                POI_LON, &(poi->lon),
+                POI_LABEL, &(poi->label),
+                POI_DESC, &(poi->desc),
                 -1);
             g_object_unref(G_OBJECT(store));
             return TRUE;
@@ -11683,15 +12190,17 @@ select_poi(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2,
                     NULL, &iter))
         {
             gtk_tree_model_get(GTK_TREE_MODEL(store),
-                &iter, POI_POIID, poi_id, -1);
+                &iter, POI_POIID, &(poi->poi_id), -1);
             gtk_tree_model_get(GTK_TREE_MODEL(store),
-                &iter, POI_CATID, cat_id, -1);
+                &iter, POI_CATID, &(poi->cat_id), -1);
             gtk_tree_model_get(GTK_TREE_MODEL(store),
-                &iter, POI_LATLON, latlon, -1);
+                &iter, POI_LATLON, &(poi->lat), -1);
             gtk_tree_model_get(GTK_TREE_MODEL(store),
-                &iter, POI_LABEL, label, -1);
+                &iter, POI_LATLON, &(poi->lon), -1);
             gtk_tree_model_get(GTK_TREE_MODEL(store),
-                &iter, POI_DESC, desc, -1);
+                &iter, POI_LABEL, &(poi->label), -1);
+            gtk_tree_model_get(GTK_TREE_MODEL(store),
+                &iter, POI_DESC, &(poi->desc), -1);
             selected = TRUE;
             break;
         }
@@ -11760,14 +12269,11 @@ poi_edit_cat(GtkWidget *widget, PoiCategoryEditInfo *data)
 }
 
 static gboolean
-poi_dialog(guint action)
+poi_dialog(POIAction action, guint unitx, guint unity)
 {
-    gchar *poi_label = NULL;
-    gchar *poi_desc = NULL;
-    guint unitx, unity, cat_id = 0, poi_id = 0;
-    gfloat lat, lon, lat1, lon1, lat2, lon2, tmp;
+    PoiInfo poi;
     gchar slat1[10], slon1[10];
-    gchar *p_latlon, *p_label = NULL, *p_desc = NULL;
+    gchar *p_latlon;
     GtkWidget *dialog;
     GtkWidget *table;
     GtkWidget *label;
@@ -11784,36 +12290,12 @@ poi_dialog(guint action)
     PoiCategoryEditInfo pcedit;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    unitx = x2unit(_cmenu_position_x);
-    unity = y2unit(_cmenu_position_y);
-    unit2latlon(unitx, unity, lat, lon);
-
     if(action == ACTION_EDIT_POI)
     {
-        unitx = x2unit(_cmenu_position_x - (3 * _draw_line_width));
-        unity = y2unit(_cmenu_position_y - (3 * _draw_line_width));
-        unit2latlon(unitx, unity, lat1, lon1);
-
-        unitx = x2unit(_cmenu_position_x + (3 * _draw_line_width));
-        unity = y2unit(_cmenu_position_y + (3 * _draw_line_width));
-        unit2latlon(unitx, unity, lat2, lon2);
-
-        if(lat1 > lat2)
+        if(!select_poi(unitx, unity, &poi))
         {
-            tmp = lat2;
-            lat2 = lat1;
-            lat1 = tmp;
-        }
-        if(lon1 > lon2)
-        {
-            tmp = lon2;
-            lon2 = lon1;
-            lon1 = tmp;
-        }
-
-        if(!select_poi(lat1, lon1, lat2, lon2,
-                    &poi_id, &cat_id, &p_latlon, &p_label, &p_desc))
             return FALSE;
+        }
 
         dialog = gtk_dialog_new_with_buttons(_("Edit POI"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
@@ -11824,8 +12306,8 @@ poi_dialog(guint action)
                 btn_delete = gtk_button_new_with_label(_("Delete")));
 
         dpoi.dialog = dialog;
-        dpoi.txt_label = g_strdup(p_label);
-        dpoi.id = poi_id;
+        dpoi.txt_label = g_strdup(poi.label);
+        dpoi.id = poi.poi_id;
 
         g_signal_connect(G_OBJECT(btn_delete), "clicked",
                           G_CALLBACK(poi_delete), &dpoi);
@@ -11835,19 +12317,16 @@ poi_dialog(guint action)
     }
     else
     {
-        gchar tmp1[15], tmp2[15];
-        deg_format(lat, tmp1);
-        deg_format(lon, tmp2);
-        p_latlon = g_strdup_printf("%s, %s", tmp1, tmp2);
-
         if(SQLITE_ROW == sqlite3_step(_stmt_nextlabel_poi))
-            p_label = g_strdup_printf("Point%06d",
+            poi.label = g_strdup_printf("Point%06d",
                     sqlite3_column_int(_stmt_nextlabel_poi, 0));
         sqlite3_reset(_stmt_nextlabel_poi);
 
-        p_desc = g_strdup("");
-        cat_id = 0;
-        poi_id = 0;
+        unit2latlon(unitx, unity, poi.lat, poi.lon);
+
+        poi.poi_id = 0;
+        poi.cat_id = 0;
+        poi.desc = g_strdup("");
 
         dialog = gtk_dialog_new_with_buttons(_("Add POI"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
@@ -11856,11 +12335,19 @@ poi_dialog(guint action)
             NULL);
     }
 
+    /* Set the p_latlon string. */
+    {
+        gchar tmp1[15], tmp2[15];
+        deg_format(poi.lat, tmp1);
+        deg_format(poi.lon, tmp2);
+        p_latlon = g_strdup_printf("%s, %s", tmp1, tmp2);
+    }
+
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
             table = gtk_table_new(6, 4, FALSE), TRUE, TRUE, 0);
 
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Lat, Lon: ")),
+            label = gtk_label_new(_("Lat, Lon")),
             0, 1, 0, 1, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
 
@@ -11870,7 +12357,7 @@ poi_dialog(guint action)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
 
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Label: ")),
+            label = gtk_label_new(_("Label")),
             0, 1, 1, 2, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
@@ -11878,8 +12365,9 @@ poi_dialog(guint action)
             1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
 
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Category: ")),
+            label = gtk_label_new(_("Category")),
             0, 1, 3, 4, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
             hbox = gtk_hbox_new(FALSE, 4),
             1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
@@ -11904,7 +12392,7 @@ poi_dialog(guint action)
             FALSE, FALSE, 4);
 
     gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Desc.: ")),
+            label = gtk_label_new(_("Description")),
             0, 1, 5, 6, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
 
@@ -11922,43 +12410,39 @@ poi_dialog(guint action)
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(txt_desc), GTK_WRAP_WORD);
 
     gtk_container_add(GTK_CONTAINER(txt_scroll), txt_desc);
-    gtk_widget_show(txt_scroll);
     gtk_widget_set_size_request(GTK_WIDGET(txt_scroll), 400, 60);
 
     desc_txt = gtk_text_view_get_buffer (GTK_TEXT_VIEW (txt_desc));
 
     /* label */
-    gtk_entry_set_text(GTK_ENTRY(txt_label), p_label);
+    gtk_entry_set_text(GTK_ENTRY(txt_label), poi.label);
 
     /* category */
-    poi_populate_cat_combo(cmb_category, cat_id);
+    poi_populate_cat_combo(cmb_category, poi.cat_id);
 
     /* poi_desc */
-    gtk_text_buffer_set_text(desc_txt, p_desc, -1);
+    gtk_text_buffer_set_text(desc_txt, poi.desc, -1);
 
     /* Connect Signals */
     pcedit.cmb_category = cmb_category;
-    pcedit.cat_id = cat_id;
+    pcedit.cat_id = poi.cat_id;
     g_signal_connect(G_OBJECT(btn_catedit), "clicked",
             G_CALLBACK(poi_edit_cat), &pcedit);
     gtk_widget_show_all(dialog);
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
+        const gchar *poi_label = NULL;
+        gchar *poi_desc = NULL;
         GtkTreeIter iter;
 
         if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_label))))
-            poi_label = g_strdup(gtk_entry_get_text(
-                        GTK_ENTRY(txt_label)));
+            poi_label = gtk_entry_get_text(GTK_ENTRY(txt_label));
         else
         {
             popup_error(dialog, _("Please specify a name for the POI."));
             continue;
         }
-
-        gtk_text_buffer_get_iter_at_offset(desc_txt, &begin,0 );
-        gtk_text_buffer_get_end_iter (desc_txt, &end);
-        poi_desc = gtk_text_buffer_get_text(desc_txt, &begin, &end, TRUE);
 
         if(!gtk_combo_box_get_active_iter(
                 GTK_COMBO_BOX(cmb_category), &iter))
@@ -11967,59 +12451,65 @@ poi_dialog(guint action)
             continue;
         }
 
+        gtk_text_buffer_get_iter_at_offset(desc_txt, &begin,0 );
+        gtk_text_buffer_get_end_iter (desc_txt, &end);
+        poi_desc = gtk_text_buffer_get_text(desc_txt, &begin, &end, TRUE);
+
         gtk_tree_model_get(
                 gtk_combo_box_get_model(GTK_COMBO_BOX(cmb_category)),
-                &iter, 0, &cat_id, -1);
+                &iter, 0, &poi.cat_id, -1);
 
         if(action == ACTION_EDIT_POI)
         {
             /* edit poi */
-            printf("Updating: %s, %s, %d, %d\n", poi_label, poi_desc, cat_id, poi_id);
             if(SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 1, poi_label,
-                        -1, g_free) ||
+                        -1, SQLITE_STATIC) ||
                SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 2, poi_desc,
-                        -1, g_free) ||
-               SQLITE_OK != sqlite3_bind_int(_stmt_update_poi, 3, cat_id) ||
-               SQLITE_OK != sqlite3_bind_int(_stmt_update_poi, 4, poi_id) ||
+                       -1, g_free) ||
+               SQLITE_OK != sqlite3_bind_int(
+                       _stmt_update_poi, 3, poi.cat_id) ||
+               SQLITE_OK != sqlite3_bind_int(
+                       _stmt_update_poi, 4, poi.poi_id) ||
                SQLITE_DONE != sqlite3_step(_stmt_update_poi))
             {
                 MACRO_BANNER_SHOW_INFO(_window, _("Problem updating POI"));
             }
             else
-                map_render_poi();
+            {
+                MACRO_MAP_RENDER_DATA();
+            }
             sqlite3_reset(_stmt_update_poi);
         }
         else
         {
             /* add poi */
-            printf("Adding POI: %f, %f, %s, %s, %d\n", lat, lon, poi_label,
-                    poi_desc, cat_id);
-            g_ascii_dtostr(slat1, sizeof(slat1), lat);
-            g_ascii_dtostr(slon1, sizeof(slon1), lon);
-            if(
-               SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 1, lat) ||
-               SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 2, lon) ||
-               SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 3, poi_label,
-                        -1, g_free) ||
-               SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 4, poi_desc,
-                        -1, g_free) ||
-               SQLITE_OK != sqlite3_bind_int(_stmt_insert_poi, 5, cat_id) ||
-               SQLITE_DONE != sqlite3_step(_stmt_insert_poi))
+            g_ascii_dtostr(slat1, sizeof(slat1), poi.lat);
+            g_ascii_dtostr(slon1, sizeof(slon1), poi.lon);
+            if(SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 1, poi.lat)
+            || SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 2, poi.lon)
+            || SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 3, poi_label,
+                   -1, g_free)
+            || SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 4, poi_desc,
+                   -1, g_free)
+            || SQLITE_OK != sqlite3_bind_int(_stmt_insert_poi, 5, poi.cat_id)
+            || SQLITE_DONE != sqlite3_step(_stmt_insert_poi))
             {
                 MACRO_BANNER_SHOW_INFO(_window, _("Problem adding POI"));
             }
             else
-                map_render_poi();
+            {
+                MACRO_MAP_RENDER_DATA();
+            }
             sqlite3_reset(_stmt_insert_poi);
         }
         break;
     }
 
-    g_object_unref (desc_txt);
+    g_free(dpoi.txt_label);
 
+    g_free(poi.label);
+    g_free(poi.desc);
     g_free(p_latlon);
-    g_free(p_label);
-    g_free(p_desc);
 
     gtk_widget_hide_all(dialog);
 
@@ -12027,28 +12517,668 @@ poi_dialog(guint action)
     return TRUE;
 }
 
-static gboolean
-cmenu_cb_add_poi(GtkAction *action)
+static void
+cmenu_show_latlon(guint unitx, guint unity)
 {
-    gboolean results;
+    gfloat lat, lon;
+    gchar buffer[80], tmp1[15], tmp2[15];
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    results = poi_dialog(ACTION_ADD_POI);
+    unit2latlon(unitx, unity, lat, lon);
+    deg_format(lat, tmp1);
+    deg_format(lon, tmp2);
 
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return results;
+    snprintf(buffer, sizeof(buffer),
+            "%s: %s\n"
+            "%s: %s",
+            _("Latitude"), tmp1,
+            _("Longitude"), tmp2);
+
+    MACRO_BANNER_SHOW_INFO(_window, buffer);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+cmenu_clip_latlon(guint unitx, guint unity)
+{
+    gchar buffer[80];
+    gfloat lat, lon;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    unit2latlon(unitx, unity, lat, lon);
+
+    snprintf(buffer, sizeof(buffer), "%.06f,%.06f", lat, lon);
+
+    gtk_clipboard_set_text(
+            gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), buffer, -1);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+cmenu_route_to(guint unitx, guint unity)
+{
+    gchar buffer[80];
+    gchar strlat[32];
+    gchar strlon[32];
+    gfloat lat, lon;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    unit2latlon(unitx, unity, lat, lon);
+
+    g_ascii_formatd(strlat, 32, "%.06f", lat);
+    g_ascii_formatd(strlon, 32, "%.06f", lon);
+    snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
+
+    route_download(buffer);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+cmenu_distance_to(guint unitx, guint unity)
+{
+    gchar buffer[80];
+    gfloat lat, lon;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    unit2latlon(unitx, unity, lat, lon);
+
+    snprintf(buffer, sizeof(buffer), "%s: %.02f %s", _("Distance"),
+            calculate_distance(_gps.lat, _gps.lon, lat, lon)
+              * UNITS_CONVERT[_units],
+            UNITS_TEXT[_units]);
+    MACRO_BANNER_SHOW_INFO(_window, buffer);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+cmenu_add_route(guint unitx, guint unity)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    MACRO_ROUTE_INCREMENT_TAIL(_route);
+    _route.tail->unitx = x2unit(_cmenu_position_x);
+    _route.tail->unity = y2unit(_cmenu_position_y);
+    route_find_nearest_point();
+    map_force_redraw();
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+cmenu_add_way(guint unitx, guint unity)
+{
+    gfloat lat, lon;
+    gchar tmp1[15], tmp2[15], *p_latlon;
+    GtkWidget *dialog;
+    GtkWidget *table;
+    GtkWidget *label;
+    GtkWidget *txt_scroll;
+    GtkWidget *txt_desc;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    dialog = gtk_dialog_new_with_buttons(_("Add Waypoint"),
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+            NULL);
+
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+            table = gtk_table_new(2, 2, FALSE), TRUE, TRUE, 0);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Lat, Lon")),
+            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+    unit2latlon(x2unit(_cmenu_position_x), y2unit(_cmenu_position_y),
+            lat, lon);
+    deg_format(lat, tmp1);
+    deg_format(lon, tmp2);
+    p_latlon = g_strdup_printf("%s, %s", tmp1, tmp2);
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(p_latlon),
+            1, 2, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
+    g_free(p_latlon);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Description")),
+            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+    txt_scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(txt_scroll),
+                                   GTK_SHADOW_IN);
+    gtk_table_attach(GTK_TABLE(table),
+            txt_scroll,
+            1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(txt_scroll),
+                                 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+
+    txt_desc = gtk_text_view_new ();
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(txt_desc), GTK_WRAP_WORD);
+
+    gtk_container_add(GTK_CONTAINER(txt_scroll), txt_desc);
+    gtk_widget_set_size_request(GTK_WIDGET(txt_scroll), 400, 60);
+
+    gtk_widget_show_all(dialog);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        GtkTextBuffer *tbuf;
+        GtkTextIter ti1, ti2;
+        gchar *desc;
+
+        tbuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(txt_desc));
+        gtk_text_buffer_get_iter_at_offset(tbuf, &ti1, 0);
+        gtk_text_buffer_get_end_iter(tbuf, &ti2);
+        desc = gtk_text_buffer_get_text(tbuf, &ti1, &ti2, TRUE);
+
+        if(*desc)
+        {
+            /* There's a description.  Add a waypoint. */
+            MACRO_ROUTE_INCREMENT_TAIL(_route);
+            _route.tail->unitx = x2unit(_cmenu_position_x);
+            _route.tail->unity = y2unit(_cmenu_position_y);
+
+            MACRO_ROUTE_INCREMENT_WTAIL(_route);
+            _route.wtail->point = _route.tail;
+            _route.wtail->desc
+                = gtk_text_buffer_get_text(tbuf, &ti1, &ti2, TRUE);
+        }
+        else
+        {
+            GtkWidget *confirm;
+
+            g_free(desc);
+
+            confirm = hildon_note_new_confirmation(GTK_WINDOW(_window),
+                    _("Creating a \"waypoint\" with no description actually "
+                        "adds a break point.  Is that what you want?"));
+
+            if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
+            {
+                /* There's no description.  Add a break by adding a (0, 0)
+                 * point (if necessary), and then the ordinary route point. */
+                if(_route.tail->unity)
+                {
+                    MACRO_ROUTE_INCREMENT_TAIL(_route);
+                    *_route.tail = _pos_null;
+                }
+
+                MACRO_ROUTE_INCREMENT_TAIL(_route);
+                _route.tail->unitx = x2unit(_cmenu_position_x);
+                _route.tail->unity = y2unit(_cmenu_position_y);
+
+                gtk_widget_destroy(confirm);
+            }
+            else
+            {
+                gtk_widget_destroy(confirm);
+                continue;
+            }
+        }
+
+        route_find_nearest_point();
+        map_render_paths();
+        MACRO_QUEUE_DRAW_AREA();
+        break;
+    }
+    gtk_widget_destroy(dialog);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 static gboolean
-cmenu_cb_edit_poi(GtkAction *action)
+cmenu_cb_loc_show_latlon(GtkAction *action)
 {
-    gboolean results;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    results = poi_dialog(ACTION_EDIT_POI);
+    cmenu_show_latlon(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_loc_clip_latlon(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    cmenu_clip_latlon(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_loc_route_to(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    cmenu_route_to(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_loc_distance_to(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    cmenu_distance_to(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_loc_add_route(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    cmenu_add_route(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_loc_add_way(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    cmenu_add_way(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_loc_add_poi(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    poi_dialog(ACTION_ADD_POI,
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+    
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_loc_set_gps(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    _pos.unitx = x2unit(_cmenu_position_x);
+    _pos.unity = y2unit(_cmenu_position_y);
+    unit2latlon(_pos.unitx, _pos.unity, _gps.lat, _gps.lon);
+
+    /* Move mark to new location. */
+    refresh_mark();
+    
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static WayPoint *
+find_nearest_visible_waypoint(guint unitx, guint unity)
+{
+    WayPoint *wcurr;
+    WayPoint *wnear;
+    guint64 nearest_squared;
+    Point pos = { unitx, unity };
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    wcurr = wnear = _visible_way_first;
+    if(wcurr && wcurr != _visible_way_last)
+    {
+        nearest_squared = DISTANCE_SQUARED(pos, *(wcurr->point));
+
+        while(wcurr++ != _visible_way_last)
+        {
+            guint64 test_squared = DISTANCE_SQUARED(pos, *(wcurr->point));
+            if(test_squared < nearest_squared)
+            {
+                wnear = wcurr;
+                nearest_squared = test_squared;
+            }
+        }
+    }
+
+    if(wnear)
+    {
+        /* Only use the waypoint if it is within a 6*_draw_width square drawn
+         * around the position. This is consistent with select_poi(). */
+        if(abs(unitx - wnear->point->unitx) < pixel2unit(3 * _draw_width)
+            && abs(unity - wnear->point->unity) < pixel2unit(3 * _draw_width))
+            return wnear; 
+    }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return results;
+    return NULL;
+}
+
+static gboolean
+cmenu_cb_way_show_latlon(GtkAction *action)
+{
+    WayPoint *way;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    way = find_nearest_visible_waypoint(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    if(way)
+        cmenu_show_latlon(way->point->unitx, way->point->unity);
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints found."));
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_way_show_desc(GtkAction *action)
+{
+    WayPoint *way;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    way = find_nearest_visible_waypoint(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    if(way)
+    {
+        MACRO_BANNER_SHOW_INFO(_window, way->desc);
+    }
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_way_clip_latlon(GtkAction *action)
+{
+    WayPoint *way;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    way = find_nearest_visible_waypoint(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    if(way)
+        cmenu_clip_latlon(way->point->unitx, way->point->unity);
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_way_clip_desc(GtkAction *action)
+{
+    WayPoint *way;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    way = find_nearest_visible_waypoint(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    if(way)
+        gtk_clipboard_set_text(
+                gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), way->desc, -1);
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_way_route_to(GtkAction *action)
+{
+    WayPoint *way;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    way = find_nearest_visible_waypoint(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    if(way)
+        cmenu_route_to(way->point->unitx, way->point->unity);
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_way_distance_to(GtkAction *action)
+{
+    WayPoint *way;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    way = find_nearest_visible_waypoint(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    if(way)
+        route_show_distance_to(way->point);
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_way_delete(GtkAction *action)
+{
+    WayPoint *way;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    way = find_nearest_visible_waypoint(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    if(way)
+    {
+        gchar buffer[BUFFER_SIZE];
+        GtkWidget *confirm;
+
+        snprintf(buffer, sizeof(buffer), "%s:\n%s\n",
+                _("Confirm delete of waypoint"), way->desc);
+        confirm = hildon_note_new_confirmation(GTK_WINDOW(_window), buffer);
+
+        if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
+        {
+            Point *pdel_min, *pdel_max, *pdel_start, *pdel_end;
+            guint num_del;
+
+            /* Delete surrounding route data, too. */
+            if(way == _route.whead)
+                pdel_min = _route.head;
+            else
+                pdel_min = way[-1].point;
+
+            if(way == _route.wtail)
+                pdel_max = _route.tail;
+            else
+                pdel_max = way[1].point;
+
+            /* Find largest continuous segment around the waypoint, EXCLUDING
+             * pdel_min and pdel_max. */
+            for(pdel_start = way->point - 1; pdel_start->unity
+                    && pdel_start > pdel_min; pdel_start--) { }
+            for(pdel_end = way->point + 1; pdel_end->unity
+                    && pdel_end < pdel_max; pdel_end++) { }
+
+            /* If pdel_end is set to _route.tail, and if _route.tail is a
+             * non-zero point, then delete _route.tail. */
+            if(pdel_end == _route.tail && pdel_end->unity)
+                pdel_end++; /* delete _route.tail too */
+            /* else, if *both* endpoints are zero points, delete one. */
+            else if(!pdel_start->unity && !pdel_end->unity)
+                pdel_start--;
+
+            /* Delete BETWEEN pdel_start and pdel_end, exclusive. */
+            num_del = pdel_end - pdel_start - 1;
+
+            memmove(pdel_start + 1, pdel_end,
+                    (_route.tail - pdel_end + 1) * sizeof(Point));
+            _route.tail -= num_del;
+
+            /* Remove waypoint and move/adjust subsequent waypoints. */
+            g_free(way->desc);
+            while(way++ != _route.wtail)
+            {
+                way[-1] = *way;
+                way[-1].point -= num_del;
+            }
+            _route.wtail--;
+
+            route_find_nearest_point();
+            map_force_redraw();
+        }
+        gtk_widget_destroy(confirm);
+    }
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("No waypoints are visible."));
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_way_add_poi(GtkAction *action)
+{
+    WayPoint *way;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    way = find_nearest_visible_waypoint(
+            x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y));
+
+    poi_dialog(ACTION_ADD_POI, way->point->unitx, way->point->unity);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_poi_route_to(GtkAction *action)
+{
+    PoiInfo poi;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(select_poi(x2unit(_cmenu_position_x), y2unit(_cmenu_position_y), &poi))
+    {
+        guint unitx, unity;
+        latlon2unit(poi.lat, poi.lon, unitx, unity);
+        cmenu_route_to(unitx, unity);
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_poi_distance_to(GtkAction *action)
+{
+    PoiInfo poi;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(select_poi(x2unit(_cmenu_position_x), y2unit(_cmenu_position_y), &poi))
+    {
+        guint unitx, unity;
+        latlon2unit(poi.lat, poi.lon, unitx, unity);
+        cmenu_distance_to(unitx, unity);
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_poi_add_route(GtkAction *action)
+{
+    PoiInfo poi;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(select_poi(x2unit(_cmenu_position_x), y2unit(_cmenu_position_y), &poi))
+    {
+        guint unitx, unity;
+        latlon2unit(poi.lat, poi.lon, unitx, unity);
+        cmenu_add_route(unitx, unity);
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_poi_add_way(GtkAction *action)
+{
+    PoiInfo poi;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(select_poi(x2unit(_cmenu_position_x), y2unit(_cmenu_position_y), &poi))
+    {
+        guint unitx, unity;
+        latlon2unit(poi.lat, poi.lon, unitx, unity);
+        cmenu_add_way(unitx, unity);
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+cmenu_cb_poi_edit_poi(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    poi_dialog(ACTION_EDIT_POI,
+            x2unit(_cmenu_position_x), y2unit(_cmenu_position_y));
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
 }
 
 /****************************************************************************
