@@ -1,3 +1,24 @@
+maemo-mapper (1.4.1) unstable; urgency=low
+
+  * Added the fi_FI and en_GB locales.
+  * Fixed the bug in accessing POI icons.
+  * Added documentation, accessible via the osso-help framework.
+  * Made some distance calculation more accurate (but slower).
+  * Changed Z order of routes and POIs.
+  * Added several new context-menu actions, including actions for constructing
+    routes in Maemo Mapper directly, and an action to set the "current GPS
+    location" even if you don't have a GPS receiver.
+  * Added the "Go to" menu.
+  * Added menu items to show route- and track-related distances.
+  * Added menu item in "View" to show/hide all POIs. 
+  * Added several new escape button options.
+  * Changed route distance calculation to use the route, not straight-line
+    distance.
+  * Removed the "Voice Speed" and "Voice Options" until moimart releases his
+    dbus-based version of flite (if ever).
+
+ -- John Costigan <gnuite@gmail.com>  Thu, 1 Mar 2007 22:42:00 -0500
+
 maemo-mapper (1.4) unstable; urgency=low
 
   * First build from the new maemo3 SDK.  Although the code is the same, there

@@ -10,13 +10,13 @@ Architecture: armel arm i386
 Pre-Depends: maemo-select-menu-location
 Depends: ${shlibs:Depends}
 Suggests: flite, proj
-Description: Geographical mapping softare specifically designed
- for the Maemo platform and the Nokia 770 form factor.  It includes support for
- visualizing GPS input, but is functional and useful without GPS hardware.  It
- also includes features for downloading and interacting with maps, GPX data
- (including driving directions), and other geo-related information.  It focuses
- in part on in-car navigation and usability.
- Home page: http://www.gnuite.com/nokia770/maemo-mapper
+Description: Geographical mapping and driving directions.
+ Specifically designed for the Maemo platform and the Nokia 770 form factor.
+ It includes support for visualizing GPS input, but is functional and useful
+ without GPS hardware.  It also includes features for downloading and
+ interacting with maps, GPX data (including driving directions), and other
+ geo-related information.  It focuses in part on in-car navigation and
+ usability.  Home page: http://www.gnuite.com/nokia770/maemo-mapper
 XB-Maemo-Icon-26:
  iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAF/ElEQVRIS42WyXMbxxXGf92z
  YidgkCAkrrCokCLDRLJLsSwvB1duLl9S5UMcl33Vxf9LDi5Xbr6lUpWDqnxKVeJYthbLUUm2

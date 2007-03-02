@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.0.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-02-12 23:36-0500\n"
+"POT-Creation-Date: 2007-03-02 18:45-0500\n"
 "PO-Revision-Date: 2006-07-04 09:56+0200\n"
 "Last-Translator: Mischa Molhoek <mischamolhoek@gmail.com>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
@@ -19,570 +19,628 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/maemo-mapper.c:11435
+#: ../src/maemo-mapper.c:11980
+msgid "# POIs"
+msgstr ""
+
+#: ../src/maemo-mapper.c:11929
 msgid "Add"
-msgstr "Add"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11179
+#: ../src/maemo-mapper.c:11668
 msgid "Add Category"
-msgstr "Add Category"
+msgstr ""
 
-#: ../src/maemo-mapper.c:6007 ../src/maemo-mapper.c:11843
+#: ../src/maemo-mapper.c:12331
 msgid "Add POI"
-msgstr "Add POI"
+msgstr ""
 
-#: ../src/maemo-mapper.c:4783
+#: ../src/maemo-mapper.c:6485 ../src/maemo-mapper.c:6514
+msgid "Add POI..."
+msgstr ""
+
+#: ../src/maemo-mapper.c:6481 ../src/maemo-mapper.c:6536
+msgid "Add Route Point"
+msgstr ""
+
+#: ../src/maemo-mapper.c:12621
+#, fuzzy
+msgid "Add Waypoint"
+msgstr "Route Markering"
+
+#: ../src/maemo-mapper.c:6483 ../src/maemo-mapper.c:6538
+#, fuzzy
+msgid "Add Waypoint..."
+msgstr "Route Markering..."
+
+#: ../src/maemo-mapper.c:5157
 msgid "Advance Notice"
 msgstr "Aankondiging"
 
-#: ../src/maemo-mapper.c:10378
+#: ../src/maemo-mapper.c:11192
 msgid "Along Route - Radius (tiles):"
-msgstr "Along Route - Radius (tiles):"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2849
+#: ../src/maemo-mapper.c:2978
 #, fuzzy
 msgid "Altitude"
 msgstr "Breedtegraad"
 
-#: ../src/maemo-mapper.c:9780
+#: ../src/maemo-mapper.c:4764
+msgid "An error occurred while attempting to scan for bluetooth devices."
+msgstr ""
+
+#: ../src/maemo-mapper.c:10586
 msgid ""
 "An error occurred while retrieving the repositories.  The web service may be "
 "temporarily down."
 msgstr ""
-"An error occurred while retrieving the repositories.  The web service may be "
-"temporarily down."
 
-#: ../src/maemo-mapper.c:7942
+#: ../src/maemo-mapper.c:8467
 msgid ""
 "An error occurred while trying to reset the bluetooth radio.\n"
 "\n"
 "Did you make sure to modify\n"
 "the /etc/sudoers file?"
 msgstr ""
-"An error occurred while trying to reset the bluetooth radio.\n"
-"\n"
-"Did you make sure to modify\n"
-"the /etc/sudoers file?"
 
-#: ../src/maemo-mapper.c:4779
+#: ../src/maemo-mapper.c:5153
 msgid "Announce"
 msgstr "Aankondigen"
 
-#: ../src/maemo-mapper.c:10414
+#: ../src/maemo-mapper.c:11229
 msgid "Area"
 msgstr "Gebied"
 
-#: ../src/maemo-mapper.c:4748 ../src/maemo-mapper.c:5871
+#: ../src/maemo-mapper.c:5122 ../src/maemo-mapper.c:6301
 msgid "Auto-Center"
 msgstr "Automatisch-Centreren"
 
-#: ../src/maemo-mapper.c:9456
+#: ../src/maemo-mapper.c:10081
 msgid "Auto-Center Mode: Lat/Lon"
 msgstr "Automatisch-Centreren Mode: Lengtegr/Breedtegr"
 
-#: ../src/maemo-mapper.c:9441
+#: ../src/maemo-mapper.c:10066
 msgid "Auto-Center Mode: Lead"
 msgstr "Automatisch-Centreren Mode: Lead"
 
-#: ../src/maemo-mapper.c:9470
+#: ../src/maemo-mapper.c:10095
 msgid "Auto-Center Off"
 msgstr "Automatisch-Centreren Uit"
 
-#: ../src/maemo-mapper.c:5836
+#: ../src/maemo-mapper.c:6261
 msgid "Auto-Download"
 msgstr "Automatisch-Downloaden"
 
-#: ../src/maemo-mapper.c:8994
+#: ../src/maemo-mapper.c:9562
 msgid "Auto-Update"
 msgstr "Automatisch-Updaten"
 
-#: ../src/maemo-mapper.c:7517
+#: ../src/maemo-mapper.c:8043
 #, fuzzy
 msgid "Bottom-Left"
 msgstr "Rechts-onder"
 
-#: ../src/maemo-mapper.c:7516 ../src/maemo-mapper.c:10477
+#: ../src/maemo-mapper.c:8042 ../src/maemo-mapper.c:11296
 msgid "Bottom-Right"
 msgstr "Rechts-onder"
 
-#: ../src/maemo-mapper.c:4966 ../src/maemo-mapper.c:9657
+#: ../src/maemo-mapper.c:5340 ../src/maemo-mapper.c:10463
 msgid "Browse..."
 msgstr "Blader..."
 
-#: ../src/maemo-mapper.c:10369
+#: ../src/maemo-mapper.c:11183
 msgid "By Area (see tab)"
-msgstr "By Area (see tab)"
+msgstr ""
 
-#: ../src/maemo-mapper.c:9647
+#: ../src/maemo-mapper.c:10453
 msgid "Cache Dir."
-msgstr "Cache Dir."
+msgstr ""
 
-#: ../src/maemo-mapper.c:9593
+#: ../src/maemo-mapper.c:10399
 msgid ""
 "Cannot delete the last repository - there must be at lease one repository."
 msgstr ""
-"Cannot delete the last repository - there must be at lease one repository."
 
-#: ../src/maemo-mapper.c:10640
+#: ../src/maemo-mapper.c:11463
 msgid ""
 "Cannot enable GPS until a GPS Receiver MAC is set in the Settings dialog box."
 msgstr ""
 "Kan GPS niet aanzetten totdat GPS MAC adres is ingevoerd in het Configuratie "
 "scherm"
 
-#: ../src/maemo-mapper.c:11665
+#: ../src/maemo-mapper.c:12181 ../src/maemo-mapper.c:12368
 msgid "Category"
-msgstr "Category"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11426
-msgid "Category List"
-msgstr "Category List"
-
-#: ../src/maemo-mapper.c:11872
-msgid "Category: "
-msgstr "Category: "
-
-#: ../src/maemo-mapper.c:5810 ../src/maemo-mapper.c:5824
-#: ../src/maemo-mapper.c:10322
+#: ../src/maemo-mapper.c:6230 ../src/maemo-mapper.c:6248
+#: ../src/maemo-mapper.c:11136
 msgid "Clear"
 msgstr "Opschonen"
 
-#: ../src/maemo-mapper.c:5922
+#: ../src/maemo-mapper.c:6365
 msgid "Close"
 msgstr "Sluiten"
 
-#: ../src/maemo-mapper.c:4522
+#: ../src/maemo-mapper.c:4890
 #, fuzzy
 msgid "Colors"
 msgstr "Sluiten"
 
-#: ../src/maemo-mapper.c:4707
+#: ../src/maemo-mapper.c:5081
 #, fuzzy
 msgid "Colors..."
 msgstr "Download..."
 
-#: ../src/maemo-mapper.c:10082 ../src/maemo-mapper.c:10175
+#: ../src/maemo-mapper.c:10898 ../src/maemo-mapper.c:10985
 msgid "Confirm DELETION of"
-msgstr "Confirm DELETION of"
+msgstr ""
 
-#: ../src/maemo-mapper.c:9600
+#: ../src/maemo-mapper.c:10406
 msgid "Confirm delete of repository"
-msgstr "Confirm delete of repository"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11051
+#: ../src/maemo-mapper.c:13024
 msgid "Confirm delete of waypoint"
-msgstr "Confirm delete of waypoint"
+msgstr ""
 
-#: ../src/maemo-mapper.c:10088 ../src/maemo-mapper.c:10181
+#: ../src/maemo-mapper.c:10904 ../src/maemo-mapper.c:10991
 msgid "Confirm download of"
-msgstr "Confirm download of"
+msgstr ""
 
-#: ../src/maemo-mapper.c:6026
-msgid "Copy Description to Clipboard"
-msgstr "Copy Description to Clipboard"
+#: ../src/maemo-mapper.c:6504
+#, fuzzy
+msgid "Copy Description"
+msgstr "Bestemming"
 
-#: ../src/maemo-mapper.c:5999 ../src/maemo-mapper.c:6024
-msgid "Copy Lat/Lon to Clipboard"
-msgstr "Copy Lat/Lon to Clipboard"
+#: ../src/maemo-mapper.c:6473 ../src/maemo-mapper.c:6502
+#, fuzzy
+msgid "Copy Lat/Lon"
+msgstr "Breedte/Lengtegraad"
 
-#: ../src/maemo-mapper.c:9097
+#: ../src/maemo-mapper.c:9699
 #, fuzzy
 msgid ""
 "Could not generate directions. Make sure your source and destination are "
 "valid."
 msgstr "Kon geen route generen. Vul geldige locaties in."
 
-#: ../src/maemo-mapper.c:2260
+#: ../src/maemo-mapper.c:12699
+msgid ""
+"Creating a \"waypoint\" with no description actually adds a break point.  Is "
+"that what you want?"
+msgstr ""
+
+#: ../src/maemo-mapper.c:2389
 #, fuzzy
 msgid "DGPS"
 msgstr "GPS"
 
-#: ../src/maemo-mapper.c:4528
+#: ../src/maemo-mapper.c:4896
 msgid "Defaults"
-msgstr "Defaults"
+msgstr ""
 
-#: ../src/maemo-mapper.c:4894
+#: ../src/maemo-mapper.c:5268
 msgid "Degrees Format"
-msgstr "Degrees Format"
+msgstr ""
 
-#: ../src/maemo-mapper.c:6033 ../src/maemo-mapper.c:11160
-#: ../src/maemo-mapper.c:11815
+#: ../src/maemo-mapper.c:11649 ../src/maemo-mapper.c:12306
 msgid "Delete"
-msgstr "Delete"
+msgstr ""
 
-#: ../src/maemo-mapper.c:10359
+#: ../src/maemo-mapper.c:11173
 msgid "Delete Maps"
-msgstr "Delete Maps"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11523
+#: ../src/maemo-mapper.c:12022
 msgid "Delete POI?"
-msgstr "Delete POI?"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11081
+#: ../src/maemo-mapper.c:11570
 msgid "Delete category?"
-msgstr "Delete category?"
+msgstr ""
 
-#: ../src/maemo-mapper.c:9856
+#: ../src/maemo-mapper.c:6511 ../src/maemo-mapper.c:10666
 msgid "Delete..."
-msgstr "Delete..."
+msgstr ""
 
-#: ../src/maemo-mapper.c:11481
-#, fuzzy
-msgid "Desc."
-msgstr "Misc."
-
-#: ../src/maemo-mapper.c:11198 ../src/maemo-mapper.c:11898
-msgid "Desc.: "
-msgstr "Desc.: "
-
-#: ../src/maemo-mapper.c:4384
+#: ../src/maemo-mapper.c:4752 ../src/maemo-mapper.c:11687
+#: ../src/maemo-mapper.c:11975 ../src/maemo-mapper.c:12395
+#: ../src/maemo-mapper.c:12647
 #, fuzzy
 msgid "Description"
 msgstr "Bestemming"
 
-#: ../src/maemo-mapper.c:9011
+#: ../src/maemo-mapper.c:9590
 msgid "Destination"
 msgstr "Bestemming"
 
-#: ../src/maemo-mapper.c:5905
+#: ../src/maemo-mapper.c:6350
 #, fuzzy
 msgid "Details..."
 msgstr "Instellingen..."
 
-#: ../src/maemo-mapper.c:10823
+#: ../src/maemo-mapper.c:3519 ../src/maemo-mapper.c:3579
+#: ../src/maemo-mapper.c:12588
 #, fuzzy
-msgid "Distance to Location"
-msgstr "Bebruik GPS Locatie"
+msgid "Distance"
+msgstr "Show Distance to"
 
-#: ../src/maemo-mapper.c:11021
-#, fuzzy
-msgid "Distance to Waypoint"
-msgstr "Route Markering"
-
-#: ../src/maemo-mapper.c:10346
+#: ../src/maemo-mapper.c:11160
 #, fuzzy
 msgid "Download Maps"
 msgstr "Landkaarten worden gedownload"
 
-#: ../src/maemo-mapper.c:8958
+#: ../src/maemo-mapper.c:9522
 msgid "Download Route"
-msgstr "Download Route"
+msgstr ""
 
-#: ../src/maemo-mapper.c:6002 ../src/maemo-mapper.c:6029
-#, fuzzy
+#: ../src/maemo-mapper.c:6478 ../src/maemo-mapper.c:6509
+#: ../src/maemo-mapper.c:6533
 msgid "Download Route to..."
-msgstr "Download Route"
+msgstr ""
 
-#: ../src/maemo-mapper.c:9662
+#: ../src/maemo-mapper.c:10468
 #, fuzzy
 msgid "Download Zoom Steps"
 msgstr "Download Route"
 
-#: ../src/maemo-mapper.c:5804 ../src/maemo-mapper.c:9837
+#: ../src/maemo-mapper.c:6220 ../src/maemo-mapper.c:10647
 msgid "Download..."
-msgstr "Download..."
+msgstr ""
 
-#: ../src/maemo-mapper.c:6422
+#: ../src/maemo-mapper.c:6951
 msgid "Downloading maps"
 msgstr "Landkaarten worden gedownload"
 
-#: ../src/maemo-mapper.c:11432
+#: ../src/maemo-mapper.c:11926
 msgid "Edit"
-msgstr "Edit"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11894
+#: ../src/maemo-mapper.c:12391
 msgid "Edit Categories..."
-msgstr "Edit Categories..."
+msgstr ""
 
-#: ../src/maemo-mapper.c:11154
+#: ../src/maemo-mapper.c:11643
 msgid "Edit Category"
-msgstr "Edit Category"
+msgstr ""
 
-#: ../src/maemo-mapper.c:6010 ../src/maemo-mapper.c:11809
+#: ../src/maemo-mapper.c:12300
 msgid "Edit POI"
-msgstr "Edit POI"
+msgstr ""
 
-#: ../src/maemo-mapper.c:5897
+#: ../src/maemo-mapper.c:6342
 msgid "Enable GPS"
 msgstr "Activeer GPS"
 
-#: ../src/maemo-mapper.c:4795
+#: ../src/maemo-mapper.c:5169
 msgid "Enable Voice Synthesis (requires flite)"
 msgstr "Activeer Spraak (heeft geinstallerde flite nodig)"
 
-#: ../src/maemo-mapper.c:11223 ../src/maemo-mapper.c:11469
+#: ../src/maemo-mapper.c:11711 ../src/maemo-mapper.c:11963
 #, fuzzy
 msgid "Enabled"
 msgstr "Activeer GPS"
 
-#: ../src/maemo-mapper.c:6684
+#: ../src/maemo-mapper.c:7203
 msgid ""
 "Error in download.  Check internet connection and/or Map Repository URL "
 "Format."
 msgstr ""
-"Error in download.  Check internet connection and/or Map Repository URL "
-"Format."
 
-#: ../src/maemo-mapper.c:7693 ../src/maemo-mapper.c:9151
-#: ../src/maemo-mapper.c:9194 ../src/maemo-mapper.c:9249
+#: ../src/maemo-mapper.c:8219 ../src/maemo-mapper.c:9755
+#: ../src/maemo-mapper.c:9798 ../src/maemo-mapper.c:9873
 msgid "Error parsing GPX file."
 msgstr "Fout by verwerken GPX bestand."
 
-#: ../src/maemo-mapper.c:1346
+#: ../src/maemo-mapper.c:1472
 #, fuzzy
 msgid "Error while writing to file"
 msgstr "Fout bij schrijven GPX bestand."
 
-#: ../src/maemo-mapper.c:9271 ../src/maemo-mapper.c:9336
+#: ../src/maemo-mapper.c:9895 ../src/maemo-mapper.c:9950
 msgid "Error writing GPX file."
 msgstr "Fout bij schrijven GPX bestand."
 
-#: ../src/maemo-mapper.c:4856
+#: ../src/maemo-mapper.c:5230
 msgid "Escape Key"
-msgstr "Escape Key"
+msgstr ""
 
-#: ../src/maemo-mapper.c:3156
+#: ../src/maemo-mapper.c:3302
 msgid "Establishing GPS fix"
 msgstr "GPS zoekt satellieten"
 
-#: ../src/maemo-mapper.c:2264
+#: ../src/maemo-mapper.c:2393
 msgid "Estimated"
-msgstr "Estimated"
+msgstr ""
 
-#: ../src/maemo-mapper.c:9085
-msgid "Failed to connect to GPX Directions server"
+#: ../src/maemo-mapper.c:4056
+#, fuzzy
+msgid "Failed to connect to GPS receiver.  Retry?"
 msgstr "Failed to connect to GPX Directions server"
 
-#: ../src/maemo-mapper.c:5253
+#: ../src/maemo-mapper.c:9687
+msgid "Failed to connect to GPX Directions server"
+msgstr ""
+
+#: ../src/maemo-mapper.c:5658
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "initialiseren GConf mislukt.  Programma wordt afgesloten."
 
-#: ../src/maemo-mapper.c:3907
+#: ../src/maemo-mapper.c:4271
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "initialiseren GConf mislukt.  Instellingen niet opgeslagen."
 
-#: ../src/maemo-mapper.c:7241 ../src/maemo-mapper.c:7681
-msgid "Failed to open file for"
-msgstr "Failed to open file for"
+#: ../src/maemo-mapper.c:7759 ../src/maemo-mapper.c:8207
+msgid "Failed to open file for reading"
+msgstr ""
 
-#: ../src/maemo-mapper.c:6898
+#: ../src/maemo-mapper.c:7416 ../src/maemo-mapper.c:7760
 msgid "Failed to open file for writing"
-msgstr "Failed to open file for writing"
+msgstr ""
 
-#: ../src/maemo-mapper.c:3037
+#: ../src/maemo-mapper.c:3169
 msgid "Failed to open or create database"
-msgstr "Failed to open or create database"
+msgstr ""
 
-#: ../src/maemo-mapper.c:1347
+#: ../src/maemo-mapper.c:1473
 msgid "File is incomplete."
-msgstr "File is incomplete."
+msgstr ""
 
-#: ../src/maemo-mapper.c:2894
+#: ../src/maemo-mapper.c:3023
 msgid "Fix"
-msgstr "Fix"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2903
+#: ../src/maemo-mapper.c:3032
 msgid "Fix Quality"
-msgstr "Fix Quality"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2263
+#: ../src/maemo-mapper.c:2392
 msgid "Float RTK"
-msgstr "Float RTK"
+msgstr ""
 
-#: ../src/maemo-mapper.c:5848
+#: ../src/maemo-mapper.c:6274
 msgid "Full Screen"
 msgstr "Volledig Scherm"
 
-#: ../src/maemo-mapper.c:4718 ../src/maemo-mapper.c:5893
+#: ../src/maemo-mapper.c:5092 ../src/maemo-mapper.c:6338
 msgid "GPS"
-msgstr "GPS"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2797
+#: ../src/maemo-mapper.c:2926
 msgid "GPS Details"
-msgstr "GPS Details"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2810
+#: ../src/maemo-mapper.c:2939
 #, fuzzy
 msgid "GPS Information"
 msgstr "GPS Locatie"
 
-#: ../src/maemo-mapper.c:10428
+#: ../src/maemo-mapper.c:6330 ../src/maemo-mapper.c:11243
 msgid "GPS Location"
 msgstr "GPS Locatie"
 
-#: ../src/maemo-mapper.c:4540
+#: ../src/maemo-mapper.c:4908
 msgid "GPS Mark"
-msgstr "GPS Mark"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2858
+#: ../src/maemo-mapper.c:6324
+msgid "Go to"
+msgstr ""
+
+#: ../src/maemo-mapper.c:10111
+#, fuzzy
+msgid "Go to Lat/Lon"
+msgstr "Breedte/Lengtegraad"
+
+#: ../src/maemo-mapper.c:6541
+msgid "Go to Nearest"
+msgstr ""
+
+#: ../src/maemo-mapper.c:6518
+msgid "Go to Next"
+msgstr ""
+
+#: ../src/maemo-mapper.c:2987
 msgid "Heading"
-msgstr "Heading"
+msgstr ""
 
-#: ../src/maemo-mapper.c:5919
+#: ../src/maemo-mapper.c:6363
 msgid "Help"
-msgstr "Help"
+msgstr ""
 
-#: ../src/maemo-mapper.c:4939
+#: ../src/maemo-mapper.c:11955
+msgid "ID"
+msgstr ""
+
+#: ../src/maemo-mapper.c:5313
 #, fuzzy
 msgid "Information Font Size"
 msgstr "GPS Locatie"
 
-#: ../src/maemo-mapper.c:5822
-msgid "Insert Breakpoint"
+#: ../src/maemo-mapper.c:6242
+#, fuzzy
+msgid "Insert Mark"
 msgstr "Insert Breakpoint"
 
-#: ../src/maemo-mapper.c:10584
+#: ../src/maemo-mapper.c:8026
+msgid "Insert Track Mark"
+msgstr ""
+
+#: ../src/maemo-mapper.c:11407
 msgid "Invalid Bottom-Right Latitude"
 msgstr "Ongeldige Rechts-Onder Breedtegraad"
 
-#: ../src/maemo-mapper.c:10591
+#: ../src/maemo-mapper.c:11414
 msgid "Invalid Bottom-Right Longitude"
 msgstr "Ongeldige Rechts-Onder Lengtegraad"
 
-#: ../src/maemo-mapper.c:8440 ../src/maemo-mapper.c:8451
+#: ../src/maemo-mapper.c:10167
+#, fuzzy
+msgid "Invalid Latitude"
+msgstr "Ongeldige Links-Boven Breedtegraad"
+
+#: ../src/maemo-mapper.c:10174
+#, fuzzy
+msgid "Invalid Longitude"
+msgstr "Ongeldige Links-Boven Lengtegraad"
+
+#: ../src/maemo-mapper.c:8985 ../src/maemo-mapper.c:8996
 msgid "Invalid NMEA input from receiver!"
 msgstr "Ongeldige NMEA invoer van ontvanger!"
 
-#: ../src/maemo-mapper.c:10570
+#: ../src/maemo-mapper.c:11393
 msgid "Invalid Top-Left Latitude"
 msgstr "Ongeldige Links-Boven Breedtegraad"
 
-#: ../src/maemo-mapper.c:10577
+#: ../src/maemo-mapper.c:11400
 msgid "Invalid Top-Left Longitude"
 msgstr "Ongeldige Links-Boven Lengtegraad"
 
-#: ../src/maemo-mapper.c:4847
+#: ../src/maemo-mapper.c:5221
 msgid "Keep Display On Only in Fullscreen Mode"
 msgstr "Hou het display alleen aan in volledig scherm mode"
 
-#: ../src/maemo-mapper.c:11476 ../src/maemo-mapper.c:11660
+#: ../src/maemo-mapper.c:11679 ../src/maemo-mapper.c:11970
+#: ../src/maemo-mapper.c:12176 ../src/maemo-mapper.c:12360
 msgid "Label"
-msgstr "Label"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11190 ../src/maemo-mapper.c:11864
-msgid "Label: "
-msgstr "Label: "
-
-#: ../src/maemo-mapper.c:11854
+#: ../src/maemo-mapper.c:12350 ../src/maemo-mapper.c:12631
 #, fuzzy
-msgid "Lat, Lon: "
+msgid "Lat, Lon"
 msgstr "Breedte/Lengtegraad"
 
-#: ../src/maemo-mapper.c:5875
+#: ../src/maemo-mapper.c:6305
 msgid "Lat/Lon"
 msgstr "Breedte/Lengtegraad"
 
-#: ../src/maemo-mapper.c:2822 ../src/maemo-mapper.c:10418
-#: ../src/maemo-mapper.c:10755 ../src/maemo-mapper.c:10879
+#: ../src/maemo-mapper.c:6328
+#, fuzzy
+msgid "Lat/Lon..."
+msgstr "Breedte/Lengtegraad"
+
+#: ../src/maemo-mapper.c:2951 ../src/maemo-mapper.c:10121
+#: ../src/maemo-mapper.c:11233 ../src/maemo-mapper.c:12534
 msgid "Latitude"
 msgstr "Breedtegraad"
 
-#: ../src/maemo-mapper.c:5881
+#: ../src/maemo-mapper.c:6311
 msgid "Lead"
 msgstr "Vooraf"
 
-#: ../src/maemo-mapper.c:4765
+#: ../src/maemo-mapper.c:5139
 msgid "Lead Amount"
 msgstr "Hoeveel Vooraf"
 
-#: ../src/maemo-mapper.c:4835
+#: ../src/maemo-mapper.c:5209
 msgid "Line Width"
 msgstr "Lijn Breedte"
 
-#: ../src/maemo-mapper.c:2867
+#: ../src/maemo-mapper.c:2996
 msgid "Local time"
-msgstr "Local time"
+msgstr ""
 
-#: ../src/maemo-mapper.c:4923 ../src/maemo-mapper.c:5991
-#: ../src/maemo-mapper.c:11655
+#: ../src/maemo-mapper.c:5297 ../src/maemo-mapper.c:6465
+#: ../src/maemo-mapper.c:12171
 #, fuzzy
 msgid "Location"
 msgstr "GPS Locatie"
 
-#: ../src/maemo-mapper.c:2831 ../src/maemo-mapper.c:10422
-#: ../src/maemo-mapper.c:10756 ../src/maemo-mapper.c:10880
+#: ../src/maemo-mapper.c:2960 ../src/maemo-mapper.c:10133
+#: ../src/maemo-mapper.c:11237 ../src/maemo-mapper.c:12535
 msgid "Longitude"
 msgstr "Lengtegraad"
 
-#: ../src/maemo-mapper.c:4379 ../src/maemo-mapper.c:4722
+#: ../src/maemo-mapper.c:4747 ../src/maemo-mapper.c:5096
 msgid "MAC"
-msgstr "MAC"
+msgstr ""
 
-#: ../src/maemo-mapper.c:4701
-msgid "Maemo Mapper Settings"
-msgstr "Maemo Mapper Instellingen"
-
-#: ../src/maemo-mapper.c:9761
+#: ../src/maemo-mapper.c:10567
 msgid ""
 "Maemo Mapper will now download and add a list of possibly-duplicate "
 "repositories from the internet.  Continue?"
 msgstr ""
-"Maemo Mapper will now download and add a list of possibly-duplicate "
-"repositories from the internet.  Continue?"
 
-#: ../src/maemo-mapper.c:10315
+#: ../src/maemo-mapper.c:11125
 msgid "Manage Maps"
-msgstr "Manage Maps"
+msgstr ""
 
-#: ../src/maemo-mapper.c:5832
+#: ../src/maemo-mapper.c:6257
 msgid "Manage Maps..."
-msgstr "Manage Maps..."
+msgstr ""
 
-#: ../src/maemo-mapper.c:5834
-msgid "Manage Repositories..."
+#: ../src/maemo-mapper.c:10636
+#, fuzzy
+msgid "Manage Repositories"
 msgstr "Manage Repositories..."
 
-#: ../src/maemo-mapper.c:2265
-msgid "Manual"
-msgstr "Manual"
+#: ../src/maemo-mapper.c:6259
+msgid "Manage Repositories..."
+msgstr ""
 
-#: ../src/maemo-mapper.c:5827
+#: ../src/maemo-mapper.c:2394
+msgid "Manual"
+msgstr ""
+
+#: ../src/maemo-mapper.c:6252
 msgid "Maps"
 msgstr "Kaarten"
 
-#: ../src/maemo-mapper.c:2912
+#: ../src/maemo-mapper.c:3920
+msgid "Mark already inserted."
+msgstr ""
+
+#: ../src/maemo-mapper.c:3041
 msgid "Max speed"
-msgstr "Max speed"
+msgstr ""
 
-#: ../src/maemo-mapper.c:4831
+#: ../src/maemo-mapper.c:5205
 msgid "Misc."
-msgstr "Misc."
+msgstr ""
 
-#: ../src/maemo-mapper.c:4871
+#: ../src/maemo-mapper.c:5245
 #, fuzzy
 msgid "Misc. 2"
 msgstr "Misc."
 
-#: ../src/maemo-mapper.c:10539 ../src/maemo-mapper.c:10673
+#: ../src/maemo-mapper.c:11362 ../src/maemo-mapper.c:11496
+#, fuzzy
 msgid ""
-"NOTE: You must set a Map URI in the Repository Manager in order to download "
+"NOTE: You must set a Map URI in the current repository in order to download "
 "maps."
 msgstr ""
 "NOTE: You must set a Map URI in the Repository Manager in order to download "
 "maps."
 
-#: ../src/maemo-mapper.c:9553 ../src/maemo-mapper.c:9732
+#: ../src/maemo-mapper.c:10359 ../src/maemo-mapper.c:10538
 msgid "Name"
-msgstr "Name"
+msgstr ""
 
-#: ../src/maemo-mapper.c:9543
+#: ../src/maemo-mapper.c:6334
+#, fuzzy
+msgid "Nearest POI"
+msgstr "Select POI"
+
+#: ../src/maemo-mapper.c:10349
 msgid "New Name"
-msgstr "New Name"
+msgstr ""
 
-#: ../src/maemo-mapper.c:9722
+#: ../src/maemo-mapper.c:10528
 msgid "New Repository"
-msgstr "New Repository"
+msgstr ""
 
-#: ../src/maemo-mapper.c:9859
+#: ../src/maemo-mapper.c:10669
 #, fuzzy
 msgid "New..."
 msgstr "Open..."
 
-#: ../src/maemo-mapper.c:7504
-msgid "Next Repository"
-msgstr "Next Repository"
+#: ../src/maemo-mapper.c:6332
+#, fuzzy
+msgid "Next Waypoint"
+msgstr "Route Markering"
 
-#: ../src/maemo-mapper.c:5049
+#: ../src/maemo-mapper.c:5430
 msgid ""
 "No GPS Receiver MAC Provided.\n"
 "GPS Disabled."
@@ -590,433 +648,539 @@ msgstr ""
 "Geen GPS MAC adres opgegeven.\n"
 "GPS uitgeschakeld."
 
-#: ../src/maemo-mapper.c:9324
-#, fuzzy
-msgid "No route is loaded."
-msgstr "Route Downloaded"
+#: ../src/maemo-mapper.c:10273 ../src/maemo-mapper.c:12123
+msgid "No POIs found."
+msgstr ""
 
-#: ../src/maemo-mapper.c:10886 ../src/maemo-mapper.c:10909
-#: ../src/maemo-mapper.c:10939 ../src/maemo-mapper.c:10961
-#: ../src/maemo-mapper.c:10995 ../src/maemo-mapper.c:11028
-#: ../src/maemo-mapper.c:11065
+#: ../src/maemo-mapper.c:12916 ../src/maemo-mapper.c:12937
+#: ../src/maemo-mapper.c:12959 ../src/maemo-mapper.c:12980
+#: ../src/maemo-mapper.c:13001 ../src/maemo-mapper.c:13081
 msgid "No waypoints are visible."
+msgstr ""
+
+#: ../src/maemo-mapper.c:12893
+#, fuzzy
+msgid "No waypoints found."
 msgstr "No waypoints are visible."
 
-#: ../src/maemo-mapper.c:5887
+#: ../src/maemo-mapper.c:6317
 msgid "None"
 msgstr "Geen"
 
-#: ../src/maemo-mapper.c:4738
+#: ../src/maemo-mapper.c:5112
+#, fuzzy
 msgid ""
-"Note: For manual rfcomm, enter a device path\n"
+"Note: You can enter a device path\n"
 "(e.g. \"/dev/rfcomm0\")."
 msgstr ""
 "Note: For manual rfcomm, enter a device path\n"
 "(e.g. \"/dev/rfcomm0\")."
 
-#: ../src/maemo-mapper.c:6089
+#: ../src/maemo-mapper.c:6619
 msgid ""
 "Now you must set up at least one Map Repository.  You can download a sample "
 "set from the internet by using the \"Download...\" button."
 msgstr ""
-"Now you must set up at least one Map Repository.  You can download a sample "
-"set from the internet by using the \"Download...\" button."
 
-#: ../src/maemo-mapper.c:5802 ../src/maemo-mapper.c:5818
+#: ../src/maemo-mapper.c:6218 ../src/maemo-mapper.c:6238
 msgid "Open..."
-msgstr "Open..."
+msgstr ""
 
-#: ../src/maemo-mapper.c:9000
+#: ../src/maemo-mapper.c:9579
 msgid "Origin"
 msgstr "Oorsprong"
 
-#: ../src/maemo-mapper.c:10353
+#: ../src/maemo-mapper.c:11167
 msgid "Overwrite"
-msgstr "Overwrite"
+msgstr ""
 
-#: ../src/maemo-mapper.c:4598 ../src/maemo-mapper.c:4952
+#: ../src/maemo-mapper.c:4966 ../src/maemo-mapper.c:5326
+#: ../src/maemo-mapper.c:6522
 msgid "POI"
-msgstr "POI"
+msgstr ""
 
-#: ../src/maemo-mapper.c:5866
-msgid "POI Categories..."
+#: ../src/maemo-mapper.c:11916
+#, fuzzy
+msgid "POI Categories"
 msgstr "POI Categories..."
 
-#: ../src/maemo-mapper.c:4956
-msgid "POI database"
-msgstr "POI database"
+#: ../src/maemo-mapper.c:6296
+msgid "POI Categories..."
+msgstr ""
 
-#: ../src/maemo-mapper.c:2261
+#: ../src/maemo-mapper.c:5330
+msgid "POI database"
+msgstr ""
+
+#: ../src/maemo-mapper.c:6292
+#, fuzzy
+msgid "POIs"
+msgstr "POI"
+
+#: ../src/maemo-mapper.c:2390
 #, fuzzy
 msgid "PPS"
 msgstr "GPS"
 
-#: ../src/maemo-mapper.c:4820
+#: ../src/maemo-mapper.c:5194
 msgid "Pitch"
 msgstr "Hoogte"
 
-#: ../src/maemo-mapper.c:4414
+#: ../src/maemo-mapper.c:4782
 msgid "Please select a bluetooth device from the list."
-msgstr "Please select a bluetooth device from the list."
+msgstr ""
 
-#: ../src/maemo-mapper.c:11957
+#: ../src/maemo-mapper.c:12450
 #, fuzzy
 msgid "Please specify a category for the POI."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/maemo-mapper.c:11946
+#: ../src/maemo-mapper.c:12443
 #, fuzzy
 msgid "Please specify a name for the POI."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/maemo-mapper.c:11249
+#: ../src/maemo-mapper.c:11737
 #, fuzzy
 msgid "Please specify a name for the category."
 msgstr "Geef een start locatie op a.u.b."
 
-#: ../src/maemo-mapper.c:9047
+#: ../src/maemo-mapper.c:9649
 #, fuzzy
 msgid "Please specify a source URL."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/maemo-mapper.c:9059
+#: ../src/maemo-mapper.c:9661
 msgid "Please specify a start location."
 msgstr "Geef een start locatie op a.u.b."
 
-#: ../src/maemo-mapper.c:9066
+#: ../src/maemo-mapper.c:9668
 msgid "Please specify an end location."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/maemo-mapper.c:12000
+#: ../src/maemo-mapper.c:12497
 msgid "Problem adding POI"
-msgstr "Problem adding POI"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11286
+#: ../src/maemo-mapper.c:11774
 msgid "Problem adding category"
-msgstr "Problem adding category"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11096 ../src/maemo-mapper.c:11534
+#: ../src/maemo-mapper.c:11585 ../src/maemo-mapper.c:12033
 msgid "Problem deleting POI"
-msgstr "Problem deleting POI"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11105
+#: ../src/maemo-mapper.c:11594
 msgid "Problem deleting category"
-msgstr "Problem deleting category"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11327
+#: ../src/maemo-mapper.c:11815
 msgid "Problem updating Category"
-msgstr "Problem updating Category"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11977
+#: ../src/maemo-mapper.c:12475
 msgid "Problem updating POI"
-msgstr "Problem updating POI"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11271
+#: ../src/maemo-mapper.c:11759
 msgid "Problem updating category"
-msgstr "Problem updating category"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2978
+#: ../src/maemo-mapper.c:3110
 msgid "Problem with POI database"
-msgstr "Problem with POI database"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2262
+#: ../src/maemo-mapper.c:2391
 msgid "Real Time Kinematic"
-msgstr "Real Time Kinematic"
+msgstr ""
 
-#: ../src/maemo-mapper.c:9853
+#: ../src/maemo-mapper.c:3849
+msgid "Recalculating directions..."
+msgstr ""
+
+#: ../src/maemo-mapper.c:10663
 #, fuzzy
 msgid "Rename..."
 msgstr "Open..."
 
-#: ../src/maemo-mapper.c:9830
-msgid "Repositories"
-msgstr "Repositories"
-
-#: ../src/maemo-mapper.c:5808
+#: ../src/maemo-mapper.c:6228
 msgid "Reset"
-msgstr "Reset"
+msgstr ""
 
-#: ../src/maemo-mapper.c:5908 ../src/maemo-mapper.c:7505
+#: ../src/maemo-mapper.c:6353 ../src/maemo-mapper.c:8034
 msgid "Reset Bluetooth"
-msgstr "Reset Bluetooth"
+msgstr ""
 
-#: ../src/maemo-mapper.c:4577 ../src/maemo-mapper.c:5798
-#: ../src/maemo-mapper.c:5852
+#: ../src/maemo-mapper.c:4945 ../src/maemo-mapper.c:6214
+#: ../src/maemo-mapper.c:6278
 msgid "Route"
-msgstr "Route"
+msgstr ""
 
-#: ../src/maemo-mapper.c:9143
+#: ../src/maemo-mapper.c:9747
 msgid "Route Downloaded"
-msgstr "Route Downloaded"
+msgstr ""
 
-#: ../src/maemo-mapper.c:7690 ../src/maemo-mapper.c:9191
+#: ../src/maemo-mapper.c:8216 ../src/maemo-mapper.c:9795
 msgid "Route Opened"
 msgstr "Route Geopend"
 
-#: ../src/maemo-mapper.c:9333
+#: ../src/maemo-mapper.c:9947
 msgid "Route Saved"
 msgstr "Route Opgeslagen"
 
-#: ../src/maemo-mapper.c:9398
+#: ../src/maemo-mapper.c:10012
 msgid "Routes are now hidden"
 msgstr "Routes zijn nu verborgen"
 
-#: ../src/maemo-mapper.c:9392
+#: ../src/maemo-mapper.c:10006
 msgid "Routes are now shown"
 msgstr "Routes zijn nu zichtbaar"
 
-#: ../src/maemo-mapper.c:2259
+#: ../src/maemo-mapper.c:2388
 msgid "SPS"
-msgstr "SPS"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2885
+#: ../src/maemo-mapper.c:3014
 msgid "Sat in use"
-msgstr "Sat in use"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2876
+#: ../src/maemo-mapper.c:3005
 msgid "Sat in view"
-msgstr "Sat in view"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2817
+#: ../src/maemo-mapper.c:2946
 msgid "Satellites details"
-msgstr "Satellites details"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2742
+#: ../src/maemo-mapper.c:2871
 msgid "Satellites in view"
-msgstr "Satellites in view"
+msgstr ""
 
-#: ../src/maemo-mapper.c:5806 ../src/maemo-mapper.c:5820
+#: ../src/maemo-mapper.c:6222 ../src/maemo-mapper.c:6240
 msgid "Save..."
 msgstr "Opslaan..."
 
-#: ../src/maemo-mapper.c:4732
+#: ../src/maemo-mapper.c:5106
 #, fuzzy
 msgid "Scan..."
 msgstr "Opslaan..."
 
-#: ../src/maemo-mapper.c:4390
+#: ../src/maemo-mapper.c:4758
 #, fuzzy
 msgid "Scanning for Bluetooth Devices"
 msgstr "Er wordt naar bluetooth apparaten gezocht"
 
-#: ../src/maemo-mapper.c:3146
+#: ../src/maemo-mapper.c:3292
 msgid "Searching for GPS receiver"
 msgstr "Er wordt naar GPS ontvanger gezocht"
 
-#: ../src/maemo-mapper.c:4354
+#: ../src/maemo-mapper.c:4722
 #, fuzzy
 msgid "Select Bluetooth Device"
 msgstr "Er wordt naar bluetooth apparaten gezocht"
 
-#: ../src/maemo-mapper.c:11627
+#: ../src/maemo-mapper.c:8021
+#, fuzzy
+msgid "Select Next Repository"
+msgstr "Next Repository"
+
+#: ../src/maemo-mapper.c:12143
 msgid "Select POI"
-msgstr "Select POI"
+msgstr ""
 
-#: ../src/maemo-mapper.c:11690
+#: ../src/maemo-mapper.c:12208
 msgid "Select one POI from the list."
-msgstr "Select one POI from the list."
+msgstr ""
 
-#: ../src/maemo-mapper.c:4752
+#: ../src/maemo-mapper.c:5126
 msgid "Sensitivity"
 msgstr "Gevoeligheid"
 
-#: ../src/maemo-mapper.c:5914
+#: ../src/maemo-mapper.c:6489
+#, fuzzy
+msgid "Set as GPS Location"
+msgstr "Bebruik GPS Locatie"
+
+#: ../src/maemo-mapper.c:5071
+#, fuzzy
+msgid "Settings"
+msgstr "Instellingen..."
+
+#: ../src/maemo-mapper.c:6360
 msgid "Settings..."
 msgstr "Instellingen..."
 
-#: ../src/maemo-mapper.c:10336
+#: ../src/maemo-mapper.c:11150
 msgid "Setup"
-msgstr "Setup"
+msgstr ""
 
-#: ../src/maemo-mapper.c:6022
+#: ../src/maemo-mapper.c:6500
 msgid "Show Description"
-msgstr "Show Description"
+msgstr ""
 
-#: ../src/maemo-mapper.c:6004 ../src/maemo-mapper.c:6031
-msgid "Show Distance to"
+#: ../src/maemo-mapper.c:6246 ../src/maemo-mapper.c:8030
+#, fuzzy
+msgid "Show Distance from Beginning"
 msgstr "Show Distance to"
 
-#: ../src/maemo-mapper.c:5901
-msgid "Show Information"
-msgstr "Show Information"
+#: ../src/maemo-mapper.c:6244 ../src/maemo-mapper.c:8028
+#, fuzzy
+msgid "Show Distance from Last Mark"
+msgstr "Show Distance to"
 
-#: ../src/maemo-mapper.c:5997 ../src/maemo-mapper.c:6020
+#: ../src/maemo-mapper.c:6476 ../src/maemo-mapper.c:6507
+#: ../src/maemo-mapper.c:6531
+msgid "Show Distance to"
+msgstr ""
+
+#: ../src/maemo-mapper.c:6226 ../src/maemo-mapper.c:8025
+#, fuzzy
+msgid "Show Distance to End of Route"
+msgstr "Show Distance to"
+
+#: ../src/maemo-mapper.c:6224 ../src/maemo-mapper.c:8023
+#, fuzzy
+msgid "Show Distance to Next Waypoint"
+msgstr "Route Markering"
+
+#: ../src/maemo-mapper.c:6346
+msgid "Show Information"
+msgstr ""
+
+#: ../src/maemo-mapper.c:6471 ../src/maemo-mapper.c:6498
 #, fuzzy
 msgid "Show Lat/Lon"
 msgstr "Breedte/Lengtegraad"
 
-#: ../src/maemo-mapper.c:4971
+#: ../src/maemo-mapper.c:5345
 msgid "Show POI below zoom"
-msgstr "Show POI below zoom"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2266
+#: ../src/maemo-mapper.c:2395
 msgid "Simulation"
-msgstr "Simulation"
+msgstr ""
 
-#: ../src/maemo-mapper.c:8976
+#: ../src/maemo-mapper.c:9544
 msgid "Source URL"
-msgstr "Source URL"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2840 ../src/maemo-mapper.c:4808
+#: ../src/maemo-mapper.c:2969 ../src/maemo-mapper.c:5182
 msgid "Speed"
 msgstr "Snelheid"
 
-#: ../src/maemo-mapper.c:4913
+#: ../src/maemo-mapper.c:5287
 #, fuzzy
 msgid "Speed Limit"
 msgstr "Snelheid"
 
-#: ../src/maemo-mapper.c:7506
+#: ../src/maemo-mapper.c:3553
+msgid "The current route is empty."
+msgstr ""
+
+#: ../src/maemo-mapper.c:3599 ../src/maemo-mapper.c:3614
+msgid "The current track is empty."
+msgstr ""
+
+#: ../src/maemo-mapper.c:3534 ../src/maemo-mapper.c:10220
+msgid "There is no next waypoint."
+msgstr ""
+
+#: ../src/maemo-mapper.c:8031
 #, fuzzy
 msgid "Toggle GPS"
 msgstr "Activeer GPS"
 
-#: ../src/maemo-mapper.c:7507
+#: ../src/maemo-mapper.c:8032
 msgid "Toggle GPS Info"
-msgstr "Toggle GPS Info"
+msgstr ""
 
-#: ../src/maemo-mapper.c:7508
+#: ../src/maemo-mapper.c:8020
+#, fuzzy
+msgid "Toggle POIs"
+msgstr "Activeer GPS"
+
+#: ../src/maemo-mapper.c:8033
 msgid "Toggle Speed Limit"
-msgstr "Toggle Speed Limit"
+msgstr ""
 
-#: ../src/maemo-mapper.c:7503
+#: ../src/maemo-mapper.c:8019
 msgid "Toggle Tracks"
-msgstr "Toggle Tracks"
+msgstr ""
 
-#: ../src/maemo-mapper.c:7514 ../src/maemo-mapper.c:10463
+#: ../src/maemo-mapper.c:8040 ../src/maemo-mapper.c:11278
 msgid "Top-Left"
 msgstr "Links-Boven"
 
-#: ../src/maemo-mapper.c:7515
+#: ../src/maemo-mapper.c:8041
 #, fuzzy
 msgid "Top-Right"
 msgstr "Rechts-onder"
 
-#: ../src/maemo-mapper.c:4561 ../src/maemo-mapper.c:5814
-#: ../src/maemo-mapper.c:5857
+#: ../src/maemo-mapper.c:4929 ../src/maemo-mapper.c:6234
+#: ../src/maemo-mapper.c:6283
 msgid "Track"
 msgstr "Route"
 
-#: ../src/maemo-mapper.c:9246
+#: ../src/maemo-mapper.c:9870
 msgid "Track Opened"
 msgstr "Route Geopend"
 
-#: ../src/maemo-mapper.c:9268
+#: ../src/maemo-mapper.c:9892
 msgid "Track Saved"
 msgstr "Route Opgeslagen"
 
-#: ../src/maemo-mapper.c:9374
+#: ../src/maemo-mapper.c:9988
 msgid "Tracks are now hidden"
 msgstr "Routes zijn nu verborgen"
 
-#: ../src/maemo-mapper.c:9368
+#: ../src/maemo-mapper.c:9982
 msgid "Tracks are now shown"
 msgstr "Routes zijn nu zichtbaar"
 
-#: ../src/maemo-mapper.c:9638
+#: ../src/maemo-mapper.c:10444
 msgid "URL Format"
 msgstr "URI Formaat"
 
-#: ../src/maemo-mapper.c:9953
+#: ../src/maemo-mapper.c:10763
 msgid "Unable to create cache directory for repository"
-msgstr "Unable to create cache directory for repository"
+msgstr ""
 
-#: ../src/maemo-mapper.c:4878
+#: ../src/maemo-mapper.c:5252
 msgid "Units"
-msgstr "Units"
+msgstr ""
 
-#: ../src/maemo-mapper.c:8990
+#: ../src/maemo-mapper.c:9572
+msgid "Use End of Route"
+msgstr ""
+
+#: ../src/maemo-mapper.c:9558
 msgid "Use GPS Location"
 msgstr "Bebruik GPS Locatie"
 
-#: ../src/maemo-mapper.c:5862
+#: ../src/maemo-mapper.c:6288
 msgid "Velocity Vector"
 msgstr "Snelheids Factor"
 
-#: ../src/maemo-mapper.c:5844
+#: ../src/maemo-mapper.c:6270
 msgid "View"
-msgstr "View"
+msgstr ""
 
-#: ../src/maemo-mapper.c:10444
+#: ../src/maemo-mapper.c:11259
 msgid "View Center"
 msgstr "Bekijk Midden"
 
-#: ../src/maemo-mapper.c:9678
+#: ../src/maemo-mapper.c:10484
 #, fuzzy
 msgid "View Zoom Steps"
 msgstr "Vergrootings-Stappen"
 
-#: ../src/maemo-mapper.c:11083
-msgid "WARNING: All POIs in that category will also be deleted!"
-msgstr "WARNING: All POIs in that category will also be deleted!"
+#: ../src/maemo-mapper.c:6528
+msgid "View/Edit..."
+msgstr ""
 
-#: ../src/maemo-mapper.c:6015
+#: ../src/maemo-mapper.c:11572
+msgid "WARNING: All POIs in that category will also be deleted!"
+msgstr ""
+
+#: ../src/maemo-mapper.c:6493
 #, fuzzy
 msgid "Waypoint"
 msgstr "Route Markering"
 
-#: ../src/maemo-mapper.c:10392
+#: ../src/maemo-mapper.c:11207
 msgid "Zoom"
 msgstr "Vergroot"
 
-#: ../src/maemo-mapper.c:10398
+#: ../src/maemo-mapper.c:11213
 msgid "Zoom Levels to Download: (0 = most detail)"
 msgstr "Vergrotings-niveaus om te Downloaden: (0 = meeste detail)"
 
-#: ../src/maemo-mapper.c:7928 ../src/maemo-mapper.c:8010
+#: ../src/maemo-mapper.c:8453 ../src/maemo-mapper.c:8535
 #, fuzzy
 msgid "Zoom to Level"
 msgstr "Vergrootings-Stappen"
 
-#: ../src/maemo-mapper.c:10175 ../src/maemo-mapper.c:10182
+#: ../src/maemo-mapper.c:10985 ../src/maemo-mapper.c:10992
 #, fuzzy
 msgid "about"
 msgstr "Route"
 
-#: ../src/maemo-mapper.c:2743
+#: ../src/maemo-mapper.c:2872
 msgid "in use"
-msgstr "in use"
+msgstr ""
 
-#: ../src/maemo-mapper.c:7491
+#: ../src/maemo-mapper.c:8007
 msgid "km"
-msgstr "km"
+msgstr ""
 
-#: ../src/maemo-mapper.c:10083 ../src/maemo-mapper.c:10089
-#: ../src/maemo-mapper.c:10176 ../src/maemo-mapper.c:10183
-#, fuzzy
+#: ../src/maemo-mapper.c:10905 ../src/maemo-mapper.c:10993
 msgid "maps"
-msgstr "Kaarten"
+msgstr "kaarten"
 
-#: ../src/maemo-mapper.c:7492
+#: ../src/maemo-mapper.c:10899 ../src/maemo-mapper.c:10986
+msgid "maps "
+msgstr "kaarten"
+
+#: ../src/maemo-mapper.c:8008
 msgid "mi."
-msgstr "mi."
+msgstr ""
 
-#: ../src/maemo-mapper.c:7493
+#: ../src/maemo-mapper.c:8009
 msgid "n.m."
-msgstr "n.m."
+msgstr ""
 
-#: ../src/maemo-mapper.c:2898
+#: ../src/maemo-mapper.c:3027
 msgid "nofix"
-msgstr "nofix"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2267 ../src/maemo-mapper.c:2907
+#: ../src/maemo-mapper.c:2396 ../src/maemo-mapper.c:3036
 #, fuzzy
 msgid "none"
 msgstr "Geen"
 
-#: ../src/maemo-mapper.c:7243 ../src/maemo-mapper.c:7682
-msgid "reading"
-msgstr "reading"
-
-#: ../src/maemo-mapper.c:9020 ../src/maemo-mapper.c:9022
-msgid "toggled"
-msgstr "toggled"
-
-#: ../src/maemo-mapper.c:10089 ../src/maemo-mapper.c:10183
+#: ../src/maemo-mapper.c:10905 ../src/maemo-mapper.c:10993
 msgid "up to about"
-msgstr "up to about"
+msgstr ""
 
-#: ../src/maemo-mapper.c:7243
+#~ msgid "Category List"
+#~ msgstr "Category List"
+
+#~ msgid "Category: "
+#~ msgstr "Category: "
+
+#~ msgid "Copy Description to Clipboard"
+#~ msgstr "Copy Description to Clipboard"
+
+#~ msgid "Copy Lat/Lon to Clipboard"
+#~ msgstr "Copy Lat/Lon to Clipboard"
+
 #, fuzzy
-msgid "writing"
-msgstr "Oorsprong"
+#~ msgid "Desc."
+#~ msgstr "Misc."
+
+#~ msgid "Desc.: "
+#~ msgstr "Desc.: "
+
+#, fuzzy
+#~ msgid "Distance to Location"
+#~ msgstr "Bebruik GPS Locatie"
+
+#, fuzzy
+#~ msgid "GPS Position"
+#~ msgstr "GPS Locatie"
+
+#~ msgid "Label: "
+#~ msgstr "Label: "
+
+#~ msgid "Maemo Mapper Settings"
+#~ msgstr "Maemo Mapper Instellingen"
+
+#, fuzzy
+#~ msgid "No route is loaded."
+#~ msgstr "Route Downloaded"
+
+#~ msgid "Repositories"
+#~ msgstr "Repositories"
+
+#~ msgid "toggled"
+#~ msgstr "toggled"
