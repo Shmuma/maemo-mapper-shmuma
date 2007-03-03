@@ -6615,6 +6615,7 @@ static gboolean
 window_present()
 {
     static gint been_here = 0;
+    static gint done_here = 0;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(!been_here++)
@@ -6636,14 +6637,19 @@ window_present()
         /* Connect to receiver. */
         if(_enable_gps)
             rcvr_connect_now();
-    }
-    gtk_window_present(GTK_WINDOW(_window));
 
-    /* Re-enable any banners that might have been up. */
+        done_here++; /* Don't ask... */
+    }
+    if(done_here)
     {
-        ConnState old_state = _conn_state;
-        set_conn_state(RCVR_OFF);
-        set_conn_state(old_state);
+        gtk_window_present(GTK_WINDOW(_window));
+
+        /* Re-enable any banners that might have been up. */
+        {
+            ConnState old_state = _conn_state;
+            set_conn_state(RCVR_OFF);
+            set_conn_state(old_state);
+        }
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
