@@ -151,7 +151,7 @@
 #define GCONF_KEY_AUTO_DOWNLOAD GCONF_KEY_PREFIX"/auto_download"
 #define GCONF_KEY_CENTER_SENSITIVITY GCONF_KEY_PREFIX"/center_sensitivity"
 #define GCONF_KEY_ANNOUNCE_NOTICE GCONF_KEY_PREFIX"/announce_notice"
-#define GCONF_KEY_draw_width GCONF_KEY_PREFIX"/draw_line_width"
+#define GCONF_KEY_DRAW_WIDTH GCONF_KEY_PREFIX"/draw_width"
 #define GCONF_KEY_ENABLE_VOICE GCONF_KEY_PREFIX"/enable_voice"
 #define GCONF_KEY_VOICE_SPEED GCONF_KEY_PREFIX"/voice_speed"
 #define GCONF_KEY_VOICE_PITCH GCONF_KEY_PREFIX"/voice_pitch"
@@ -3118,52 +3118,61 @@ db_connect()
     if(SQLITE_OK != sqlite3_get_table(_db, "select label from poi limit 1",
         &pszResult, &nRow, &nColumn, NULL))
     {
-        if(SQLITE_OK != sqlite3_exec(_db,
-                /* Create the necessary tables... */
+        gchar *create_sql = sqlite3_mprintf(
                 "create table poi (poi_id integer PRIMARY KEY, lat real, "
                 "lon real, label text, desc text, cat_id integer);"
                 "create table category (cat_id integer PRIMARY KEY,"
                 "label text, desc text, enabled integer);"
                 /* Add some default categories... */
                 "insert into category (label, desc, enabled) "
-                "values ('Fuel',"
-                  "'Stations for purchasing fuel for vehicles.', 1);"
+                    "values ('%q', '%q', 1); "
                 "insert into category (label, desc, enabled) "
-                "values ('Residence', "
-                  "'Houses, apartments, or other residences of import.', 1);"
+                    "values ('%q', '%q', 1); "
                 "insert into category (label, desc, enabled) "
-                "values ('Dining', "
-                  "'Places to eat or drink.', 1);"
+                    "values ('%q', '%q', 1); "
                 "insert into category (label, desc, enabled) "
-                "values ('Shopping/Services', "
-                  "'Places to shop or acquire services.', 1);"
+                    "values ('%q', '%q', 1); "
                 "insert into category (label, desc, enabled) "
-                "values ('Recreation', "
-                  "'Indoor or Outdoor places to have fun.', 1);"
+                    "values ('%q', '%q', 1); "
                 "insert into category (label, desc, enabled) "
-                "values ('Transportation', "
-                  "'Bus stops, airports, train stations, etc.', 1);"
+                    "values ('%q', '%q', 1); "
                 "insert into category (label, desc, enabled) "
-                "values ('Lodging', "
-                  "'Places to stay temporarily or for the night.', 1);"
+                    "values ('%q', '%q', 1); "
                 "insert into category (label, desc, enabled) "
-                "values ('School', "
-                  "'Elementary schools, college campuses, etc.', 1);"
+                    "values ('%q', '%q', 1); "
                 "insert into category (label, desc, enabled) "
-                "values ('Business', "
-                  "'General places of business.', 1);"
+                    "values ('%q', '%q', 1); "
                 "insert into category (label, desc, enabled) "
-                "values ('Landmark', "
-                  "'General landmarks.', 1);"
+                    "values ('%q', '%q', 1); "
                 "insert into category (label, desc, enabled) "
-                "values ('Other', "
-                  "'Miscellaneous category for everything else.', 1);",
-                NULL,
-                NULL,
-                &perror)
+                    "values ('%q', '%q', 1); ",
+                _("Fuel"),
+                _("Stations for purchasing fuel for vehicles."),
+                _("Residence"),
+                _("Houses, apartments, or other residences of import."),
+                _("Dining"),
+                _("Places to eat or drink."),
+                _("Shopping/Services"),
+                _("Places to shop or acquire services."),
+                _("Recreation"),
+                _("Indoor or Outdoor places to have fun."),
+                _("Transportation"),
+                _("Bus stops, airports, train stations, etc."),
+                _("Lodging"),
+                _("Places to stay temporarily or for the night."),
+                _("School"),
+                _("Elementary schools, college campuses, etc."),
+                _("Business"),
+                _("General places of business."),
+                _("Landmark"),
+                _("General landmarks."),
+                _("Other"),
+                _("Miscellaneous category for everything else."));
+
+        if(SQLITE_OK != sqlite3_exec(_db, create_sql, NULL, NULL, &perror)
                 && (SQLITE_OK != sqlite3_get_table(_db,
-                            "select label from poi limit 1",
-                            &pszResult, &nRow, &nColumn, NULL)))
+                        "select label from poi limit 1",
+                        &pszResult, &nRow, &nColumn, NULL)))
         {
             snprintf(buffer, sizeof(buffer), "%s:\n%s",
                     _("Failed to open or create database"),
@@ -4307,7 +4316,7 @@ config_save()
 
     /* Save Draw Line Width. */
     gconf_client_set_int(gconf_client,
-            GCONF_KEY_draw_width, _draw_width, NULL);
+            GCONF_KEY_DRAW_WIDTH, _draw_width, NULL);
 
     /* Save Announce Advance Notice Ratio. */
     gconf_client_set_int(gconf_client,
@@ -5720,7 +5729,7 @@ config_init()
 
     /* Get Draw Line Width- Default is 5. */
     _draw_width = gconf_client_get_int(gconf_client,
-            GCONF_KEY_draw_width, NULL);
+            GCONF_KEY_DRAW_WIDTH, NULL);
     if(!_draw_width)
         _draw_width = 5;
 
@@ -8046,6 +8055,7 @@ maemo_mapper_init(gint argc, gchar **argv)
     memset(&_track, 0, sizeof(_track));
     memset(&_route, 0, sizeof(_route));
     MACRO_INIT_TRACK(_track);
+    MACRO_INIT_ROUTE(_route);
 
     config_init();
 
