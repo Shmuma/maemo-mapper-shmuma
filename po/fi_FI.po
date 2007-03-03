@@ -944,7 +944,7 @@ msgstr "Herkkyys"
 
 #: ../src/maemo-mapper.c:6498
 msgid "Set as GPS Location"
-msgstr "Aseta GPS sijainnin mukaan"
+msgstr "Aseta GPS sijainniksi"
 
 #: ../src/maemo-mapper.c:5080
 msgid "Settings"
