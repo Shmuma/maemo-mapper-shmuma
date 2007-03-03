@@ -1,3 +1,10 @@
+maemo-mapper (1.4.2) unstable; urgency=low
+
+  * Updated the fi_FI locale and added msgid's for POI categories.
+  * Fixed segfault when starting Maemo Mapper for the very first time.
+
+ -- John Costigan <gnuite@gmail.com>  Sat, 3 Mar 2007 16:48:00 -0500
+
 maemo-mapper (1.4.1) unstable; urgency=low
 
   * Added the fi_FI and en_GB locales.
