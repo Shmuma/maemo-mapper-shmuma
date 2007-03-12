@@ -1,3 +1,30 @@
+maemo-mapper (1.4.3) unstable; urgency=low
+
+  * Fixed bug that caused announcements to be late.
+  * Fixed bug with WMS repositories.
+  * Added native support for OpenStreetMap; made it the default repo.
+  * Added support for remapping all of the hardware keys.  In doing so, I
+    removed the "Escape Key"-specific stuff in Misc. 2, and cleaned up that
+    tab a little bit (i.e. moved Info Font Size to Misc. [1]).
+  * Added Zoom In/Out buttons to the View menu.
+  * Added a scale.
+  * Added an About page with version information.
+  * Added a "Double Pixels" option for repositories; if enabled, maps will be
+    shown at a minimum of double the pixel size, for those who don't want to
+    squint.
+  * Added a "Next-able" option for repositories, which controls whether or not
+    the repository is selectable via the "Select Next Repository" shortcut.
+  * Changed "Track Mark" functionality back to old "Track Break" name.
+  * Added the ability to add waypoint-like "Marks" to the track.  Marks are
+    like Track Breaks, except that you can give a description.
+  * Added some additional "first time running Maemo Mapper" help.
+  * Reorganized the track and route code.
+  * Modified timestamp to use GPS time if available.
+  * Changed old recursive-make-dir code to just use g_makdir_with_parents.
+  * Changed Repo Manager to support using ~ in the cache dir.
+
+ -- John Costigan <gnuite@gmail.com>  Mon, 12 Mar 2007 02:19:00 -0400
+
 maemo-mapper (1.4.2) unstable; urgency=low
 
   * Updated the fi_FI locale and added msgid's for POI categories.

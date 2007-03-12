@@ -218,8 +218,6 @@
           <display_text>Show Distance to Next Waypoint</display_text> - Show
           the distance left to be traveled (along the current route) until
           the next waypoint.
-          This action can be assigned to the <graphic
-            filename="2686KEY_esc"/> key.
         </listitem>
         <listitem>
           <display_text>Show Distance to End of Route</display_text> - Show
@@ -227,8 +225,6 @@
           the end of the current route.  The calculated distance includes
           the distance between breaks in the route (i.e. between the end of
           one route segment and the beginning of another route segment).
-          This action can be assigned to the <graphic
-            filename="2686KEY_esc"/> key.
         </listitem>
         <listitem>
           <display_text>Reset</display_text> - Reset Maemo Mapper's tracking
@@ -269,20 +265,20 @@
           GPX file on the file system.
         </listitem>
         <listitem>
-          <display_text>Insert Mark</display_text> - Artificially insert a
-          mark in your current track data.  This can be used to track, for
-          example, refueling stops.  Note that Maemo Mapper automatically
-          inserts marks when contact with a GPS receiver is established or
-          lost.
-          This action can be assigned to the <graphic
-            filename="2686KEY_esc"/> key.
+          <display_text>Insert Break</display_text> - Artificially insert a
+	  break in your current track data.  This simulates the loss and
+	  re-acquisition of a GPS fix, and it can be used to track, for
+	  example, refueling stops.
         </listitem>
         <listitem>
-          <display_text>Show Distance from Last Mark</display_text> - Show
+          <display_text>Insert Mark</display_text> - Artificially insert a
+	  mark with a description in your current track data.  This can be
+	  used to mark important landmarks.
+        </listitem>
+        <listitem>
+          <display_text>Show Distance from Last Break</display_text> - Show
           the distance traveled (along the current track) since the last
-          mark.
-          This action can be assigned to the <graphic
-            filename="2686KEY_esc"/> key.
+          break.
         </listitem>
         <listitem>
           <display_text>Show Distance from Beginning</display_text> - Show
@@ -290,8 +286,6 @@
           beginning of the track.  The calculated distance includes the
           distance between breaks in the track (i.e. between when a GPS fix
           is lost and later re-acquired).
-          This action can be assigned to the <graphic
-            filename="2686KEY_esc"/> key.
         </listitem>
         <listitem>
           <display_text>Clear</display_text> - Clear the current track,
@@ -342,10 +336,24 @@
       </para>
       <list>
         <listitem>
+	  <display_text>Zoom In</display_text> - Zoom in by one zoom level.
+	  You can also use the <graphic
+	    filename="2686KEY_zoom_in"/> button.
+        </listitem>
+        <listitem>
+	  <display_text>Zoom Out</display_text> - Zoom out by one zoom
+	  level.  You can also use the <graphic
+	    filename="2686KEY_zoom_out"/> button.
+        </listitem>
+        <listitem>
           <display_text>Full Screen</display_text> - Toggle full-screen
           mode.  You can also use the <graphic
-            filename="2686KEY_zoom_full_screen"/> button to toggle
-          full-screen mode.
+	    filename="2686KEY_full_screen"/> button to toggle
+	  full-screen mode.
+        </listitem>
+        <listitem>
+	  <display_text>Scale</display_text> - Toggle the display of the
+	  scale.
         </listitem>
         <listitem>
           <display_text>Route</display_text> - Toggle the display of routes.
@@ -360,8 +368,6 @@
         </listitem>
         <listitem>
           <display_text>POIs</display_text> - Toggle the display of POIs.
-          This action can be assigned to the <graphic
-            filename="2686KEY_esc"/> key.
         </listitem>
         <listitem>
           <display_text>POI Categories...</display_text> - Define POI
@@ -440,16 +446,12 @@
           with a GPS receiver.  You must have a GPS receiver set up in order
           to use this menu item.  When on, Maemo Mapper will constantly
           search for the GPS receiver.
-          This action can be assigned to the <graphic
-            filename="2686KEY_esc"/> key.
         </listitem>
         <listitem>
           <display_text>Show Information</display_text> - Toggle display of
           additional information provided by the GPS receiver.  This
           information will appear in the main display as a panel on the
           left.
-          This action can be assigned to the <graphic
-            filename="2686KEY_esc"/> key.
         </listitem>
         <listitem>
           <display_text>Details...</display_text> - Show even more
@@ -463,8 +465,6 @@
           to your /etc/sudoers file (if you don't know what that means,
           don't try it): <b>user ALL = NOPASSWD: /usr/sbin/hciconfig hci0
             reset</b>
-          This action can be assigned to the <graphic
-            filename="2686KEY_esc"/> key.
         </listitem>
       </list>
       <heading>Other</heading>
@@ -479,7 +479,11 @@
             refid="help_maemomapper_settings" refdoc="Settings"/>.
         </listitem>
         <listitem>
-          <display_text>Help</display_text> - Access this help file.
+          <display_text>Help...</display_text> - Access this help file.
+        </listitem>
+        <listitem>
+          <display_text>About...</display_text> - Display version and
+	  copyright information.
         </listitem>
         <listitem>
           <display_text>Close</display_text> - Close Maemo Mapper.
@@ -732,6 +736,22 @@
           <display_text>Download Zoom Steps</display_text> ensures that you
           see all maps at their native resolution.
         </listitem>
+	<listitem>
+	  <display_text>Double Pixels</display_text> - This forces Maemo
+	  Mapper to avoid using the native resolution of any maps, instead
+	  using pixel-doubling.  This is useful if your repository's maps
+	  contain small, hard-to-read text, and you want to double the size
+	  of the images to make them more readable.  This setting can also
+	  affect the zoom levels that are downloaded when Auto-Download is
+	  enabled.
+	</listitem>
+	<listitem>
+	  <display_text>Next-able</display_text> - This oddly-named option
+	  determines whether or not the "Select Next Repository" action
+	  (which can be mapped to any of the hardware keys) will be able to
+	  select this repository.  When unset, the "Select Next Repository"
+	  action will simply skip over this repository.
+	</listitem>
       </list>
       <para>
         In addition to the per-repository controls, there are a few buttons
@@ -748,6 +768,12 @@
         </listitem>
         <listitem>
           <display_text>New...</display_text> - Adds a new repository.
+        </listitem>
+        <listitem>
+          <display_text>Reset...</display_text> - Resets your repository
+	  list to the factory default.  This will remove all of your
+	  repositories and replace them with the single default repository
+	  that comes with Maemo Mapper.
         </listitem>
         <listitem>
           <display_text>Download...</display_text> - Downloads information
@@ -984,11 +1010,21 @@
       <para>
         The <display_text>Settings</display_text> dialog (accessible from
         the main menu) provides access to a plethora of configurable options
-        that control how Maemo Mapper appears and runs.  In addition to the
-        <display_text>Colors...</display_text> button (which allows you to
-        customize the colors that are used for drawing on-map objects), there
-        are several tabs in the dialog, each of which tries to group sets of
-        related options.
+	that control how Maemo Mapper appears and runs.  In addition to the
+	tabs, which are described below, there are also two buttons at the
+	bottom of the diagram labeled <display_text>Hardware
+	  Keys...</display_text> and <display_text>Colors...</display_text>.
+      </para>
+      <para>
+	The <display_text>Hardware Keys...</display_text> button brings up
+	another dialog box, which allows you to customize the actions that
+	each hardware key causes.  For example, you can map the 
+        <graphic filename="2686KEY_esc"/> button to cycle through map
+	repositories, giving you quick access to switching among them.
+      </para>
+      <para>
+        The <display_text>Colors...</display_text> button allows you to
+        customize the colors that are used for drawing on-map objects.
       </para>
       <heading>GPS</heading>
       <para>
@@ -1108,12 +1144,9 @@
           will only keep the screen on in full screen mode.
         </listitem>
         <listitem>
-          <display_text>Escape Key</display_text> - The <graphic
-            filename="2686KEY_esc"/> key can be programmed to perform any
-          number of functions.  All of these functions are available from
-          the main menu, except for <display_text>Toggle Speed
-            Limit</display_text>, which is available from the
-          <display_text>Settings</display_text> dialog.
+          <display_text>Information Font Size</display_text> - Controls the
+          font size for all information that is popped up to the user in the
+          upper-right corner, including waypoint descriptions.
         </listitem>
         <listitem>
           <display_text>Units</display_text> - Controls the units in which
@@ -1131,11 +1164,6 @@
         <listitem>
           <display_text>Location</display_text> - Controls the location on
           the screen of the speed warning.
-        </listitem>
-        <listitem>
-          <display_text>Information Font Size</display_text> - Controls the
-          font size for all information that is popped up to the user in the
-          upper-right corner, including waypoint descriptions.
         </listitem>
       </list>
       <heading>POI</heading>
@@ -1156,6 +1184,51 @@
           drawn.  When zoomed out beyond this level, no POIs will be drawn.
         </listitem>
       </list>
+    </topic>
+    <topic>
+      <topictitle>About Maemo Mapper</topictitle>
+      <context contextUID="help_maemomapper_about"/>
+      <para>
+        Current Version: __VERSION__
+      </para>
+      <para>
+        Maemo Mapper was created and developed by John Costigan (aka
+	<display_text>gnuite</display_text>).
+      </para>
+      <para>
+        Copyright © 2006-2007 John Costigan.
+      </para>
+      <para>
+        POI and GPS-Info code originally written by Cezary Jackiewicz.
+      </para>
+      <para>
+	Default map data provided by http://www.openstreetmap.org/ - other
+	map repositories are subject to their own licenses and may or may not
+	be suitable for use with Maemo Mapper.  It may be illegal to use a
+	certain repository with Maemo Mapper or under certain conditions.  This
+	includes the repositories downloadable directly in Maemo Mapper.  If
+	you are not sure if you are legally allowed to use a particular
+	repository, you should delete it from your list of repositories.  The
+	authors of Maemo Mapper cannot be held responsible for your use of a
+	particular repository.
+      </para>
+      <para>
+        This program is free software; you can redistribute it and/or modify
+        it under the terms of the GNU General Public License as published by
+        the Free Software Foundation; either version 2 of the License, or
+        (at your option) any later version.
+      </para>
+      <para>
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.
+      </para>
+      <para>
+        You should have received a copy of the GNU General Public License along
+        with this program; if not, write to the Free Software Foundation, Inc.,
+        51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+      </para>
     </topic>
   </folder>
 </ossohelpsource>

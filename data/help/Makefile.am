@@ -18,14 +18,12 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
  
-serviceentry_DATA = com.gnuite.maemo_mapper.service
+helpfile_enus_DATA = en_US/maemomapper.xml
+helpfile_engb_DATA = en_GB/maemomapper.xml
 
-desktopentry_DATA = maemo-mapper.desktop
+EXTRA_DIST = $(helpfile_engb_DATA) $(helpfile_engb_DATA)
 
-icon_26x26_DATA = icons/26x26/maemo-mapper.png 
-icon_40x40_DATA = icons/40x40/maemo-mapper.png
-icon_scalable_DATA = icons/scalable/maemo-mapper.png
+# Replace version in help files
+%.xml: %.xml.in
+	sed "s/__VERSION__/$(VERSION)/g" $< >$@
 
-EXTRA_DIST = $(serviceentry_DATA) $(desktopentry_DATA) $(icon_26x26_DATA) $(icon_40x40_DATA) $(icon_scalable_DATA)
-
-SUBDIRS = help

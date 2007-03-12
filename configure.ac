@@ -19,7 +19,7 @@
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 1.4.2)
+AM_INIT_AUTOMAKE(maemo-mapper, 1.4.3)
 
 AC_PROG_CPP
 AC_CONFIG_HEADERS(src/config.h)
@@ -88,7 +88,10 @@ icon_50x50dir=$datadir/icons/hicolor/50x50/hildon
 icon_scalabledir=$datadir/icons/hicolor/scalable/hildon
 
 # Help file install directory
-helpfile_engbdir=$datadir/osso-help/en_US
+helpfile_enusdir=$datadir/osso-help/en_US
+AC_SUBST(helpfile_enusdir)
+helpfile_engbdir=$datadir/osso-help/en_GB
+AC_SUBST(helpfile_engbdir)
 
 # Hildon control panel plugin install directories
 pluginlibdir=`$PKG_CONFIG hildon-control-panel --variable=plugindir`
@@ -106,7 +109,6 @@ AC_SUBST(icon_50x50dir)
 AC_SUBST(icon_scalabledir)
 AC_SUBST(pluginlibdir)
 AC_SUBST(plugindesktopentrydir)
-AC_SUBST(helpfile_engbdir)
 
 AC_DEFINE_UNQUOTED([LOCALEDIR], "${localedir}", [Runtime locale catalog files path])
 AC_DEFINE_UNQUOTED([PIXMAPDIR], "${pixmapdir}", [Runtime pixmap files path])
@@ -116,6 +118,7 @@ AC_OUTPUT(
           Makefile \
           src/Makefile \
           data/Makefile \
+          data/help/Makefile \
           po/Makefile.in \
           po/Makefile
 )
