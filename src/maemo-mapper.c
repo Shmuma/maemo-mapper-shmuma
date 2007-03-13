@@ -9199,6 +9199,8 @@ channel_parse_rmc(gchar *sentence)
     if(token && *token)
     {
         dpoint = strchr(token, '.');
+        if(!dpoint) /* handle buggy NMEA */
+            dpoint = token + strlen(strchr);
         MACRO_PARSE_FLOAT(tmpd, dpoint - 2);
         dpoint[-2] = '\0';
         MACRO_PARSE_INT(tmpi, token);
@@ -9215,6 +9217,8 @@ channel_parse_rmc(gchar *sentence)
     if(token && *token)
     {
         dpoint = strchr(token, '.');
+        if(!dpoint) /* handle buggy NMEA */
+            dpoint = token + strlen(strchr);
         MACRO_PARSE_FLOAT(tmpd, dpoint - 2);
         dpoint[-2] = '\0';
         MACRO_PARSE_INT(tmpi, token);
