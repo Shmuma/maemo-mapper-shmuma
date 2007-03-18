@@ -9200,7 +9200,7 @@ channel_parse_rmc(gchar *sentence)
     {
         dpoint = strchr(token, '.');
         if(!dpoint) /* handle buggy NMEA */
-            dpoint = token + strlen(strchr);
+            dpoint = token + strlen(token);
         MACRO_PARSE_FLOAT(tmpd, dpoint - 2);
         dpoint[-2] = '\0';
         MACRO_PARSE_INT(tmpi, token);
@@ -9218,7 +9218,7 @@ channel_parse_rmc(gchar *sentence)
     {
         dpoint = strchr(token, '.');
         if(!dpoint) /* handle buggy NMEA */
-            dpoint = token + strlen(strchr);
+            dpoint = token + strlen(token);
         MACRO_PARSE_FLOAT(tmpd, dpoint - 2);
         dpoint[-2] = '\0';
         MACRO_PARSE_INT(tmpi, token);
@@ -9248,7 +9248,7 @@ channel_parse_rmc(gchar *sentence)
 
     /* Parse date. */
     token = strsep(&sentence, DELIM);
-    if(token && *token)
+    if(token && *token && gpsdate)
     {
         struct tm time;
         gpsdate[6] = '\0'; /* Make sure time is 6 chars long. */
@@ -9429,7 +9429,11 @@ channel_parse_gsv(gchar *sentence)
     /* Parse number of satellites in view. */
     token = strsep(&sentence, DELIM);
     if(token && *token)
+    {
         MACRO_PARSE_INT(_gps.satinview, token);
+        if(_gps.satinview > 12) /* Handle buggy NMEA. */
+            _gps.satinview = 12;
+    }
 
     /* Loop until there are no more satellites to parse. */
     while(sentence && satcnt < 12)
