@@ -1,3 +1,16 @@
+maemo-mapper (1.4.5) unstable; urgency=low
+
+  * Added ability to edit latitude and longitude in POI Add/Edit dialog.
+  * Tapping on a POI now shows the category and label of the POI (and does not
+    re-center the display). (closes #645)
+  * Added action to clear the track. (contributed by Kalle Valo)
+  * Changed the way dialog boxes are displayed - this might help some of the
+    random "crash when I try to open XXX dialog box" crashes.
+  * Added the "Go to | Address..." menu item.
+  * Added Spanish translation.
+
+ -- John Costigan <gnuite@gmail.com>  Sun, 20 Mar 2007 00:27:00 -0500
+
 maemo-mapper (1.4.4) unstable; urgency=low
 
   * Updated Finnish translation.
