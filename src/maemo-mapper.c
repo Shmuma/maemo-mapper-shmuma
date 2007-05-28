@@ -391,7 +391,7 @@
 #ifndef __g_cclosure_user_marshal_MARSHAL_H__
 #define __g_cclosure_user_marshal_MARSHAL_H__
 
-#include	<glib-object.h>
+#include    <glib-object.h>
 
 G_BEGIN_DECLS
 
@@ -644,7 +644,7 @@ typedef enum
     CUSTOM_ACTION_CHANGE_REPO,
     CUSTOM_ACTION_ROUTE_DISTNEXT,
     CUSTOM_ACTION_ROUTE_DISTLAST,
-    CUSTOM_ACTION_TRACK_BREAK,    
+    CUSTOM_ACTION_TRACK_BREAK,
     CUSTOM_ACTION_TRACK_CLEAR,
     CUSTOM_ACTION_TRACK_DISTLAST,
     CUSTOM_ACTION_TRACK_DISTFIRST,
@@ -2984,7 +2984,7 @@ db_connect()
 
     /* Prepare our SQL statements. */
     /* select from poi */
-    sqlite3_prepare(_db, 
+    sqlite3_prepare(_db,
                     "select p.lat, p.lon, p.poi_id, p.label, p.desc,"
                     " p.cat_id, c.label, c.desc"
                     " from poi p, category c "
@@ -3018,7 +3018,7 @@ db_connect()
                     " delete from poi where poi_id = ?",
                     -1, &_stmt_delete_poi, NULL);
     /* delete from poi by cat_id */
-    sqlite3_prepare(_db, 
+    sqlite3_prepare(_db,
                     "delete from poi where cat_id = ?",
                     -1, &_stmt_delete_poi_by_catid, NULL);
     /* get next poilabel */
@@ -3027,7 +3027,7 @@ db_connect()
                     -1, &_stmt_nextlabel_poi, NULL);
 
     /* select from category */
-    sqlite3_prepare(_db, 
+    sqlite3_prepare(_db,
                     "select c.label, c.desc, c.enabled"
                     " from category c where c.cat_id = ?",
                     -1, &_stmt_select_cat, NULL);
@@ -3042,7 +3042,7 @@ db_connect()
                     " enabled = ? where poi_id = ?",
                     -1, &_stmt_update_cat, NULL);
     /* delete from category */
-    sqlite3_prepare(_db, 
+    sqlite3_prepare(_db,
                     "delete from category where cat_id = ?",
                     -1, &_stmt_delete_cat, NULL);
     /* enable category */
@@ -3675,7 +3675,7 @@ track_add(time_t time, gboolean newly_fixed)
 }
 
 static void
-track_clear() 
+track_clear()
 {
     GtkWidget *confirm;
 
@@ -3683,8 +3683,8 @@ track_clear()
                             _("Really clear the track?"));
 
     if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm))) {
-	 _track.tail = _track.head;
-	 map_force_redraw();
+     _track.tail = _track.head;
+     map_force_redraw();
     }
 
     gtk_widget_destroy(confirm);
@@ -3840,7 +3840,7 @@ rcvr_connect_response(DBusGProxy *proxy, DBusGProxyCall *call_id)
 
     if(_conn_state == RCVR_DOWN && _rcvr_mac)
     {
-        if(!dbus_g_proxy_end_call(_rfcomm_req_proxy, call_id, &error, 
+        if(!dbus_g_proxy_end_call(_rfcomm_req_proxy, call_id, &error,
                     G_TYPE_STRING, &fdpath, G_TYPE_INVALID))
         {
             if(error->domain == DBUS_GERROR
@@ -4543,7 +4543,7 @@ settings_dialog_hardkeys_reset(GtkWidget *widget, KeysDialogInfo *cdi)
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
-    
+
 static gboolean
 settings_dialog_hardkeys(GtkWidget *widget, GtkWidget *parent)
 {
@@ -9252,7 +9252,7 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
                     FALSE,
                     _scale_rect.x, _scale_rect.y,
                     _scale_rect.width, _scale_rect.height);
-            
+
             /* Now calculate and draw the distance. */
             {
                 gchar buffer[16];
@@ -9354,16 +9354,20 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
         PoiInfo poi;
         guint unitx = x2unit((gint)(event->x + 0.5));
         guint unity = y2unit((gint)(event->y + 0.5));
-        if(_show_poi && select_poi(unitx, unity, &poi, TRUE)) /* TRUE=quick */
+
+        if (_show_poi && (_poi_zoom > _zoom))
         {
-            gchar *banner;
-            latlon2unit(poi.lat, poi.lon, unitx, unity);
-            banner = g_strdup_printf("%s (%s)", poi.label, poi.clabel);
-            MACRO_BANNER_SHOW_INFO(_window, banner);
-            g_free(banner);
-            g_free(poi.label);
-            g_free(poi.desc);
-            g_free(poi.clabel);
+            if(select_poi(unitx, unity, &poi, TRUE)) /* TRUE=quick */
+            {
+                gchar *banner;
+                latlon2unit(poi.lat, poi.lon, unitx, unity);
+                banner = g_strdup_printf("%s (%s)", poi.label, poi.clabel);
+                MACRO_BANNER_SHOW_INFO(_window, banner);
+                g_free(banner);
+                g_free(poi.label);
+                g_free(poi.desc);
+                g_free(poi.clabel);
+            }
         }
         else
         {
@@ -11308,7 +11312,7 @@ repoman_reset(GtkWidget *widget, RepoManInfo *rmi)
         gtk_entry_set_text(
                 GTK_ENTRY(((RepoEditInfo*)rmi->repo_edits->data)->txt_url),
                 REPO_DEFAULT_MAP_URI);
-        
+
         gtk_combo_box_set_active(GTK_COMBO_BOX(rmi->cmb_repos), 0);
     }
     gtk_widget_destroy(confirm);
@@ -13501,7 +13505,7 @@ cmenu_cb_loc_add_poi(GtkAction *action)
     poi_dialog(ACTION_ADD_POI,
             x2unit(_cmenu_position_x),
             y2unit(_cmenu_position_y));
-    
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -13517,7 +13521,7 @@ cmenu_cb_loc_set_gps(GtkAction *action)
 
     /* Move mark to new location. */
     refresh_mark();
-    
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -13553,7 +13557,7 @@ find_nearest_waypoint(guint unitx, guint unity)
          * around the position. This is consistent with select_poi(). */
         if(abs(unitx - wnear->point->unitx) < pixel2unit(3 * _draw_width)
             && abs(unity - wnear->point->unity) < pixel2unit(3 * _draw_width))
-            return wnear; 
+            return wnear;
     }
 
     MACRO_BANNER_SHOW_INFO(_window, _("There are no waypoints."));
