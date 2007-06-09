@@ -11068,12 +11068,21 @@ repoman_dialog_rename(GtkWidget *widget, RepoManInfo *rmi)
     return TRUE;
 }
 
+static void
+repoman_delete(RepoManInfo *rmi, gint index)
+{
+    gtk_combo_box_remove_text(GTK_COMBO_BOX(rmi->cmb_repos), index);
+    gtk_notebook_remove_page(GTK_NOTEBOOK(rmi->notebook), index);
+    rmi->repo_edits = g_list_remove_link(
+            rmi->repo_edits,
+            g_list_nth(rmi->repo_edits, index));
+}
+
 static gboolean
 repoman_dialog_delete(GtkWidget *widget, RepoManInfo *rmi)
 {
     gchar buffer[100];
     GtkWidget *confirm;
-    gint active = gtk_combo_box_get_active(GTK_COMBO_BOX(rmi->cmb_repos));
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(gtk_tree_model_iter_n_children(GTK_TREE_MODEL(
@@ -11090,22 +11099,19 @@ repoman_dialog_delete(GtkWidget *widget, RepoManInfo *rmi)
     snprintf(buffer, sizeof(buffer), "%s:\n%s\n",
             _("Confirm delete of repository"),
             gtk_combo_box_get_active_text(GTK_COMBO_BOX(rmi->cmb_repos)));
-    confirm = hildon_note_new_confirmation(GTK_WINDOW(_window), buffer);
+
+    confirm = hildon_note_new_confirmation(GTK_WINDOW(rmi->dialog),buffer);
 
     if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
     {
-        gtk_combo_box_remove_text(GTK_COMBO_BOX(rmi->cmb_repos), active);
-        gtk_notebook_remove_page(GTK_NOTEBOOK(rmi->notebook), active);
-        rmi->repo_edits = g_list_remove_link(
-                rmi->repo_edits,
-                g_list_nth(rmi->repo_edits, active));
+        gint active = gtk_combo_box_get_active(GTK_COMBO_BOX(rmi->cmb_repos));
+        repoman_delete(rmi, active);
         gtk_combo_box_set_active(GTK_COMBO_BOX(rmi->cmb_repos),
                 MAX(0, active - 1));
     }
 
     gtk_widget_destroy(confirm);
 
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
@@ -11125,6 +11131,10 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
     gtk_notebook_append_page(GTK_NOTEBOOK(rmi->notebook),
             vbox = gtk_vbox_new(FALSE, 4),
             gtk_label_new(name));
+
+    /* Prevent destruction of notebook page, because the destruction causes
+     * a seg fault (!?!?) */
+    gtk_object_ref(GTK_OBJECT(vbox));
 
     gtk_box_pack_start(GTK_BOX(vbox),
             table = gtk_table_new(2, 2, FALSE),
@@ -11292,20 +11302,14 @@ repoman_reset(GtkWidget *widget, RepoManInfo *rmi)
     GtkWidget *confirm;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    confirm = hildon_note_new_confirmation(GTK_WINDOW(_window),
+    confirm = hildon_note_new_confirmation(GTK_WINDOW(rmi->dialog),
             _("Replace all repositories with the default repository?"));
 
     if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
     {
         /* First, delete all existing repositories. */
         while(rmi->repo_edits)
-        {
-            gtk_combo_box_remove_text(GTK_COMBO_BOX(rmi->cmb_repos), 0);
-            gtk_notebook_remove_page(GTK_NOTEBOOK(rmi->notebook), 0);
-            rmi->repo_edits = g_list_remove_link(
-                    rmi->repo_edits,
-                    g_list_first(rmi->repo_edits));
-        }
+            repoman_delete(rmi, 0);
 
         /* Now, add the default repository. */
         repoman_dialog_add_repo(rmi, REPO_DEFAULT_NAME);
@@ -11571,6 +11575,10 @@ repoman_dialog()
     }
 
     gtk_widget_hide(dialog);
+
+    /* Clear out the notebook entries. */
+    while(rmi.repo_edits)
+        repoman_delete(&rmi, 0);
 
     map_set_zoom(_zoom); /* make sure we're at an appropriate zoom level. */
 
