@@ -1,3 +1,15 @@
+maemo-mapper (1.4.6) unstable; urgency=low
+
+  * Fix repository duplication bug in the "Manage Repositories" dialog box.
+  * Incorporated patches contributed by Tatu Männistö:
+    1. remember full screen setting over invocations.
+    2. show zoom level in a box (like scale), no banner for changes.
+    3. fix a speed display bug, allow removing "Downloading maps" banner
+       when no connectivity is available.
+    4. add input / output capability for various DMS formats.
+
+ -- John Costigan <gnuite@gmail.com>  Sat, 9 Jun 2007 13:03:00 -0400
+
 maemo-mapper (1.4.5) unstable; urgency=low
 
   * Added ability to edit latitude and longitude in POI Add/Edit dialog.
@@ -9,7 +21,7 @@ maemo-mapper (1.4.5) unstable; urgency=low
   * Added the "Go to | Address..." menu item.
   * Added Spanish translation.
 
- -- John Costigan <gnuite@gmail.com>  Sun, 20 Mar 2007 00:27:00 -0500
+ -- John Costigan <gnuite@gmail.com>  Sun, 20 Mar 2007 00:27:00 -0400
 
 maemo-mapper (1.4.4) unstable; urgency=low
 
