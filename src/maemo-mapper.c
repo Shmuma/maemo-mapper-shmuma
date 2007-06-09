@@ -29,6 +29,7 @@
 
 #include <config.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -158,6 +159,7 @@
 #define GCONF_KEY_ENABLE_VOICE GCONF_KEY_PREFIX"/enable_voice"
 #define GCONF_KEY_VOICE_SPEED GCONF_KEY_PREFIX"/voice_speed"
 #define GCONF_KEY_VOICE_PITCH GCONF_KEY_PREFIX"/voice_pitch"
+#define GCONF_KEY_FULLSCREEN GCONF_KEY_PREFIX"/fullscreen"
 #define GCONF_KEY_ALWAYS_KEEP_ON GCONF_KEY_PREFIX"/always_keep_on"
 #define GCONF_KEY_UNITS GCONF_KEY_PREFIX"/units"
 #define GCONF_KEY_SPEED_LIMIT_ON GCONF_KEY_PREFIX"/speed_limit_on"
@@ -177,6 +179,7 @@
 #define GCONF_KEY_ZOOM GCONF_KEY_PREFIX"/zoom"
 #define GCONF_KEY_ROUTEDIR GCONF_KEY_PREFIX"/route_directory"
 #define GCONF_KEY_TRACKFILE GCONF_KEY_PREFIX"/track_file"
+#define GCONF_KEY_SHOWZOOMLEVEL GCONF_KEY_PREFIX"/show_zoomlevel"
 #define GCONF_KEY_SHOWSCALE GCONF_KEY_PREFIX"/show_scale"
 #define GCONF_KEY_SHOWTRACKS GCONF_KEY_PREFIX"/show_tracks"
 #define GCONF_KEY_SHOWROUTES GCONF_KEY_PREFIX"/show_routes"
@@ -234,8 +237,8 @@
             center_unity = _pos.unity; \
             break; \
         default: \
-             center_unitx = _center.unitx; \
-             center_unity = _center.unity; \
+            center_unitx = _center.unitx; \
+            center_unity = _center.unity; \
             ; \
     } \
 };
@@ -345,6 +348,7 @@
     } \
 }
 
+#define LL_FMT_LEN 20
 #define lat_format(A, B) deg_format((A), (B), 'S', 'N')
 #define lon_format(A, B) deg_format((A), (B), 'W', 'E')
 
@@ -711,6 +715,9 @@ typedef enum
     DDPDDDDD_NSEW,
     DD_MMPMMM_NSEW,
     DD_MM_SSPS_NSEW,
+    NSEW_DDPDDDDD,
+    NSEW_DD_MMPMMM,
+    NSEW_DD_MM_SSPS,
     DEG_FORMAT_ENUM_COUNT
 } DegFormat;
 gchar *DEG_FORMAT_TEXT[DEG_FORMAT_ENUM_COUNT];
@@ -983,9 +990,13 @@ static gint _mark_height = -1;
 
 /** Pango stuff. */
 static GdkRectangle _scale_rect;
+static GdkRectangle _zoom_rect;
 static PangoContext *_scale_context = NULL;
+static PangoContext *_zoom_context = NULL;
 static PangoFontDescription *_scale_font = NULL;
+static PangoFontDescription *_zoom_font = NULL;
 static PangoLayout *_scale_layout = NULL;
+static PangoLayout *_zoom_layout = NULL;
 static GdkGC *_speed_limit_gc1 = NULL;
 static GdkGC *_speed_limit_gc2 = NULL;
 static PangoContext *_speed_limit_context = NULL;
@@ -1061,6 +1072,7 @@ static GtkWidget *_menu_auto_download_item = NULL;
 static GtkWidget *_menu_zoomin_item = NULL;
 static GtkWidget *_menu_zoomout_item = NULL;
 static GtkWidget *_menu_fullscreen_item = NULL;
+static GtkWidget *_menu_show_zoomlevel_item = NULL;
 static GtkWidget *_menu_show_scale_item = NULL;
 static GtkWidget *_menu_show_routes_item = NULL;
 static GtkWidget *_menu_show_tracks_item = NULL;
@@ -1098,7 +1110,6 @@ static guint _cmenu_position_y;
 
 /* Menu items for the "Location" context menu. */
 static GtkWidget *_cmenu_loc_show_latlon_item = NULL;
-static GtkWidget *_cmenu_loc_clip_latlon_item = NULL;
 static GtkWidget *_cmenu_loc_route_to_item = NULL;
 static GtkWidget *_cmenu_loc_distance_to_item = NULL;
 static GtkWidget *_cmenu_loc_add_route = NULL;
@@ -1151,6 +1162,7 @@ static gboolean _gps_info = FALSE;
 static gchar *_route_dl_url = NULL;
 static guint _route_dl_radius = 4;
 static gint _show_tracks = 0;
+static gboolean _show_zoomlevel = TRUE;
 static gboolean _show_scale = TRUE;
 static gboolean _show_velvec = TRUE;
 static gboolean _show_poi = TRUE;
@@ -1299,6 +1311,8 @@ menu_cb_zoomout(GtkAction *action);
 static gboolean
 menu_cb_fullscreen(GtkAction *action);
 static gboolean
+menu_cb_show_zoomlevel(GtkAction *action);
+static gboolean
 menu_cb_show_scale(GtkAction *action);
 static gboolean
 menu_cb_show_routes(GtkAction *action);
@@ -1354,8 +1368,6 @@ menu_cb_about(GtkAction *action);
 static gboolean
 cmenu_cb_loc_show_latlon(GtkAction *action);
 static gboolean
-cmenu_cb_loc_clip_latlon(GtkAction *action);
-static gboolean
 cmenu_cb_loc_route_to(GtkAction *action);
 static gboolean
 cmenu_cb_loc_distance_to(GtkAction *action);
@@ -1404,6 +1416,13 @@ curl_download_timeout();
 
 static gboolean
 auto_route_dl_idle();
+
+static gint
+strdmstod_1(gdouble *d,gchar *nptr, gchar **endptr, gchar *sep, gint utf8_deg);
+static gdouble
+strdmstod_2(gchar *nptr, gchar **endptr);
+static gdouble
+strdmstod(const gchar *nptr, gchar **endptr);
 
 /****************************************************************************
  * ABOVE: CALLBACK DECLARATIONS *********************************************
@@ -1643,17 +1662,21 @@ speed_limit(void)
         _speed_excess = FALSE;
     }
 
+    /* remove previous number */
+    if (width != 0 && height != 0) {
+      gtk_widget_queue_draw_area (_map_widget,
+                                 x - 5,
+                                 y - 5,
+                                 width + 10,
+                                 height + 10);
+      gdk_window_process_all_updates();
+    }
+
     buffer = g_strdup_printf("%0.0f", cur_speed);
     pango_layout_set_text(_speed_limit_layout, buffer, -1);
 
-    pango_layout_get_pixel_size(_speed_limit_layout, &width, &height);
 
-    gtk_widget_queue_draw_area (_map_widget,
-        x - 5,
-        y - 5,
-        width + 5,
-        height + 5);
-    gdk_window_process_all_updates();
+    pango_layout_get_pixel_size(_speed_limit_layout, &width, &height);
 
     switch (_speed_location)
     {
@@ -2121,6 +2144,11 @@ deg_format(gfloat coor, gchar *scoor, gchar neg_char, gchar pos_char)
             sprintf(scoor, "%.5f° %c", acoor,
                     coor < 0.f ? neg_char : pos_char);
             break;
+        case NSEW_DDPDDDDD:
+            sprintf(scoor, "%c %.5f°",
+                    coor < 0.f ? neg_char : pos_char,
+                    acoor);
+            break;
 
         case DD_MMPMMM:
             sprintf(scoor, "%d°%06.3f'",
@@ -2130,6 +2158,11 @@ deg_format(gfloat coor, gchar *scoor, gchar neg_char, gchar pos_char)
             sprintf(scoor, "%d°%06.3f' %c",
                     (int)acoor, (acoor - (int)acoor)*60.0,
                     coor < 0.f ? neg_char : pos_char);
+            break;
+        case NSEW_DD_MMPMMM:
+            sprintf(scoor, "%c %d° %06.3f'",
+                    coor < 0.f ? neg_char : pos_char,
+                    (int)acoor, (acoor - (int)acoor)*60.0);
             break;
 
         case DD_MM_SSPS:
@@ -2142,6 +2175,13 @@ deg_format(gfloat coor, gchar *scoor, gchar neg_char, gchar pos_char)
             sprintf(scoor, "%d°%02d'%04.1f\" %c", (int)acoor, (int)min,
                     ((min - (int)min)*60.0),
                     coor < 0.f ? neg_char : pos_char);
+            break;
+        case NSEW_DD_MM_SSPS:
+            min = (acoor - (int)acoor)*60.0;
+            sprintf(scoor, "%c %d° %02d' %04.1f\"",
+                    coor < 0.f ? neg_char : pos_char,
+                    (int)acoor, (int)min,
+                    ((min - (int)min)*60.0));
             break;
     }
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -2290,7 +2330,7 @@ gps_display_details(void)
 static void
 gps_display_data(void)
 {
-    gchar *buffer, litbuf[16];
+    gchar *buffer, litbuf[LL_FMT_LEN];
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(_gps.fix < 2)
@@ -3580,8 +3620,8 @@ map_render_paths()
  *
  * If a non-zero time is given, then the current position (as taken from the
  * _pos variable) is appended to _track with the given time.  If time is zero,
- * then _point_null is appended to _track with time zero (this produces a "break"
- * in the track).
+ * then _point_null is appended to _track with time zero (this produces a
+ * "break" in the track).
  */
 static void
 track_add(time_t time, gboolean newly_fixed)
@@ -3683,8 +3723,8 @@ track_clear()
                             _("Really clear the track?"));
 
     if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm))) {
-     _track.tail = _track.head;
-     map_force_redraw();
+        _track.tail = _track.head;
+        map_force_redraw();
     }
 
     gtk_widget_destroy(confirm);
@@ -4044,6 +4084,10 @@ config_save()
     gconf_client_set_bool(gconf_client,
             GCONF_KEY_ENABLE_VOICE, _enable_voice, NULL);
 
+    /* Save fullscreen flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_FULLSCREEN, _fullscreen, NULL);
+
     /* Save Keep On When Fullscreen flag. */
     gconf_client_set_bool(gconf_client,
             GCONF_KEY_ALWAYS_KEEP_ON, _always_keep_on, NULL);
@@ -4157,6 +4201,10 @@ config_save()
     /* Save Auto-Center Mode. */
     gconf_client_set_int(gconf_client,
             GCONF_KEY_AUTOCENTER_MODE, _center_mode, NULL);
+
+    /* Save Show Zoom Level flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_SHOWZOOMLEVEL, _show_zoomlevel, NULL);
 
     /* Save Show Scale flag. */
     gconf_client_set_bool(gconf_client,
@@ -4899,7 +4947,7 @@ settings_dialog()
                 GTK_DIALOG(dialog), HELP_ID_SETTINGS, _osso);
 
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
-                btn_buttons = gtk_button_new_with_label(_("Hardware Keys...")));
+               btn_buttons = gtk_button_new_with_label(_("Hardware Keys...")));
 
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
                 btn_colors = gtk_button_new_with_label(_("Colors...")));
@@ -4955,7 +5003,7 @@ settings_dialog()
                 1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_container_add(GTK_CONTAINER(label),
                 num_center_ratio = hildon_controlbar_new());
-        hildon_controlbar_set_range(HILDON_CONTROLBAR(num_center_ratio), 1, 10);
+        hildon_controlbar_set_range(HILDON_CONTROLBAR(num_center_ratio), 1,10);
         force_min_visible_bars(HILDON_CONTROLBAR(num_center_ratio), 1);
 
         /* Lead Amount. */
@@ -4984,7 +5032,8 @@ settings_dialog()
         gtk_table_attach(GTK_TABLE(table),
                 num_announce_notice = hildon_controlbar_new(),
                 1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-        hildon_controlbar_set_range(HILDON_CONTROLBAR(num_announce_notice), 1, 20);
+        hildon_controlbar_set_range(
+                HILDON_CONTROLBAR(num_announce_notice), 1, 20);
         force_min_visible_bars(HILDON_CONTROLBAR(num_announce_notice), 1);
 
         /* Enable Voice. */
@@ -5629,6 +5678,10 @@ config_init()
     else
         _voice_pitch = 3;
 
+    /* Get Fullscreen flag. Default is FALSE. */
+    _fullscreen = gconf_client_get_bool(gconf_client,
+            GCONF_KEY_FULLSCREEN, NULL);
+
     /* Get Always Keep On flag.  Default is FALSE. */
     _always_keep_on = gconf_client_get_bool(gconf_client,
             GCONF_KEY_ALWAYS_KEEP_ON, NULL);
@@ -5844,6 +5897,10 @@ config_init()
     else
         _center_mode = CENTER_LEAD;
 
+    /* Get Show Zoom Level flag.  Default is FALSE. */
+    _show_zoomlevel = gconf_client_get_bool(gconf_client,
+            GCONF_KEY_SHOWZOOMLEVEL, NULL);
+
     /* Get Show Scale flag.  Default is TRUE. */
     value = gconf_client_get(gconf_client, GCONF_KEY_SHOWSCALE, NULL);
     if(value)
@@ -5941,14 +5998,7 @@ config_init()
 
 
     /* Get GPS Info flag.  Default is FALSE. */
-    value = gconf_client_get(gconf_client, GCONF_KEY_GPS_INFO, NULL);
-    if(value)
-    {
-        _gps_info = gconf_value_get_bool(value);
-        gconf_value_free(value);
-    }
-    else
-        _gps_info = FALSE;
+    _gps_info = gconf_client_get_bool(gconf_client, GCONF_KEY_GPS_INFO, NULL);
 
     /* Get Route Download URL.  Default is:
      * "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s&daddr=%s" */
@@ -6140,6 +6190,11 @@ menu_init()
     gtk_check_menu_item_set_active(
             GTK_CHECK_MENU_ITEM(_menu_fullscreen_item), _fullscreen);
     gtk_menu_append(submenu, gtk_separator_menu_item_new());
+    gtk_menu_append(submenu, _menu_show_zoomlevel_item
+            = gtk_check_menu_item_new_with_label(_("Zoom Level")));
+    gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(_menu_show_zoomlevel_item),
+            _show_zoomlevel);
     gtk_menu_append(submenu, _menu_show_scale_item
             = gtk_check_menu_item_new_with_label(_("Scale")));
     gtk_check_menu_item_set_active(
@@ -6291,6 +6346,8 @@ menu_init()
                       G_CALLBACK(menu_cb_fullscreen), NULL);
     g_signal_connect(G_OBJECT(_menu_show_tracks_item), "toggled",
                       G_CALLBACK(menu_cb_show_tracks), NULL);
+    g_signal_connect(G_OBJECT(_menu_show_zoomlevel_item), "toggled",
+                      G_CALLBACK(menu_cb_show_zoomlevel), NULL);
     g_signal_connect(G_OBJECT(_menu_show_scale_item), "toggled",
                       G_CALLBACK(menu_cb_show_scale), NULL);
     g_signal_connect(G_OBJECT(_menu_show_routes_item), "toggled",
@@ -6356,8 +6413,6 @@ menu_init()
     /* Setup the map context menu. */
     gtk_menu_append(submenu, _cmenu_loc_show_latlon_item
             = gtk_menu_item_new_with_label(_("Show Lat/Lon")));
-    gtk_menu_append(submenu, _cmenu_loc_clip_latlon_item
-            = gtk_menu_item_new_with_label(_("Copy Lat/Lon")));
     gtk_menu_append(submenu, gtk_separator_menu_item_new());
     gtk_menu_append(submenu, _cmenu_loc_distance_to_item
             = gtk_menu_item_new_with_label(_("Show Distance to")));
@@ -6388,7 +6443,7 @@ menu_init()
     gtk_menu_append(submenu, _cmenu_way_clip_latlon_item
             = gtk_menu_item_new_with_label(_("Copy Lat/Lon")));
     gtk_menu_append(submenu, _cmenu_way_clip_desc_item
-           = gtk_menu_item_new_with_label(_("Copy Description")));
+            = gtk_menu_item_new_with_label(_("Copy Description")));
     gtk_menu_append(submenu, gtk_separator_menu_item_new());
     gtk_menu_append(submenu, _cmenu_way_distance_to_item
             = gtk_menu_item_new_with_label(_("Show Distance to")));
@@ -6430,8 +6485,6 @@ menu_init()
     /* Connect signals for context menu. */
     g_signal_connect(G_OBJECT(_cmenu_loc_show_latlon_item), "activate",
                       G_CALLBACK(cmenu_cb_loc_show_latlon), NULL);
-    g_signal_connect(G_OBJECT(_cmenu_loc_clip_latlon_item), "activate",
-                      G_CALLBACK(cmenu_cb_loc_clip_latlon), NULL);
     g_signal_connect(G_OBJECT(_cmenu_loc_route_to_item), "activate",
                       G_CALLBACK(cmenu_cb_loc_route_to), NULL);
     g_signal_connect(G_OBJECT(_cmenu_loc_distance_to_item), "activate",
@@ -6737,7 +6790,7 @@ map_convert_wms_to_wms(gint tilex, gint tiley, gint zoomlevel, gchar* uri)
             "(echo \"%.6f %.6f\"; echo \"%.6f %.6f\") | "
             "/usr/bin/cs2cs +proj=longlat +datum=WGS84 +to +init=%s -f %%.6f "
             " > /tmp/tmpcs2cs ",
-             lon1, lat1, lon2, lat2, srs);
+            lon1, lat1, lon2, lat2, srs);
     vprintf("Running command: %s\n", cmd);
     system_retcode = system(cmd);
 
@@ -6956,12 +7009,12 @@ map_render_poi()
             {
                 /* No icon for POI or for category or default POI icon file.
                    Draw default purple square. */
-                 error = NULL;
-                 gdk_draw_rectangle(_map_pixmap, _gc[COLORABLE_POI], TRUE,
-                     poix - (gint)(1.5f * _draw_width),
-                     poiy - (gint)(1.5f * _draw_width),
-                     3 * _draw_width,
-                     3 * _draw_width);
+                error = NULL;
+                gdk_draw_rectangle(_map_pixmap, _gc[COLORABLE_POI], TRUE,
+                        poix - (gint)(1.5f * _draw_width),
+                        poiy - (gint)(1.5f * _draw_width),
+                        3 * _draw_width,
+                        3 * _draw_width);
             }
             else
             {
@@ -7246,8 +7299,8 @@ curl_download_timeout()
                 /* This is the autoroute download. */
                 /* Now, parse the autoroute and update the display. */
                 if(_autoroute_data.enabled && parse_gpx(&_route,
-                       _autoroute_data.rdl_data.bytes,
-                       _autoroute_data.rdl_data.bytes_read, 0))
+                            _autoroute_data.rdl_data.bytes,
+                            _autoroute_data.rdl_data.bytes_read, 0))
                 {
                     /* Find the nearest route point, if we're connected. */
                     route_find_nearest_point();
@@ -8020,7 +8073,7 @@ maemo_mapper_init(gint argc, gchar **argv)
         = GCONF_KEY_PREFIX"/color_mark_velocity";
     COLORABLE_GCONF[COLORABLE_MARK_OLD] = GCONF_KEY_PREFIX"/color_mark_old";
     COLORABLE_GCONF[COLORABLE_TRACK] = GCONF_KEY_PREFIX"/color_track";
-    COLORABLE_GCONF[COLORABLE_TRACK_MARK] = GCONF_KEY_PREFIX"/color_track_mark";
+    COLORABLE_GCONF[COLORABLE_TRACK_MARK] =GCONF_KEY_PREFIX"/color_track_mark";
     COLORABLE_GCONF[COLORABLE_TRACK_BREAK]
         = GCONF_KEY_PREFIX"/color_track_break";
     COLORABLE_GCONF[COLORABLE_ROUTE] = GCONF_KEY_PREFIX"/color_route";
@@ -8035,6 +8088,9 @@ maemo_mapper_init(gint argc, gchar **argv)
     DEG_FORMAT_TEXT[DDPDDDDD_NSEW] = "dd.ddddd° S";
     DEG_FORMAT_TEXT[DD_MMPMMM_NSEW] = "dd°mm.mmm' S";
     DEG_FORMAT_TEXT[DD_MM_SSPS_NSEW] = "dd°mm'ss.s\" S";
+    DEG_FORMAT_TEXT[NSEW_DDPDDDDD] = "S dd.ddddd°";
+    DEG_FORMAT_TEXT[NSEW_DD_MMPMMM] = "S dd° mm.mmm'";
+    DEG_FORMAT_TEXT[NSEW_DD_MM_SSPS] = "S dd° mm' ss.s\"";
 
     SPEED_LOCATION_TEXT[SPEED_LOCATION_TOP_LEFT] = _("Top-Left");
     SPEED_LOCATION_TEXT[SPEED_LOCATION_TOP_RIGHT] = _("Top-Right");
@@ -8056,6 +8112,11 @@ maemo_mapper_init(gint argc, gchar **argv)
     /* Initialize _window. */
     _window = GTK_WIDGET(hildon_window_new());
     hildon_program_add_window(_program, HILDON_WINDOW(_window));
+
+    /* Lets go fullscreen if so requested in saved config */
+    if (_fullscreen) {
+      gtk_window_fullscreen(GTK_WINDOW(_window));
+    }
 
     /* Create and add widgets and supporting data. */
     hbox = gtk_hbox_new(FALSE, 0);
@@ -8172,6 +8233,14 @@ maemo_mapper_init(gint argc, gchar **argv)
     _scale_font = pango_font_description_new();
     pango_font_description_set_size(_scale_font, 12 * PANGO_SCALE);
     pango_layout_set_font_description(_scale_layout, _scale_font);
+
+    /* zoom box */
+    _zoom_context = gtk_widget_get_pango_context(_map_widget);
+    _zoom_layout = pango_layout_new(_zoom_context);
+    _zoom_font = pango_font_description_new();
+    pango_font_description_set_size(_zoom_font, 12 * PANGO_SCALE);
+    pango_layout_set_font_description(_zoom_layout, _zoom_font);
+    pango_layout_set_alignment(_zoom_layout, PANGO_ALIGN_CENTER);
 
     /* speed limit */
     _speed_limit_gc1 = gdk_gc_new (_map_widget->window);
@@ -8398,7 +8467,7 @@ select_poi(guint unitx, guint unity, PoiInfo *poi, gboolean quick)
     GtkListStore *store = NULL;
     GtkTreeIter iter;
     gboolean selected = FALSE;
-    gchar tmp1[16], tmp2[16];
+    gchar tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN];
     guint num_cats = 0;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -8498,10 +8567,10 @@ select_poi(guint unitx, guint unity, PoiInfo *poi, gboolean quick)
 
         sw = gtk_scrolled_window_new (NULL, NULL);
         gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sw),
-                       GTK_SHADOW_ETCHED_IN);
+                GTK_SHADOW_ETCHED_IN);
         gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw),
-                      GTK_POLICY_NEVER,
-                      GTK_POLICY_AUTOMATIC);
+                GTK_POLICY_NEVER,
+                GTK_POLICY_AUTOMATIC);
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                 sw, TRUE, TRUE, 0);
 
@@ -8740,11 +8809,11 @@ key_zoom_timeout()
     }
 
     /* We can zoom more - tell them how much they're zooming. */
-    {
-        gchar buffer[32];
-        snprintf(buffer, sizeof(buffer),
-                "%s %d", _("Zoom to Level"), _key_zoom_new);
-        MACRO_BANNER_SHOW_INFO(_window, buffer);
+    if (!_show_zoomlevel) {
+      gchar buffer[32];
+      snprintf(buffer, sizeof(buffer),
+              "%s %d", _("Zoom to Level"), _key_zoom_new);
+      MACRO_BANNER_SHOW_INFO(_window, buffer);
     }
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -8853,12 +8922,14 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                 /* Remember, _key_zoom_new is unsigned. */
                 if(_key_zoom_new < MAX_ZOOM)
                 {
-                    gchar buffer[80];
-                    snprintf(buffer, sizeof(buffer),"%s %d",
-                            _("Zoom to Level"), _key_zoom_new);
-                    MACRO_BANNER_SHOW_INFO(_window, buffer);
+                    if (!_show_zoomlevel) {
+                        gchar buffer[80];
+                        snprintf(buffer, sizeof(buffer),"%s %d",
+                                _("Zoom to Level"), _key_zoom_new);
+                        MACRO_BANNER_SHOW_INFO(_window, buffer);
+                    }
                     _key_zoom_timeout_sid = g_timeout_add(
-                        500, key_zoom_timeout, NULL);
+                            500, key_zoom_timeout, NULL);
                 }
             }
             break;
@@ -9026,6 +9097,16 @@ map_cb_configure(GtkWidget *widget, GdkEventConfigure *event)
     pango_layout_set_text(_scale_layout, "0", -1);
     pango_layout_get_pixel_size(_scale_layout, NULL, &_scale_rect.height);
     _scale_rect.y = _screen_height_pixels - _scale_rect.height - 1;
+
+    /* Set _zoom rect. */
+    pango_layout_set_text(_zoom_layout, "00", -1);
+    pango_layout_get_pixel_size(_zoom_layout, &_zoom_rect.width,
+            &_zoom_rect.height);
+    _zoom_rect.width *= 1.25;
+    pango_layout_set_width(_zoom_layout, _zoom_rect.width);
+    pango_layout_context_changed(_zoom_layout);
+    _zoom_rect.x = _scale_rect.x - _zoom_rect.width;
+    _zoom_rect.y = _screen_height_pixels - _zoom_rect.height - 1;
 
 
     MACRO_RECALC_FOCUS_BASE();
@@ -9236,6 +9317,26 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
             event->area.width, event->area.height);
     map_draw_mark();
 
+    /* draw zoom box if so wanted */
+    if (_show_zoomlevel) {
+      gchar *buffer = g_strdup_printf("%d", _zoom);
+      gdk_draw_rectangle(_map_widget->window,
+              _map_widget->style->bg_gc[GTK_WIDGET_STATE(_map_widget)],
+              TRUE,
+              _zoom_rect.x, _zoom_rect.y,
+              _zoom_rect.width, _zoom_rect.height);
+      gdk_draw_rectangle(_map_widget->window,
+              _map_widget->style->fg_gc[GTK_WIDGET_STATE(_map_widget)],
+              FALSE,
+              _zoom_rect.x, _zoom_rect.y,
+              _zoom_rect.width, _zoom_rect.height);
+      pango_layout_set_text(_zoom_layout, buffer, -1);
+      gdk_draw_layout(_map_widget->window,
+              _map_widget->style->fg_gc[GTK_WIDGET_STATE(_map_widget)],
+              _zoom_rect.x + _zoom_rect.width / 2,
+              _zoom_rect.y, _zoom_layout);
+    }
+
     /* Draw scale, if necessary. */
     if(_show_scale)
     {
@@ -9351,13 +9452,15 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
     else
 #endif
     {
+        gboolean selected_poi = FALSE;
         PoiInfo poi;
         guint unitx = x2unit((gint)(event->x + 0.5));
         guint unity = y2unit((gint)(event->y + 0.5));
 
-        if (_show_poi && (_poi_zoom > _zoom))
+        if(_show_poi && (_poi_zoom > _zoom))
         {
-            if(select_poi(unitx, unity, &poi, TRUE)) /* TRUE=quick */
+            selected_poi = select_poi(unitx, unity, &poi, TRUE); /*TRUE=quick*/
+            if(selected_poi)
             {
                 gchar *banner;
                 latlon2unit(poi.lat, poi.lon, unitx, unity);
@@ -9369,7 +9472,7 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
                 g_free(poi.clabel);
             }
         }
-        else
+        if(!selected_poi)
         {
             if(_center_mode > 0)
                 gtk_check_menu_item_set_active(
@@ -9969,9 +10072,9 @@ route_download(gchar *to)
                 hbox = gtk_hbox_new(FALSE, 6),
                 0, 2, 2, 3, GTK_FILL, 0, 2, 4);
         gtk_box_pack_start(GTK_BOX(hbox),
-                oti.rad_use_route = gtk_radio_button_new_with_label_from_widget(
-                    GTK_RADIO_BUTTON(oti.rad_use_gps), _("Use End of Route")),
-                TRUE, TRUE, 0);
+               oti.rad_use_route = gtk_radio_button_new_with_label_from_widget(
+                   GTK_RADIO_BUTTON(oti.rad_use_gps), _("Use End of Route")),
+               TRUE, TRUE, 0);
 
         /* Origin. */
         gtk_table_attach(GTK_TABLE(table),
@@ -10360,7 +10463,7 @@ static gboolean
 menu_cb_track_insert_mark(GtkAction *action)
 {
     gfloat lat, lon;
-    gchar tmp1[16], tmp2[16], *p_latlon;
+    gchar tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN], *p_latlon;
     static GtkWidget *dialog = NULL;
     static GtkWidget *table = NULL;
     static GtkWidget *label = NULL;
@@ -10541,13 +10644,26 @@ menu_cb_show_tracks(GtkAction *action)
 }
 
 static gboolean
+menu_cb_show_zoomlevel(GtkAction *action)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    _show_zoomlevel = gtk_check_menu_item_get_active(
+                GTK_CHECK_MENU_ITEM(_menu_show_zoomlevel_item));
+    map_cb_configure(0, 0); /* ugly but works in this case */
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
 menu_cb_show_scale(GtkAction *action)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     _show_scale = gtk_check_menu_item_get_active(
                 GTK_CHECK_MENU_ITEM(_menu_show_scale_item));
-    MACRO_QUEUE_DRAW_AREA();
+    map_cb_configure(0, 0); /* ugly but works in this case */
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -10688,9 +10804,10 @@ menu_cb_goto_latlon(GtkAction *action)
         gtk_table_attach(GTK_TABLE(table),
                 txt_lat = gtk_entry_new(),
                 1, 2, 0, 1, GTK_FILL, 0, 2, 4);
+        gtk_entry_set_width_chars(GTK_ENTRY(txt_lat), 16);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
         g_object_set(G_OBJECT(txt_lat), HILDON_INPUT_MODE_HINT,
-                HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
+                HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
 
         gtk_table_attach(GTK_TABLE(table),
                 label = gtk_label_new(_("Longitude")),
@@ -10700,9 +10817,10 @@ menu_cb_goto_latlon(GtkAction *action)
         gtk_table_attach(GTK_TABLE(table),
                 txt_lon = gtk_entry_new(),
                 1, 2, 1, 2, GTK_FILL, 0, 2, 4);
+        gtk_entry_set_width_chars(GTK_ENTRY(txt_lon), 16);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
         g_object_set(G_OBJECT(txt_lon), HILDON_INPUT_MODE_HINT,
-                HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
+                HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
     }
 
     /* Initialize with the current center position. */
@@ -10710,9 +10828,9 @@ menu_cb_goto_latlon(GtkAction *action)
         gchar buffer[32];
         gfloat lat, lon;
         unit2latlon(_center.unitx, _center.unity, lat, lon);
-        snprintf(buffer, sizeof(buffer), "%.06f", lat);
+        lat_format(lat, buffer);
         gtk_entry_set_text(GTK_ENTRY(txt_lat), buffer);
-        snprintf(buffer, sizeof(buffer), "%.06f", lon);
+        lon_format(lon, buffer);
         gtk_entry_set_text(GTK_ENTRY(txt_lon), buffer);
     }
 
@@ -10722,19 +10840,19 @@ menu_cb_goto_latlon(GtkAction *action)
     {
         const gchar *text;
         gchar *error_check;
-        gfloat lat, lon;
+        gdouble lat, lon;
         guint unitx, unity;
 
         text = gtk_entry_get_text(GTK_ENTRY(txt_lat));
-        lat = strtof(text, &error_check);
-        if(text == error_check || lat < -90.f || lat > 90.f) {
+        lat = strdmstod(text, &error_check);
+        if(text == error_check || lat < -90. || lat > 90.) {
             popup_error(dialog, _("Invalid Latitude"));
             continue;
         }
 
         text = gtk_entry_get_text(GTK_ENTRY(txt_lon));
-        lon = strtof(text, &error_check);
-        if(text == error_check || lon < -180.f || lon > 180.f) {
+        lon = strdmstod(text, &error_check);
+        if(text == error_check || lon < -180. || lon > 180.) {
             popup_error(dialog, _("Invalid Longitude"));
             continue;
         }
@@ -12055,17 +12173,19 @@ menu_cb_mapman(GtkAction *action)
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 mapman_info.txt_topleft_lat = gtk_entry_new(),
                 1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+        gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_topleft_lat), 16);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lat), 1.f);
         g_object_set(G_OBJECT(mapman_info.txt_topleft_lat),
                 HILDON_INPUT_MODE_HINT,
-                HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
+                HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 mapman_info.txt_topleft_lon = gtk_entry_new(),
                 2, 3, 3, 4, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+        gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_topleft_lon), 16);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lon), 1.f);
         g_object_set(G_OBJECT(mapman_info.txt_topleft_lon),
                 HILDON_INPUT_MODE_HINT,
-                HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
+                HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
 
         /* Bottom Right. */
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
@@ -12075,17 +12195,19 @@ menu_cb_mapman(GtkAction *action)
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 mapman_info.txt_botright_lat = gtk_entry_new(),
                 1, 2, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+        gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_botright_lat), 16);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lat), 1.f);
         g_object_set(G_OBJECT(mapman_info.txt_botright_lat),
                 HILDON_INPUT_MODE_HINT,
-                HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
+                HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 mapman_info.txt_botright_lon = gtk_entry_new(),
                 2, 3, 4, 5, GTK_EXPAND | GTK_FILL, 0, 4, 0);
+        gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_botright_lat), 16);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lon), 1.f);
         g_object_set(G_OBJECT(mapman_info.txt_botright_lon),
                 HILDON_INPUT_MODE_HINT,
-                HILDON_INPUT_MODE_HINT_NUMERICSPECIAL, NULL);
+                HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
 
         /* Default action is to download by area. */
         gtk_toggle_button_set_active(
@@ -12104,29 +12226,29 @@ menu_cb_mapman(GtkAction *action)
     /* Initialize fields.  Do no use g_ascii_formatd; these strings will be
      * output (and parsed) as locale-dependent. */
 
-    snprintf(buffer, sizeof(buffer), "%.06f", _gps.lat);
+    lat_format(_gps.lat, buffer);
     gtk_label_set_text(GTK_LABEL(lbl_gps_lat), buffer);
-    snprintf(buffer, sizeof(buffer), "%.06f", _gps.lon);
+    lon_format(_gps.lon, buffer);
     gtk_label_set_text(GTK_LABEL(lbl_gps_lon), buffer);
 
     unit2latlon(_center.unitx, _center.unity, lat, lon);
-    snprintf(buffer, sizeof(buffer), "%.06f", lat);
+    lat_format(lat, buffer);
     gtk_label_set_text(GTK_LABEL(lbl_center_lat), buffer);
-    snprintf(buffer, sizeof(buffer), "%.06f", lon);
+    lon_format(lon, buffer);
     gtk_label_set_text(GTK_LABEL(lbl_center_lon), buffer);
 
     /* Initialize to the bounds of the screen. */
     unit2latlon(x2unit(0), y2unit(0), lat, lon);
-    snprintf(buffer, sizeof(buffer), "%.06f", lat);
+    lat_format(lat, buffer);
     gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_topleft_lat), buffer);
-    snprintf(buffer, sizeof(buffer), "%.06f", lon);
+    lon_format(lon, buffer);
     gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_topleft_lon), buffer);
 
     unit2latlon(x2unit(_screen_width_pixels), y2unit(_screen_height_pixels),
             lat, lon);
-    snprintf(buffer, sizeof(buffer), "%.06f", lat);
+    lat_format(lat, buffer);
     gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_botright_lat), buffer);
-    snprintf(buffer, sizeof(buffer), "%.06f", lon);
+    lon_format(lon, buffer);
     gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_botright_lon), buffer);
 
     gtk_toggle_button_set_active(
@@ -12164,32 +12286,32 @@ menu_cb_mapman(GtkAction *action)
         {
             const gchar *text;
             gchar *error_check;
-            gfloat start_lat, start_lon, end_lat, end_lon;
+            gdouble start_lat, start_lon, end_lat, end_lon;
 
             text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lat));
-            start_lat = strtof(text, &error_check);
-            if(text == error_check || start_lat < -90.f || start_lat > 90.f) {
+            start_lat = strdmstod(text, &error_check);
+            if(text == error_check || start_lat < -90. || start_lat > 90.) {
                 popup_error(dialog, _("Invalid Top-Left Latitude"));
                 continue;
             }
 
             text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lon));
-            start_lon = strtof(text, &error_check);
-            if(text == error_check || start_lon < -180.f || start_lon>180.f) {
+            start_lon = strdmstod(text, &error_check);
+            if(text == error_check || start_lon < -180. || start_lon>180.) {
                 popup_error(dialog, _("Invalid Top-Left Longitude"));
                 continue;
             }
 
             text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_botright_lat));
-            end_lat = strtof(text, &error_check);
-            if(text == error_check || end_lat < -90.f || end_lat > 90.f) {
+            end_lat = strdmstod(text, &error_check);
+            if(text == error_check || end_lat < -90. || end_lat > 90.) {
                 popup_error(dialog, _("Invalid Bottom-Right Latitude"));
                 continue;
             }
 
             text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_botright_lon));
-            end_lon = strtof(text, &error_check);
-            if(text == error_check || end_lon < -180.f || end_lon > 180.f) {
+            end_lon = strdmstod(text, &error_check);
+            if(text == error_check || end_lon < -180. || end_lon > 180.) {
                 popup_error(dialog,_("Invalid Bottom-Right Longitude"));
                 continue;
             }
@@ -12311,6 +12433,24 @@ menu_cb_auto_download(GtkAction *action)
                 _("NOTE: You must set a Map URI in the current repository in "
                     "order to download maps."));
         map_force_redraw();
+    }
+
+    if (!_auto_download && _download_banner) {
+      gtk_widget_destroy(_download_banner);
+      _download_banner = 0;
+
+      _iap_connecting = FALSE;
+      _iap_connected = FALSE;
+      _num_downloads = _curr_download = 0;
+
+      /* clean up curl */
+      CURL *curr;
+      while((curr = g_queue_pop_tail(_curl_easy_queue)))
+          curl_easy_cleanup(curr);
+
+      curl_multi_cleanup(_curl_multi);
+      _curl_multi = NULL;
+      _curl_sid = 0;
     }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -13106,15 +13246,15 @@ poi_dialog(POIAction action, guint unitx, guint unity)
         gchar *error_check;
 
         text = gtk_entry_get_text(GTK_ENTRY(txt_lat));
-        poi.lat = strtof(text, &error_check);
-        if(text == error_check || poi.lat < -90.f || poi.lat > 90.f) {
+        poi.lat = strdmstod(text, &error_check);
+        if(text == error_check || poi.lat < -90. || poi.lat > 90.) {
             popup_error(dialog, _("Invalid Latitude"));
             continue;
         }
 
         text = gtk_entry_get_text(GTK_ENTRY(txt_lon));
-        poi.lon = strtof(text, &error_check);
-        if(text == error_check || poi.lon < -180.f || poi.lon > 180.f) {
+        poi.lon = strdmstod(text, &error_check);
+        if(text == error_check || poi.lon < -180. || poi.lon > 180.) {
             popup_error(dialog, _("Invalid Longitude"));
             continue;
         }
@@ -13146,17 +13286,17 @@ poi_dialog(POIAction action, guint unitx, guint unity)
         {
             /* edit poi */
             if(SQLITE_OK != sqlite3_bind_double(
-                       _stmt_update_poi, 1, poi.lat) ||
+                        _stmt_update_poi, 1, poi.lat) ||
                SQLITE_OK != sqlite3_bind_double(
-                       _stmt_update_poi, 2, poi.lon) ||
+                   _stmt_update_poi, 2, poi.lon) ||
                SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 3, poi_label,
                         -1, SQLITE_STATIC) ||
                SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 4, poi_desc,
-                       -1, g_free) ||
+                   -1, g_free) ||
                SQLITE_OK != sqlite3_bind_int(
-                       _stmt_update_poi, 5, poi.cat_id) ||
+                   _stmt_update_poi, 5, poi.cat_id) ||
                SQLITE_OK != sqlite3_bind_int(
-                       _stmt_update_poi, 6, poi.poi_id) ||
+                   _stmt_update_poi, 6, poi.poi_id) ||
                SQLITE_DONE != sqlite3_step(_stmt_update_poi))
             {
                 MACRO_BANNER_SHOW_INFO(_window, _("Problem updating POI"));
@@ -13203,26 +13343,162 @@ poi_dialog(POIAction action, guint unitx, guint unity)
     return TRUE;
 }
 
+typedef struct {
+    gdouble glat, glon;
+    GtkWidget *fmt_combo;
+    GtkWidget *lat;
+    GtkWidget *lon;
+} LatlonDialog;
+
+static void
+latlon_cb_copy_clicked(GtkWidget *widget, LatlonDialog *lld) {
+    gchar buffer[42];
+
+    snprintf(buffer, sizeof(buffer),
+            "%s %s",
+            gtk_label_get_text(GTK_LABEL(lld->lat)),
+            gtk_label_get_text(GTK_LABEL(lld->lon)));
+
+    gtk_clipboard_set_text(
+            gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), buffer, -1);
+}
+
+static void
+latlon_cb_fmt_changed(GtkWidget *widget, LatlonDialog *lld) {
+  DegFormat fmt;
+
+  fmt = gtk_combo_box_get_active(GTK_COMBO_BOX(lld->fmt_combo));
+
+  {
+    guint old = _degformat; /* augh... */
+    gchar buffer[LL_FMT_LEN];
+
+    _degformat = fmt;
+    lat_format(lld->glat, buffer);
+    gtk_label_set_label(GTK_LABEL(lld->lat), buffer);
+    lon_format(lld->glon, buffer);
+    gtk_label_set_label(GTK_LABEL(lld->lon), buffer);
+    _degformat = old;
+  }
+}
+
+static gboolean
+latlon_dialog(gdouble lat, gdouble lon)
+{
+    LatlonDialog lld;
+    GtkWidget *dialog;
+    GtkWidget *table;
+    GtkWidget *label;
+    GtkWidget *txt_lat;
+    GtkWidget *txt_lon;
+    GtkWidget *cmb_format;
+    GtkWidget *btn_copy = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    dialog = gtk_dialog_new_with_buttons(_("Show Position"),
+            GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            NULL);
+
+    /* Set the lat/lon strings. */
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+            table = gtk_table_new(5, 2, FALSE), TRUE, TRUE, 0);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Lat")),
+            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            txt_lat = gtk_label_new(""),
+            1, 2, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(txt_lat), 1.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Lon")),
+            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            txt_lon = gtk_label_new(""),
+            1, 2, 1, 2, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(txt_lon), 1.f, 0.5f);
+
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Format")),
+            0, 1, 2, 3, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+            1, 2, 2, 3, GTK_FILL, 0, 2, 4);
+    gtk_container_add(GTK_CONTAINER(label),
+            cmb_format = gtk_combo_box_new_text());
+    gtk_table_attach(GTK_TABLE(table),
+            btn_copy = gtk_button_new_with_label(_("Copy")),
+            0, 2, 3, 4, GTK_FILL, 0, 2, 4);
+
+    /* Lat/Lon */
+    {
+      gchar buffer[LL_FMT_LEN];
+
+      lat_format(lat, buffer);
+      gtk_label_set_label(GTK_LABEL(txt_lat), buffer);
+      lat_format(lon, buffer);
+      gtk_label_set_label(GTK_LABEL(txt_lon), buffer);
+    }
+
+    /* Fill in formats */
+    {
+      int i;
+
+      for(i = 0; i < DEG_FORMAT_ENUM_COUNT; i++) {
+          gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_format),
+                  DEG_FORMAT_TEXT[i]);
+      }
+      gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_format), _degformat);
+    }
+
+
+    /* setup cb context */
+    lld.fmt_combo = cmb_format;
+    lld.glat = lat;
+    lld.glon = lon;
+    lld.lat = txt_lat;
+    lld.lon = txt_lon;
+
+    /* Connect Signals */
+    g_signal_connect(G_OBJECT(cmb_format), "changed",
+                    G_CALLBACK(latlon_cb_fmt_changed), &lld);
+    g_signal_connect(G_OBJECT(btn_copy), "clicked",
+                    G_CALLBACK(latlon_cb_copy_clicked), &lld);
+
+    gtk_widget_show_all(dialog);
+
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_hide_all(dialog);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
 static void
 cmenu_show_latlon(guint unitx, guint unity)
 {
-    gfloat lat, lon;
-    gchar buffer[80], tmp1[16], tmp2[16];
-    printf("%s()\n", __PRETTY_FUNCTION__);
+  gfloat lat, lon;
+  gchar buffer[80], tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN];
+  printf("%s()\n", __PRETTY_FUNCTION__);
 
-    unit2latlon(unitx, unity, lat, lon);
-    lat_format(lat, tmp1);
-    lon_format(lon, tmp2);
+  unit2latlon(unitx, unity, lat, lon);
+  lat_format(lat, tmp1);
+  lon_format(lon, tmp2);
 
-    snprintf(buffer, sizeof(buffer),
+  snprintf(buffer, sizeof(buffer),
             "%s: %s\n"
-            "%s: %s",
-            _("Latitude"), tmp1,
-            _("Longitude"), tmp2);
+          "%s: %s",
+          _("Latitude"), tmp1,
+          _("Longitude"), tmp2);
 
-    MACRO_BANNER_SHOW_INFO(_window, buffer);
+  MACRO_BANNER_SHOW_INFO(_window, buffer);
 
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+  vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 static void
@@ -13296,7 +13572,7 @@ static void
 cmenu_route_add_way(guint unitx, guint unity)
 {
     gfloat lat, lon;
-    gchar tmp1[16], tmp2[16], *p_latlon;
+    gchar tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN], *p_latlon;
     static GtkWidget *dialog = NULL;
     static GtkWidget *table = NULL;
     static GtkWidget *label = NULL;
@@ -13430,24 +13706,14 @@ cmenu_route_add_way(guint unitx, guint unity)
 static gboolean
 cmenu_cb_loc_show_latlon(GtkAction *action)
 {
+    gdouble lat, lon;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    cmenu_show_latlon(
-            x2unit(_cmenu_position_x),
-            y2unit(_cmenu_position_y));
+    unit2latlon(x2unit(_cmenu_position_x),
+            y2unit(_cmenu_position_y),
+            lat, lon);
 
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-cmenu_cb_loc_clip_latlon(GtkAction *action)
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    cmenu_clip_latlon(
-            x2unit(_cmenu_position_x),
-            y2unit(_cmenu_position_y));
+    latlon_dialog(lat, lon);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -13844,3 +14110,245 @@ cmenu_cb_poi_edit_poi(GtkAction *action)
  * ABOVE: CALLBACKS *********************************************************
  ****************************************************************************/
 
+/* Utility function to parse DMS values */
+
+/*
+ * Get one numeric token off the string, fractional part separator
+ * is ',' or '.' and number may follow any token from sep.
+ * Return value found is in d.
+ *
+ * If utf8_deg is set then accept also Unicode degree symbol U+00B0
+ * encoded as UTF-8 octets 0xc2 0xb0.
+ *
+ * @returns
+ *    0 : on error.
+ *    1 : when nothing or just white space was seen.
+ *    2 : when fractional number was seen.
+ *    3 : when whole number was seen.
+ *  In case 0, endptr points to the beginning of the input string nptr,
+ *  d is undefined.
+ *
+ *  In case 1 endptr points past the whitespace, d is undefined.
+ *
+ *  In cases 2 and 3 the found number is stored in d and endptr points
+ *  to first char not part of the number.
+ *
+ */
+static gint
+strdmstod_1(gdouble *d, gchar *nptr, gchar **endptr, gchar *sep, gint utf8_deg)
+{
+    guchar *p;
+    gint v_flag, f_flag;
+    gdouble v;
+
+    p = nptr;
+
+    while (*p && isspace(*p)) {
+        p++;
+    }
+
+    v_flag = 0;
+    f_flag = 0;
+
+    /* whole part */
+    v = 0.0;
+    while (*p && isdigit(*p)) {
+        v *= 10;
+        v += *p++ - '0';
+        v_flag = 1;
+    }
+
+    if (v_flag) {
+        if (*p && (*p == '.' || *p == ',')) {
+            gdouble f;
+            gint n;
+
+            p++;
+
+            /* fractional part */
+            f = 0.0;
+            n = 1;
+            while (*p && isdigit(*p)) {
+                f *= 10.0;
+                f += *p++ - '0';
+                n *= 10;
+            }
+
+            if (n > 1) {
+                f_flag = 1;
+                v += f/n;
+            }
+        }
+
+        /* allow for extra sep char at the end */
+        if (*p && strchr(sep, *p)) {
+            p++;
+        } else if (utf8_deg && *p == 0xc2 && *(p+1) == 0xb0) {
+            p += 2;
+        }
+
+        *d = v;
+        if (endptr) *endptr = p;
+        return f_flag ? 2 : 3;
+    }
+
+    if (endptr) *endptr = p;
+    return *p == 0;
+}
+
+static gdouble
+strdmstod_2(gchar *nptr, gchar **endptr)
+{
+    gint ret;
+    guchar *p;
+    gdouble d, m, s;
+
+    p = nptr;
+
+    /* degrees */
+    ret = strdmstod_1(&d, p, endptr, "dD@", 1);
+    switch (ret) {
+        case 0: return 0.0;
+        case 1:
+                if (endptr) *endptr = (char *)nptr;
+                return 0.0;
+        case 2: return d;
+    }
+
+    /* minutes */
+    p = *endptr;
+    m = 0.0;
+    ret = strdmstod_1(&m, p, endptr, "mM'", 0);
+    switch (ret) {
+        case 0: return 0.0;
+        case 1: return d;
+        case 2: return d + m/60.0;
+    }
+
+    /* seconds */
+    p = *endptr;
+    ret = strdmstod_1(&s, p, endptr, "sS\"", 0);
+    switch (ret) {
+        case 0: return 0.0;
+        case 1: return d + m/60.0;
+        case 2:
+        case 3: return d + m/60.0 + s/3600.0;
+    }
+
+    /* can't be here */
+    return 0.0;
+}
+
+/*
+ * format: / \s* [+-NSWE]? \s* ( d | D \s+ m | D \s+ M \s+ s ) [NSWE]? /x
+ * where D := / \d+[@d°]? /ix
+ *       M := / \d+['m]? /ix
+ *       d := / D | \d+[,.]\d+[@d°]? /ix
+ *       m := / M | \d+[,.]\d+['m]? /ix
+ *       s := / S | \d+[,.]\d+["s]? /ix
+ *
+ *   and N or W are treated as positive, S or E are treated as negative,
+ *   they may occur only once.
+ */
+static gdouble
+strdmstod(const gchar *nptr, gchar **endptr)
+{
+    gint s;
+    gchar *p, *end;
+    gchar *sign = 0;
+    gdouble d;
+
+    p = (char *)nptr;
+
+    while (*p && isspace(*p))
+        p++;
+
+    if (!*p) {
+        if (endptr) *endptr = (char *)nptr;
+        return 0.0;
+    }
+
+    if (strchr("NWSE-+", *p)) {
+        sign = p;
+        p++;
+    }
+
+    d = strdmstod_2(p, &end);
+    if (p == end && d == 0.0) {
+        if (endptr) *endptr = end;
+        return d;
+    }
+
+    p = end;
+    while (*p && isspace(*p))
+        p++;
+
+    s = 1;
+    if (sign == 0) {
+        if (*p && strchr("NWSE", *p)) {
+            if (*p == 'S' || *p == 'E') s = -1;
+            p++;
+        }
+    } else {
+        if (*sign == 'S' || *sign == 'E' || *sign == '-') s = -1;
+    }
+
+    if (endptr) *endptr = p;
+    return s * d;
+}
+
+#if 0
+struct t_case {
+    gchar *fmt;
+    gdouble value;
+} t_cases[] = {
+    { "12°", 12 },
+    { "+12d", 12 },
+    { "-12.345d", -12.345 },
+    { "12.345 E", -12.345 },
+    { "12d34m", 12.5666667 },
+    { "N 12 34", 12.5666667 },
+    { "S 12d34.56m", -12.576 },
+    { "W 12 34.56", 12.576 },
+    { "E 12d34m56s", -12.582222 },
+    { "12 34 56 S", -12.582222 },
+    { "12 34 56", 12.582222 },
+    { "12d34m56.7s E", -12.582417 },
+    { "12 34 56.7 W", 12.582417 },
+    { "12° 34 56.7 W", 12.582417 },
+
+    { 0, 0 }
+};
+
+int
+strdmstod_test()
+{
+    struct t_case *t;
+    gint fail, ok;
+
+    fail = ok = 0;
+
+    for (t = t_cases; t->fmt; t++) {
+        gdouble v;
+        gchar *endp;
+
+        v = strdmstod(t->fmt, &endp);
+        if (endp == t->fmt || *endp != 0) {
+            fprintf(stderr, "FAIL syntax %s\n", t->fmt);
+            fail++;
+        } else if (fabs(v - t->value) > 0.000001) {
+            fprintf(stderr, "FAIL value %s -> %.10g (%.10g)\n",
+                    t->fmt, v, t->value);
+            fail++;
+        } else {
+            ok++;
+        }
+    }
+
+    if (fail == 0) {
+        fprintf(stderr, "ALL TESTS OK\n");
+    } else {
+        fprintf(stderr, "FAIL %d, OK %d\n", fail, ok);
+    }
+}
+#endif
