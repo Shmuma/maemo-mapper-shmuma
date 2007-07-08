@@ -3672,7 +3672,7 @@ track_add(time_t time, gboolean newly_fixed)
             *_track.tail = _point_null;
 
         if(_autoroute_data.enabled && !_autoroute_data.in_progress
-                && _near_point_dist_squared > 400)
+                && _near_point_dist_squared > (200 * 200))
         {
             MACRO_BANNER_SHOW_INFO(_window,
                     _("Recalculating directions..."));
@@ -9979,6 +9979,7 @@ struct _OriginToggleInfo {
     GtkWidget *rad_use_gps;
     GtkWidget *rad_use_route;
     GtkWidget *rad_use_text;
+    GtkWidget *chk_avoid_highways;
     GtkWidget *chk_auto;
     GtkWidget *txt_from;
     GtkWidget *txt_to;
@@ -10016,7 +10017,6 @@ route_download(gchar *to)
     static GtkWidget *table = NULL;
     static GtkWidget *label = NULL;
     static GtkWidget *txt_source_url = NULL;
-    static GtkWidget *hbox = NULL;
     static OriginToggleInfo oti;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -10051,30 +10051,31 @@ route_download(gchar *to)
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
                 txt_source_url = gtk_entry_new(),
-                1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+                1, 3, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(txt_source_url), 25);
 
         /* Auto. */
         gtk_table_attach(GTK_TABLE(table),
-                hbox = gtk_hbox_new(FALSE, 6),
-                0, 2, 1, 2, GTK_FILL, 0, 2, 4);
-        gtk_box_pack_start(GTK_BOX(hbox),
                 oti.rad_use_gps = gtk_radio_button_new_with_label(NULL,
                     _("Use GPS Location")),
-                TRUE, TRUE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox),
+                0, 2, 1, 2, GTK_FILL, 0, 2, 4);
+        gtk_table_attach(GTK_TABLE(table),
                 oti.chk_auto = gtk_check_button_new_with_label(
                     _("Auto-Update")),
-                TRUE, TRUE, 0);
+                2, 3, 1, 2, GTK_FILL, 0, 2, 4);
 
         /* Use End of Route. */
         gtk_table_attach(GTK_TABLE(table),
-                hbox = gtk_hbox_new(FALSE, 6),
-                0, 2, 2, 3, GTK_FILL, 0, 2, 4);
-        gtk_box_pack_start(GTK_BOX(hbox),
                oti.rad_use_route = gtk_radio_button_new_with_label_from_widget(
                    GTK_RADIO_BUTTON(oti.rad_use_gps), _("Use End of Route")),
-               TRUE, TRUE, 0);
+               0, 2, 2, 3, GTK_FILL, 0, 2, 4);
+
+        /* Avoid Highways. */
+        gtk_table_attach(GTK_TABLE(table),
+                oti.chk_avoid_highways = gtk_check_button_new_with_label(
+                    _("Avoid Highways")),
+                2, 3, 2, 3, GTK_FILL, 0, 2, 4);
+
 
         /* Origin. */
         gtk_table_attach(GTK_TABLE(table),
@@ -10083,7 +10084,7 @@ route_download(gchar *to)
                 0, 1, 3, 4, GTK_FILL, 0, 2, 4);
         gtk_table_attach(GTK_TABLE(table),
                 oti.txt_from = gtk_entry_new(),
-                1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+                1, 3, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_from), 25);
         g_object_set(G_OBJECT(oti.txt_from), HILDON_AUTOCAP, FALSE, NULL);
 
@@ -10094,9 +10095,10 @@ route_download(gchar *to)
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
                 oti.txt_to = gtk_entry_new(),
-                1, 2, 4, 5, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+                1, 3, 4, 5, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_to), 25);
         g_object_set(G_OBJECT(oti.txt_to), HILDON_AUTOCAP, FALSE, NULL);
+
 
         /* Set up auto-completion. */
         from_comp = gtk_entry_completion_new();
@@ -10116,12 +10118,11 @@ route_download(gchar *to)
                           G_CALLBACK(origin_type_selected), &oti);
         g_signal_connect(G_OBJECT(oti.rad_use_text), "toggled",
                           G_CALLBACK(origin_type_selected), &oti);
+
+        //gtk_widget_set_sensitive(oti.chk_auto, FALSE);
     }
 
     /* Initialize fields. */
-
-    gtk_widget_set_sensitive(oti.chk_auto, FALSE);
-    gtk_widget_set_sensitive(oti.rad_use_route, _route.head != _route.tail);
 
     gtk_entry_set_text(GTK_ENTRY(txt_source_url), _route_dl_url);
     if(to)
@@ -10130,23 +10131,30 @@ route_download(gchar *to)
     /* Use "End of Route" by default if they have a route. */
     if(_route.head != _route.tail)
     {
+        /* There is no route, so make it the default. */
+        gtk_widget_set_sensitive(oti.rad_use_route, TRUE);
         gtk_toggle_button_set_active(
                 GTK_TOGGLE_BUTTON(oti.rad_use_route), TRUE);
         gtk_widget_grab_focus(oti.rad_use_route);
     }
     /* Else use "GPS Location" if they have GPS enabled. */
-    else if(_enable_gps)
-    {
-        gtk_toggle_button_set_active(
-                GTK_TOGGLE_BUTTON(oti.rad_use_gps), TRUE);
-        gtk_widget_grab_focus(oti.rad_use_gps);
-    }
-    /* Else use text. */
     else
     {
-        gtk_toggle_button_set_active(
-                GTK_TOGGLE_BUTTON(oti.rad_use_text), TRUE);
-        gtk_widget_grab_focus(oti.txt_from);
+        /* There is no route, so desensitize "Use End of Route." */
+        gtk_widget_set_sensitive(oti.rad_use_route, FALSE);
+        if(_enable_gps)
+        {
+            gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(oti.rad_use_gps), TRUE);
+            gtk_widget_grab_focus(oti.rad_use_gps);
+        }
+        /* Else use text. */
+        else
+        {
+            gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(oti.rad_use_text), TRUE);
+            gtk_widget_grab_focus(oti.txt_from);
+        }
     }
 
     gtk_widget_show_all(dialog);
@@ -10222,6 +10230,14 @@ route_download(gchar *to)
         buffer = g_strdup_printf(source_url, from_escaped, to_escaped);
         g_free(from_escaped);
         g_free(to_escaped);
+
+        if(gtk_toggle_button_get_active(
+                    GTK_TOGGLE_BUTTON(oti.chk_avoid_highways)))
+        {
+            gchar *old = buffer;
+            buffer = g_strconcat(old, "&avoid_highways=on", NULL);
+            g_free(old);
+        }
 
         /* Attempt to download the route from the server. */
         MACRO_CURL_EASY_INIT(curl_easy);
