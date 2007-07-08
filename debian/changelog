@@ -1,3 +1,12 @@
+maemo-mapper (1.4.7) unstable; urgency=low
+
+  * Added "Avoid Highways" option to the "Download Route" dialog.
+  * Updated Spanish translations.
+  * Fixed bug with sensitivity of the "Auto-Update" checkbox.
+  * Fixed bug that caused Auto-Update to be constantly invoked.
+
+ -- John Costigan <gnuite@gmail.com>  Say, 7 Jul 2007 21:52:00 -0400
+
 maemo-mapper (1.4.6) unstable; urgency=low
 
   * Fix repository duplication bug in the "Manage Repositories" dialog box.
