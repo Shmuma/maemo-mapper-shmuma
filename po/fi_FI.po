@@ -11,81 +11,80 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-07-07 20:45-0400\n"
-"PO-Revision-Date: 2007-03-18 18:12+0200\n"
+"POT-Creation-Date: 2007-11-01 15:35-0400\n"
+"PO-Revision-Date: 2007-10-12 21:42+0200\n"
 "Last-Translator: Marko Vertainen <marko.vertainen@iki.fi>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/maemo-mapper.c:12960
+#: ../src/poi.c:922
 msgid "# POIs"
 msgstr "# POI:t"
 
-#: ../src/maemo-mapper.c:6293
+#: ../src/menu.c:1597
 msgid "About..."
 msgstr "Tietoja..."
 
-#: ../src/maemo-mapper.c:12916
-msgid "Add"
-msgstr "Lisää"
-
-#: ../src/maemo-mapper.c:12650
+#: ../src/poi.c:604
 msgid "Add Category"
 msgstr "Lisää kategoria"
 
-#: ../src/maemo-mapper.c:13149
+#: ../src/poi.c:1123
 msgid "Add POI"
 msgstr "Lisää POI"
 
-#: ../src/maemo-mapper.c:6427 ../src/maemo-mapper.c:6456
+#: ../src/cmenu.c:610 ../src/cmenu.c:639
 msgid "Add POI..."
 msgstr "Lisää POI..."
 
-#: ../src/maemo-mapper.c:6423 ../src/maemo-mapper.c:6478
+#: ../src/cmenu.c:606 ../src/cmenu.c:661
 msgid "Add Route Point"
 msgstr "Lisää reittipiste"
 
-#: ../src/maemo-mapper.c:13601
+#: ../src/path.c:1334
 msgid "Add Waypoint"
 msgstr "Lisää kohdepiste"
 
-#: ../src/maemo-mapper.c:6425 ../src/maemo-mapper.c:6480
+#: ../src/cmenu.c:608 ../src/cmenu.c:663
 msgid "Add Waypoint..."
 msgstr "Lisää kohdepiste..."
 
-#: ../src/maemo-mapper.c:10910
+#: ../src/poi.c:878
 #, fuzzy
-msgid "Address"
-msgstr "Lisää"
-
-#: ../src/maemo-mapper.c:10987
-msgid "Address Located"
-msgstr ""
-
-#: ../src/maemo-mapper.c:6256
-#, fuzzy
-msgid "Address..."
+msgid "Add..."
 msgstr "Lisää POI..."
 
-#: ../src/maemo-mapper.c:5029
+#: ../src/menu.c:837
+msgid "Address"
+msgstr "Osoite"
+
+#: ../src/menu.c:862
+msgid "Address Located"
+msgstr "Osoite löydetty"
+
+#: ../src/menu.c:1489
+msgid "Address..."
+msgstr "Osoitteeseen..."
+
+#: ../src/settings.c:1126
 msgid "Advance Notice"
 msgstr "Ennakkovaroitus"
 
-#: ../src/maemo-mapper.c:12100
+#: ../src/maps.c:2101
 msgid "Along Route - Radius (tiles):"
 msgstr "Reitin varrelta - Säde:"
 
-#: ../src/maemo-mapper.c:2813
+#: ../src/display.c:805
 msgid "Altitude"
 msgstr "Korkeus"
 
-#: ../src/maemo-mapper.c:4501
+#: ../src/settings.c:548
 msgid "An error occurred while attempting to scan for bluetooth devices."
 msgstr "Tapahtui virhe bluetooth laitteita haettaessa."
 
-#: ../src/maemo-mapper.c:11489
+#: ../src/maps.c:1517
 msgid ""
 "An error occurred while retrieving the repositories.  The web service may be "
 "temporarily down."
@@ -93,7 +92,7 @@ msgstr ""
 "Tapahtui virhe varastoja haettaessa. Palvelu saattaa olla väliaikaisesti "
 "pois käytöstä."
 
-#: ../src/maemo-mapper.c:8829
+#: ../src/gps.c:955
 msgid ""
 "An error occurred while trying to reset the bluetooth radio.\n"
 "\n"
@@ -105,147 +104,205 @@ msgstr ""
 "Muistitko muokata\n"
 "/etc/sudoers tiedostoa?"
 
-#: ../src/maemo-mapper.c:5025
+#: ../src/settings.c:1122
 msgid "Announce"
 msgstr "Ilmoitus"
 
-#: ../src/maemo-mapper.c:12137
+#: ../src/maps.c:2138
 msgid "Area"
 msgstr "Alue"
 
-#: ../src/maemo-mapper.c:4994 ../src/maemo-mapper.c:6227
+#: ../src/menu.c:1540 ../src/settings.c:1061
 msgid "Auto-Center"
 msgstr "Autom. keskitys"
 
-#: ../src/maemo-mapper.c:10774
+#: ../src/menu.c:1114
 msgid "Auto-Center Mode: Lat/Lon"
 msgstr "Automaattinen keskitys: Lat/Lon"
 
-#: ../src/maemo-mapper.c:10759
+#: ../src/menu.c:1097
 msgid "Auto-Center Mode: Lead"
 msgstr "Automaattinen keskitys: Etumatka"
 
-#: ../src/maemo-mapper.c:10788
+#: ../src/menu.c:1130
 msgid "Auto-Center Off"
 msgstr "Automaattinen keskitys pois päältä"
 
-#: ../src/maemo-mapper.c:6172
+#: ../src/menu.c:1419
 msgid "Auto-Download"
 msgstr "Autom. noutaminen"
 
-#: ../src/maemo-mapper.c:10064
+#: ../src/settings.c:1221
+#, fuzzy
+msgid "Auto-Download Pre-cache"
+msgstr "Autom. noutaminen"
+
+#: ../src/menu.c:1454
+#, fuzzy
+msgid "Auto-Rotate"
+msgstr "Autom. päivitys"
+
+#: ../src/menu.c:624
+msgid "Auto-Rotate Disabled"
+msgstr ""
+
+#: ../src/menu.c:619
+msgid "Auto-Rotate Enabled"
+msgstr ""
+
+#: ../src/path.c:1113
 msgid "Auto-Update"
 msgstr "Autom. päivitys"
 
-#: ../src/maemo-mapper.c:10076
+#: ../src/path.c:1119
 msgid "Avoid Highways"
-msgstr ""
+msgstr "Vältä valtateitä"
 
-#: ../src/maemo-mapper.c:8098
+#: ../src/poi.c:1749
+#, fuzzy
+msgid "Bear."
+msgstr "Tyhjennä"
+
+#: ../src/main.c:310
+#, fuzzy
+msgid "Bluetooth"
+msgstr "Nollaa bluetooth"
+
+#: ../src/main.c:307
 msgid "Bottom-Left"
 msgstr "Ala-vasen"
 
-#: ../src/maemo-mapper.c:8097 ../src/maemo-mapper.c:12208
+#: ../src/main.c:306 ../src/maps.c:2209
 msgid "Bottom-Right"
 msgstr "Ala-oikea"
 
-#: ../src/maemo-mapper.c:3767
+#: ../src/path.c:967
 msgid "Break already inserted."
 msgstr "Katkaisupiste on jo asetettu."
 
-#: ../src/maemo-mapper.c:5191 ../src/maemo-mapper.c:11297
+#: ../src/poi.c:2509
+#, fuzzy
+msgid "Browse POIs"
+msgstr "POI:t päällä/pois"
+
+#: ../src/maps.c:1323 ../src/menu.c:1403 ../src/settings.c:1054
+#: ../src/settings.c:1278
 msgid "Browse..."
 msgstr "Selaa"
 
-#: ../src/maemo-mapper.c:2996
+#: ../src/poi.c:153
 msgid "Bus stops, airports, train stations, etc."
 msgstr "Bussi- ja rautatieasemat, lentokentät ym."
 
-#: ../src/maemo-mapper.c:3001
+#: ../src/poi.c:158
 msgid "Business"
 msgstr "Liike-elämä"
 
-#: ../src/maemo-mapper.c:12091
+#: ../src/maps.c:2092
 msgid "By Area (see tab)"
 msgstr "Alueelta (katso välilehti)"
 
-#: ../src/maemo-mapper.c:11287
-msgid "Cache Dir."
+#: ../src/maps.c:1313
+#, fuzzy
+msgid "Cache DB"
 msgstr "Tallennuskansio"
 
-#: ../src/maemo-mapper.c:11227
+#: ../src/maps.c:1253
 msgid ""
 "Cannot delete the last repository - there must be at lease one repository."
 msgstr ""
 "Ei voida poistaa viimeistä varastoa - vähintään yksi varasto pitää olla "
 "määriteltynä."
 
-#: ../src/maemo-mapper.c:12416
+#: ../src/menu.c:1177
+#, fuzzy
 msgid ""
-"Cannot enable GPS until a GPS Receiver MAC is set in the Settings dialog box."
+"Cannot enable GPS until a GPS receiver is set up in the Settings dialog box."
 msgstr ""
 "GPS:ää ei voida ottaa käyttöön ennenkuin GPS:n MAC-osoite on määritelty "
 "asetusten valintaikkunassa."
 
-#: ../src/maemo-mapper.c:8597 ../src/maemo-mapper.c:13185
+#: ../src/menu.c:1405
+#, fuzzy
+msgid "Categories..."
+msgstr "POI-kategoriat..."
+
+#: ../src/poi.c:458 ../src/poi.c:1159 ../src/poi.c:1512 ../src/poi.c:1732
+#: ../src/poi.c:2089 ../src/poi.c:2243 ../src/poi.c:2540
 msgid "Category"
 msgstr "Kategoria"
 
-#: ../src/maemo-mapper.c:6139 ../src/maemo-mapper.c:6159
-#: ../src/maemo-mapper.c:12044
+#: ../src/poi.c:1928 ../src/poi.c:2003
+msgid "Checked POI Actions..."
+msgstr ""
+
+#: ../src/maps.c:2045 ../src/menu.c:1371 ../src/menu.c:1391
 msgid "Clear"
 msgstr "Tyhjennä"
 
-#: ../src/maemo-mapper.c:8060
-#, fuzzy
+#: ../src/main.c:269
 msgid "Clear Track"
-msgstr "Reittijäljet päällä/pois"
+msgstr "Tyhjennä reittijälki"
 
-#: ../src/maemo-mapper.c:6295
+#: ../src/menu.c:1448
+#, fuzzy
+msgid "Clockwise"
+msgstr "Sulje"
+
+#: ../src/menu.c:1599
 msgid "Close"
 msgstr "Sulje"
 
-#: ../src/maemo-mapper.c:4729
+#: ../src/settings.c:760
 msgid "Colors"
 msgstr "Värit"
 
-#: ../src/maemo-mapper.c:4953
+#: ../src/settings.c:993
 msgid "Colors..."
 msgstr "Värit..."
 
-#: ../src/maemo-mapper.c:11803 ../src/maemo-mapper.c:11890
+#: ../src/menu.c:1515
+msgid "Compass Rose"
+msgstr ""
+
+#: ../src/maps.c:1784 ../src/maps.c:1880
 msgid "Confirm DELETION of"
 msgstr "Vahvista"
 
-#: ../src/maemo-mapper.c:11234
+#: ../src/maps.c:1260
 msgid "Confirm delete of repository"
 msgstr "Vahvista varaston poisto"
 
-#: ../src/maemo-mapper.c:13966
+#: ../src/cmenu.c:385
 msgid "Confirm delete of waypoint"
 msgstr "Vahvista kohdepisteen poisto"
 
-#: ../src/maemo-mapper.c:11809 ../src/maemo-mapper.c:11896
+#: ../src/maps.c:1790 ../src/maps.c:1886
 msgid "Confirm download of"
 msgstr "Vahvista"
 
-#: ../src/maemo-mapper.c:4663
+#: ../src/settings.c:699
 msgid "Continue?"
 msgstr "Jatka?"
 
-#: ../src/maemo-mapper.c:13451
+#: ../src/display.c:2453
 msgid "Copy"
-msgstr ""
+msgstr "Kopioi"
 
-#: ../src/maemo-mapper.c:6446
+#: ../src/cmenu.c:629
 msgid "Copy Description"
 msgstr "Kopioi kuvaus"
 
-#: ../src/maemo-mapper.c:6444
+#: ../src/cmenu.c:627
 msgid "Copy Lat/Lon"
 msgstr "Kopioi Lat/Lon"
 
-#: ../src/maemo-mapper.c:13684
+#: ../src/menu.c:1450
+#, fuzzy
+msgid "Counter"
+msgstr "Reittisuunnitelma"
+
+#: ../src/path.c:1417
 msgid ""
 "Creating a \"waypoint\" with no description actually adds a break point.  Is "
 "that what you want?"
@@ -253,336 +310,449 @@ msgstr ""
 "Luotaessa \"kohdepiste\"  ilman kuvausta, lisää itseasiassa katkaisupisteen. "
 "Tarkoititko sitä?"
 
-#: ../src/maemo-mapper.c:2286
+#: ../src/display.c:278
 msgid "DGPS"
 msgstr "DGPS"
 
-#: ../src/maemo-mapper.c:5129
+#: ../src/poi.c:2079
+#, fuzzy
+msgid "Default Category"
+msgstr "Poista kategoria?"
+
+#: ../src/settings.c:1208
 msgid "Degrees Format"
 msgstr "Asteiden muoto"
 
-#: ../src/maemo-mapper.c:12631 ../src/maemo-mapper.c:13124
-msgid "Delete"
-msgstr "Poista"
-
-#: ../src/maemo-mapper.c:12081
+#: ../src/maps.c:2082
 msgid "Delete Maps"
 msgstr "Poista kartat"
 
-#: ../src/maemo-mapper.c:13008
+#: ../src/poi.c:958
 msgid "Delete POI?"
 msgstr "Poista POI?"
 
-#: ../src/maemo-mapper.c:12552
+#: ../src/poi.c:506
 msgid "Delete category?"
 msgstr "Poista kategoria?"
 
-#: ../src/maemo-mapper.c:6453 ../src/maemo-mapper.c:11586
+#: ../src/poi.c:1843
+#, fuzzy
+msgid "Delete selected POI?"
+msgstr "Poista POI?"
+
+#: ../src/cmenu.c:636 ../src/maps.c:1614 ../src/poi.c:585 ../src/poi.c:1096
+#: ../src/poi.c:1943
 msgid "Delete..."
 msgstr "Poista..."
 
-#: ../src/maemo-mapper.c:4489 ../src/maemo-mapper.c:10513
-#: ../src/maemo-mapper.c:12669 ../src/maemo-mapper.c:12955
-#: ../src/maemo-mapper.c:13212 ../src/maemo-mapper.c:13626
+#: ../src/menu.c:310 ../src/path.c:1359 ../src/poi.c:623 ../src/poi.c:917
+#: ../src/poi.c:1174 ../src/settings.c:536
 msgid "Description"
 msgstr "Kuvaus"
 
-#: ../src/maemo-mapper.c:10093
+#: ../src/path.c:1136
 msgid "Destination"
 msgstr "Kohdepiste"
 
-#: ../src/maemo-mapper.c:6278
+#: ../src/menu.c:1582
 msgid "Details..."
 msgstr "Yksityiskohdat..."
 
-#: ../src/maemo-mapper.c:2989
-msgid "Dining"
-msgstr "Ruokailu"
+#: ../src/gps.c:779
+#, fuzzy
+msgid "Disconnecting from GPS receiver"
+msgstr "Etsitään GPS-vastaanotinta"
 
-#: ../src/maemo-mapper.c:3365 ../src/maemo-mapper.c:3425
-#: ../src/maemo-mapper.c:13566
+#: ../src/poi.c:1740
+#, fuzzy
+msgid "Dist."
+msgstr "Etäisyys"
+
+#: ../src/cmenu.c:136 ../src/path.c:517 ../src/path.c:577
 msgid "Distance"
 msgstr "Etäisyys"
 
-#: ../src/maemo-mapper.c:11354
+#: ../src/maps.c:1382
 msgid "Double Pixels"
 msgstr "Tuplapikselit"
 
-#: ../src/maemo-mapper.c:12068
+#: ../src/main.c:195 ../src/menu.c:1466
+msgid "Down"
+msgstr ""
+
+#: ../src/maps.c:2069
 msgid "Download Maps"
 msgstr "Lataa kartat"
 
-#: ../src/maemo-mapper.c:10034
+#: ../src/poi.c:2202
+#, fuzzy
+msgid "Download POIs"
+msgstr "Lataa kartat"
+
+#: ../src/path.c:1071
 msgid "Download Route"
 msgstr "Lataa reittisuunnitelma"
 
-#: ../src/maemo-mapper.c:6420 ../src/maemo-mapper.c:6451
-#: ../src/maemo-mapper.c:6475
+#: ../src/cmenu.c:603 ../src/cmenu.c:634 ../src/cmenu.c:658
 msgid "Download Route to..."
 msgstr "Lataa reittisuunnitelma kohteeseen..."
 
-#: ../src/maemo-mapper.c:11317
+#: ../src/maps.c:1345
 msgid "Download Zoom Steps"
 msgstr "Lataa zoom tasot"
 
-#: ../src/maemo-mapper.c:6129 ../src/maemo-mapper.c:11567
+#: ../src/maps.c:1595 ../src/menu.c:1361 ../src/menu.c:1401
 msgid "Download..."
 msgstr "Lataa..."
 
-#: ../src/maemo-mapper.c:6937
-msgid "Downloading maps"
-msgstr "Ladataan karttoja"
+#: ../src/maps.c:654 ../src/maps.c:667
+msgid "Downloaded maps will not be cached."
+msgstr ""
 
-#: ../src/maemo-mapper.c:12913
-msgid "Edit"
-msgstr "Muokkaa"
+#: ../src/menu.c:1479
+#, fuzzy
+msgid "East"
+msgstr "Vieritä itään"
 
-#: ../src/maemo-mapper.c:13208
+#: ../src/poi.c:1170
 msgid "Edit Categories..."
 msgstr "Muokkaa kategorioita..."
 
-#: ../src/maemo-mapper.c:12625
+#: ../src/poi.c:579
 msgid "Edit Category"
 msgstr "Muokkaa kategoriaa"
 
-#: ../src/maemo-mapper.c:13118
+#: ../src/poi.c:1090
 msgid "Edit POI"
 msgstr "Muokkaa POI:ta"
 
-#: ../src/maemo-mapper.c:3000
+#: ../src/poi.c:875 ../src/poi.c:1999
+#, fuzzy
+msgid "Edit..."
+msgstr "Näytä/Muokkaa..."
+
+#: ../src/poi.c:157
 msgid "Elementary schools, college campuses, etc."
 msgstr "Elementary schools, college campuses, etc."
 
-#: ../src/maemo-mapper.c:6270
+#: ../src/menu.c:1574
 msgid "Enable GPS"
 msgstr "Käytä GPS:ää"
 
-#: ../src/maemo-mapper.c:5042
+#: ../src/settings.c:1139
 msgid "Enable Voice Synthesis (requires flite)"
 msgstr "Käytä puhesyntetisaattoria (vaatii flite:n)"
 
-#: ../src/maemo-mapper.c:12693 ../src/maemo-mapper.c:12945
+#: ../src/poi.c:647 ../src/poi.c:907
 msgid "Enabled"
 msgstr "Käytössä"
 
-#: ../src/maemo-mapper.c:7185
-msgid ""
-"Error in download.  Check internet connection and/or Map Repository URL "
-"Format."
-msgstr ""
-"Virhe latauksessa. Tarkista Internet yhteys ja/tai karttavaraston URL:n "
-"oikeellisuus."
+#: ../src/poi.c:1305
+#, fuzzy
+msgid "Error adding POI"
+msgstr "Ongelma POI:n lisäämisessä"
 
-#: ../src/maemo-mapper.c:8371 ../src/maemo-mapper.c:10319
-#: ../src/maemo-mapper.c:10363 ../src/maemo-mapper.c:10437
+#: ../src/poi.c:710
+#, fuzzy
+msgid "Error adding category"
+msgstr "Ongelma kategorian lisäämisessä"
+
+#: ../src/gps.c:631
+#, fuzzy
+msgid "Error connecting to GPS receiver."
+msgstr "Yhteys GPS vastaanottimeen epäonnistui. Yritä uudelleen?"
+
+#: ../src/gps.c:617
+msgid "Error connecting to GPSD."
+msgstr ""
+
+#: ../src/poi.c:521 ../src/poi.c:969 ../src/poi.c:1871
+#, fuzzy
+msgid "Error deleting POI"
+msgstr "Ongelma POI:n poistamisessa"
+
+#: ../src/poi.c:530
+#, fuzzy
+msgid "Error deleting category"
+msgstr "Ongelma kategorian poistossa"
+
+#: ../src/main.c:488 ../src/menu.c:122 ../src/menu.c:234 ../src/path.c:678
+#: ../src/poi.c:2130 ../src/poi.c:2481
 msgid "Error parsing GPX file."
 msgstr "Virhe tulkittaessa GPX tiedostoa."
 
-#: ../src/maemo-mapper.c:1501
+#: ../src/gps.c:667
+#, fuzzy
+msgid "Error reading GPS data."
+msgstr "Virhe tulkittaessa GPX tiedostoa."
+
+#: ../src/poi.c:754
+#, fuzzy
+msgid "Error updating Category"
+msgstr "Ongelma kategorian päivityksessä"
+
+#: ../src/poi.c:1285 ../src/poi.c:1583
+#, fuzzy
+msgid "Error updating POI"
+msgstr "Ongelma POI:n päivityksessä"
+
+#: ../src/poi.c:695
+#, fuzzy
+msgid "Error updating category"
+msgstr "Ongelma kategorian päivityksessä"
+
+#: ../src/gpx.c:478 ../src/gpx.c:805
 msgid "Error while writing to file"
 msgstr "Virhe kirjoitettaessa tiedostoa"
 
-#: ../src/maemo-mapper.c:10459 ../src/maemo-mapper.c:10618
+#: ../src/poi.c:103
+#, fuzzy
+msgid "Error with POI database"
+msgstr "Ongelma POI-tietokannassa"
+
+#: ../src/menu.c:153 ../src/menu.c:256 ../src/poi.c:1911
 msgid "Error writing GPX file."
 msgstr "Virhe kirjoitettaessa GPX tiedostoa."
 
-#: ../src/maemo-mapper.c:3148
+#: ../src/gps.c:801
 msgid "Establishing GPS fix"
 msgstr "Odotetaan GPS:n lukittumista"
 
-#: ../src/maemo-mapper.c:2290
+#: ../src/display.c:282
 msgid "Estimated"
 msgstr "Arvioitu"
 
-#: ../src/maemo-mapper.c:3903
-msgid "Failed to connect to GPS receiver.  Retry?"
+#: ../src/poi.c:1948
+msgid "Export to GPX..."
+msgstr ""
+
+#: ../src/gps.c:923
+#, fuzzy
+msgid "Failed to connect to Bluetooth GPS receiver."
 msgstr "Yhteys GPS vastaanottimeen epäonnistui. Yritä uudelleen?"
 
-#: ../src/maemo-mapper.c:10251 ../src/maemo-mapper.c:10957
+#: ../src/util.c:139
 msgid "Failed to connect to GPX Directions server"
 msgstr "Yhteyden muodostus GPX reittipalvelimeen epäonnistui"
 
-#: ../src/maemo-mapper.c:5577
+#: ../src/settings.c:1646
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "GConf alustus epäonnistui.  Lopetetaan."
 
-#: ../src/maemo-mapper.c:4047
+#: ../src/settings.c:72
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "GConf alustus epäonnistui.  Asetuksia ei tallennettu."
 
-#: ../src/maemo-mapper.c:7750 ../src/maemo-mapper.c:8360
+#: ../src/display.c:2561 ../src/main.c:476
 msgid "Failed to open file for reading"
 msgstr "Tiedoston avaus lukemista varten epäonnistui"
 
-#: ../src/maemo-mapper.c:7403 ../src/maemo-mapper.c:7751
+#: ../src/display.c:2562
 msgid "Failed to open file for writing"
 msgstr "Tiedoston avaus kirjoitusta varten epäonnistui"
 
-#: ../src/maemo-mapper.c:3014
+#: ../src/maps.c:652 ../src/maps.c:666
+#, fuzzy
+msgid "Failed to open map database for repository"
+msgstr "Tietokannan avaus tai luonti epäonnistui"
+
+#: ../src/poi.c:171
 msgid "Failed to open or create database"
 msgstr "Tietokannan avaus tai luonti epäonnistui"
 
-#: ../src/maemo-mapper.c:1502
+#: ../src/path.c:1553
+msgid "Failed to open path database. Tracks and routes will not be saved."
+msgstr ""
+
+#: ../src/path.c:195 ../src/path.c:221 ../src/path.c:240
+msgid "Failed to write to path database. Tracks and routes may not be saved."
+msgstr ""
+
+#: ../src/main.c:312
+msgid "File"
+msgstr ""
+
+#: ../src/settings.c:1044
+msgid "File Path"
+msgstr ""
+
+#: ../src/gpx.c:479 ../src/gpx.c:806
 msgid "File is incomplete."
 msgstr "Tiedosto on vaillinainen."
 
-#: ../src/maemo-mapper.c:2858
+#: ../src/display.c:850
 msgid "Fix"
 msgstr "Lukitus"
 
-#: ../src/maemo-mapper.c:2867
+#: ../src/display.c:859
 msgid "Fix Quality"
 msgstr "Lukituksen laatu"
 
-#: ../src/maemo-mapper.c:2289
+#: ../src/settings.c:1093
+#, fuzzy
+msgid "Fixed"
+msgstr "Lukitus"
+
+#: ../src/display.c:281
 msgid "Float RTK"
 msgstr "Kelluva RTK"
 
-#: ../src/maemo-mapper.c:13442
-#, fuzzy
+#: ../src/display.c:2444
 msgid "Format"
-msgstr "URL:n muotoilu"
+msgstr "Muoto"
 
-#: ../src/maemo-mapper.c:2985
-msgid "Fuel"
-msgstr "Huoltoasemat"
-
-#: ../src/maemo-mapper.c:6189
+#: ../src/menu.c:1564
 msgid "Full Screen"
-msgstr "Kokoruutu"
+msgstr "Koko näyttö"
 
-#: ../src/maemo-mapper.c:4747 ../src/maemo-mapper.c:4964
-#: ../src/maemo-mapper.c:6266
+#: ../src/menu.c:1570 ../src/settings.c:778 ../src/settings.c:1004
 msgid "GPS"
 msgstr "GPS"
 
-#: ../src/maemo-mapper.c:2761
+#: ../src/display.c:753
 msgid "GPS Details"
 msgstr "GPS:n yksityiskohdat"
 
-#: ../src/maemo-mapper.c:2774
+#: ../src/display.c:766
 msgid "GPS Information"
 msgstr "GPS tieto"
 
-#: ../src/maemo-mapper.c:6258 ../src/maemo-mapper.c:12151
+#: ../src/maps.c:2152 ../src/menu.c:1491
 msgid "GPS Location"
-msgstr "GPS sijainti"
+msgstr "GPS-sijainti"
 
-#: ../src/maemo-mapper.c:3004
+#: ../src/main.c:311
+#, fuzzy
+msgid "GPSD"
+msgstr "GPS"
+
+#: ../src/settings.c:1025
+msgid "GPSD Host"
+msgstr ""
+
+#: ../src/poi.c:161
 msgid "General landmarks."
 msgstr "Yleiset maamerkit."
 
-#: ../src/maemo-mapper.c:3002
+#: ../src/poi.c:159
 msgid "General places of business."
 msgstr "Liike-elämän yleiset paikat."
 
-#: ../src/maemo-mapper.c:6250
+#: ../src/menu.c:1483 ../src/poi.c:1996
 msgid "Go to"
 msgstr "Siirry"
 
-#: ../src/maemo-mapper.c:10900
-#, fuzzy
+#: ../src/menu.c:827
 msgid "Go to Address"
-msgstr "Siirry lähimpään"
+msgstr "Siirry osoitteeseen"
 
-#: ../src/maemo-mapper.c:10806
+#: ../src/menu.c:731
 msgid "Go to Lat/Lon"
 msgstr "Siirry Lat/Lon"
 
-#: ../src/maemo-mapper.c:6483
+#: ../src/cmenu.c:666
 msgid "Go to Nearest"
 msgstr "Siirry lähimpään"
 
-#: ../src/maemo-mapper.c:6460
+#: ../src/cmenu.c:643
 msgid "Go to Next"
 msgstr "Siirry seuraavaan"
 
-#: ../src/maemo-mapper.c:4608
+#: ../src/settings.c:644
 msgid "Hardware Keys"
 msgstr "Näppäimet"
 
-#: ../src/maemo-mapper.c:4950
+#: ../src/settings.c:990
 msgid "Hardware Keys..."
 msgstr "Näppäimet..."
 
-#: ../src/maemo-mapper.c:2822
+#: ../src/display.c:814
 msgid "Heading"
 msgstr "Suunta"
 
-#: ../src/maemo-mapper.c:6291
+#: ../src/menu.c:1595
 msgid "Help..."
 msgstr "Ohje..."
 
-#: ../src/maemo-mapper.c:2988
+#: ../src/poi.c:145
 msgid "Houses, apartments, or other residences of import."
 msgstr "Talot, asunnot tai muut tärkeät asuinpaikat."
 
-#: ../src/maemo-mapper.c:12937
+#: ../src/poi.c:899
 msgid "ID"
 msgstr "ID"
 
-#: ../src/maemo-mapper.c:2994
+#: ../src/menu.c:1399
+msgid "Import..."
+msgstr ""
+
+#: ../src/poi.c:151
 msgid "Indoor or Outdoor places to have fun."
 msgstr "Sisä- tai ulkotiloja hauskanpitoon."
 
-#: ../src/maemo-mapper.c:5102
-msgid "Information Font Size"
-msgstr "Tietojen fonttikoko"
+#: ../src/settings.c:1174
+#, fuzzy
+msgid "Info Font Size"
+msgstr "Tietojen kirjasinkoko"
 
-#: ../src/maemo-mapper.c:6151
+#: ../src/menu.c:1383
 msgid "Insert Break"
 msgstr "Lisää katkaisupiste"
 
-#: ../src/maemo-mapper.c:10493
+#: ../src/menu.c:290
 msgid "Insert Mark"
 msgstr "Lisää merkki"
 
-#: ../src/maemo-mapper.c:6153
+#: ../src/menu.c:1385
 msgid "Insert Mark..."
 msgstr "Lisää merkki..."
 
-#: ../src/maemo-mapper.c:8059
+#: ../src/main.c:268
 msgid "Insert Track Break"
 msgstr "Lisää katkaisupiste reittijälkeen"
 
-#: ../src/maemo-mapper.c:12324
+#: ../src/maps.c:2342
 msgid "Invalid Bottom-Right Latitude"
 msgstr "Virheellinen ala-oikea latitudi"
 
-#: ../src/maemo-mapper.c:12331
+#: ../src/maps.c:2349
 msgid "Invalid Bottom-Right Longitude"
 msgstr "Virheellinen ala-oikea longitudi"
 
-#: ../src/maemo-mapper.c:10865 ../src/maemo-mapper.c:13267
+#: ../src/menu.c:792 ../src/poi.c:1224
 msgid "Invalid Latitude"
 msgstr "Virheellinen latitudi"
 
-#: ../src/maemo-mapper.c:10872 ../src/maemo-mapper.c:13274
+#: ../src/menu.c:799 ../src/poi.c:1231
 msgid "Invalid Longitude"
 msgstr "Virheellinen longitudi"
 
-#: ../src/maemo-mapper.c:9534 ../src/maemo-mapper.c:9545
+#: ../src/gps.c:66 ../src/gps.c:77
 msgid "Invalid NMEA input from receiver!"
 msgstr "Virheellinen NMEA syöte vastaanottimelta!"
 
-#: ../src/maemo-mapper.c:12310
+#: ../src/maps.c:2328
 msgid "Invalid Top-Left Latitude"
 msgstr "Virheellinen ylä-vasen latitudi"
 
-#: ../src/maemo-mapper.c:12317
+#: ../src/maps.c:2335
 msgid "Invalid Top-Left Longitude"
 msgstr "Virheellinen ylä-vasen longitudi"
 
-#: ../src/maemo-mapper.c:10971
-#, fuzzy
+#: ../src/util.c:150
 msgid "Invalid address."
-msgstr "Virheellinen latitudi"
+msgstr "Virheellinen osoite"
 
-#: ../src/maemo-mapper.c:10264
+#: ../src/poi.c:2460
+#, fuzzy
+msgid "Invalid origin or query."
+msgstr "Virheellinen longitudi"
+
+#: ../src/path.c:657
 msgid "Invalid source or destination."
-msgstr ""
+msgstr "Virheellinen lähde- tai kohdeosoite"
 
-#: ../src/maemo-mapper.c:6562
+#: ../src/display.c:1077
 msgid ""
 "It looks like this is your first time running Maemo Mapper.  Press OK to "
 "view the the help pages. Otherwise, press Cancel to continue."
@@ -590,82 +760,82 @@ msgstr ""
 "Näyttää siltä, että tämä on ensimmäinen kerta, kun käynnistit Maemo "
 "Mapperin. Valitse OK ohjeen avaamiseksi, tai valitse Cancel jatkaaksesi."
 
-#: ../src/maemo-mapper.c:5094
-msgid "Keep Display On Only in Fullscreen Mode"
-msgstr "Pidä näyttö päällä vain kokoruudun ollessa käytössä"
-
-#: ../src/maemo-mapper.c:8592 ../src/maemo-mapper.c:12661
-#: ../src/maemo-mapper.c:12950 ../src/maemo-mapper.c:13177
+#: ../src/poi.c:453 ../src/poi.c:615 ../src/poi.c:912 ../src/poi.c:1151
+#: ../src/poi.c:1757
 msgid "Label"
 msgstr "Nimike"
 
-#: ../src/maemo-mapper.c:3003
+#: ../src/poi.c:160
 msgid "Landmark"
 msgstr "Maamerkit"
 
-#: ../src/maemo-mapper.c:13161 ../src/maemo-mapper.c:13424
-#, fuzzy
+#: ../src/display.c:2426 ../src/poi.c:1135
 msgid "Lat"
-msgstr "Lat/Lon"
+msgstr "Lat"
 
-#: ../src/maemo-mapper.c:10503 ../src/maemo-mapper.c:13611
-#, fuzzy
+#: ../src/menu.c:300 ../src/path.c:1344
 msgid "Lat, Lon:"
-msgstr "Lat, Lon"
+msgstr "Lat, Lon:"
 
-#: ../src/maemo-mapper.c:6231
+#: ../src/menu.c:1544
 msgid "Lat/Lon"
 msgstr "Lat/Lon"
 
-#: ../src/maemo-mapper.c:6254
+#: ../src/menu.c:1487
 msgid "Lat/Lon..."
 msgstr "Lat/Lon..."
 
-#: ../src/maemo-mapper.c:2786 ../src/maemo-mapper.c:10816
-#: ../src/maemo-mapper.c:12141 ../src/maemo-mapper.c:13512
+#: ../src/cmenu.c:82 ../src/display.c:778 ../src/maps.c:2142 ../src/menu.c:741
 msgid "Latitude"
 msgstr "Latitudi"
 
-#: ../src/maemo-mapper.c:6237
+#: ../src/menu.c:1550
 msgid "Lead"
 msgstr "Etumatka"
 
-#: ../src/maemo-mapper.c:5011
+#: ../src/settings.c:1078
 msgid "Lead Amount"
 msgstr "Etumatkan määrä"
 
-#: ../src/maemo-mapper.c:5082
-msgid "Line Width"
-msgstr "Rivin leveys"
+#: ../src/main.c:196 ../src/menu.c:1468
+#, fuzzy
+msgid "Left"
+msgstr "Ylä-vasen"
 
-#: ../src/maemo-mapper.c:2831
+#: ../src/settings.c:1151
+msgid "Line Width"
+msgstr "Viivan leveys"
+
+#: ../src/display.c:823
 msgid "Local time"
 msgstr "Paikallinen aika"
 
-#: ../src/maemo-mapper.c:5162 ../src/maemo-mapper.c:6409
-#: ../src/maemo-mapper.c:8587
+#: ../src/cmenu.c:592 ../src/poi.c:448 ../src/settings.c:1249
 msgid "Location"
 msgstr "Sijainti"
 
-#: ../src/maemo-mapper.c:2997
+#: ../src/poi.c:154
 msgid "Lodging"
 msgstr "Majapaikat"
 
-#: ../src/maemo-mapper.c:13169 ../src/maemo-mapper.c:13433
-#, fuzzy
+#: ../src/display.c:2435 ../src/poi.c:1143
 msgid "Lon"
-msgstr "Majapaikat"
+msgstr "Lon"
 
-#: ../src/maemo-mapper.c:2795 ../src/maemo-mapper.c:10829
-#: ../src/maemo-mapper.c:12145 ../src/maemo-mapper.c:13513
+#: ../src/cmenu.c:83 ../src/display.c:787 ../src/maps.c:2146 ../src/menu.c:755
 msgid "Longitude"
 msgstr "Longitudi"
 
-#: ../src/maemo-mapper.c:4484 ../src/maemo-mapper.c:4968
+#: ../src/settings.c:531
 msgid "MAC"
 msgstr "MAC"
 
-#: ../src/maemo-mapper.c:11470
+#: ../src/settings.c:1009
+#, fuzzy
+msgid "MAC Address"
+msgstr "Osoite"
+
+#: ../src/maps.c:1498
 msgid ""
 "Maemo Mapper will now download and add a list of possibly-duplicate "
 "repositories from the internet.  Continue?"
@@ -673,47 +843,47 @@ msgstr ""
 "Maemo Mapper lataa ja lisää listan karttavarastoja Internetistä. Osa "
 "karttavarastoista saattaa olla jo olemassa. Jatketaanko?"
 
-#: ../src/maemo-mapper.c:12033
+#: ../src/maps.c:2034
 msgid "Manage Maps"
 msgstr "Karttojen hallinta"
 
-#: ../src/maemo-mapper.c:6168
+#: ../src/menu.c:1415
 msgid "Manage Maps..."
 msgstr "Karttojen hallinta..."
 
-#: ../src/maemo-mapper.c:11550
+#: ../src/maps.c:1578
 msgid "Manage Repositories"
 msgstr "Karttavarastojen hallinta"
 
-#: ../src/maemo-mapper.c:6170
+#: ../src/menu.c:1417
 msgid "Manage Repositories..."
 msgstr "Karttavarastojen hallinta..."
 
-#: ../src/maemo-mapper.c:2291
+#: ../src/display.c:283
 msgid "Manual"
 msgstr "Manuaalinen"
 
-#: ../src/maemo-mapper.c:6163
+#: ../src/menu.c:1410
 msgid "Maps"
 msgstr "Kartat"
 
-#: ../src/maemo-mapper.c:2876
+#: ../src/display.c:868
 msgid "Max speed"
 msgstr "Maks. nopeus"
 
-#: ../src/maemo-mapper.c:5078
+#: ../src/settings.c:1147
 msgid "Misc."
 msgstr "Sekal."
 
-#: ../src/maemo-mapper.c:5114
+#: ../src/settings.c:1204
 msgid "Misc. 2"
 msgstr "Sekal. 2"
 
-#: ../src/maemo-mapper.c:3006
+#: ../src/poi.c:163
 msgid "Miscellaneous category for everything else."
 msgstr "Sekalainen kategoria kaikelle muulle."
 
-#: ../src/maemo-mapper.c:12285 ../src/maemo-mapper.c:12449
+#: ../src/maps.c:2294 ../src/menu.c:520
 msgid ""
 "NOTE: You must set a Map URI in the current repository in order to download "
 "maps."
@@ -721,63 +891,66 @@ msgstr ""
 "HUOM: Karttojen URI täytyy asettaa karttavarastojen hallinnassa, jotta "
 "kartat voidaan ladata."
 
-#: ../src/maemo-mapper.c:11171 ../src/maemo-mapper.c:11409
+#: ../src/maps.c:1197 ../src/maps.c:1437
 msgid "Name"
 msgstr "Nimi"
 
-#: ../src/maemo-mapper.c:6262
+#: ../src/menu.c:1495
 msgid "Nearest POI"
 msgstr "Lähin POI"
 
-#: ../src/maemo-mapper.c:11161
+#: ../src/maps.c:1187
 msgid "New Name"
 msgstr "Uusi nimi"
 
-#: ../src/maemo-mapper.c:11399
+#: ../src/maps.c:1427
 msgid "New Repository"
 msgstr "Uusi karttavarasto"
 
-#: ../src/maemo-mapper.c:11589
+#: ../src/maps.c:1617
 msgid "New..."
 msgstr "Uusi..."
 
-#: ../src/maemo-mapper.c:6260
+#: ../src/menu.c:1493
 msgid "Next Waypoint"
 msgstr "Seuraava kohdepiste"
 
-#: ../src/maemo-mapper.c:11362
+#: ../src/maps.c:1390
 msgid "Next-able"
 msgstr "Pikavalittava"
 
-#: ../src/maemo-mapper.c:5283
+#: ../src/settings.c:1472
+#, fuzzy
 msgid ""
-"No GPS Receiver MAC provided.\n"
+"No GPS Receiver provided.\n"
 "GPS will be disabled."
 msgstr ""
 "GPS:n MAC-osoitetta ei ole määritelty.\n"
 "GPS ei ole käytettävissä."
 
-#: ../src/maemo-mapper.c:8530 ../src/maemo-mapper.c:11082
+#: ../src/menu.c:950 ../src/poi.c:391 ../src/poi.c:2772
 msgid "No POIs found."
 msgstr "POI:ta ei löytynyt."
 
-#: ../src/maemo-mapper.c:6243
+#: ../src/poi.c:1401
+#, fuzzy
+msgid "No POIs were found."
+msgstr "POI:ta ei löytynyt."
+
+#: ../src/main.c:309 ../src/menu.c:1556
 msgid "None"
 msgstr "Ei keskitystä"
 
-#: ../src/maemo-mapper.c:4984
-msgid ""
-"Note: You can enter a device path\n"
-"(e.g. \"/dev/rfcomm0\")."
-msgstr ""
-"Huom: Voit syöttää laitteen polun\n"
-"(esim. \"/dev/rfcomm0\")."
+#: ../src/menu.c:1473
+#, fuzzy
+msgid "North"
+msgstr "Vieritä pohjoiseen"
 
-#: ../src/maemo-mapper.c:6127 ../src/maemo-mapper.c:6147
+#: ../src/menu.c:1359 ../src/menu.c:1379
 msgid "Open..."
 msgstr "Avaa..."
 
-#: ../src/maemo-mapper.c:6572
+#: ../src/display.c:1087
 msgid ""
 "OpenStreetMap.org provides public, free-to-use maps.  You can also download "
 "a sample set of repositories from  the internet by using the \"Download...\" "
@@ -787,511 +960,599 @@ msgstr ""
 "karttoja. Voit ladata lisäksi otoksen muita karttavarastoja Internetistä "
 "\"Lataa...\" painikkeella."
 
-#: ../src/maemo-mapper.c:10083
+#: ../src/path.c:1126 ../src/poi.c:2268 ../src/poi.c:2565
 msgid "Origin"
 msgstr "Lähtöpiste"
 
-#: ../src/maemo-mapper.c:3005
+#: ../src/poi.c:162
 msgid "Other"
 msgstr "Muut"
 
-#: ../src/maemo-mapper.c:12075
+#: ../src/maps.c:2076
 msgid "Overwrite"
 msgstr "Ylikirjoita"
 
-#: ../src/maemo-mapper.c:4792 ../src/maemo-mapper.c:5177
-#: ../src/maemo-mapper.c:6464
+#: ../src/cmenu.c:647 ../src/menu.c:1395 ../src/menu.c:1534
+#: ../src/settings.c:823 ../src/settings.c:1264
 msgid "POI"
 msgstr "POI"
 
-#: ../src/maemo-mapper.c:12903
+#: ../src/poi.c:865
 msgid "POI Categories"
-msgstr "POI kategoriat"
+msgstr "POI-kategoriat"
 
-#: ../src/maemo-mapper.c:6222
-msgid "POI Categories..."
-msgstr "POI kategoriat..."
+#: ../src/poi.c:1987
+#, fuzzy
+msgid "POI List"
+msgstr "POI:t"
 
-#: ../src/maemo-mapper.c:5181
+#: ../src/settings.c:1268
 msgid "POI database"
 msgstr "POI tietokanta"
 
-#: ../src/maemo-mapper.c:6218
-msgid "POIs"
-msgstr "POI:t"
+#: ../src/poi.c:1907
+msgid "POIs Exported"
+msgstr ""
 
-#: ../src/maemo-mapper.c:2287
+#: ../src/poi.c:1395
+msgid ""
+"POIs were added to the POI database.  The following screen will allow you to "
+"modify or delete any of the new POIs."
+msgstr ""
+
+#: ../src/display.c:279
 msgid "PPS"
 msgstr "PPS"
 
-#: ../src/maemo-mapper.c:8044
+#: ../src/poi.c:2252
+msgid "Page"
+msgstr ""
+
+#: ../src/menu.c:1460
+msgid "Pan"
+msgstr ""
+
+#: ../src/main.c:245
 msgid "Pan East"
 msgstr "Vieritä itään"
 
-#: ../src/maemo-mapper.c:8041
+#: ../src/main.c:242
 msgid "Pan North"
 msgstr "Vieritä pohjoiseen"
 
-#: ../src/maemo-mapper.c:8043
+#: ../src/settings.c:1065
+#, fuzzy
+msgid "Pan Sensitivity"
+msgstr "Herkkyys"
+
+#: ../src/main.c:244
 msgid "Pan South"
 msgstr "Vieritä etelään"
 
-#: ../src/maemo-mapper.c:8042
+#: ../src/main.c:243
 msgid "Pan West"
 msgstr "Vieritä länteen"
 
-#  This word refers to Pitch as in of a person's voice.
-#: ../src/maemo-mapper.c:5067
-msgid "Pitch"
-msgstr "Korkeus"
-
-#: ../src/maemo-mapper.c:2990
+#: ../src/poi.c:147
 msgid "Places to eat or drink."
 msgstr "Baarit ja ruokailupaikat."
 
-#: ../src/maemo-mapper.c:2992
+#: ../src/poi.c:149
 msgid "Places to shop or acquire services."
 msgstr "Kauppat ja palvelut."
 
-#: ../src/maemo-mapper.c:2998
+#: ../src/poi.c:155
 msgid "Places to stay temporarily or for the night."
 msgstr "Paikat väliaikaiseen yöpymiseen."
 
-#: ../src/maemo-mapper.c:10567
+#: ../src/menu.c:364
 msgid "Please provide a description for the mark."
 msgstr "Anna merkille kuvaus."
 
-#: ../src/maemo-mapper.c:4519
+#: ../src/settings.c:566
 msgid "Please select a bluetooth device from the list."
 msgstr "Valitse bluetooth laite listalta."
 
-#: ../src/maemo-mapper.c:13289
-msgid "Please specify a category for the POI."
+#: ../src/poi.c:1250 ../src/poi.c:1532
+#, fuzzy
+msgid "Please specify a category."
 msgstr "Määrittele POI pisteen kategoria."
 
-#: ../src/maemo-mapper.c:13282
-msgid "Please specify a name for the POI."
-msgstr "Määrittele POI pisteen nimi."
+#: ../src/poi.c:2104 ../src/poi.c:2425
+#, fuzzy
+msgid "Please specify a default category."
+msgstr "Määrittele kategorian nimi."
 
-#: ../src/maemo-mapper.c:12719
+#: ../src/poi.c:673
 msgid "Please specify a name for the category."
 msgstr "Määrittele kategorian nimi."
 
-#: ../src/maemo-mapper.c:10173
+#: ../src/poi.c:1243
+#, fuzzy
+msgid "Please specify a name."
+msgstr "Määritä osoite"
+
+#: ../src/poi.c:2432
+#, fuzzy
+msgid "Please specify a query."
+msgstr "Määrittele lähde URL."
+
+#: ../src/path.c:1214 ../src/poi.c:2368
 msgid "Please specify a source URL."
 msgstr "Määrittele lähde URL."
 
-#: ../src/maemo-mapper.c:10217
+#: ../src/path.c:1256
 msgid "Please specify a start location."
 msgstr "Määrittele lähtöpiste."
 
-#: ../src/maemo-mapper.c:10941
-#, fuzzy
-msgid "Please specify an address."
-msgstr "Määrittele lähde URL."
-
-#: ../src/maemo-mapper.c:10224
+#: ../src/path.c:1263
 msgid "Please specify an end location."
 msgstr "Määrittele kohdepiste."
 
-#: ../src/maemo-mapper.c:13340
-msgid "Problem adding POI"
-msgstr "Ongelma POI:n lisäämisessä"
+#: ../src/poi.c:2419 ../src/poi.c:2696
+#, fuzzy
+msgid "Please specify an origin."
+msgstr "Määrittele kohdepiste."
 
-#: ../src/maemo-mapper.c:12756
-msgid "Problem adding category"
-msgstr "Ongelma kategorian lisäämisessä"
+#: ../src/settings.c:1110
+msgid "Points"
+msgstr ""
 
-#: ../src/maemo-mapper.c:12567 ../src/maemo-mapper.c:13019
-msgid "Problem deleting POI"
-msgstr "Ongelma POI:n poistamisessa"
+#: ../src/settings.c:1035
+#, fuzzy
+msgid "Port"
+msgstr "Vieritä pohjoiseen"
 
-#: ../src/maemo-mapper.c:12576
-msgid "Problem deleting category"
-msgstr "Ongelma kategorian poistossa"
+#: ../src/maps.c:850
+msgid "Processing Maps"
+msgstr ""
 
-#: ../src/maemo-mapper.c:12795
-msgid "Problem updating Category"
-msgstr "Ongelma kategorian päivityksessä"
+#: ../src/poi.c:2278 ../src/poi.c:2575
+msgid "Query"
+msgstr ""
 
-#: ../src/maemo-mapper.c:13318
-msgid "Problem updating POI"
-msgstr "Ongelma POI:n päivityksessä"
-
-#: ../src/maemo-mapper.c:12741
-msgid "Problem updating category"
-msgstr "Ongelma kategorian päivityksessä"
-
-#: ../src/maemo-mapper.c:2946
-msgid "Problem with POI database"
-msgstr "Ongelma POI tietokannassa"
-
-#: ../src/maemo-mapper.c:2288
+#: ../src/display.c:280
 msgid "Real Time Kinematic"
-msgstr ""
+msgstr "Real Time Kinematic"
 
-#: ../src/maemo-mapper.c:3723
+#: ../src/path.c:919
 msgid "Really clear the track?"
-msgstr ""
+msgstr "Haluatko varmasti tyhjentää reittijäljen?"
 
-#: ../src/maemo-mapper.c:3678
+#: ../src/path.c:798
 msgid "Recalculating directions..."
 msgstr "Lasketaan uusi reittisuunnitelma..."
 
-#: ../src/maemo-mapper.c:2993
+#: ../src/poi.c:150
 msgid "Recreation"
 msgstr "Virkistäytyminen"
 
-#: ../src/maemo-mapper.c:11583
+#: ../src/maps.c:1611
 msgid "Rename..."
 msgstr "Nimeä uud..."
 
-#: ../src/maemo-mapper.c:11440
+#: ../src/maps.c:1468
 msgid "Replace all repositories with the default repository?"
 msgstr "Korvaa kaikki karttavarastot oletusvarastolla?"
 
-#: ../src/maemo-mapper.c:6137
+#: ../src/menu.c:1369 ../src/menu.c:1452
 msgid "Reset"
 msgstr "Nollaa"
 
-#: ../src/maemo-mapper.c:6281 ../src/maemo-mapper.c:8069
+#: ../src/main.c:278 ../src/menu.c:1585
 msgid "Reset Bluetooth"
 msgstr "Nollaa bluetooth"
 
-#: ../src/maemo-mapper.c:4699
+#: ../src/main.c:247
+msgid "Reset Viewing Angle"
+msgstr ""
+
+#: ../src/settings.c:730
 msgid "Reset all colors to their original defaults?"
 msgstr "Korvaa kaikki värit oletusväreillä?"
 
-#: ../src/maemo-mapper.c:4580
+#: ../src/settings.c:616
 msgid "Reset all hardware keys to their original defaults?"
 msgstr "Korvaa kaikki näppäinvalinnat oletusasetuksilla?"
 
-#: ../src/maemo-mapper.c:4614 ../src/maemo-mapper.c:4735
-#: ../src/maemo-mapper.c:11561
+#: ../src/maps.c:1589 ../src/settings.c:650 ../src/settings.c:766
 msgid "Reset..."
 msgstr "Nollaa..."
 
-#: ../src/maemo-mapper.c:2987
+#: ../src/poi.c:144
 msgid "Residence"
 msgstr "Asuminen"
 
-#: ../src/maemo-mapper.c:4777 ../src/maemo-mapper.c:6123
-#: ../src/maemo-mapper.c:6204
+#: ../src/poi.c:146
+msgid "Restaurant"
+msgstr ""
+
+#: ../src/main.c:194 ../src/menu.c:1470
+#, fuzzy
+msgid "Right"
+msgstr "Ylä-oikea"
+
+#: ../src/menu.c:1444
+#, fuzzy
+msgid "Rotate"
+msgstr "Reittisuunnitelma"
+
+#: ../src/settings.c:1097
+#, fuzzy
+msgid "Rotate Sensit."
+msgstr "Herkkyys"
+
+#: ../src/main.c:249
+msgid "Rotate View Clockwise"
+msgstr ""
+
+#: ../src/main.c:251
+msgid "Rotate View Counter-Clockwise"
+msgstr ""
+
+#: ../src/menu.c:1355 ../src/menu.c:1520 ../src/settings.c:808
 msgid "Route"
 msgstr "Reittisuunnitelma"
 
-#: ../src/maemo-mapper.c:10311
+#: ../src/path.c:672
 msgid "Route Downloaded"
 msgstr "Reittisuunnitelma ladattu"
 
-#: ../src/maemo-mapper.c:8368 ../src/maemo-mapper.c:10360
+#: ../src/main.c:485 ../src/menu.c:119
 msgid "Route Opened"
 msgstr "Reittisuunnitelma avattu"
 
-#: ../src/maemo-mapper.c:10615
+#: ../src/menu.c:150
 msgid "Route Saved"
 msgstr "Reittisuunnitelma tallennettu"
 
-#: ../src/maemo-mapper.c:10705
+#: ../src/menu.c:1048
 msgid "Routes are now hidden"
 msgstr "Reitit on nyt piilotettu"
 
-#: ../src/maemo-mapper.c:10699
+#: ../src/menu.c:1042
 msgid "Routes are now shown"
 msgstr "Reitit on nyt näkyvissä"
 
-#: ../src/maemo-mapper.c:2285
+#: ../src/display.c:277
 msgid "SPS"
 msgstr "SPS"
 
-#: ../src/maemo-mapper.c:2849
+#: ../src/display.c:841
 msgid "Sat in use"
 msgstr "Sat käytössä"
 
-#: ../src/maemo-mapper.c:2840
+#: ../src/display.c:832
 msgid "Sat in view"
 msgstr "Sat näkyy"
 
-#: ../src/maemo-mapper.c:2781
+#: ../src/display.c:773
 msgid "Satellites details"
 msgstr "Satelliittien yksityiskohdat"
 
-#: ../src/maemo-mapper.c:2707
+#: ../src/display.c:699
 msgid "Satellites in view"
 msgstr "Satelliitteja näkyvissä"
 
-#: ../src/maemo-mapper.c:6131 ../src/maemo-mapper.c:6149
+#: ../src/menu.c:1363 ../src/menu.c:1381
 msgid "Save..."
 msgstr "Tallenna..."
 
-#: ../src/maemo-mapper.c:6199
+#: ../src/menu.c:1510
 msgid "Scale"
 msgstr "Asteikko"
 
-#: ../src/maemo-mapper.c:4978
+#: ../src/settings.c:1019
 msgid "Scan..."
 msgstr "Etsi..."
 
-#: ../src/maemo-mapper.c:4495
+#: ../src/settings.c:542
 msgid "Scanning for Bluetooth Devices"
 msgstr "Etsitään bluetooth laitteita"
 
-#: ../src/maemo-mapper.c:2999
+#: ../src/poi.c:156
 msgid "School"
 msgstr "Koulut"
 
-#: ../src/maemo-mapper.c:3138
+#: ../src/gps.c:790
 msgid "Searching for GPS receiver"
 msgstr "Etsitään GPS-vastaanotinta"
 
-#: ../src/maemo-mapper.c:4459
+#: ../src/settings.c:506
 msgid "Select Bluetooth Device"
 msgstr "Valitse bluetooth laite"
 
-#: ../src/maemo-mapper.c:8054
+#: ../src/main.c:263
 msgid "Select Next Repository"
 msgstr "Valitse seuraava karttavarasto"
 
-#: ../src/maemo-mapper.c:8560
+#: ../src/poi.c:421
 msgid "Select POI"
 msgstr "Valitse POI"
 
-#: ../src/maemo-mapper.c:8630
+#: ../src/poi.c:1933
+msgid ""
+"Select an operation to perform\n"
+"on the POIs that you checked\n"
+"in the POI list."
+msgstr ""
+
+#: ../src/poi.c:486
 msgid "Select one POI from the list."
 msgstr "Valitse yksi POI listalta."
 
-#: ../src/maemo-mapper.c:4998
-msgid "Sensitivity"
-msgstr "Herkkyys"
+#: ../src/poi.c:142
+#, fuzzy
+msgid "Service Station"
+msgstr "Virkistäytyminen"
 
-#: ../src/maemo-mapper.c:6431
+#: ../src/poi.c:1502 ../src/poi.c:1939
+#, fuzzy
+msgid "Set Category..."
+msgstr "Muokkaa kategorioita..."
+
+#: ../src/cmenu.c:614
 msgid "Set as GPS Location"
-msgstr "Aseta GPS sijainniksi"
+msgstr "Aseta GPS-sijainniksi"
 
-#: ../src/maemo-mapper.c:4940
+#: ../src/settings.c:980
 msgid "Settings"
 msgstr "Asetukset"
 
-#: ../src/maemo-mapper.c:6288
+#: ../src/menu.c:1592
 msgid "Settings..."
 msgstr "Asetukset..."
 
-#: ../src/maemo-mapper.c:12058
+#: ../src/maps.c:2059
 msgid "Setup"
-msgstr "Asetus"
+msgstr "Valinnat"
 
-#: ../src/maemo-mapper.c:2991
+#: ../src/poi.c:148
 msgid "Shopping/Services"
 msgstr "Kaupat/Palvelut"
 
-#: ../src/maemo-mapper.c:6442
+#: ../src/menu.c:1501
+#, fuzzy
+msgid "Show"
+msgstr "Koulut"
+
+#: ../src/cmenu.c:625
 msgid "Show Description"
 msgstr "Näytä kuvaus"
 
-#: ../src/maemo-mapper.c:6157 ../src/maemo-mapper.c:8064
+#: ../src/main.c:273 ../src/menu.c:1389
 msgid "Show Distance from Beginning"
 msgstr "Näytä etäisyys lähtöpisteestä"
 
-#: ../src/maemo-mapper.c:8062
+#: ../src/main.c:271
 msgid "Show Distance from Last Break"
-msgstr "Näytä etäisyys edellisestä katkaisupisteestä"
+msgstr "Näytä etäisyys katkaisupisteestä"
 
-#: ../src/maemo-mapper.c:6155
+#: ../src/menu.c:1387
 msgid "Show Distance from Last Mark"
 msgstr "Näytä etäisyys edellisestä merkistä"
 
-#: ../src/maemo-mapper.c:6418 ../src/maemo-mapper.c:6449
-#: ../src/maemo-mapper.c:6473
+#: ../src/cmenu.c:601 ../src/cmenu.c:632 ../src/cmenu.c:656
 msgid "Show Distance to"
 msgstr "Näytä etäisyys kohteeseen"
 
-#: ../src/maemo-mapper.c:6135 ../src/maemo-mapper.c:8058
+#: ../src/main.c:267 ../src/menu.c:1367
 msgid "Show Distance to End of Route"
 msgstr "Näytä etäisyys reitin loppupisteeseen"
 
-#: ../src/maemo-mapper.c:6133 ../src/maemo-mapper.c:8056
+#: ../src/main.c:265 ../src/menu.c:1365
 msgid "Show Distance to Next Waypoint"
-msgstr "Näytä etäisyys seuraavaan kohdepisteeseen"
+msgstr "Näytä etäisyys seur. kohdepisteeseen"
 
-#: ../src/maemo-mapper.c:6274
+#: ../src/menu.c:1578
 msgid "Show Information"
 msgstr "Näytä tietoja"
 
-#: ../src/maemo-mapper.c:6415 ../src/maemo-mapper.c:6440
+#: ../src/cmenu.c:598 ../src/cmenu.c:623
 msgid "Show Lat/Lon"
 msgstr "Näytä Lat/Lon"
 
-#: ../src/maemo-mapper.c:5196
+#: ../src/settings.c:1283
 msgid "Show POI below zoom"
 msgstr "Näytä POI:t alle zoom tason"
 
-#: ../src/maemo-mapper.c:13414
-#, fuzzy
+#: ../src/display.c:2416
 msgid "Show Position"
-msgstr "Näytä kuvaus"
+msgstr "Näytä sijainti"
 
-#: ../src/maemo-mapper.c:2292
+#: ../src/display.c:284
 msgid "Simulation"
 msgstr "Simulaatio"
 
-#: ../src/maemo-mapper.c:10049
+#: ../src/path.c:1086 ../src/poi.c:2220
 msgid "Source URL"
 msgstr "Lähde URL"
 
-#: ../src/maemo-mapper.c:2804 ../src/maemo-mapper.c:5055
+#: ../src/menu.c:1475
+#, fuzzy
+msgid "South"
+msgstr "Vieritä etelään"
+
+#: ../src/display.c:796
 msgid "Speed"
 msgstr "Nopeus"
 
-#: ../src/maemo-mapper.c:5152
+#: ../src/settings.c:1239
 msgid "Speed Limit"
 msgstr "Nopeusrajoitus"
 
-#: ../src/maemo-mapper.c:2986
+#: ../src/poi.c:143
 msgid "Stations for purchasing fuel for vehicles."
 msgstr "Huoltoasemat ja autokorjaamot."
 
-#: ../src/maemo-mapper.c:3399
+#: ../src/maps.c:504
+msgid ""
+"The current repository is in a legacy format and will be converted.  You "
+"should delete your old maps if you no longer plan to use them."
+msgstr ""
+
+#: ../src/path.c:551
 msgid "The current route is empty."
 msgstr "Nykyinen reittisuunnitelma on tyhjä."
 
-#: ../src/maemo-mapper.c:3445 ../src/maemo-mapper.c:3460
+#: ../src/path.c:597 ../src/path.c:612
 msgid "The current track is empty."
 msgstr "Nykyinen reittijälki on tyhjä."
 
-#: ../src/maemo-mapper.c:4660
+#: ../src/settings.c:696
 msgid "The following action is mapped to multiple keys"
 msgstr "Seuraava toiminne on valittu useaan näppäimeen"
 
-#: ../src/maemo-mapper.c:9002
+#: ../src/input.c:364
 msgid "There are no other next-able repositories."
 msgstr "Toista pikavalittavaa karttavarastoa ei ole määritetty."
 
-#: ../src/maemo-mapper.c:13853
+#: ../src/cmenu.c:265 ../src/cmenu.c:287 ../src/cmenu.c:306 ../src/cmenu.c:326
+#: ../src/cmenu.c:345 ../src/cmenu.c:364 ../src/cmenu.c:442 ../src/cmenu.c:461
 msgid "There are no waypoints."
 msgstr "Kohdepiste puuttuu."
 
-#: ../src/maemo-mapper.c:3380 ../src/maemo-mapper.c:11044
+#: ../src/menu.c:912 ../src/path.c:532
 msgid "There is no next waypoint."
 msgstr "Seuraava kohdepiste puuttuu."
 
-#: ../src/maemo-mapper.c:8046
+#: ../src/main.c:253
 msgid "Toggle Auto-Center"
 msgstr "Automaattinen keskitys päällä/pois"
 
-#: ../src/maemo-mapper.c:8048
-msgid "Toggle Fullscreen"
-msgstr "Kokoruutu päällä/pois"
+#: ../src/main.c:255
+#, fuzzy
+msgid "Toggle Auto-Rotate"
+msgstr "Automaattinen keskitys päällä/pois"
 
-#: ../src/maemo-mapper.c:8065
+#: ../src/main.c:257
+msgid "Toggle Fullscreen"
+msgstr "Koko näyttö päällä/pois"
+
+#: ../src/main.c:274
 msgid "Toggle GPS"
 msgstr "GPS päällä/pois"
 
-#: ../src/maemo-mapper.c:8066
+#: ../src/main.c:275
 msgid "Toggle GPS Info"
 msgstr "GPS-info päällä/pois"
 
-#: ../src/maemo-mapper.c:8053
+#: ../src/main.c:262
 msgid "Toggle POIs"
 msgstr "POI:t päällä/pois"
 
-#: ../src/maemo-mapper.c:8052
+#: ../src/main.c:261
 msgid "Toggle Scale"
 msgstr "Asteikko päällä/pois"
 
-#: ../src/maemo-mapper.c:8068
+#: ../src/main.c:277
 msgid "Toggle Speed Limit"
 msgstr "Nopeusrajoitus päällä/pois"
 
-#: ../src/maemo-mapper.c:8051
+#: ../src/main.c:260
 msgid "Toggle Tracks"
 msgstr "Reittijäljet päällä/pois"
 
-#: ../src/maemo-mapper.c:8095 ../src/maemo-mapper.c:12186
+#: ../src/main.c:304 ../src/maps.c:2187
 msgid "Top-Left"
 msgstr "Ylä-vasen"
 
-#: ../src/maemo-mapper.c:8096
+#: ../src/main.c:305
 msgid "Top-Right"
 msgstr "Ylä-oikea"
 
-#: ../src/maemo-mapper.c:4762 ../src/maemo-mapper.c:6143
-#: ../src/maemo-mapper.c:6209
+#: ../src/menu.c:1375 ../src/menu.c:1525 ../src/settings.c:793
 msgid "Track"
 msgstr "Reittijälki"
 
-#: ../src/maemo-mapper.c:10434
+#: ../src/menu.c:231
 msgid "Track Opened"
 msgstr "Reittijälki avattu"
 
-#: ../src/maemo-mapper.c:10456
+#: ../src/menu.c:253
 msgid "Track Saved"
 msgstr "Reittijälki tallennettu"
 
-#: ../src/maemo-mapper.c:10655
+#: ../src/menu.c:985
 msgid "Tracks are now hidden"
 msgstr "Reittijäljet on nyt piilotettu"
 
-#: ../src/maemo-mapper.c:10649
+#: ../src/menu.c:979
 msgid "Tracks are now shown"
 msgstr "Reittijäljet on nyt nähtävissä"
 
-#: ../src/maemo-mapper.c:2995
+#: ../src/poi.c:152
 msgid "Transportation"
 msgstr "Julkinenliikenne"
 
-#: ../src/maemo-mapper.c:11278
+#: ../src/maps.c:1304
 msgid "URL Format"
 msgstr "URL:n muotoilu"
 
-#: ../src/maemo-mapper.c:5543
-msgid "Unable to create cache directory for repository"
+#: ../src/maps.c:684
+#, fuzzy
+msgid "Unable to create map database for repository"
 msgstr "Ei voitu luoda tallennuskansiota karttavarastolle"
 
-#: ../src/maemo-mapper.c:5118
+#: ../src/settings.c:1162
+#, fuzzy
+msgid "Unblank Screen"
+msgstr "Koko näyttö"
+
+#: ../src/settings.c:1191
 msgid "Units"
 msgstr "Yksiköt"
 
-#: ../src/maemo-mapper.c:11003
+#: ../src/util.c:155
 msgid "Unknown error while locating address."
+msgstr "Tunnistamaton virhe osoitteen etsinnässä."
+
+#: ../src/main.c:193 ../src/menu.c:1464
+msgid "Up"
 msgstr ""
 
-#: ../src/maemo-mapper.c:10070
+#: ../src/path.c:1103 ../src/poi.c:2233 ../src/poi.c:2531
 msgid "Use End of Route"
 msgstr "Käytä reitin loppupistettä"
 
-#: ../src/maemo-mapper.c:10060
+#: ../src/path.c:1097 ../src/poi.c:2227 ../src/poi.c:2525
 msgid "Use GPS Location"
-msgstr "Käytä GPS sijaintia"
+msgstr "Käytä GPS-sijaintia"
 
-#: ../src/maemo-mapper.c:6214
+#: ../src/menu.c:1530
 msgid "Velocity Vector"
 msgstr "Nopeusvektori"
 
-#: ../src/maemo-mapper.c:6181
+#: ../src/menu.c:1428
 msgid "View"
 msgstr "Näytä"
 
-#: ../src/maemo-mapper.c:12167
+#: ../src/maps.c:2168
 msgid "View Center"
 msgstr "Näytä keskusta"
 
-#: ../src/maemo-mapper.c:11333
+#: ../src/maps.c:1361
 msgid "View Zoom Steps"
 msgstr "Näytä zoom tasot"
 
-#: ../src/maemo-mapper.c:6470
+#: ../src/cmenu.c:653
 msgid "View/Edit..."
 msgstr "Näytä/Muokkaa..."
 
-#: ../src/maemo-mapper.c:12554
+#: ../src/poi.c:508
 msgid "WARNING: All POIs in that category will also be deleted!"
 msgstr "VAROITUS: Kaikki POI:t tässä kategoriassa poistetaan!"
 
-#: ../src/maemo-mapper.c:6435
+#: ../src/cmenu.c:618
 msgid "Waypoint"
 msgstr "Kohdepiste"
 
-#: ../src/maemo-mapper.c:6579
+#: ../src/menu.c:1477
+#, fuzzy
+msgid "West"
+msgstr "Nollaa"
+
+#: ../src/display.c:1094
 msgid ""
 "You will now see a blank screen.  You can download maps using the \"Manage "
 "Maps\" menu item in the \"Maps\" menu.  Or, press OK to enable Auto-Download."
@@ -1300,71 +1561,76 @@ msgstr ""
 "hallinta\" valikkoa \"Kartat\" valikosta tai valitsemalla OK, jolloin "
 "automaattinen karttojen lataus otetaan käyttöön."
 
-#: ../src/maemo-mapper.c:12115
+#: ../src/maps.c:2116 ../src/menu.c:1434
 msgid "Zoom"
-msgstr "Zoomaa"
+msgstr "Zoom tasot"
 
-#: ../src/maemo-mapper.c:6185 ../src/maemo-mapper.c:8049
+#: ../src/main.c:258 ../src/menu.c:1438
 msgid "Zoom In"
 msgstr "Tarkenna"
 
-#: ../src/maemo-mapper.c:6194
-#, fuzzy
+#: ../src/menu.c:1505
 msgid "Zoom Level"
-msgstr "Zoomaa tasolle"
+msgstr "Zoom taso"
 
-#: ../src/maemo-mapper.c:12121
+#: ../src/maps.c:2122
 msgid "Zoom Levels to Download: (0 = most detail)"
 msgstr "Ladattavat zoom tasot : (0 = tarkin)"
 
-#: ../src/maemo-mapper.c:6187 ../src/maemo-mapper.c:8050
+#: ../src/main.c:259 ../src/menu.c:1440
 msgid "Zoom Out"
 msgstr "Loitonna"
 
-#: ../src/maemo-mapper.c:8815 ../src/maemo-mapper.c:8928
-#: ../src/maemo-mapper.c:12356 ../src/maemo-mapper.c:12374
+#: ../src/input.c:103 ../src/input.c:290 ../src/menu.c:546 ../src/menu.c:564
 msgid "Zoom to Level"
 msgstr "Zoomaa tasolle"
 
-#: ../src/maemo-mapper.c:11890 ../src/maemo-mapper.c:11897
+#: ../src/maps.c:1880 ../src/maps.c:1887
 msgid "about"
 msgstr "noin"
 
-#: ../src/maemo-mapper.c:2708
+#: ../src/display.c:700
 msgid "in use"
 msgstr "käytössä"
 
-#: ../src/maemo-mapper.c:7999
+#: ../src/main.c:189
 msgid "km"
 msgstr "km"
 
-#: ../src/maemo-mapper.c:11810 ../src/maemo-mapper.c:11898
+#: ../src/maps.c:1791 ../src/maps.c:1888
 msgid "maps"
 msgstr "kartan palan lataus"
 
-#: ../src/maemo-mapper.c:11804 ../src/maemo-mapper.c:11891
+#: ../src/maps.c:1785 ../src/maps.c:1881
 msgid "maps "
 msgstr "kartan palan poisto"
 
-#: ../src/maemo-mapper.c:8000
+#: ../src/display.c:1466
+msgid "maps failed to download."
+msgstr ""
+
+#: ../src/main.c:190
 msgid "mi."
 msgstr "mi."
 
-#: ../src/maemo-mapper.c:8001
+#: ../src/main.c:191
 msgid "n.m."
 msgstr "n.m."
 
-#: ../src/maemo-mapper.c:2862
+#: ../src/display.c:854
 msgid "nofix"
 msgstr "nofix"
 
-#: ../src/maemo-mapper.c:2293 ../src/maemo-mapper.c:2871
+#: ../src/display.c:285 ../src/display.c:863
 msgid "none"
 msgstr "ei lainkaan"
 
-#: ../src/maemo-mapper.c:11810 ../src/maemo-mapper.c:11898
+#: ../src/maps.c:1791 ../src/maps.c:1888
 msgid "up to about"
 msgstr "noin"
+
+#~ msgid "Add"
+#~ msgstr "Lisää"
 
 #~ msgid ""
 #~ "Could not generate directions. Make sure your source and destination are "
@@ -1376,14 +1642,53 @@ msgstr "noin"
 #~ msgid "Defaults"
 #~ msgstr "Oletukset"
 
+#~ msgid "Delete"
+#~ msgstr "Poista"
+
+#~ msgid "Dining"
+#~ msgstr "Ruokailu"
+
+#~ msgid "Downloading maps"
+#~ msgstr "Ladataan karttoja"
+
+#~ msgid "Edit"
+#~ msgstr "Muokkaa"
+
+#~ msgid ""
+#~ "Error in download.  Check internet connection and/or Map Repository URL "
+#~ "Format."
+#~ msgstr ""
+#~ "Virhe latauksessa. Tarkista Internet yhteys ja/tai karttavaraston URL:n "
+#~ "oikeellisuus."
+
 #~ msgid "Escape Key"
 #~ msgstr "Escape näppäin"
 
+#~ msgid "Fuel"
+#~ msgstr "Huoltoasemat"
+
 #~ msgid "GPS Mark"
 #~ msgstr "GPS merkki"
+
+#~ msgid "Keep Display On Only in Fullscreen Mode"
+#~ msgstr "Pidä näyttö päällä vain koko näytön ollessa käytössä"
 
 #~ msgid "No waypoints are visible."
 #~ msgstr "Kohdepisteitä ei ole näkyvissä."
 
 #~ msgid "No waypoints found."
 #~ msgstr "Kohdepisteitä ei löytynyt."
+
+#~ msgid ""
+#~ "Note: You can enter a device path\n"
+#~ "(e.g. \"/dev/rfcomm0\")."
+#~ msgstr ""
+#~ "Huom: Voit syöttää laitteen polun\n"
+#~ "(esim. \"/dev/rfcomm0\")."
+
+#  This word refers to Pitch as in of a person's voice.
+#~ msgid "Pitch"
+#~ msgstr "Korkeus"
+
+#~ msgid "Please specify a name for the POI."
+#~ msgstr "Määrittele POI pisteen nimi."

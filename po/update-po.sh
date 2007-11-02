@@ -1,6 +1,6 @@
 #!/bin/sh
 
-xgettext --keyword=_ -C -s -o template.pot `dirname $0`/../src/maemo-mapper.c
+xgettext --keyword=_ -C -s -o template.pot `sed 's/\\\\$//' POTFILES`
 
 for FILE in `dirname $0`/*.po
 do

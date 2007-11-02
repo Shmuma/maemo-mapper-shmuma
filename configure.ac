@@ -1,25 +1,24 @@
 #
-# This file is part of maemo-mapper
+# Copyright (C) 2006, 2007 John Costigan.
 #
-# Copyright (C) 2006 John Costigan.
+# This file is part of Maemo Mapper.
 #
-# This program is free software; you can redistribute it and/or modify
+# Maemo Mapper is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
+# the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
+# Maemo Mapper is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+# You should have received a copy of the GNU General Public License
+# along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 1.4.7)
+AM_INIT_AUTOMAKE(maemo-mapper, 2.0)
 
 AC_PROG_CPP
 AC_CONFIG_HEADERS(src/config.h)
@@ -30,7 +29,7 @@ PKG_CHECK_MODULES(GTK, gtk+-2.0)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
 
-PKG_CHECK_MODULES(OSSO, libosso >= 1 libossohelp osso-ic)
+PKG_CHECK_MODULES(OSSO, libosso >= 1 libossohelp)
 AC_SUBST(OSSO_LIBS)
 AC_SUBST(OSSO_CFLAGS)
 
@@ -50,13 +49,13 @@ PKG_CHECK_MODULES(LIBXML2, libxml-2.0 >= 2.6.16)
 AC_SUBST(LIBXML2_LIBS)
 AC_SUBST(LIBXML2_CFLAGS)
 
-PKG_CHECK_MODULES(LIBCURL, libcurl)
-AC_SUBST(LIBCURL_LIBS)
-AC_SUBST(LIBCURL_CFLAGS)
-
 PKG_CHECK_MODULES(SQLITE, sqlite3)
 AC_SUBST(SQLITE_LIBS)
 AC_SUBST(SQLITE_CFLAGS)
+
+PKG_CHECK_MODULES(CONIC, conic)
+AC_SUBST(CONIC_LIBS)
+AC_SUBST(CONIC_CFLAGS)
 
 
 # Localisation
@@ -92,6 +91,8 @@ helpfile_enusdir=$datadir/osso-help/en_US
 AC_SUBST(helpfile_enusdir)
 helpfile_engbdir=$datadir/osso-help/en_GB
 AC_SUBST(helpfile_engbdir)
+helpfile_fifidir=$datadir/osso-help/fi_FI
+AC_SUBST(helpfile_fifidir)
 
 # Hildon control panel plugin install directories
 pluginlibdir=`$PKG_CONFIG hildon-control-panel --variable=plugindir`

@@ -1,3 +1,29 @@
+maemo-mapper (2.0) unstable; urgency=low
+
+  * Changed map repositories to use gdbm instead of file system.
+  * Changed track and route temporary files to use sqlite instead of GPX.
+    (Save and Open operations still use GPX.)
+  * Changed map retrieval to use threads.
+  * Changed NMEA retrieval to support GPSD and to use a separate thread.
+  * Added POI import, download, browser, and export.
+  * Added support for view rotation.  Also threaded view creation.
+  * Added an on-screen compass that points north.
+  * Added support for dragging the view in order to pan.
+  * Added support for repositories with no map cache at all.
+  * Added hourglass to notify users when a redraw is occurring.
+  * Replaced old internet connectivity with  support for libconic0.
+  * Reorganized the view-related menu items into an expanded "View" menu.
+  * Added Pre-cache option to reduce the amount of time that black areas are
+    on the screen while in Auto-download mode.
+  * Modified the Waypoint Notification Window to use a progress bar; this
+    should also fix some of the flicker that used to occur.
+  * Improved the robustness of bluetooth receiver error handling (no more
+      crashing when out of range).
+  * Improved memory utilization.
+  * Reorganized the code for greater readability.
+
+ -- John Costigan <gnuite@gmail.com>  Mon, 1 Oct 2007 22:08:00 -0400
+
 maemo-mapper (1.4.7) unstable; urgency=low
 
   * Added "Avoid Highways" option to the "Download Route" dialog.
@@ -5,7 +31,7 @@ maemo-mapper (1.4.7) unstable; urgency=low
   * Fixed bug with sensitivity of the "Auto-Update" checkbox.
   * Fixed bug that caused Auto-Update to be constantly invoked.
 
- -- John Costigan <gnuite@gmail.com>  Say, 7 Jul 2007 21:52:00 -0400
+ -- John Costigan <gnuite@gmail.com>  Sat, 7 Jul 2007 21:52:00 -0400
 
 maemo-mapper (1.4.6) unstable; urgency=low
 

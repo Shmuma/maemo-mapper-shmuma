@@ -26,6 +26,8 @@ endif
 
 ifneq (,$(findstring debug,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -g -O0 -DDEBUG
+else
+	CFLAGS += -DNDEBUG
 endif
 
 configure: configure-stamp

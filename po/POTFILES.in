@@ -1,3 +1,17 @@
 # List of MaemoPad source files to be localized
 
-src/maemo-mapper.c
+src/cmenu.c
+src/data.c
+src/display.c
+src/gdk-pixbuf-rotate.c
+src/gps.c
+src/gpx.c
+src/input.c
+src/main.c
+src/maps.c
+src/marshal.c
+src/menu.c
+src/path.c
+src/poi.c
+src/settings.c
+src/util.c

@@ -1,0 +1,964 @@
+/*
+ * Copyright (C) 2006, 2007 John Costigan.
+ *
+ * POI and GPS-Info code originally written by Cezary Jackiewicz.
+ *
+ * Default map data provided by http://www.openstreetmap.org/
+ *
+ * This file is part of Maemo Mapper.
+ *
+ * Maemo Mapper is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Maemo Mapper is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#define _GNU_SOURCE
+
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <dbus/dbus-glib.h>
+#include <bt-dbus.h>
+#include <hildon-widgets/hildon-note.h>
+#include <hildon-widgets/hildon-banner.h>
+#include <libgnomevfs/gnome-vfs.h>
+#include <libgnomevfs/gnome-vfs-inet-connection.h>
+
+#include "types.h"
+#include "data.h"
+#include "defines.h"
+
+#include "display.h"
+#include "gps.h"
+#include "path.h"
+#include "util.h"
+
+
+#define GPS_READ_BUF_SIZE 128
+
+static void rcvr_connect_response(DBusGProxy *proxy, DBusGProxyCall *call_id);
+
+static volatile GThread *_gps_thread = NULL;
+static GMutex *_gps_init_mutex = NULL;
+static volatile gint _gps_rcvr_retry_count = 0;
+static DBusGProxy *_rfcomm_req_proxy = NULL;
+
+static gint _gmtoffset = 0;
+
+
+#define MACRO_PARSE_INT(tofill, str) { \
+    gchar *error_check; \
+    (tofill) = strtol((str), &error_check, 10); \
+    if(error_check == (str)) \
+    { \
+        g_printerr("Line %d: Failed to parse string as int: %s\n", \
+                __LINE__, str); \
+        MACRO_BANNER_SHOW_INFO(_window, \
+                _("Invalid NMEA input from receiver!")); \
+        return; \
+    } \
+}
+#define MACRO_PARSE_FLOAT(tofill, str) { \
+    gchar *error_check; \
+    (tofill) = g_ascii_strtod((str), &error_check); \
+    if(error_check == (str)) \
+    { \
+        g_printerr("Failed to parse string as float: %s\n", str); \
+        MACRO_BANNER_SHOW_INFO(_window, \
+                _("Invalid NMEA input from receiver!")); \
+        return; \
+    } \
+}
+static void
+gps_parse_rmc(gchar *sentence)
+{
+    /* Recommended Minimum Navigation Information C
+     *  1) UTC Time
+     *  2) Status, V=Navigation receiver warning A=Valid
+     *  3) Latitude
+     *  4) N or S
+     *  5) Longitude
+     *  6) E or W
+     *  7) Speed over ground, knots
+     *  8) Track made good, degrees true
+     *  9) Date, ddmmyy
+     * 10) Magnetic Variation, degrees
+     * 11) E or W
+     * 12) FAA mode indicator (NMEA 2.3 and later)
+     * 13) Checksum
+     */
+    gchar *token, *dpoint, *gpsdate = NULL;
+    gdouble tmpd = 0.f;
+    gint tmpi = 0;
+    gboolean newly_fixed = FALSE;
+    vprintf("%s(): %s\n", __PRETTY_FUNCTION__, sentence);
+
+#define DELIM ","
+
+    /* Parse time. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+        gpsdate = token;
+
+    token = strsep(&sentence, DELIM);
+    /* Token is now Status. */
+    if(token && *token == 'A')
+    {
+        /* Data is valid. */
+        if(_gps_state < RCVR_FIXED)
+        {
+            newly_fixed = TRUE;
+            set_conn_state(RCVR_FIXED);
+        }
+    }
+    else
+    {
+        /* Data is invalid - not enough satellites?. */
+        if(_gps_state > RCVR_UP)
+        {
+            set_conn_state(RCVR_UP);
+            track_insert_break(FALSE);
+        }
+    }
+
+    /* Parse the latitude. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+    {
+        dpoint = strchr(token, '.');
+        if(!dpoint) /* handle buggy NMEA */
+            dpoint = token + strlen(token);
+        MACRO_PARSE_FLOAT(tmpd, dpoint - 2);
+        dpoint[-2] = '\0';
+        MACRO_PARSE_INT(tmpi, token);
+        _gps.lat = tmpi + (tmpd * (1.0 / 60.0));
+    }
+
+    /* Parse N or S. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token == 'S')
+        _gps.lat = -_gps.lat;
+
+    /* Parse the longitude. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+    {
+        dpoint = strchr(token, '.');
+        if(!dpoint) /* handle buggy NMEA */
+            dpoint = token + strlen(token);
+        MACRO_PARSE_FLOAT(tmpd, dpoint - 2);
+        dpoint[-2] = '\0';
+        MACRO_PARSE_INT(tmpi, token);
+        _gps.lon = tmpi + (tmpd * (1.0 / 60.0));
+    }
+
+    /* Parse E or W. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token == 'W')
+        _gps.lon = -_gps.lon;
+
+    /* Parse speed over ground, knots. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+    {
+        MACRO_PARSE_FLOAT(_gps.speed, token);
+        if(_gps.fix > 1)
+            _gps.maxspeed = MAX(_gps.maxspeed, _gps.speed);
+    }
+
+    /* Parse heading, degrees from true north. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+    {
+        MACRO_PARSE_FLOAT(_gps.heading, token);
+    }
+
+    /* Parse date. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token && gpsdate)
+    {
+        struct tm time;
+        gpsdate[6] = '\0'; /* Make sure time is 6 chars long. */
+        strcat(gpsdate, token);
+        strptime(gpsdate, "%H%M%S%d%m%y", &time);
+        _pos.time = mktime(&time) + _gmtoffset;
+    }
+    else
+        _pos.time = time(NULL);
+
+    /* Translate data into integers. */
+    latlon2unit(_gps.lat, _gps.lon, _pos.unitx, _pos.unity);
+
+    /* Add new data to track. */
+    if(_gps_state == RCVR_FIXED)
+    {
+        if(track_add(_pos.time, newly_fixed))
+        {
+            /* Move mark to new location. */
+            map_refresh_mark(FALSE);
+        }
+        else
+        {
+            map_move_mark();
+        }
+    }
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+gps_parse_gga(gchar *sentence)
+{
+    /* GGA          Global Positioning System Fix Data
+     1. Fix Time
+     2. Latitude
+     3. N or S
+     4. Longitude
+     5. E or W
+     6. Fix quality
+                   0 = invalid
+                   1 = GPS fix (SPS)
+                   2 = DGPS fix
+                   3 = PPS fix
+                   4 = Real Time Kinematic
+                   5 = Float RTK
+                   6 = estimated (dead reckoning) (2.3 feature)
+                   7 = Manual input mode
+                   8 = Simulation mode
+     7. Number of satellites being tracked
+     8. Horizontal dilution of position
+     9. Altitude, Meters, above mean sea level
+     10. Alt unit (meters)
+     11. Height of geoid (mean sea level) above WGS84 ellipsoid
+     12. unit
+     13. (empty field) time in seconds since last DGPS update
+     14. (empty field) DGPS station ID number
+     15. the checksum data
+     */
+    gchar *token;
+    vprintf("%s(): %s\n", __PRETTY_FUNCTION__, sentence);
+
+#define DELIM ","
+
+    /* Skip Fix time */
+    token = strsep(&sentence, DELIM);
+    /* Skip latitude */
+    token = strsep(&sentence, DELIM);
+    /* Skip N or S */
+    token = strsep(&sentence, DELIM);
+    /* Skip longitude */
+    token = strsep(&sentence, DELIM);
+    /* Skip S or W */
+    token = strsep(&sentence, DELIM);
+
+    /* Parse Fix quality */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+        MACRO_PARSE_INT(_gps.fixquality, token);
+
+    /* Skip number of satellites */
+    token = strsep(&sentence, DELIM);
+
+    /* Parse Horizontal dilution of position */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+        MACRO_PARSE_INT(_gps.hdop, token);
+
+    /* Altitude */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+    {
+        MACRO_PARSE_FLOAT(_pos.altitude, token);
+    }
+    else
+        _pos.altitude = 0;
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+gps_parse_gsa(gchar *sentence)
+{
+    /* GPS DOP and active satellites
+     *  1) Auto selection of 2D or 3D fix (M = manual)
+     *  2) 3D fix - values include: 1 = no fix, 2 = 2D, 3 = 2D
+     *  3) PRNs of satellites used for fix
+     *     (space for 12)
+     *  4) PDOP (dilution of precision)
+     *  5) Horizontal dilution of precision (HDOP)
+     *  6) Vertical dilution of precision (VDOP)
+     *  7) Checksum
+     */
+    gchar *token;
+    gint i;
+    vprintf("%s(): %s\n", __PRETTY_FUNCTION__, sentence);
+
+#define DELIM ","
+
+    /* Skip Auto selection. */
+    token = strsep(&sentence, DELIM);
+
+    /* 3D fix. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+        MACRO_PARSE_INT(_gps.fix, token);
+
+    _gps.satinuse = 0;
+    for(i = 0; i < 12; i++)
+    {
+        token = strsep(&sentence, DELIM);
+        if(token && *token)
+            _gps.satforfix[_gps.satinuse++] = atoi(token);
+    }
+
+    /* PDOP */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+        MACRO_PARSE_FLOAT(_gps.pdop, token);
+
+    /* HDOP */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+        MACRO_PARSE_FLOAT(_gps.hdop, token);
+
+    /* VDOP */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+        MACRO_PARSE_FLOAT(_gps.vdop, token);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+gps_parse_gsv(gchar *sentence)
+{
+    /* Must be GSV - Satellites in view
+     *  1) total number of messages
+     *  2) message number
+     *  3) satellites in view
+     *  4) satellite number
+     *  5) elevation in degrees (0-90)
+     *  6) azimuth in degrees to true north (0-359)
+     *  7) SNR in dB (0-99)
+     *  more satellite infos like 4)-7)
+     *  n) checksum
+     */
+    gchar *token;
+    gint msgcnt = 0, nummsgs = 0;
+    static gint running_total = 0;
+    static gint num_sats_used = 0;
+    static gint satcnt = 0;
+    vprintf("%s(): %s\n", __PRETTY_FUNCTION__, sentence);
+
+    /* Parse number of messages. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+        MACRO_PARSE_INT(nummsgs, token);
+
+    /* Parse message number. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+        MACRO_PARSE_INT(msgcnt, token);
+
+    /* Parse number of satellites in view. */
+    token = strsep(&sentence, DELIM);
+    if(token && *token)
+    {
+        MACRO_PARSE_INT(_gps.satinview, token);
+        if(_gps.satinview > 12) /* Handle buggy NMEA. */
+            _gps.satinview = 12;
+    }
+
+    /* Loop until there are no more satellites to parse. */
+    while(sentence && satcnt < 12)
+    {
+        /* Get token for Satellite Number. */
+        token = strsep(&sentence, DELIM);
+        if(token && *token)
+            _gps_sat[satcnt].prn = atoi(token);
+
+        /* Get token for elevation in degrees (0-90). */
+        token = strsep(&sentence, DELIM);
+        if(token && *token)
+            _gps_sat[satcnt].elevation = atoi(token);
+
+        /* Get token for azimuth in degrees to true north (0-359). */
+        token = strsep(&sentence, DELIM);
+        if(token && *token)
+            _gps_sat[satcnt].azimuth = atoi(token);
+
+        /* Get token for SNR. */
+        token = strsep(&sentence, DELIM);
+        if(token && *token && (_gps_sat[satcnt].snr = atoi(token)))
+        {
+            /* SNR is non-zero - add to total and count as used. */
+            running_total += _gps_sat[satcnt].snr;
+            num_sats_used++;
+        }
+        satcnt++;
+    }
+
+    if(msgcnt == nummsgs)
+    {
+        /*  This is the last message. Calculate signal strength. */
+        if(num_sats_used)
+        {
+            if(_gps_state == RCVR_UP)
+            {
+                gdouble fraction = running_total * sqrtf(num_sats_used)
+                    / num_sats_used / 100.0;
+                BOUND(fraction, 0.0, 1.0);
+                hildon_banner_set_fraction(
+                        HILDON_BANNER(_fix_banner), fraction);
+            }
+            running_total = 0;
+            num_sats_used = 0;
+        }
+        satcnt = 0;
+
+        /* Keep awake while they watch the progress bar. */
+        UNBLANK_SCREEN(TRUE, FALSE);
+    }
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+void
+gps_init()
+{
+    DBusGConnection *dbus_conn;
+    GError *error = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    _gps_init_mutex = g_mutex_new();
+
+    /* Initialize D-Bus. */
+    if(NULL == (dbus_conn = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error)))
+    {
+        g_printerr("Failed to open connection to D-Bus: %s.\n",
+                error->message);
+        error = NULL;
+    }
+
+    if(NULL == (_rfcomm_req_proxy = dbus_g_proxy_new_for_name(
+                    dbus_conn,
+                    BTCOND_SERVICE,
+                    BTCOND_REQ_PATH,
+                    BTCOND_REQ_INTERFACE)))
+    {
+        g_printerr("Failed to open connection to %s.\n",
+                BTCOND_REQ_INTERFACE);
+    }
+
+    /* set _gpsoffset */
+    {   
+        time_t time1;
+        struct tm time2;
+        time1 = time(NULL);
+        localtime_r(&time1, &time2);
+        _gmtoffset = time2.tm_gmtoff;
+    }
+
+    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+}
+static gboolean
+gps_handle_error_idle(gchar *error)
+{
+    printf("%s(%s)\n", __PRETTY_FUNCTION__, error);
+
+    /* Ask for re-try. */
+    if(++_gps_rcvr_retry_count > 2)
+    {
+        GtkWidget *confirm;
+        gchar buffer[BUFFER_SIZE];
+
+        snprintf(buffer, sizeof(buffer), "%s\nRetry?", error);
+        confirm = hildon_note_new_confirmation(GTK_WINDOW(_window), buffer);
+
+        rcvr_disconnect();
+
+        if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
+            rcvr_connect(); /* Try again. */
+        else
+        {
+            /* Disable GPS. */
+            gtk_check_menu_item_set_active(
+                    GTK_CHECK_MENU_ITEM(_menu_enable_gps_item), FALSE);
+        }
+
+        /* Ask user to re-connect. */
+        gtk_widget_destroy(confirm);
+    }
+    else
+    {
+        rcvr_disconnect();
+        rcvr_connect(); /* Try again. */
+    }
+
+    g_free(error);
+
+    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+    return FALSE;
+}
+
+static gboolean
+gps_update_state_idle(gpointer data)
+{
+    ConnState new_state = GPOINTER_TO_INT(data);
+    printf("%s(%d)\n", __PRETTY_FUNCTION__, new_state);
+
+    if(new_state < RCVR_FIXED)
+    {
+        if(_track.tail->unity)
+            track_insert_break(FALSE);
+        _speed_excess = FALSE;
+    }
+    set_conn_state(new_state);
+
+    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+    return FALSE;
+}
+
+static gboolean
+gps_parse_nmea_idle(gchar *nmea)
+{
+    printf("%s(%s)\n", __PRETTY_FUNCTION__, nmea);
+
+    if(_enable_gps && _gps_state > RCVR_DOWN)
+    {
+        if(!strncmp(nmea + 3, "GSV", 3))
+        {
+            if(_gps_state == RCVR_UP || _gps_info || _satdetails_on)
+                gps_parse_gsv(nmea + 7);
+        }
+        else if(!strncmp(nmea + 3, "RMC", 3))
+            gps_parse_rmc(nmea + 7);
+        else if(!strncmp(nmea + 3, "GGA", 3))
+            gps_parse_gga(nmea + 7);
+        else if(!strncmp(nmea + 3, "GSA", 3))
+            gps_parse_gsa(nmea + 7);
+
+        if(_gps_info)
+            gps_display_data();
+        if(_satdetails_on)
+            gps_display_details();
+    }
+
+    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+    return FALSE;
+}
+
+static GpsRcvrInfo*
+gri_clone(GpsRcvrInfo *gri)
+{
+    GpsRcvrInfo *ret = g_new(GpsRcvrInfo, 1);
+    ret->type = gri->type;
+    ret->bt_mac = g_strdup(gri->bt_mac);
+    ret->bt_file = g_strdup(gri->bt_file);
+    ret->file_path = g_strdup(gri->file_path);
+    ret->gpsd_host = g_strdup(gri->gpsd_host);
+    ret->gpsd_port = gri->gpsd_port;
+    return ret;
+}
+
+static void
+gri_free(GpsRcvrInfo *gri)
+{
+    g_free(gri->bt_mac);
+    g_free(gri->file_path);
+    g_free(gri->gpsd_host);
+    g_free(gri);
+}
+
+static void
+thread_read_nmea(GpsRcvrInfo *gri)
+{
+    gchar buf[GPS_READ_BUF_SIZE];
+    gchar *buf_curr = buf;
+    gchar *buf_last = buf + GPS_READ_BUF_SIZE - 1;
+    GnomeVFSFileSize bytes_read;
+    GnomeVFSHandle *handle = NULL;
+    GnomeVFSInetConnection *iconn = NULL;
+    GnomeVFSSocket *socket = NULL;
+    GnomeVFSResult vfs_result;
+    GThread *my_thread = g_thread_self();
+    gboolean error = FALSE;
+    printf("%s(%d)\n", __PRETTY_FUNCTION__, gri->type);
+
+    /* Lock/Unlock the mutex to ensure that _gps_thread is done being set. */
+    g_mutex_lock(_gps_init_mutex);
+    g_mutex_unlock(_gps_init_mutex);
+
+    if(gri->type == GPS_RCVR_GPSD)
+    {
+        /* Create a socket to interact with GPSD. */
+        GTimeVal timeout = { 15, 0 };
+        vfs_result = gnome_vfs_inet_connection_create(&iconn,
+                gri->gpsd_host, gri->gpsd_port, NULL);
+        if(vfs_result != GNOME_VFS_OK
+               || NULL == (socket = gnome_vfs_inet_connection_to_socket(iconn))
+               || GNOME_VFS_OK != (vfs_result = gnome_vfs_socket_set_timeout(
+                       socket, &timeout, NULL))
+               || GNOME_VFS_OK != (vfs_result = gnome_vfs_socket_write(socket,
+                       "r\r\n", sizeof("r\r\n"), &bytes_read, NULL))
+               || bytes_read != sizeof("r\r\n"))
+        {
+            g_idle_add((GSourceFunc)gps_handle_error_idle,
+                    g_strdup_printf("%s",
+                    _("Error connecting to GPSD.")));
+            error = TRUE;
+        }
+    }
+    else
+    {
+        /* Open a handle to interact with a file. */
+        vfs_result = gnome_vfs_open(&handle,
+                gri->type == GPS_RCVR_BT ? gri->bt_file : gri->file_path,
+                GNOME_VFS_OPEN_READ);
+        if(vfs_result != GNOME_VFS_OK)
+        {
+            g_idle_add((GSourceFunc)gps_handle_error_idle,
+                    g_strdup_printf("%s",
+                    _("Error connecting to GPS receiver.")));
+            error = TRUE;
+        }
+    }
+
+    if(vfs_result == GNOME_VFS_OK)
+    {
+        g_idle_add((GSourceFunc)gps_update_state_idle, (void*)RCVR_UP);
+        while(my_thread == _gps_thread)
+        {
+            gchar *eol;
+            if(gri->type == GPS_RCVR_GPSD)
+            {
+                vfs_result = gnome_vfs_socket_read( 
+                        socket,
+                        buf,
+                        buf_last - buf_curr,
+                        &bytes_read,
+                        NULL);
+            }
+            else
+            {
+                vfs_result = gnome_vfs_read( 
+                        handle,
+                        buf,
+                        buf_last - buf_curr,
+                        &bytes_read);
+            }
+
+            if(vfs_result != GNOME_VFS_OK)
+            {
+                if(my_thread == _gps_thread)
+                {
+                    /* Error wasn't user-initiated. */
+                    g_idle_add((GSourceFunc)gps_handle_error_idle,
+                            g_strdup_printf("%s",
+                                _("Error reading GPS data.")));
+                    error = TRUE;
+                }
+                break;
+            }
+
+            /* Successful connection.  Reset the retry counter. */
+            _gps_rcvr_retry_count = 0;
+
+            buf_curr += bytes_read;
+            *buf_curr = '\0'; /* append a \0 so we can read as string */
+            while(my_thread == _gps_thread && (eol = strchr(buf, '\n')))
+            {
+                gint csum = 0;
+                if(*buf == '$')
+                {
+                    gchar *sptr = buf + 1; /* Skip the $ */
+                    /* This is the beginning of a sentence; okay to parse. */
+                    *eol = '\0'; /* overwrite \n with \0 */
+                    while(*sptr && *sptr != '*')
+                        csum ^= *sptr++;
+
+                    /* If we're at a \0 (meaning there is no checksum), or if
+                     * the checksum is good, then parse the sentence. */
+                    if(!*sptr || csum == strtol(sptr + 1, NULL, 16))
+                    {
+                        if(*sptr)
+                            *sptr = '\0'; /* take checksum out of the buffer.*/
+                        if(my_thread == _gps_thread)
+                            g_idle_add((GSourceFunc)gps_parse_nmea_idle,
+                                    g_strdup(buf));
+                    }
+                    else
+                    {
+                        /* There was a checksum, and it was bad. */
+                        g_printerr("%s: Bad checksum in NMEA sentence:\n%s\n",
+                                __PRETTY_FUNCTION__, buf);
+                    }
+                }
+
+                /* If eol is at or after (buf_curr - 1) */
+                if(eol >= (buf_curr - 1))
+                {
+                    /* Last read was a newline - reset read buffer */
+                    buf_curr = buf;
+                    *buf_curr = '\0';
+                }
+                else
+                {
+                    /* Move the next line to the front of the buffer. */
+                    memmove(buf, eol + 1,
+                            buf_curr - eol); /* include terminating 0 */
+                    /* Subtract _curr so that it's pointing at the new \0. */
+                    buf_curr -= (eol - buf + 1);
+                }
+            }
+        }
+    }
+
+    /* Clean up. */
+    if(handle)
+        gnome_vfs_close(handle);
+    if(iconn)
+        gnome_vfs_inet_connection_free(iconn, NULL);
+
+    if(!error)
+    {
+        g_idle_add((GSourceFunc)gps_update_state_idle,
+                GINT_TO_POINTER(RCVR_OFF));
+    }
+    gri_free(gri);
+
+    printf("%s(): g_thread_exit(NULL)\n", __PRETTY_FUNCTION__);
+    g_thread_exit(NULL);
+}
+
+/**
+ * Set the connection state.  This function controls all connection-related
+ * banners.
+ */
+void
+set_conn_state(ConnState new_conn_state)
+{
+    printf("%s(%d)\n", __PRETTY_FUNCTION__, new_conn_state);
+
+    switch(_gps_state = new_conn_state)
+    {
+        case RCVR_OFF:
+        case RCVR_FIXED:
+            if(_connect_banner)
+            {
+                gtk_widget_destroy(_connect_banner);
+                _connect_banner = NULL;
+            }
+            if(_fix_banner)
+            {
+                gtk_widget_destroy(_fix_banner);
+                _fix_banner = NULL;
+            }
+            break;
+        case RCVR_DISCONNECT:
+            if(_connect_banner)
+            {
+                gtk_widget_destroy(_connect_banner);
+                _connect_banner = NULL;
+            }
+            if(_fix_banner)
+            {
+                gtk_widget_destroy(_fix_banner);
+                _fix_banner = NULL;
+            }
+            _connect_banner = hildon_banner_show_animation(
+                    _window, NULL, _("Disconnecting from GPS receiver"));
+            break;
+
+        case RCVR_DOWN:
+            if(_fix_banner)
+            {
+                gtk_widget_destroy(_fix_banner);
+                _fix_banner = NULL;
+            }
+            if(!_connect_banner)
+                _connect_banner = hildon_banner_show_animation(
+                        _window, NULL, _("Searching for GPS receiver"));
+            break;
+        case RCVR_UP:
+            if(_connect_banner)
+            {
+                gtk_widget_destroy(_connect_banner);
+                _connect_banner = NULL;
+            }
+            if(!_fix_banner)
+            {
+                _fix_banner = hildon_banner_show_progress(
+                        _window, NULL, _("Establishing GPS fix"));
+            }
+            break;
+        default: ; /* to quell warning. */
+    }
+    map_force_redraw();
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+/**
+ * Disconnect from the receiver.  This method cleans up any and everything
+ * that might be associated with the receiver.
+ */
+void
+rcvr_disconnect()
+{
+    GError *error = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_gps_thread)
+        set_conn_state(RCVR_DISCONNECT);
+
+    _gps_thread = NULL;
+
+    /* Check if we need to cancel the RFComm request. */
+    if(!_gps_thread && _gri.type == GPS_RCVR_BT && _rfcomm_req_proxy)
+    {
+        dbus_g_proxy_call(_rfcomm_req_proxy, BTCOND_RFCOMM_CANCEL_CONNECT_REQ,
+                    &error,
+                    G_TYPE_STRING, _gri.bt_mac,
+                    G_TYPE_STRING, "SPP",
+                    G_TYPE_INVALID,
+                    G_TYPE_INVALID);
+        error = NULL;
+        dbus_g_proxy_call(_rfcomm_req_proxy, BTCOND_RFCOMM_DISCONNECT_REQ,
+                    &error,
+                    G_TYPE_STRING, _gri.bt_mac,
+                    G_TYPE_STRING, "SPP",
+                    G_TYPE_INVALID,
+                    G_TYPE_INVALID);
+        set_conn_state(RCVR_OFF);
+    }
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+/**
+ * Connect to the receiver.
+ * This method assumes that _fd is -1 and _channel is NULL.  If unsure, call
+ * rcvr_disconnect() first.
+ * Since this is an idle function, this function returns whether or not it
+ * should be called again, which is always FALSE.
+ */
+gboolean
+rcvr_connect()
+{
+    printf("%s(%d)\n", __PRETTY_FUNCTION__, _gps_state);
+
+    if(_enable_gps && _gps_state <= RCVR_DISCONNECT
+            && _gri.type != GPS_RCVR_NONE)
+    {
+        set_conn_state(RCVR_DOWN);
+
+        if(_gri.type != GPS_RCVR_BT || (_gri.bt_file &&
+                    g_file_test(_gri.bt_file, G_FILE_TEST_EXISTS)))
+        {
+            /* Lock/Unlock the mutex to ensure that the thread doesn't
+             * start until _gps_thread is set. */
+            g_mutex_lock(_gps_init_mutex);
+            _gps_thread = g_thread_create((GThreadFunc)thread_read_nmea,
+                    gri_clone(&_gri), FALSE, NULL);
+            g_mutex_unlock(_gps_init_mutex);
+        }
+        else
+        {
+            /* Create the RFCOMM file descriptor. */
+            if(_rfcomm_req_proxy)
+            {
+                gint mybool = TRUE;
+                dbus_g_proxy_begin_call(
+                        _rfcomm_req_proxy, BTCOND_RFCOMM_CONNECT_REQ,
+                        (DBusGProxyCallNotify)rcvr_connect_response,
+                        NULL, NULL,
+                        G_TYPE_STRING, _gri.bt_mac,
+                        G_TYPE_STRING, "SPP",
+                        G_TYPE_BOOLEAN, &mybool,
+                        G_TYPE_INVALID);
+            }
+        }
+    }
+
+    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+    return FALSE;
+}
+
+static void
+rcvr_connect_response(DBusGProxy *proxy, DBusGProxyCall *call_id)
+{
+    GError *error = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if((_gps_state == RCVR_DOWN || _gps_state == RCVR_DISCONNECT)
+        && _gri.type != GPS_RCVR_NONE)
+    {
+        if(!dbus_g_proxy_end_call(_rfcomm_req_proxy, call_id, &error,
+                    G_TYPE_STRING, &_gri.bt_file, G_TYPE_INVALID))
+        {
+            if(error->domain == DBUS_GERROR
+                    && error->code == DBUS_GERROR_REMOTE_EXCEPTION)
+            {
+                /* If we're already connected, it's not an error, unless
+                 * they don't give us the file descriptor path, in which
+                 * case we re-connect.*/
+                if(!strcmp(BTCOND_ERROR_CONNECTED,
+                            dbus_g_error_get_name(error)) || !_gri.bt_file)
+                {
+                    printf("Caught remote method exception %s: %s",
+                            dbus_g_error_get_name(error),
+                            error->message);
+
+                    gps_handle_error_idle(
+                            _("Failed to connect to Bluetooth GPS receiver."));
+                    return;
+                }
+            }
+            else
+            {
+                /* Unknown error. */
+                g_printerr("Error: %s\n", error->message);
+                rcvr_disconnect();
+                rcvr_connect(); /* Try again. */
+                return;
+            }
+        }
+        /* Lock/Unlock the mutex to ensure that the thread doesn't
+         * start until _gps_thread is set. */
+        g_mutex_lock(_gps_init_mutex);
+        _gps_thread = g_thread_create((GThreadFunc)thread_read_nmea,
+                gri_clone(&_gri), FALSE, NULL);
+        g_mutex_unlock(_gps_init_mutex);
+    }
+    /* else { Looks like the middle of a disconnect.  Do nothing. } */
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+void
+reset_bluetooth()
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    if(system("/usr/bin/sudo -l | grep -q '/usr/sbin/hciconfig  *hci0  *reset'"
+            " && sudo /usr/sbin/hciconfig hci0 reset"))
+        popup_error(_window,
+                _("An error occurred while trying to reset the bluetooth "
+                "radio.\n\n"
+                "Did you make sure to modify\nthe /etc/sudoers file?"));
+    else if(_gps_state > RCVR_DISCONNECT)
+    {
+        rcvr_connect();
+    }
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
