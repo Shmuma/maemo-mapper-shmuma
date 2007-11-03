@@ -35,6 +35,7 @@
 
 #include "display.h"
 #include "gps.h"
+#include "gdk-pixbuf-rotate.h"
 #include "gpx.h"
 #include "maps.h"
 #include "menu.h"
@@ -458,7 +459,7 @@ menu_cb_poi_categories(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(category_list_dialog())
+    if(category_list_dialog(_window))
         map_force_redraw();
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -557,7 +558,7 @@ menu_cb_view_zoom_out(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(_zoom < MAX_ZOOM - 1)
+    if(_zoom < MAX_ZOOM)
     {
         gchar buffer[80];
         snprintf(buffer, sizeof(buffer),"%s %d",
@@ -583,6 +584,8 @@ menu_cb_view_rotate_clock(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    map_rotate(-ROTATE_DEGREES);
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -592,6 +595,8 @@ menu_cb_view_rotate_counter(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    map_rotate(ROTATE_DEGREES);
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -600,6 +605,8 @@ static gboolean
 menu_cb_view_rotate_reset(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    map_rotate(-_next_map_rotate_angle);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -639,7 +646,15 @@ menu_cb_view_rotate_auto(GtkMenuItem *item)
 static gboolean
 menu_cb_view_pan_up(GtkMenuItem *item)
 {
+    gfloat panx_adj, pany_adj;
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Adjust for rotate angle. */
+    gdk_pixbuf_rotate_vector(&panx_adj, &pany_adj, _map_reverse_matrix,
+            0, -PAN_PIXELS);
+
+    map_pan(pixel2unit((gint)(panx_adj + 0.5f)),
+                pixel2unit((gint)(pany_adj + 0.5f)));
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -648,7 +663,15 @@ menu_cb_view_pan_up(GtkMenuItem *item)
 static gboolean
 menu_cb_view_pan_down(GtkMenuItem *item)
 {
+    gfloat panx_adj, pany_adj;
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Adjust for rotate angle. */
+    gdk_pixbuf_rotate_vector(&panx_adj, &pany_adj, _map_reverse_matrix,
+            0, PAN_PIXELS);
+
+    map_pan(pixel2unit((gint)(panx_adj + 0.5f)),
+                pixel2unit((gint)(pany_adj + 0.5f)));
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -657,7 +680,15 @@ menu_cb_view_pan_down(GtkMenuItem *item)
 static gboolean
 menu_cb_view_pan_left(GtkMenuItem *item)
 {
+    gfloat panx_adj, pany_adj;
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Adjust for rotate angle. */
+    gdk_pixbuf_rotate_vector(&panx_adj, &pany_adj, _map_reverse_matrix,
+            -PAN_PIXELS, 0);
+
+    map_pan(pixel2unit((gint)(panx_adj + 0.5f)),
+                pixel2unit((gint)(pany_adj + 0.5f)));
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -666,7 +697,15 @@ menu_cb_view_pan_left(GtkMenuItem *item)
 static gboolean
 menu_cb_view_pan_right(GtkMenuItem *item)
 {
+    gfloat panx_adj, pany_adj;
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Adjust for rotate angle. */
+    gdk_pixbuf_rotate_vector(&panx_adj, &pany_adj, _map_reverse_matrix,
+            PAN_PIXELS, 0);
+
+    map_pan(pixel2unit((gint)(panx_adj + 0.5f)),
+                pixel2unit((gint)(pany_adj + 0.5f)));
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -677,6 +716,8 @@ menu_cb_view_pan_north(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    map_pan(0, -pixel2unit(PAN_PIXELS));
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -685,6 +726,8 @@ static gboolean
 menu_cb_view_pan_south(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    map_pan(0, pixel2unit(PAN_PIXELS));
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -695,6 +738,8 @@ menu_cb_view_pan_west(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    map_pan(-pixel2unit(PAN_PIXELS), 0);
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -703,6 +748,8 @@ static gboolean
 menu_cb_view_pan_east(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    map_pan(pixel2unit(PAN_PIXELS), 0);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1447,6 +1494,7 @@ menu_init()
             = gtk_menu_item_new_with_label(_("Clockwise")));
     gtk_menu_append(submenu2, _menu_view_rotate_counter_item
             = gtk_menu_item_new_with_label(_("Counter")));
+    gtk_menu_append(submenu2, gtk_separator_menu_item_new());
     gtk_menu_append(submenu2, _menu_view_rotate_reset_item
             = gtk_menu_item_new_with_label(_("Reset")));
     gtk_menu_append(submenu2, _menu_view_rotate_auto_item

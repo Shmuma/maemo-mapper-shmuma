@@ -31,6 +31,12 @@
 
 #define _(String) gettext(String)
 
+/* #define MAPDB_SQLITE */
+
+#ifdef MAPDB_SQLITE
+#include "sqlite3.h"
+#endif
+
 /** This enumerated type defines the possible connection states. */
 typedef enum
 {
@@ -180,6 +186,10 @@ typedef enum
     CUSTOM_ACTION_PAN_WEST,
     CUSTOM_ACTION_PAN_SOUTH,
     CUSTOM_ACTION_PAN_EAST,
+    CUSTOM_ACTION_PAN_UP,
+    CUSTOM_ACTION_PAN_DOWN,
+    CUSTOM_ACTION_PAN_LEFT,
+    CUSTOM_ACTION_PAN_RIGHT,
     CUSTOM_ACTION_RESET_VIEW_ANGLE,
     CUSTOM_ACTION_ROTATE_CLOCKWISE,
     CUSTOM_ACTION_ROTATE_COUNTERCLOCKWISE,
@@ -337,14 +347,6 @@ struct _PoiSaxData {
     SaxData sax_data;
     GList *poi_list;
     PoiInfo *curr_poi;
-};
-
-/** Data used during action: add or edit category/poi **/
-typedef struct _DeletePOI DeletePOI;
-struct _DeletePOI {
-    GtkWidget *dialog;
-    gchar *txt_label;
-    gint id;
 };
 
 /** Data regarding a map repository. */

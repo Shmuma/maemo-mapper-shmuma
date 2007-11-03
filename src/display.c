@@ -423,7 +423,7 @@ gps_show_info(void)
     else
     {
         gps_hide_text();
-        gtk_widget_hide_all(GTK_WIDGET(_gps_widget));
+        gtk_widget_hide(GTK_WIDGET(_gps_widget));
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -1234,12 +1234,8 @@ map_center_unit_full(Point new_center,
     if(!_mouse_is_down)
     {
         /* Assure that _center.unitx/y are bounded. */
-        BOUND(new_center.unitx,
-                pixel2unit(_screen_halfwidth_pixels),
-                WORLD_SIZE_UNITS - pixel2unit(_screen_halfwidth_pixels) - 1);
-        BOUND(new_center.unity,
-                pixel2unit(_screen_halfheight_pixels),
-                WORLD_SIZE_UNITS - pixel2unit(_screen_halfheight_pixels));
+        BOUND(new_center.unitx, 0, WORLD_SIZE_UNITS);
+        BOUND(new_center.unity, 0, WORLD_SIZE_UNITS);
 
         mrt = g_slice_new(MapRenderTask);
         ++_redraw_count;
@@ -1275,10 +1271,15 @@ map_center_unit(Point new_center)
 }
 
 void
-map_center_rotate(gint rotate_angle)
+map_rotate(gint rotate_angle)
 {
+    if(_center_mode > 0 && gtk_check_menu_item_get_active(
+                GTK_CHECK_MENU_ITEM(_menu_view_rotate_auto_item)))
+        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
+                    _menu_view_rotate_auto_item), FALSE);
+
     map_center_unit_full(map_calc_new_center(_next_zoom), _next_zoom,
-        rotate_angle);
+        (_next_map_rotate_angle + rotate_angle) % 360);
 }
 
 void
@@ -1443,8 +1444,11 @@ map_download_refresh_idle(MapUpdateTask *mut)
 
     if(++_curr_download == _num_downloads)
     {
-        gtk_widget_destroy(_download_banner);
-        _download_banner = NULL;
+        if(_download_banner)
+        {
+            gtk_widget_destroy(_download_banner);
+            _download_banner = NULL;
+        }
         _num_downloads = _curr_download = 0;
         g_thread_pool_stop_unused_threads();
 #ifndef MAPDB_SQLITE
@@ -1491,9 +1495,8 @@ map_set_zoom(gint new_zoom)
 {
     printf("%s(%d)\n", __PRETTY_FUNCTION__, _zoom);
 
-    /* Note that, since new_zoom is a gint and MIN_ZOOM is 0, this if
-     * condition also checks for new_zoom >= MIN_ZOOM. */
-    if(new_zoom > (MAX_ZOOM - 1))
+    /* This if condition also checks for new_zoom >= 0. */
+    if((unsigned)new_zoom > MAX_ZOOM)
         return;
 
     map_center_zoom(new_zoom / _curr_repo->view_zoom_steps
@@ -2395,7 +2398,7 @@ latlon_dialog(gdouble lat, gdouble lon)
     gtk_widget_show_all(dialog);
 
     gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_hide_all(dialog);
+    gtk_widget_hide(dialog);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;

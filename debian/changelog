@@ -1,3 +1,25 @@
+maemo-mapper (2.0.1) unstable; urgency=low
+
+  * Expanded the available zoom levels by four additional zoom steps.  This
+    change invalidates previous map databases, so you will have to discard
+    your previous map data.
+  * Fixed crash that occurred during rapid map auto-download.
+  * Tightened up the POI Edit dialog to show more of the POI description.
+  * Added "Edit Categories..." buttons in a few more places.
+  * Fixed all of the formerly useless View menu items. (closes #1598, #1604)
+  * Fixed bug in parsing East-of-the-meridian longitudes.
+  * Fixed bug in "Along Route" radio button.
+  * Fixed bug with repeated internet connection attempts.
+  * Fixed bug in update of POI List after Delete from Edit POI dialog.
+    (closes #1599)
+  * Fixed crash when adding a new POI from the context menu.
+  * Added confirmation of overwriting query when selecting a category from the
+    drop down box in the "Download POI" dialog.
+  * Fixed crash with invalid address in the "Go to | Address" action.
+  * Fixed initialization of the POI icon directory name.
+
+ -- John Costigan <gnuite@gmail.com>  Thu, 3 Nov 2007 05:00:00 -0400
+
 maemo-mapper (2.0) unstable; urgency=low
 
   * Changed map repositories to use gdbm instead of file system.
@@ -22,7 +44,7 @@ maemo-mapper (2.0) unstable; urgency=low
   * Improved memory utilization.
   * Reorganized the code for greater readability.
 
- -- John Costigan <gnuite@gmail.com>  Mon, 1 Oct 2007 22:08:00 -0400
+ -- John Costigan <gnuite@gmail.com>  Thu, 1 Nov 2007 23:00:00 -0400
 
 maemo-mapper (1.4.7) unstable; urgency=low
 

@@ -54,7 +54,7 @@ void map_force_redraw();
 
 void map_center_unit_full(Point new_center, gint zoom, gint rotate_angle);
 void map_center_unit(Point new_center);
-void map_center_rotate(gint rotate_angle);
+void map_rotate(gint rotate_angle);
 void map_center_zoom(gint zoom);
 
 gboolean map_download_refresh_idle(MapUpdateTask *mut);

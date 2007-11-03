@@ -308,7 +308,7 @@ banner_reset()
  *  to first char not part of the number.
  *
  */
-gint
+static gint
 strdmstod_1(gdouble *d, gchar *nptr, gchar **endptr, gchar *sep, gint utf8_deg)
 {
     guchar *p;
@@ -370,7 +370,7 @@ strdmstod_1(gdouble *d, gchar *nptr, gchar **endptr, gchar *sep, gint utf8_deg)
     return *p == 0;
 }
 
-gdouble
+static gdouble
 strdmstod_2(gchar *nptr, gchar **endptr)
 {
     gint ret;
@@ -434,40 +434,44 @@ strdmstod(const gchar *nptr, gchar **endptr)
 
     p = (char *)nptr;
 
-    while (*p && isspace(*p))
+    while(*p && isspace(*p))
         p++;
 
-    if (!*p) {
-        if (endptr) *endptr = (char *)nptr;
+    if(!*p) {
+        if(endptr)
+            *endptr = (char *)nptr;
         return 0.0;
     }
 
-    if (strchr("NWSE-+", *p)) {
+    if(strchr("nwseNWSE-+", *p)) {
         sign = p;
         p++;
     }
 
     d = strdmstod_2(p, &end);
-    if (p == end && d == 0.0) {
-        if (endptr) *endptr = end;
+    if(p == end && d == 0.0) {
+        if(endptr) *endptr = end;
         return d;
     }
 
     p = end;
-    while (*p && isspace(*p))
+    while(*p && isspace(*p))
         p++;
 
     s = 1;
-    if (sign == 0) {
-        if (*p && strchr("NWSE", *p)) {
-            if (*p == 'S' || *p == 'E') s = -1;
+    if(sign == 0) {
+        if(*p && strchr("nwseNWSE", *p)) {
+            if(tolower(*p) == 's' || tolower(*p) == 'w')
+                s = -1;
             p++;
         }
     } else {
-        if (*sign == 'S' || *sign == 'E' || *sign == '-') s = -1;
+        if(tolower(*sign) == 's' || tolower(*sign) == 'w' || *sign == '-')
+            s = -1;
+        printf("s: %d\n", s);
     }
 
-    if (endptr) *endptr = p;
+    if(endptr) *endptr = p;
     return s * d;
 }
 

@@ -45,8 +45,8 @@ static gint _key_zoom_is_down = FALSE;
 static gint _key_zoom_new = -1;
 static gint _key_zoom_timeout_sid = 0;
 static gint _key_pan_is_down = FALSE;
-static gint _key_pan_incr_devx = 0;
-static gint _key_pan_incr_devy = 0;
+static gfloat _key_pan_incr_devx = 0;
+static gfloat _key_pan_incr_devy = 0;
 static gint _key_pan_timeout_sid = 0;
 
 static gboolean
@@ -64,10 +64,13 @@ key_pan_timeout(CustomAction action)
     }
     else
     {
+        gfloat panx_adj, pany_adj;
         /* Time is up for further action - execute the pan. */
-        gint pan_unitx = -pixel2unit(_map_offset_devx);
-        gint pan_unity = -pixel2unit(_map_offset_devy);
-        map_pan(pan_unitx, pan_unity);
+        /* Adjust for rotate angle. */
+        gdk_pixbuf_rotate_vector(&panx_adj, &pany_adj, _map_reverse_matrix,
+                _map_offset_devx, _map_offset_devy);
+        map_pan(-pixel2unit((gint)(panx_adj + 0.5f)),
+                    -pixel2unit((gint)(pany_adj + 0.5f)));
         _key_pan_timeout_sid = 0;
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
@@ -93,7 +96,7 @@ key_zoom_timeout(CustomAction action)
         {
             /* We're currently zooming out (_zoom is increasing). */
             gint test = _key_zoom_new + _curr_repo->view_zoom_steps;
-            if(test < MAX_ZOOM)
+            if(test <= MAX_ZOOM)
                 /* We can zoom some more.  Hurray! */
                 _key_zoom_new = test;
         }
@@ -179,12 +182,16 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
         case CUSTOM_ACTION_PAN_SOUTH:
         case CUSTOM_ACTION_PAN_EAST:
         case CUSTOM_ACTION_PAN_WEST:
+        case CUSTOM_ACTION_PAN_UP:
+        case CUSTOM_ACTION_PAN_DOWN:
+        case CUSTOM_ACTION_PAN_LEFT:
+        case CUSTOM_ACTION_PAN_RIGHT:
             if(!_key_pan_is_down)
             {
                 _key_pan_is_down = TRUE;
                 if(_center_mode > 0)
                     gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                                _menu_view_rotate_auto_item), FALSE);
+                                _menu_view_ac_none_item), FALSE);
                 if(_key_pan_timeout_sid)
                 {
                     g_source_remove(_key_pan_timeout_sid);
@@ -193,57 +200,59 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                 /* Figure out new pan. */
                 switch(_action[custom_key])
                 {
+                    case CUSTOM_ACTION_PAN_UP:
                     case CUSTOM_ACTION_PAN_NORTH:
                         _key_pan_incr_devy = -PAN_PIXELS;
                         break;
                     case CUSTOM_ACTION_PAN_SOUTH:
+                    case CUSTOM_ACTION_PAN_DOWN:
                         _key_pan_incr_devy = PAN_PIXELS;
                         break;
                     case CUSTOM_ACTION_PAN_EAST:
+                    case CUSTOM_ACTION_PAN_RIGHT:
                         _key_pan_incr_devx = PAN_PIXELS;
                         break;
                     case CUSTOM_ACTION_PAN_WEST:
+                    case CUSTOM_ACTION_PAN_LEFT:
                         _key_pan_incr_devx = -PAN_PIXELS;
                         break;
                     default:
                         g_printerr("Invalid action in key_pan_timeout(): %d\n",
                                 _action[custom_key]);
                 }
+                switch(_action[custom_key])
+                {
+                    case CUSTOM_ACTION_PAN_NORTH:
+                    case CUSTOM_ACTION_PAN_SOUTH:
+                    case CUSTOM_ACTION_PAN_EAST:
+                    case CUSTOM_ACTION_PAN_WEST:
+                        /* Adjust for rotate angle. */
+                        gdk_pixbuf_rotate_vector(&_key_pan_incr_devx,
+                                &_key_pan_incr_devy, _map_rotate_matrix,
+                                _key_pan_incr_devx, _key_pan_incr_devy);
+                    default:
+                        ;
+                }
                 key_pan_timeout(_action[custom_key]);
                 _key_pan_timeout_sid = g_timeout_add(
-                        500, (GSourceFunc)key_pan_timeout,
+                        250, (GSourceFunc)key_pan_timeout,
                         (gpointer)(_action[custom_key]));
             }
             break;
 
         case CUSTOM_ACTION_RESET_VIEW_ANGLE:
-            if(_center_mode > 0)
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                            _menu_view_rotate_auto_item), FALSE);
-            map_center_rotate(0);
+            map_rotate(-_next_map_rotate_angle);
             break;
 
         case CUSTOM_ACTION_ROTATE_CLOCKWISE:
         {
-            gint new_angle = _next_map_rotate_angle - ROTATE_DEGREES;
-            if(new_angle < 0)
-                new_angle += 360;
-            if(_center_mode > 0)
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                            _menu_view_rotate_auto_item), FALSE);
-            map_center_rotate(new_angle);
+            map_rotate(-ROTATE_DEGREES);
             break;
         }
 
         case CUSTOM_ACTION_ROTATE_COUNTERCLOCKWISE:
         {
-            gint new_angle = _next_map_rotate_angle + ROTATE_DEGREES;
-            if(new_angle >= 360)
-                new_angle -= 360;
-            if(_center_mode > 0)
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                            _menu_view_rotate_auto_item), FALSE);
-            map_center_rotate(new_angle);
+            map_rotate(ROTATE_DEGREES);
             break;
         }
 
@@ -448,6 +457,10 @@ window_cb_key_release(GtkWidget* widget, GdkEventKey *event)
         case CUSTOM_ACTION_PAN_SOUTH:
         case CUSTOM_ACTION_PAN_EAST:
         case CUSTOM_ACTION_PAN_WEST:
+        case CUSTOM_ACTION_PAN_UP:
+        case CUSTOM_ACTION_PAN_DOWN:
+        case CUSTOM_ACTION_PAN_LEFT:
+        case CUSTOM_ACTION_PAN_RIGHT:
             if(_key_pan_timeout_sid)
             {
                 g_source_remove(_key_pan_timeout_sid);

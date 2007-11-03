@@ -60,8 +60,9 @@ static HildonProgram *_program = NULL;
 static ConIcConnection *_conic_conn = NULL;
 static gboolean _conic_is_connecting = FALSE;
 static volatile gboolean _conic_is_connected = FALSE;
-static GMutex *_conic_is_connected_mutex = NULL;
-static GCond *_conic_is_connected_cond = NULL;
+static gboolean _conic_conn_failed = FALSE;
+static GMutex *_conic_connection_mutex = NULL;
+static GCond *_conic_connection_cond = NULL;
 
 static void
 conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
@@ -69,13 +70,14 @@ conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
     ConIcConnectionStatus status;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    g_mutex_lock(_conic_is_connected_mutex);
+    g_mutex_lock(_conic_connection_mutex);
 
     status = con_ic_connection_event_get_status(event);
 
     if((_conic_is_connected = (status == CON_IC_CONNECTION_ERROR_NONE)))
     {
         /* We're connected. */
+        _conic_conn_failed = FALSE;
         if(_download_banner != NULL)
         {
             gtk_widget_show(_download_banner);
@@ -84,6 +86,8 @@ conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
     else
     {
         /* We're not connected. */
+        /* Mark as a failed connection, if we had been trying to connect. */
+        _conic_conn_failed = _conic_is_connecting;
         if(_download_banner != NULL)
         {
             gtk_widget_hide(_download_banner);
@@ -91,8 +95,8 @@ conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
     }
 
     _conic_is_connecting = FALSE; /* No longer trying to connect. */
-    g_cond_broadcast(_conic_is_connected_cond);
-    g_mutex_unlock(_conic_is_connected_mutex);
+    g_cond_broadcast(_conic_connection_cond);
+    g_mutex_unlock(_conic_connection_mutex);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -103,14 +107,14 @@ conic_recommend_connected()
     printf("%s()\n", __PRETTY_FUNCTION__);
 
 #ifndef DEBUG
-    g_mutex_lock(_conic_is_connected_mutex);
+    g_mutex_lock(_conic_connection_mutex);
     if(!_conic_is_connecting)
     {
         /* Fire up a connection request. */
         con_ic_connection_connect(_conic_conn, CON_IC_CONNECT_FLAG_NONE);
         _conic_is_connecting = TRUE;
     }
-    g_mutex_unlock(_conic_is_connected_mutex);
+    g_mutex_unlock(_conic_connection_mutex);
 #endif
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -124,15 +128,17 @@ conic_ensure_connected()
 #ifndef DEBUG
     while(!_conic_is_connected)
     {   
-        g_mutex_lock(_conic_is_connected_mutex);
-        if(!_conic_is_connecting)
+        g_mutex_lock(_conic_connection_mutex);
+        /* If we're not connected, and if we're not connecting, and if we're
+         * not in the wake of a connection failure, then try to connect. */
+        if(!_conic_is_connected && !_conic_is_connecting &&!_conic_conn_failed)
         {
             /* Fire up a connection request. */
             con_ic_connection_connect(_conic_conn, CON_IC_CONNECT_FLAG_NONE);
             _conic_is_connecting = TRUE;
         }
-        g_cond_wait(_conic_is_connected_cond, _conic_is_connected_mutex);
-        g_mutex_unlock(_conic_is_connected_mutex);
+        g_cond_wait(_conic_connection_cond, _conic_connection_mutex);
+        g_mutex_unlock(_conic_connection_mutex);
     }
 #endif
 
@@ -242,6 +248,10 @@ maemo_mapper_init(gint argc, gchar **argv)
     CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_PAN_WEST] = _("Pan West");
     CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_PAN_SOUTH] = _("Pan South");
     CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_PAN_EAST] = _("Pan East");
+    CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_PAN_UP] = _("Pan Up");
+    CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_PAN_DOWN] = _("Pan Down");
+    CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_PAN_LEFT] = _("Pan Left");
+    CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_PAN_RIGHT] = _("Pan Right");
     CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_RESET_VIEW_ANGLE]
         = _("Reset Viewing Angle");
     CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_ROTATE_CLOCKWISE]
@@ -320,8 +330,8 @@ maemo_mapper_init(gint argc, gchar **argv)
     _mut_priority_mutex = g_mutex_new();
     _mouse_mutex = g_mutex_new();
 
-    _conic_is_connected_mutex = g_mutex_new();
-    _conic_is_connected_cond = g_cond_new();
+    _conic_connection_mutex = g_mutex_new();
+    _conic_connection_cond = g_cond_new();
 
     settings_init();
 

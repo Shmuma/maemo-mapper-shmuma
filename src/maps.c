@@ -782,7 +782,7 @@ map_convert_coords_to_quadtree_string(gint x, gint y, gint zoomlevel,
     if (initial)
         *ptr++ = initial;
 
-    for(n = 16 - zoomlevel; n >= 0; n--)
+    for(n = MAX_ZOOM - zoomlevel; n >= 0; n--)
     {
         gint xbit = (x >> n) & 1;
         gint ybit = (y >> n) & 1;
@@ -806,11 +806,13 @@ map_construct_url(RepoData *repo, gint zoom, gint tilex, gint tiley)
     switch(repo->type)
     {
         case REPOTYPE_XYZ:
-            retval = g_strdup_printf(repo->url, tilex, tiley, zoom);
+            retval = g_strdup_printf(repo->url,
+                    tilex, tiley,  zoom - (MAX_ZOOM - 16));
             break;
 
         case REPOTYPE_XYZ_INV:
-            retval = g_strdup_printf(repo->url, 17 - zoom, tilex, tiley);
+            retval = g_strdup_printf(repo->url,
+                    MAX_ZOOM + 1 - zoom, tilex, tiley);
             break;
 
         case REPOTYPE_QUAD_QRST:
@@ -1512,7 +1514,7 @@ repoman_download(GtkWidget *widget, RepoManInfo *rmi)
 
         /* Get repo config file from www.gnuite.com. */
         if(GNOME_VFS_OK != (vfs_result = gnome_vfs_read_entire_file(
-                    "http://www.gnuite.com/nokia770/maemo-mapper/repos.txt",
+                    "http://192.168.1.2:8080/nokia770/maemo-mapper/repos.txt",
                     &size, &bytes)))
         {
             popup_error(rmi->dialog,
@@ -1526,17 +1528,19 @@ repoman_download(GtkWidget *widget, RepoManInfo *rmi)
         {
             for(head = bytes; head && *head; head = tail)
             {
+                gchar buffer[BUFFER_SIZE];
                 RepoData *rd;
                 RepoEditInfo *rei;
                 tail = strchr(head, '\n');
                 *tail++ = '\0';
+
                 rd = settings_parse_repo(head);
+                snprintf(buffer, sizeof(buffer), "%s.db", rd->db_filename);
                 rei = repoman_dialog_add_repo(
                         rmi, g_strdup(rd->name));
                 /* Initialize fields with data from the RepoData object. */
                 gtk_entry_set_text(GTK_ENTRY(rei->txt_url), rd->url);
-                gtk_entry_set_text(GTK_ENTRY(rei->txt_db_filename),
-                        rd->db_filename);
+                gtk_entry_set_text(GTK_ENTRY(rei->txt_db_filename), buffer);
                 hildon_controlbar_set_value(
                         HILDON_CONTROLBAR(rei->num_dl_zoom_steps),
                         rd->dl_zoom_steps);
@@ -1746,7 +1750,8 @@ mapman_by_area(gfloat start_lat, gfloat start_lon,
     gint z;
     gchar buffer[80];
     GtkWidget *confirm;
-    printf("%s()\n", __PRETTY_FUNCTION__);
+    printf("%s(%f, %f, %f, %f)\n", __PRETTY_FUNCTION__, start_lat, start_lon,
+            end_lat, end_lon);
 
     latlon2unit(start_lat, start_lon, start_unitx, start_unity);
     latlon2unit(end_lat, end_lon, end_unitx, end_unity);
@@ -1766,7 +1771,7 @@ mapman_by_area(gfloat start_lat, gfloat start_lon,
     }
 
     /* First, get the number of maps to download. */
-    for(z = MAX_ZOOM; z-- != 0; )
+    for(z = 0; z <= MAX_ZOOM; ++z)
     {
         if(gtk_toggle_button_get_active(
                     GTK_TOGGLE_BUTTON(mapman_info->chk_zoom_levels[z])))
@@ -1802,7 +1807,7 @@ mapman_by_area(gfloat start_lat, gfloat start_lon,
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
     }
-    for(z = MAX_ZOOM; z-- != 0; )
+    for(z = 0; z <= MAX_ZOOM; ++z)
     {
         if(gtk_toggle_button_get_active(
                     GTK_TOGGLE_BUTTON(mapman_info->chk_zoom_levels[z])))
@@ -1849,7 +1854,7 @@ mapman_by_route(MapmanInfo *mapman_info, MapUpdateType update_type,
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     /* First, get the number of maps to download. */
-    for(z = 0; z < MAX_ZOOM; z++)
+    for(z = 0; z <= MAX_ZOOM; ++z)
     {
         if(gtk_toggle_button_get_active(
                     GTK_TOGGLE_BUTTON(mapman_info->chk_zoom_levels[z])))
@@ -1901,7 +1906,7 @@ mapman_by_route(MapmanInfo *mapman_info, MapUpdateType update_type,
     }
 
     /* Now, do the actual download. */
-    for(z = 0; z < MAX_ZOOM; z++)
+    for(z = 0; z <= MAX_ZOOM; ++z)
     {
         if(gtk_toggle_button_get_active(
                     GTK_TOGGLE_BUTTON(mapman_info->chk_zoom_levels[z])))
@@ -1935,6 +1940,7 @@ mapman_by_route(MapmanInfo *mapman_info, MapUpdateType update_type,
                         {
                             for(y = miny; y <= maxy; y++)
                             {
+                                /* Make sure this tile is even possible. */
                                 if((unsigned)tilex
                                         < unit2ztile(WORLD_SIZE_UNITS, z)
                                   && (unsigned)tiley
@@ -1970,7 +1976,7 @@ mapman_clear(GtkWidget *widget, MapmanInfo *mapman_info)
     printf("%s()\n", __PRETTY_FUNCTION__);
     if(gtk_notebook_get_current_page(GTK_NOTEBOOK(mapman_info->notebook)))
         /* This is the second page (the "Zoom" page) - clear the checks. */
-        for(z = 0; z < MAX_ZOOM; z++)
+        for(z = 0; z <= MAX_ZOOM; ++z)
             gtk_toggle_button_set_active(
                     GTK_TOGGLE_BUTTON(mapman_info->chk_zoom_levels[z]), FALSE);
     else
@@ -2102,8 +2108,6 @@ mapman_dialog()
                             GTK_RADIO_BUTTON(mapman_info.rad_by_area),
                             _("Along Route - Radius (tiles):")),
                 FALSE, FALSE, 0);
-        gtk_widget_set_sensitive(mapman_info.rad_by_route,
-                _route.head != _route.tail);
         gtk_box_pack_start(GTK_BOX(hbox),
                 mapman_info.num_route_radius = hildon_number_editor_new(0,100),
                 FALSE, FALSE, 0);
@@ -2124,14 +2128,19 @@ mapman_dialog()
                     _("Zoom Levels to Download: (0 = most detail)")),
                 0, 4, 0, 1, GTK_FILL, 0, 4, 0);
         gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
-        for(z = 0; z < MAX_ZOOM; z++)
+        snprintf(buffer, sizeof(buffer), "%d", 0);
+        gtk_table_attach(GTK_TABLE(table),
+                mapman_info.chk_zoom_levels[0]
+                        = gtk_check_button_new_with_label(buffer),
+                4, 5 , 0, 1, GTK_FILL, 0, 0, 0);
+        for(z = 0; z < MAX_ZOOM; ++z)
         {
-            snprintf(buffer, sizeof(buffer), "%d", z);
+            snprintf(buffer, sizeof(buffer), "%d", z + 1);
             gtk_table_attach(GTK_TABLE(table),
-                    mapman_info.chk_zoom_levels[z]
+                    mapman_info.chk_zoom_levels[z + 1]
                             = gtk_check_button_new_with_label(buffer),
                     z / 4, z / 4 + 1, z % 4 + 1, z % 4 + 2,
-                    GTK_FILL, 0, 4, 0);
+                    GTK_FILL, 0, 0, 0);
         }
 
         /* Area page. */
@@ -2197,6 +2206,9 @@ mapman_dialog()
         g_object_set(G_OBJECT(mapman_info.txt_topleft_lat),
                 HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
+        g_object_set(G_OBJECT(mapman_info.txt_topleft_lat),
+                HILDON_AUTOCAP,
+                FALSE, NULL);
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 mapman_info.txt_topleft_lon = gtk_entry_new(),
                 2, 3, 3, 4, GTK_FILL, 0, 4, 0);
@@ -2205,6 +2217,9 @@ mapman_dialog()
         g_object_set(G_OBJECT(mapman_info.txt_topleft_lon),
                 HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
+        g_object_set(G_OBJECT(mapman_info.txt_topleft_lon),
+                HILDON_AUTOCAP,
+                FALSE, NULL);
 
         /* Bottom Right. */
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
@@ -2219,6 +2234,9 @@ mapman_dialog()
         g_object_set(G_OBJECT(mapman_info.txt_botright_lat),
                 HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
+        g_object_set(G_OBJECT(mapman_info.txt_botright_lat),
+                HILDON_AUTOCAP,
+                FALSE, NULL);
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 mapman_info.txt_botright_lon = gtk_entry_new(),
                 2, 3, 4, 5, GTK_FILL, 0, 4, 0);
@@ -2227,6 +2245,9 @@ mapman_dialog()
         g_object_set(G_OBJECT(mapman_info.txt_botright_lon),
                 HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
+        g_object_set(G_OBJECT(mapman_info.txt_botright_lon),
+                HILDON_AUTOCAP,
+                FALSE, NULL);
 
         /* Default action is to download by area. */
         gtk_toggle_button_set_active(
@@ -2244,6 +2265,9 @@ mapman_dialog()
 
     /* Initialize fields.  Do no use g_ascii_formatd; these strings will be
      * output (and parsed) as locale-dependent. */
+
+    gtk_widget_set_sensitive(mapman_info.rad_by_route,
+            _route.head != _route.tail);
 
     lat_format(_gps.lat, buffer);
     gtk_label_set_text(GTK_LABEL(lbl_gps_lat), buffer);

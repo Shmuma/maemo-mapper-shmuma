@@ -50,13 +50,11 @@
 
 #define EARTH_RADIUS (3440.06479f)
 
-/* #define MAPDB_SQLITE */
-
 /** MAX_ZOOM defines the largest map zoom level we will download.
  * (MAX_ZOOM - 1) is the largest map zoom level that the user can zoom to.
  */
 #define MIN_ZOOM (0)
-#define MAX_ZOOM (16)
+#define MAX_ZOOM (20)
 
 #define TILE_SIZE_PIXELS (256)
 #define TILE_HALFDIAG_PIXELS (181)

@@ -39,9 +39,6 @@ gboolean banner_reset();
 
 void deg_format(gfloat coor, gchar *scoor, gchar neg_char, gchar pos_char);
 
-gint strdmstod_1(gdouble *d, gchar *nptr, gchar **endptr, gchar *sep,
-        gint utf8_deg);
-gdouble strdmstod_2(gchar *nptr, gchar **endptr);
 gdouble strdmstod(const gchar *nptr, gchar **endptr);
 
 #endif /* ifndef MAEMO_MAPPER_UTIL_H */

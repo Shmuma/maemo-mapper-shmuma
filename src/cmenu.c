@@ -233,7 +233,7 @@ cmenu_cb_loc_add_poi(GtkMenuItem *item)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     screen2unit(_cmenu_position_x, _cmenu_position_y, unitx, unity);
-    poi_view_dialog(NULL, unitx, unity);
+    poi_view_dialog(_window, NULL, unitx, unity);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -459,7 +459,7 @@ cmenu_cb_way_add_poi(GtkMenuItem *item)
 
     screen2unit(_cmenu_position_x, _cmenu_position_y, unitx, unity);
     if((way = find_nearest_waypoint(unitx, unity)))
-        poi_view_dialog(NULL, way->point->unitx, way->point->unity);
+        poi_view_dialog(_window, NULL, way->point->unitx, way->point->unity);
     else
     {
         MACRO_BANNER_SHOW_INFO(_window, _("There are no waypoints."));
@@ -555,7 +555,7 @@ cmenu_cb_poi_edit_poi(GtkMenuItem *item)
     memset(&poi, 0, sizeof(poi));
     screen2unit(_cmenu_position_x, _cmenu_position_y, unitx, unity);
     select_poi(unitx, unity, &poi, FALSE); /* FALSE = not quick */
-    poi_view_dialog(&poi, unitx, unity);
+    poi_view_dialog(_window, &poi, unitx, unity);
     if(poi.label)
         g_free(poi.label);
     if(poi.desc)

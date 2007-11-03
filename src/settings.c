@@ -1955,7 +1955,7 @@ settings_init()
     else
         _zoom = 12 / _curr_repo->view_zoom_steps
             * _curr_repo->view_zoom_steps;
-    BOUND(_zoom, 0, MAX_ZOOM - 1);
+    BOUND(_zoom, 0, MAX_ZOOM);
     _next_zoom = _zoom;
 
     /* Get Route Directory.  Default is NULL. */
@@ -2089,10 +2089,12 @@ settings_init()
         g_free(poi_base);
     }
 
+    _poi_db_dirname = g_path_get_dirname(_poi_db_filename);
+
     _poi_zoom = gconf_client_get_int(gconf_client,
             GCONF_KEY_POI_ZOOM, NULL);
     if(!_poi_zoom)
-    _poi_zoom = 6;
+        _poi_zoom = MAX_ZOOM - 10;
 
 
     /* Get GPS Info flag.  Default is FALSE. */
@@ -2114,7 +2116,7 @@ settings_init()
         gconf_value_free(value);
     }
     else
-        _route_dl_radius = 4;
+        _route_dl_radius = 8;
 
     /* Get POI Download URL.  Default is:
      * "http://www.gnuite.com/cgi-bin/poi.cgi?saddr=%s&query=%s&page=%d" */

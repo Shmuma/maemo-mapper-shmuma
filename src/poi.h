@@ -24,22 +24,16 @@
 #ifndef MAEMO_MAPPER_POI_H
 #define MAEMO_MAPPER_POI_H
 
-typedef struct _PoiCategoryEditInfo PoiCategoryEditInfo;
-struct _PoiCategoryEditInfo
-{
-    GtkWidget *cmb_category;
-    gint cat_id;
-};
-
 void poi_db_connect();
 
 gboolean get_nearest_poi(gint unitx, gint unity, PoiInfo *poi);
 
 gboolean select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick);
 
-gboolean category_list_dialog();
+gboolean category_list_dialog(GtkWidget *parent);
 
-gboolean poi_view_dialog(PoiInfo *poi, gint unitx, gint unity);
+gboolean poi_view_dialog(GtkWidget *parent, PoiInfo *poi,
+        gint unitx, gint unity);
 gboolean poi_import_dialog(gint unitx, gint unity);
 gboolean poi_download_dialog(gint unitx, gint unity);
 gboolean poi_browse_dialog(gint unitx, gint unity);
