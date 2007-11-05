@@ -180,7 +180,6 @@
 #define GCONF_KEY_PREFIX "/apps/maemo/maemo-mapper"
 #define GCONF_KEY_GPS_RCVR_TYPE GCONF_KEY_PREFIX"/gps_rcvr_type"
 #define GCONF_KEY_GPS_BT_MAC GCONF_KEY_PREFIX"/receiver_mac"
-#define GCONF_KEY_GPS_BT_FILE GCONF_KEY_PREFIX"/receiver_file"
 #define GCONF_KEY_GPS_GPSD_HOST GCONF_KEY_PREFIX"/gps_gpsd_host"
 #define GCONF_KEY_GPS_GPSD_PORT GCONF_KEY_PREFIX"/gps_gpsd_port"
 #define GCONF_KEY_GPS_FILE_PATH GCONF_KEY_PREFIX"/gps_file_path"

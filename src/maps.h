@@ -24,56 +24,7 @@
 #ifndef MAEMO_MAPPER_MAPS_H
 #define MAEMO_MAPPER_MAPS_H
 
-#include "defines.h"
-
-typedef struct _RepoManInfo RepoManInfo;
-struct _RepoManInfo {
-    GtkWidget *dialog;
-    GtkWidget *notebook;
-    GtkWidget *cmb_repos;
-    GList *repo_edits;
-};
-
-typedef struct _RepoEditInfo RepoEditInfo;
-struct _RepoEditInfo {
-    gchar *name;
-    GtkWidget *txt_url;
-    GtkWidget *txt_db_filename;
-    GtkWidget *num_dl_zoom_steps;
-    GtkWidget *num_view_zoom_steps;
-    GtkWidget *chk_double_size;
-    GtkWidget *chk_nextable;
-    GtkWidget *btn_browse;
-    BrowseInfo browse_info;
-};
-
-typedef struct _MapmanInfo MapmanInfo;
-struct _MapmanInfo {
-    GtkWidget *dialog;
-    GtkWidget *notebook;
-    GtkWidget *tbl_area;
-
-    /* The "Setup" tab. */
-    GtkWidget *rad_download;
-    GtkWidget *rad_delete;
-    GtkWidget *chk_overwrite;
-    GtkWidget *rad_by_area;
-    GtkWidget *rad_by_route;
-    GtkWidget *num_route_radius;
-
-    /* The "Area" tab. */
-    GtkWidget *txt_topleft_lat;
-    GtkWidget *txt_topleft_lon;
-    GtkWidget *txt_botright_lat;
-    GtkWidget *txt_botright_lon;
-
-    /* The "Zoom" tab. */
-    GtkWidget *chk_zoom_levels[MAX_ZOOM];
-};
-
-
-gboolean mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley,
-        gboolean should_lock);
+gboolean mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley);
 GdkPixbuf* mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley);
 
 void set_repo_type(RepoData *repo);

@@ -1,3 +1,20 @@
+maemo-mapper (2.0.2) unstable; urgency=low
+
+  * Changed the bluetooth receiver interaction to hopefully be friendlier to
+    more GPS receivers (particularly Holux).
+  * Fixed memory overflow situation when downloading "500 MB" of maps.  Maemo
+    Mapper should be able to handle more downloads at a time now, but keep in
+    mind that it's not unlimited.  2 GB of downloads is too much.
+  * Fixed the spurious straight lines in the drawing of tracks and routes.
+  * Fixed bug with not downloading higher-zoom maps when no maps were
+    available in the current zoom level and the current zoom level is not a
+    downloadable zoom level (per the download zoom steps variable).
+  * Fixed crashes that occurred during downloading of many maps at a time.
+  * Fixed corruption of GDBM database when downloading many maps at a time.
+  * Fixed bugs in detection of next waypoint.
+
+ -- John Costigan <gnuite@gmail.com>  Thu, 4 Nov 2007 23:45:00 -0500
+
 maemo-mapper (2.0.1) unstable; urgency=low
 
   * Expanded the available zoom levels by four additional zoom steps.  This

@@ -153,7 +153,7 @@ GThreadPool *_mut_thread_pool = NULL;
 GThreadPool *_mrt_thread_pool = NULL;
 
 /** CONFIGURATION INFORMATION. */
-GpsRcvrInfo _gri = { 0, 0, 0, 0, 0, 0 };
+GpsRcvrInfo _gri = { 0, 0, 0, 0, 0 };
 ConnState _gps_state;
 gchar *_route_dir_uri = NULL;
 gchar *_track_file_uri = NULL;

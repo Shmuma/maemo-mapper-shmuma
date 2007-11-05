@@ -904,34 +904,47 @@ map_render_segment(GdkGC *gc_norm, GdkGC *gc_alt,
     {
         gint x2, y2;
         unit2buf(unitx2, unity2, x2, y2);
-        gdk_draw_arc(_map_pixmap, gc_alt,
-                FALSE, /* FALSE: not filled. */
-                x2 - _draw_width,
-                y2 - _draw_width,
-                2 * _draw_width,
-                2 * _draw_width,
-                0, /* start at 0 degrees. */
-                360 * 64);
+        if(((unsigned)(x2+_draw_width) < _screen_width_pixels+2*_draw_width)
+         ||((unsigned)(y2+_draw_width) < _screen_height_pixels+2*_draw_width))
+        {
+            gdk_draw_arc(_map_pixmap, gc_alt,
+                    FALSE, /* FALSE: not filled. */
+                    x2 - _draw_width,
+                    y2 - _draw_width,
+                    2 * _draw_width,
+                    2 * _draw_width,
+                    0, /* start at 0 degrees. */
+                    360 * 64);
+        }
     }
     else if(!unity2)
     {
         gint x1, y1;
         unit2buf(unitx1, unity1, x1, y1);
-        gdk_draw_arc(_map_pixmap, gc_alt,
-                FALSE, /* FALSE: not filled. */
-                x1 - _draw_width,
-                y1 - _draw_width,
-                2 * _draw_width,
-                2 * _draw_width,
-                0, /* start at 0 degrees. */
-                360 * 64);
+        if(((unsigned)(x1+_draw_width) < _screen_width_pixels+2*_draw_width)
+         ||((unsigned)(y1+_draw_width) < _screen_height_pixels+2*_draw_width))
+        {
+            gdk_draw_arc(_map_pixmap, gc_alt,
+                    FALSE, /* FALSE: not filled. */
+                    x1 - _draw_width,
+                    y1 - _draw_width,
+                    2 * _draw_width,
+                    2 * _draw_width,
+                    0, /* start at 0 degrees. */
+                    360 * 64);
+        }
     }
     else
     {
         gint x1, y1, x2, y2;
         unit2buf(unitx1, unity1, x1, y1);
         unit2buf(unitx2, unity2, x2, y2);
-        gdk_draw_line(_map_pixmap, gc_norm, x1, y1, x2, y2);
+        /* Make sure this line could possibly be visible. */
+        if(!((x1 > _screen_width_pixels && x2 > _screen_width_pixels)
+                || (x1 < 0 && x2 < 0)
+                || (y1 > _screen_height_pixels && y2 > _screen_height_pixels)
+                || (y1 < 0 && y2 < 0)))
+            gdk_draw_line(_map_pixmap, gc_norm, x1, y1, x2, y2);
     }
 
     /* vprintf("%s(): return\n", __PRETTY_FUNCTION__); */
@@ -1570,7 +1583,7 @@ thread_render_map(MapRenderTask *mrt)
     gfloat *tile_dev;
     ThreadLatch *refresh_latch = NULL;
     gint cache_amount;
-    static gint auto_download_batch_id = 0;
+    static gint8 auto_download_batch_id = CHAR_MIN;
     printf("%s(%d, %d, %d, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             mrt->screen_width_pixels, mrt->screen_height_pixels,
             mrt->new_center.unitx, mrt->new_center.unity, mrt->zoom,
@@ -1712,7 +1725,7 @@ thread_render_map(MapRenderTask *mrt)
                 else if(mapdb_exists(
                                     mrt->repo, mrt->zoom + zoff,
                                     tilex >> zoff,
-                                    tiley >> zoff, FALSE))
+                                    tiley >> zoff))
                 {
                     break;
                 }
@@ -1726,10 +1739,10 @@ thread_render_map(MapRenderTask *mrt)
                                     - (mrt->repo->double_size ? 1 : 0))
                                 % mrt->repo->dl_zoom_steps))
                     /* Make sure this tile is even possible. */
-                    && ((unsigned)tilex < unit2ztile(WORLD_SIZE_UNITS,
-                            mrt->zoom + zoff)
-                      && (unsigned)tiley < unit2ztile(WORLD_SIZE_UNITS,
-                          mrt->zoom + zoff)))
+                    && ((unsigned)(tilex >> zoff)
+                            < unit2ztile(WORLD_SIZE_UNITS, mrt->zoom + zoff)
+                      && (unsigned)(tiley >> zoff)
+                            < unit2ztile(WORLD_SIZE_UNITS, mrt->zoom + zoff)))
                 {
                     started_download = TRUE;
 

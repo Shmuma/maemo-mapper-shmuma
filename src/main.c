@@ -157,11 +157,20 @@ maemo_mapper_destroy()
     /* _program and widgets have already been destroyed. */
     _window = NULL;
 
+    rcvr_disconnect();
+
     path_destroy();
 
     settings_save();
 
     poi_destroy();
+
+    g_mutex_lock(_mut_priority_mutex);
+    _mut_priority_tree = g_tree_new((GCompareFunc)mut_priority_comparefunc);
+    g_mutex_unlock(_mut_priority_mutex);
+
+    /* Allow remaining downloads to finish. */
+    g_thread_pool_free(_mut_thread_pool, TRUE, TRUE);
 
     if(_curr_repo->db)
     {
@@ -450,8 +459,6 @@ maemo_mapper_init(gint argc, gchar **argv)
     g_signal_connect(G_OBJECT(_window), "destroy",
             G_CALLBACK(gtk_main_quit), NULL);
 
-    /* Initialize data. */
-
     memset(&_autoroute_data, 0, sizeof(_autoroute_data));
 
     latlon2unit(_gps.lat, _gps.lon, _pos.unitx, _pos.unity);
@@ -550,14 +557,6 @@ osso_cb_hw_state_idle(osso_hw_state_t *state)
     {
         maemo_mapper_destroy();
         exit(1);
-    }
-    else if(state->memory_low_ind)
-    {
-        /* Try to reduce downloads by limiting the download threads.
-         * Note that we never reverse this, so it stays in effect until
-         * application restart. */
-        g_thread_pool_set_max_threads(_mut_thread_pool, 1, NULL);
-        g_thread_pool_set_max_threads(_mrt_thread_pool, 1, NULL);
     }
 
     g_free(state);

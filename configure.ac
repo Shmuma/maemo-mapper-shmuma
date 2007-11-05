@@ -18,7 +18,7 @@
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 2.0.1)
+AM_INIT_AUTOMAKE(maemo-mapper, 2.0.2)
 
 AC_PROG_CPP
 AC_CONFIG_HEADERS(src/config.h)
@@ -57,6 +57,12 @@ PKG_CHECK_MODULES(CONIC, conic)
 AC_SUBST(CONIC_LIBS)
 AC_SUBST(CONIC_CFLAGS)
 
+AC_CHECK_HEADER(gdbm.h, [has_gdbm=yes], [has_gdbm=no], [])
+
+if test "$has_gdbm" != "yes"
+then
+	AC_MSG_ERROR(gdbm.h not found. Please install libgdbm-dev.)
+fi
 
 # Localisation
 localedir=`$PKG_CONFIG osso-af-settings --variable=localedir`

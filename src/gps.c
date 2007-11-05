@@ -43,10 +43,6 @@
 #include "util.h"
 
 
-#define GPS_READ_BUF_SIZE 128
-
-static void rcvr_connect_response(DBusGProxy *proxy, DBusGProxyCall *call_id);
-
 static volatile GThread *_gps_thread = NULL;
 static GMutex *_gps_init_mutex = NULL;
 static volatile gint _gps_rcvr_retry_count = 0;
@@ -470,6 +466,7 @@ gps_init()
 
     vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
 }
+
 static gboolean
 gps_handle_error_idle(gchar *error)
 {
@@ -563,7 +560,6 @@ gri_clone(GpsRcvrInfo *gri)
     GpsRcvrInfo *ret = g_new(GpsRcvrInfo, 1);
     ret->type = gri->type;
     ret->bt_mac = g_strdup(gri->bt_mac);
-    ret->bt_file = g_strdup(gri->bt_file);
     ret->file_path = g_strdup(gri->file_path);
     ret->gpsd_host = g_strdup(gri->gpsd_host);
     ret->gpsd_port = gri->gpsd_port;
@@ -582,9 +578,9 @@ gri_free(GpsRcvrInfo *gri)
 static void
 thread_read_nmea(GpsRcvrInfo *gri)
 {
-    gchar buf[GPS_READ_BUF_SIZE];
+    gchar buf[BUFFER_SIZE];
     gchar *buf_curr = buf;
-    gchar *buf_last = buf + GPS_READ_BUF_SIZE - 1;
+    gchar *buf_last = buf + sizeof(buf) - 1;
     GnomeVFSFileSize bytes_read;
     GnomeVFSHandle *handle = NULL;
     GnomeVFSInetConnection *iconn = NULL;
@@ -598,42 +594,87 @@ thread_read_nmea(GpsRcvrInfo *gri)
     g_mutex_lock(_gps_init_mutex);
     g_mutex_unlock(_gps_init_mutex);
 
-    if(gri->type == GPS_RCVR_GPSD)
+    switch(gri->type)
     {
-        /* Create a socket to interact with GPSD. */
-        GTimeVal timeout = { 15, 0 };
-        vfs_result = gnome_vfs_inet_connection_create(&iconn,
-                gri->gpsd_host, gri->gpsd_port, NULL);
-        if(vfs_result != GNOME_VFS_OK
+        case GPS_RCVR_BT:
+        {
+            /* We need to connect RFCOMM first. */
+            gchar *bt_file = NULL;
+            GError *err = NULL;
+
+            if(!dbus_g_proxy_call(
+                    _rfcomm_req_proxy,
+                    BTCOND_RFCOMM_CONNECT_REQ,
+                    &err,
+                    G_TYPE_STRING, _gri.bt_mac, /* BDA of remote device */
+                    G_TYPE_STRING, "SPP", /* SDP profile, e.g. "DUN" */
+                    G_TYPE_BOOLEAN, TRUE, /* Automatic disconnect */
+                    G_TYPE_INVALID,
+                    G_TYPE_STRING, &bt_file,
+                    G_TYPE_INVALID)
+                || GNOME_VFS_OK != (vfs_result = gnome_vfs_open(
+                                &handle, bt_file, GNOME_VFS_OPEN_READ)))
+            {
+                if(err)
+                {
+                    printf("Caught remote method exception %s: %s",
+                            dbus_g_error_get_name(err),
+                            err->message);
+                }
+                else
+                {
+                    printf("GnomeVFS Error: %s\n",
+                            gnome_vfs_result_to_string(vfs_result));
+                }
+                g_idle_add((GSourceFunc)gps_handle_error_idle,
+                        g_strdup_printf("%s",
+                        _("Error connecting to GPS receiver.")));
+                error = TRUE;
+            }
+
+            g_free(bt_file);
+            break;
+        }
+        case GPS_RCVR_GPSD:
+        {
+            /* Create a socket to interact with GPSD. */
+            GTimeVal timeout = { 15, 0 };
+            vfs_result = gnome_vfs_inet_connection_create(&iconn,
+                    gri->gpsd_host, gri->gpsd_port, NULL);
+            if(vfs_result != GNOME_VFS_OK
                || NULL == (socket = gnome_vfs_inet_connection_to_socket(iconn))
                || GNOME_VFS_OK != (vfs_result = gnome_vfs_socket_set_timeout(
                        socket, &timeout, NULL))
                || GNOME_VFS_OK != (vfs_result = gnome_vfs_socket_write(socket,
                        "r\r\n", sizeof("r\r\n"), &bytes_read, NULL))
                || bytes_read != sizeof("r\r\n"))
-        {
-            g_idle_add((GSourceFunc)gps_handle_error_idle,
-                    g_strdup_printf("%s",
-                    _("Error connecting to GPSD.")));
-            error = TRUE;
+            {
+                g_idle_add((GSourceFunc)gps_handle_error_idle,
+                        g_strdup_printf("%s",
+                        _("Error connecting to GPSD.")));
+                error = TRUE;
+            }
+            break;
         }
-    }
-    else
-    {
-        /* Open a handle to interact with a file. */
-        vfs_result = gnome_vfs_open(&handle,
-                gri->type == GPS_RCVR_BT ? gri->bt_file : gri->file_path,
-                GNOME_VFS_OPEN_READ);
-        if(vfs_result != GNOME_VFS_OK)
+        case GPS_RCVR_FILE:
         {
-            g_idle_add((GSourceFunc)gps_handle_error_idle,
-                    g_strdup_printf("%s",
-                    _("Error connecting to GPS receiver.")));
-            error = TRUE;
+            /* Open a handle to interact with a file. */
+            vfs_result = gnome_vfs_open(&handle, gri->file_path,
+                    GNOME_VFS_OPEN_READ);
+            if(vfs_result != GNOME_VFS_OK)
+            {
+                g_idle_add((GSourceFunc)gps_handle_error_idle,
+                        g_strdup_printf("%s",
+                        _("Error connecting to GPS receiver.")));
+                error = TRUE;
+            }
+            break;
         }
+        default:
+            ;
     }
 
-    if(vfs_result == GNOME_VFS_OK)
+    if(!error && my_thread == _gps_thread)
     {
         g_idle_add((GSourceFunc)gps_update_state_idle, (void*)RCVR_UP);
         while(my_thread == _gps_thread)
@@ -673,6 +714,7 @@ thread_read_nmea(GpsRcvrInfo *gri)
             /* Successful connection.  Reset the retry counter. */
             _gps_rcvr_retry_count = 0;
 
+            /* Loop through the buffer and read each NMEA sentence. */
             buf_curr += bytes_read;
             *buf_curr = '\0'; /* append a \0 so we can read as string */
             while(my_thread == _gps_thread && (eol = strchr(buf, '\n')))
@@ -764,21 +806,6 @@ set_conn_state(ConnState new_conn_state)
                 _fix_banner = NULL;
             }
             break;
-        case RCVR_DISCONNECT:
-            if(_connect_banner)
-            {
-                gtk_widget_destroy(_connect_banner);
-                _connect_banner = NULL;
-            }
-            if(_fix_banner)
-            {
-                gtk_widget_destroy(_fix_banner);
-                _fix_banner = NULL;
-            }
-            _connect_banner = hildon_banner_show_animation(
-                    _window, NULL, _("Disconnecting from GPS receiver"));
-            break;
-
         case RCVR_DOWN:
             if(_fix_banner)
             {
@@ -818,13 +845,9 @@ rcvr_disconnect()
     GError *error = NULL;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(_gps_thread)
-        set_conn_state(RCVR_DISCONNECT);
-
     _gps_thread = NULL;
 
-    /* Check if we need to cancel the RFComm request. */
-    if(!_gps_thread && _gri.type == GPS_RCVR_BT && _rfcomm_req_proxy)
+    if(_gri.type == GPS_RCVR_BT && _rfcomm_req_proxy)
     {
         dbus_g_proxy_call(_rfcomm_req_proxy, BTCOND_RFCOMM_CANCEL_CONNECT_REQ,
                     &error,
@@ -839,9 +862,9 @@ rcvr_disconnect()
                     G_TYPE_STRING, "SPP",
                     G_TYPE_INVALID,
                     G_TYPE_INVALID);
-        set_conn_state(RCVR_OFF);
     }
-
+    if(_window)
+        set_conn_state(RCVR_OFF);
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
@@ -857,82 +880,10 @@ rcvr_connect()
 {
     printf("%s(%d)\n", __PRETTY_FUNCTION__, _gps_state);
 
-    if(_enable_gps && _gps_state <= RCVR_DISCONNECT
-            && _gri.type != GPS_RCVR_NONE)
+    if(_enable_gps && _gps_state == RCVR_OFF && _gri.type != GPS_RCVR_NONE)
     {
         set_conn_state(RCVR_DOWN);
 
-        if(_gri.type != GPS_RCVR_BT || (_gri.bt_file &&
-                    g_file_test(_gri.bt_file, G_FILE_TEST_EXISTS)))
-        {
-            /* Lock/Unlock the mutex to ensure that the thread doesn't
-             * start until _gps_thread is set. */
-            g_mutex_lock(_gps_init_mutex);
-            _gps_thread = g_thread_create((GThreadFunc)thread_read_nmea,
-                    gri_clone(&_gri), FALSE, NULL);
-            g_mutex_unlock(_gps_init_mutex);
-        }
-        else
-        {
-            /* Create the RFCOMM file descriptor. */
-            if(_rfcomm_req_proxy)
-            {
-                gint mybool = TRUE;
-                dbus_g_proxy_begin_call(
-                        _rfcomm_req_proxy, BTCOND_RFCOMM_CONNECT_REQ,
-                        (DBusGProxyCallNotify)rcvr_connect_response,
-                        NULL, NULL,
-                        G_TYPE_STRING, _gri.bt_mac,
-                        G_TYPE_STRING, "SPP",
-                        G_TYPE_BOOLEAN, &mybool,
-                        G_TYPE_INVALID);
-            }
-        }
-    }
-
-    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-    return FALSE;
-}
-
-static void
-rcvr_connect_response(DBusGProxy *proxy, DBusGProxyCall *call_id)
-{
-    GError *error = NULL;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    if((_gps_state == RCVR_DOWN || _gps_state == RCVR_DISCONNECT)
-        && _gri.type != GPS_RCVR_NONE)
-    {
-        if(!dbus_g_proxy_end_call(_rfcomm_req_proxy, call_id, &error,
-                    G_TYPE_STRING, &_gri.bt_file, G_TYPE_INVALID))
-        {
-            if(error->domain == DBUS_GERROR
-                    && error->code == DBUS_GERROR_REMOTE_EXCEPTION)
-            {
-                /* If we're already connected, it's not an error, unless
-                 * they don't give us the file descriptor path, in which
-                 * case we re-connect.*/
-                if(!strcmp(BTCOND_ERROR_CONNECTED,
-                            dbus_g_error_get_name(error)) || !_gri.bt_file)
-                {
-                    printf("Caught remote method exception %s: %s",
-                            dbus_g_error_get_name(error),
-                            error->message);
-
-                    gps_handle_error_idle(
-                            _("Failed to connect to Bluetooth GPS receiver."));
-                    return;
-                }
-            }
-            else
-            {
-                /* Unknown error. */
-                g_printerr("Error: %s\n", error->message);
-                rcvr_disconnect();
-                rcvr_connect(); /* Try again. */
-                return;
-            }
-        }
         /* Lock/Unlock the mutex to ensure that the thread doesn't
          * start until _gps_thread is set. */
         g_mutex_lock(_gps_init_mutex);
@@ -940,9 +891,9 @@ rcvr_connect_response(DBusGProxy *proxy, DBusGProxyCall *call_id)
                 gri_clone(&_gri), FALSE, NULL);
         g_mutex_unlock(_gps_init_mutex);
     }
-    /* else { Looks like the middle of a disconnect.  Do nothing. } */
 
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+    return FALSE;
 }
 
 void
@@ -955,7 +906,7 @@ reset_bluetooth()
                 _("An error occurred while trying to reset the bluetooth "
                 "radio.\n\n"
                 "Did you make sure to modify\nthe /etc/sudoers file?"));
-    else if(_gps_state > RCVR_DISCONNECT)
+    else if(_gps_state != RCVR_OFF)
     {
         rcvr_connect();
     }

@@ -50,22 +50,65 @@
 #include "util.h"
 
 
+typedef struct _RepoManInfo RepoManInfo;
+struct _RepoManInfo {
+    GtkWidget *dialog;
+    GtkWidget *notebook;
+    GtkWidget *cmb_repos;
+    GList *repo_edits;
+};
+
+typedef struct _RepoEditInfo RepoEditInfo;
+struct _RepoEditInfo {
+    gchar *name;
+    GtkWidget *txt_url;
+    GtkWidget *txt_db_filename;
+    GtkWidget *num_dl_zoom_steps;
+    GtkWidget *num_view_zoom_steps;
+    GtkWidget *chk_double_size;
+    GtkWidget *chk_nextable;
+    GtkWidget *btn_browse;
+    BrowseInfo browse_info;
+};
+
+typedef struct _MapmanInfo MapmanInfo;
+struct _MapmanInfo {
+    GtkWidget *dialog;
+    GtkWidget *notebook;
+    GtkWidget *tbl_area;
+
+    /* The "Setup" tab. */
+    GtkWidget *rad_download;
+    GtkWidget *rad_delete;
+    GtkWidget *chk_overwrite;
+    GtkWidget *rad_by_area;
+    GtkWidget *rad_by_route;
+    GtkWidget *num_route_radius;
+
+    /* The "Area" tab. */
+    GtkWidget *txt_topleft_lat;
+    GtkWidget *txt_topleft_lon;
+    GtkWidget *txt_botright_lat;
+    GtkWidget *txt_botright_lon;
+
+    /* The "Zoom" tab. */
+    GtkWidget *chk_zoom_levels[MAX_ZOOM + 1];
+};
+
+
 gboolean
-mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley,
-        gboolean should_lock)
+mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
     gboolean exists;
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
 
-    if(should_lock)
-        g_mutex_lock(_mapdb_mutex);
+    g_mutex_lock(_mapdb_mutex);
 
     if(!repo->db)
     {
         /* There is no cache.  Return FALSE. */
-        if(should_lock)
-            g_mutex_unlock(_mapdb_mutex);
+        g_mutex_unlock(_mapdb_mutex);
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
     }
@@ -99,8 +142,7 @@ mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley,
     }
 #endif
 
-    if(should_lock)
-        g_mutex_unlock(_mapdb_mutex);
+    g_mutex_unlock(_mapdb_mutex);
 
     vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, exists);
     return exists;
@@ -113,8 +155,6 @@ mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley)
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
 
-    /* Grab the mapdb lock so that we have temporary exclusive access.  This
-     * makes the draw refresh a little bit faster. */
     g_mutex_lock(_mapdb_mutex);
 
     if(!repo->db)
@@ -868,21 +908,31 @@ mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
     MapUpdateTask *mut;
     MapUpdateTask *old_mut;
     gboolean is_replacing = FALSE;
-    static gint mut_id = INT_MIN;
     vprintf("%s(%s, %d, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley, update_type);
 
     mut = g_slice_new(MapUpdateTask);
+    if(!mut)
+    {
+        /* Could not allocate memory. */
+        g_printerr("Out of memory in allocation of update task #%d\n",
+                _num_downloads + 1);
+        return FALSE;
+    }
     mut->zoom = zoom;
     mut->tilex = tilex;
     mut->tiley = tiley;
     mut->update_type = update_type;
 
-    g_mutex_lock(_mut_priority_mutex);
+    /* Lock the mutex if this is an auto-update. */
+    if(update_type == MAP_UPDATE_AUTO)
+        g_mutex_lock(_mut_priority_mutex);
     if(NULL != (old_mut = g_hash_table_lookup(_mut_exists_table, mut)))
     {
-        /* Check if new mut is in a newer batch that the old mut. */
-        if(old_mut->batch_id < batch_id && old_mut->pending)
+        /* Check if new mut is in a newer batch that the old mut.
+         * We use vfs_result to indicate a MUT that is already in the process
+         * of being downloaded. */
+        if(old_mut->batch_id < batch_id && old_mut->vfs_result < 0)
         {
             /* It is, so remove the old one so we can re-add this one. */
             g_hash_table_remove(_mut_exists_table, old_mut);
@@ -893,33 +943,37 @@ mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
         else
         {
             /* It's not, so just ignore it. */
-            g_mutex_unlock(_mut_priority_mutex);
+            if(update_type == MAP_UPDATE_AUTO)
+                g_mutex_unlock(_mut_priority_mutex);
             g_slice_free(MapUpdateTask, mut);
             vprintf("%s(): return FALSE (1)\n", __PRETTY_FUNCTION__);
             return FALSE;
         }
     }
+
     g_hash_table_insert(_mut_exists_table, mut, mut);
 
     mut->repo = repo;
     mut->refresh_latch = refresh_latch;
     mut->priority = priority;
     mut->batch_id = batch_id;
-    mut->pending = TRUE;
-    mut->id = ++mut_id;
     mut->pixbuf = NULL;
-    mut->vfs_result = GNOME_VFS_OK;
+    mut->vfs_result = -1;
 
     g_tree_insert(_mut_priority_tree, mut, mut);
-    g_mutex_unlock(_mut_priority_mutex);
+
+    /* Unlock the mutex if this is an auto-update. */
+    if(update_type == MAP_UPDATE_AUTO)
+        g_mutex_unlock(_mut_priority_mutex);
 
     if(!is_replacing)
     {
         /* Increment download count and (possibly) display banner. */
-        if(!_num_downloads++ && !_download_banner)
+        if(++_num_downloads == 20 && !_download_banner)
             g_idle_add((GSourceFunc)mapdb_initiate_update_banner_idle, NULL);
 
-        g_thread_pool_push(_mut_thread_pool, (gpointer)1, NULL);
+        if(_num_downloads <= NUM_DOWNLOAD_THREADS)
+            g_thread_pool_push(_mut_thread_pool, (gpointer)1, NULL);
     }
 
     vprintf("%s(): return FALSE (2)\n", __PRETTY_FUNCTION__);
@@ -936,42 +990,49 @@ get_next_mut(gpointer key, gpointer value, MapUpdateTask **data)
 gboolean
 thread_proc_mut()
 {
-    gint retries;
-    MapUpdateTask *mut = NULL;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    /* Wait until we are connected. */
-    conic_ensure_connected();
+    /* Make sure things are inititalized. */
+    gnome_vfs_init();
 
-    g_mutex_lock(_mut_priority_mutex);
-    g_tree_foreach(_mut_priority_tree, (GTraverseFunc)get_next_mut, &mut);
-    if(!mut)
+    while(TRUE)
     {
-        printf("NOT SURE WHAT HAPPENED HERE.\n");
+        gint retries;
+        gboolean refresh_sent = FALSE;
+        MapUpdateTask *mut = NULL;
+
+        /* Wait until we are connected. */
+        conic_ensure_connected();
+
+        /* Get the next MUT from the mut tree. */
+        g_mutex_lock(_mut_priority_mutex);
+        g_tree_foreach(_mut_priority_tree, (GTraverseFunc)get_next_mut, &mut);
+        if(!mut)
+        {
+            /* No more MUTs to process.  Return. */
+            g_mutex_unlock(_mut_priority_mutex);
+            return FALSE;
+        }
+        /* Mark this MUT as "in-progress". */
+        mut->vfs_result = GNOME_VFS_NUM_ERRORS;
+        g_tree_remove(_mut_priority_tree, mut);
         g_mutex_unlock(_mut_priority_mutex);
-        return FALSE;
-    }
-    mut->pending = FALSE;
-    g_tree_remove(_mut_priority_tree, mut);
-    g_mutex_unlock(_mut_priority_mutex);
 
-    printf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
-            mut->repo->name, mut->zoom, mut->tilex, mut->tiley);
+        printf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
+                mut->repo->name, mut->zoom, mut->tilex, mut->tiley);
 
-    if(mut->repo != _curr_repo)
-    {
-        /* Do nothing. */
-    }
-    else if(mut->update_type == MAP_UPDATE_DELETE)
-    {
-        /* Easy - just delete the entry from the database.  We don't care about
-         * failures (sorry). */
-        if(mut->repo->db)
-            mapdb_delete(mut->repo, mut->zoom, mut->tilex, mut->tiley);
-    }
-    else
-    {
-        for(retries = INITIAL_DOWNLOAD_RETRIES; retries > 0; --retries)
+        if(mut->repo != _curr_repo)
+        {
+            /* Do nothing. */
+        }
+        else if(mut->update_type == MAP_UPDATE_DELETE)
+        {
+            /* Easy - just delete the entry from the database.  We don't care
+             * about failures (sorry). */
+            if(mut->repo->db)
+                mapdb_delete(mut->repo, mut->zoom, mut->tilex, mut->tiley);
+        }
+        else for(retries = INITIAL_DOWNLOAD_RETRIES; retries > 0; --retries)
         {
             gboolean exists = FALSE;
             gchar *src_url;
@@ -986,7 +1047,7 @@ thread_proc_mut()
             /* First check for existence. */
             exists = mut->repo->db
                 ? mapdb_exists(mut->repo, mut->zoom,
-                        mut->tilex, mut->tiley, TRUE)
+                        mut->tilex, mut->tiley)
                 : FALSE;
             if(exists && mut->update_type == MAP_UPDATE_ADD)
             {
@@ -1000,7 +1061,7 @@ thread_proc_mut()
                 /* We don't want to overwrite, so check for existence. */
                 /* Map already exists, and we're not going to overwrite. */
                 if(mapdb_exists(mut->repo, mut->zoom,
-                            mut->tilex,mut->tiley, TRUE))
+                            mut->tilex,mut->tiley))
                 {
                     break;
                 }
@@ -1061,14 +1122,14 @@ thread_proc_mut()
                     g_cond_wait(mut->refresh_latch->cond,
                             mut->refresh_latch->mutex);
                 }
-                /* Latch is open.  Decrement the number of waiters and check if
-                 * we're the last waiter to run. */
+                /* Latch is open.  Decrement the number of waiters and
+                 * check if we're the last waiter to run. */
                 if(mut->refresh_latch->is_done_adding_tasks)
                 {
                     if(++mut->refresh_latch->num_done
                                 == mut->refresh_latch->num_tasks)
                     {
-                        /* We're the last waiter.  Free the latch resources. */
+                        /* Last waiter.  Free the latch resources. */
                         g_mutex_unlock(mut->refresh_latch->mutex);
                         g_cond_free(mut->refresh_latch->cond);
                         g_mutex_free(mut->refresh_latch->mutex);
@@ -1077,7 +1138,7 @@ thread_proc_mut()
                     }
                     else
                     {
-                        /* We're not the last waiter. Signal the next waiter.*/
+                        /* Not the last waiter. Signal the next waiter.*/
                         g_cond_signal(mut->refresh_latch->cond);
                         g_mutex_unlock(mut->refresh_latch->mutex);
                     }
@@ -1088,6 +1149,7 @@ thread_proc_mut()
 
             g_idle_add_full(G_PRIORITY_HIGH_IDLE,
                     (GSourceFunc)map_download_refresh_idle, mut, NULL);
+            refresh_sent = TRUE;
 
             /* DO NOT USE mut FROM THIS POINT ON. */
 
@@ -1097,15 +1159,13 @@ thread_proc_mut()
 
             /* Success! */
             g_free(bytes);
-
-            vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-            return FALSE;
+            break;
         }
-    }
 
-    /* Don't add an idle until the thread_render_map() task is done. */
-    g_idle_add_full(G_PRIORITY_HIGH_IDLE,
-            (GSourceFunc)map_download_refresh_idle, mut, NULL);
+        if(!refresh_sent)
+            g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                    (GSourceFunc)map_download_refresh_idle, mut, NULL);
+    }
 
     vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
     return FALSE;
@@ -1130,13 +1190,25 @@ mut_exists_equalfunc(const MapUpdateTask *a, const MapUpdateTask *b)
 gint
 mut_priority_comparefunc(const MapUpdateTask *a, const MapUpdateTask *b)
 {
-    gint diff = (b->batch_id - a->batch_id); /* More recent ones first. */
+    /* The update_type enum is sorted in order of ascending priority. */
+    gint diff = (b->update_type - a->update_type);
+    if(diff)
+        return diff;
+    diff = (b->batch_id - a->batch_id); /* More recent ones first. */
     if(diff)
         return diff;
     diff = (a->priority - b->priority); /* Lower priority numbers first. */
     if(diff)
         return diff;
-    return (b->id - a->id); /* Don't care - use id. */
+
+    /* At this point, we don't care, so just pick arbitrarily. */
+    diff = (a->tilex - b->tilex);
+    if(diff)
+        return diff;
+    diff = (a->tiley - b->tiley);
+    if(diff)
+        return diff;
+    return (a->zoom - b->zoom);
 }
 
 static gboolean
@@ -1807,6 +1879,8 @@ mapman_by_area(gfloat start_lat, gfloat start_lon,
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
     }
+
+    g_mutex_lock(_mut_priority_mutex);
     for(z = 0; z <= MAX_ZOOM; ++z)
     {
         if(gtk_toggle_button_get_active(
@@ -1836,6 +1910,8 @@ mapman_by_area(gfloat start_lat, gfloat start_lon,
             }
         }
     }
+    g_mutex_unlock(_mut_priority_mutex);
+
     gtk_widget_destroy(confirm);
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1906,6 +1982,7 @@ mapman_by_route(MapmanInfo *mapman_info, MapUpdateType update_type,
     }
 
     /* Now, do the actual download. */
+    g_mutex_lock(_mut_priority_mutex);
     for(z = 0; z <= MAX_ZOOM; ++z)
     {
         if(gtk_toggle_button_get_active(
@@ -1963,6 +2040,7 @@ mapman_by_route(MapmanInfo *mapman_info, MapUpdateType update_type,
             }
         }
     }
+    g_mutex_unlock(_mut_priority_mutex);
     _route_dl_radius = radius;
     gtk_widget_destroy(confirm);
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -2286,6 +2364,8 @@ mapman_dialog()
                     _screen_height_pixels) / 2),
             _center.unity - pixel2unit(MAX(_screen_width_pixels,
                     _screen_height_pixels) / 2), lat, lon);
+    BOUND(lat, -90.f, 90.f);
+    BOUND(lon, -180.f, 180.f);
     lat_format(lat, buffer);
     gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_topleft_lat), buffer);
     lon_format(lon, buffer);
@@ -2296,6 +2376,8 @@ mapman_dialog()
                     _screen_height_pixels) / 2),
             _center.unity + pixel2unit(MAX(_screen_width_pixels,
                     _screen_height_pixels) / 2), lat, lon);
+    BOUND(lat, -90.f, 90.f);
+    BOUND(lon, -180.f, 180.f);
     lat_format(lat, buffer);
     gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_botright_lat), buffer);
     lon_format(lon, buffer);
@@ -2324,7 +2406,7 @@ mapman_dialog()
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
         MapUpdateType update_type;
-        static gint download_batch_id = INT_MIN;
+        static gint8 download_batch_id = INT8_MIN;
 
         if(gtk_toggle_button_get_active(
                     GTK_TOGGLE_BUTTON(mapman_info.rad_delete)))

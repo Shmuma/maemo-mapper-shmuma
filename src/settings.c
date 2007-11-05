@@ -86,14 +86,6 @@ settings_save()
         gconf_client_unset(gconf_client,
                 GCONF_KEY_GPS_BT_MAC, NULL);
 
-    /* Save Bluetooth Receiver File. */
-    if(_gri.bt_file)
-        gconf_client_set_string(gconf_client,
-                GCONF_KEY_GPS_BT_FILE, _gri.bt_file, NULL);
-    else
-        gconf_client_unset(gconf_client,
-                GCONF_KEY_GPS_BT_FILE, NULL);
-
     /* Save GPSD Host. */
     if(_gri.gpsd_host)
         gconf_client_set_string(gconf_client,
@@ -1654,10 +1646,6 @@ settings_init()
     /* Get Bluetooth Receiver MAC.  Default is NULL. */
     _gri.bt_mac = gconf_client_get_string(
             gconf_client, GCONF_KEY_GPS_BT_MAC, NULL);
-
-    /* Get Bluetooth Receiver File.  Default is NULL. */
-    _gri.bt_file = gconf_client_get_string(
-            gconf_client, GCONF_KEY_GPS_BT_FILE, NULL);
 
     /* Get GPSD Host.  Default is NULL. */
     _gri.gpsd_host = gconf_client_get_string(

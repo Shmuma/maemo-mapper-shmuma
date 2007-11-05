@@ -339,7 +339,7 @@ route_update_nears(gboolean quick)
         {
             if(curr->unity)
             {
-                gint dist_squared = DISTANCE_SQUARED(_pos, *curr);
+                gint64 dist_squared = DISTANCE_SQUARED(_pos, *curr);
                 if(dist_squared <= near_dist_squared)
                 {
                     near = curr;
@@ -354,7 +354,7 @@ route_update_nears(gboolean quick)
         _near_point = near;
         _near_point_dist_squared = near_dist_squared;
 
-        for(wnext = wcurr = _next_way; wcurr <= _route.wtail; wcurr++)
+        for(wnext = wcurr = _next_way; wcurr < _route.wtail; wcurr++)
         {
             if(wcurr->point < near
             /* Okay, this else if expression warrants explanation.  If the
@@ -370,7 +370,9 @@ route_update_nears(gboolean quick)
                      && (DISTANCE_SQUARED(_pos, *near) > _next_way_dist_squared
                       && DISTANCE_SQUARED(_pos, *_next_wpt)
                                                    < _next_wpt_dist_squared))))
+            {
                 wnext = wcurr + 1;
+            }
             else
                 break;
         }
@@ -750,6 +752,8 @@ track_add(time_t time, gboolean newly_fixed)
         gboolean moving = FALSE;
         gboolean approaching_waypoint = FALSE;
 
+        announce_thres_unsquared = (20+_gps.speed) * _announce_notice_ratio*32;
+
         if(!_track.tail->unity || ((_pos.unitx - _track.tail->unitx)
                     * (_pos.unitx - _track.tail->unitx))
                 + ((_pos.unity - _track.tail->unity)
@@ -791,8 +795,11 @@ track_add(time_t time, gboolean newly_fixed)
 
             *_track.tail = _pos;
 
-            if(_near_point_dist_squared > (200 * 200))
+            if(_near_point_dist_squared > (2000 * 2000))
             {
+                /* Prevent announcments from occurring. */
+                announce_thres_unsquared = INT_MAX;
+
                 if(_autoroute_data.enabled && !_autoroute_data.in_progress)
                 {
                     MACRO_BANNER_SHOW_INFO(_window,
@@ -811,8 +818,6 @@ track_add(time_t time, gboolean newly_fixed)
             /* Keep the display on. */
             moving = TRUE;
         }
-
-        announce_thres_unsquared = (20+_gps.speed) * _announce_notice_ratio*2;
 
         if(_initial_distance_waypoint
                && (_next_way != _initial_distance_waypoint

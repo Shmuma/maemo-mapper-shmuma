@@ -629,7 +629,8 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
                 g_free(poi.clabel);
             }
         }
-        else if(_show_paths & ROUTES_MASK && _route.whead <= _route.wtail)
+        if(!selected_point && (_show_paths & ROUTES_MASK)
+                && _route.whead <= _route.wtail)
         {
             WayPoint *way = find_nearest_waypoint(
                     clkpt.unitx, clkpt.unity);

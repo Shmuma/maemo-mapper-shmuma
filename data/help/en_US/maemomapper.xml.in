@@ -1304,7 +1304,7 @@
       </para>
       <list>
         <listitem>
-          <display_text>Sensitivity</display_text> - Controls how often
+          <display_text>Pan Sensitivity</display_text> - Controls how often
           Maemo Mapper re-centers the display, based on how close your
           position (or the position of your <i>lead</i>) gets to the edge of
           the screen.  When set to a low value, Maemo Mapper will only
@@ -1320,6 +1320,21 @@
           The distance in front of you on which the screen is centered is
           based on two variables: your current speed and the value of the
           <display_text>Lead Amount</display_text> option.
+        </listitem>
+        <listitem>
+          <display_text>Fixed</display_text> - Controls whether or not your
+	  lead amount is affected by your speed.  If checked, then your
+	  speed will not affect the lead amount.
+        </listitem>
+        <listitem>
+          <display_text>Rotate Sensit.</display_text> - Controls how often
+          Maemo Mapper rotates the display based on your heading, depending
+	  on how far your current rotation is from your heading rotation.
+        </listitem>
+        <listitem>
+          <display_text>Points</display_text> - Controls which direction
+	  on the screen your heading points to when auto-rotating.  The
+	  default is for your current heading to point up.
         </listitem>
       </list>
       <heading>Announce</heading>

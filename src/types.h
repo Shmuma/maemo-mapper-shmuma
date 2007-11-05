@@ -45,9 +45,6 @@ typedef enum
      * No gtk_banner is visible. */
     RCVR_OFF,
 
-    /** We are now trying to disconnect from the receiver. */
-    RCVR_DISCONNECT,
-
     /** The connection with the receiver is down.  A gtk_banner is visible with
      * the text, "Connecting to GPS receiver". */
     RCVR_DOWN,
@@ -453,18 +450,16 @@ struct _ThreadLatch
 typedef struct _MapUpdateTask MapUpdateTask;
 struct _MapUpdateTask
 {
-    gint id;
-    gint batch_id;
     gint priority;
-    gboolean pending;
-    RepoData *repo;
-    MapUpdateType update_type;
-    gint zoom;
     gint tilex;
     gint tiley;
     ThreadLatch *refresh_latch;
-    GnomeVFSResult vfs_result;
     GdkPixbuf *pixbuf;
+    RepoData *repo;
+    gint8 update_type;
+    gint8 zoom;
+    gint8 vfs_result;
+    gint8 batch_id;
 };
 
 /** Data used during the asynchronous automatic route downloading operation. */
@@ -482,7 +477,6 @@ typedef struct _GpsRcvrInfo GpsRcvrInfo;
 struct _GpsRcvrInfo {
     GpsRcvrType type;
     gchar *bt_mac;
-    gchar *bt_file;
     gchar *file_path;
     gchar *gpsd_host;
     gint gpsd_port;
