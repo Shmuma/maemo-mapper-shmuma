@@ -1586,7 +1586,7 @@ repoman_download(GtkWidget *widget, RepoManInfo *rmi)
 
         /* Get repo config file from www.gnuite.com. */
         if(GNOME_VFS_OK != (vfs_result = gnome_vfs_read_entire_file(
-                    "http://192.168.1.2:8080/nokia770/maemo-mapper/repos.txt",
+                    "http://www.gnuite.com/nokia770/maemo-mapper/repos.txt",
                     &size, &bytes)))
         {
             popup_error(rmi->dialog,

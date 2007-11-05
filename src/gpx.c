@@ -374,7 +374,7 @@ gpx_path_parse(Path *to_replace, gchar *buffer, gint size, gint policy_old)
     sax_handler.error = (errorSAXFunc)gpx_error;
     sax_handler.fatalError = (fatalErrorSAXFunc)gpx_error;
 
-    xmlSAXUserParseMemory(&sax_handler, &data.sax_data, buffer, size);
+    xmlSAXUserParseMemory(&sax_handler, &data, buffer, size);
     g_string_free(data.sax_data.chars, TRUE);
 
     if(data.sax_data.state != FINISH)
@@ -533,7 +533,7 @@ gpx_path_write(Path *path, GnomeVFSHandle *handle)
             WRITE_STRING("\"");
 
             /* write the elevation */
-            if(curr->altitude > INT_MIN)
+            if(curr->altitude != 0)
             {
                 if(first_sub)
                 {
@@ -755,13 +755,13 @@ gpx_poi_end_element(PoiSaxData *data, const xmlChar *name)
 gboolean
 gpx_poi_parse(gchar *buffer, gint size, GList **poi_list)
 {
-    PoiSaxData sax_data;
+    PoiSaxData data;
     xmlSAXHandler sax_handler;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    sax_data.poi_list = *poi_list;
-    sax_data.sax_data.state = START;
-    sax_data.sax_data.chars = g_string_new("");
+    data.poi_list = *poi_list;
+    data.sax_data.state = START;
+    data.sax_data.chars = g_string_new("");
 
     memset(&sax_handler, 0, sizeof(sax_handler));
     sax_handler.characters = (charactersSAXFunc)gpx_chars;
@@ -772,11 +772,11 @@ gpx_poi_parse(gchar *buffer, gint size, GList **poi_list)
     sax_handler.error = (errorSAXFunc)gpx_error;
     sax_handler.fatalError = (fatalErrorSAXFunc)gpx_error;
 
-    xmlSAXUserParseMemory(&sax_handler, &sax_data, buffer, size);
-    g_string_free(sax_data.sax_data.chars, TRUE);
-    *poi_list = sax_data.poi_list;
+    xmlSAXUserParseMemory(&sax_handler, &data, buffer, size);
+    g_string_free(data.sax_data.chars, TRUE);
+    *poi_list = data.poi_list;
 
-    if(sax_data.sax_data.state != FINISH)
+    if(data.sax_data.state != FINISH)
     {
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
