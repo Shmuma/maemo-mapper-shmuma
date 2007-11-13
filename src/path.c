@@ -60,7 +60,6 @@ struct _OriginToggleInfo {
 
 /* _near_point is the route point to which we are closest. */
 static Point *_near_point = NULL;
-static gint64 _near_point_dist_squared = INT64_MAX;
 
 /* _next_way is what we currently interpret to be the next waypoint. */
 static WayPoint *_next_way;
@@ -352,7 +351,6 @@ route_update_nears(gboolean quick)
 
         /* Update _near_point. */
         _near_point = near;
-        _near_point_dist_squared = near_dist_squared;
 
         for(wnext = wcurr = _next_way; wcurr < _route.wtail; wcurr++)
         {
@@ -754,11 +752,8 @@ track_add(time_t time, gboolean newly_fixed)
 
         announce_thres_unsquared = (20+_gps.speed) * _announce_notice_ratio*32;
 
-        if(!_track.tail->unity || ((_pos.unitx - _track.tail->unitx)
-                    * (_pos.unitx - _track.tail->unitx))
-                + ((_pos.unity - _track.tail->unity)
-                    * (_pos.unity - _track.tail->unity))
-                > (_draw_width * _draw_width))
+        if(!_track.tail->unity || (_pos.unitx - _track.tail->unitx)
+                || (_pos.unity - _track.tail->unity))
         {
             ret = TRUE;
             /* Update the nearest-waypoint data. */
@@ -795,23 +790,83 @@ track_add(time_t time, gboolean newly_fixed)
 
             *_track.tail = _pos;
 
-            if(_near_point_dist_squared > (2000 * 2000))
+            /* Calculate distance to route. (point to line) */
+            if(_near_point)
             {
-                /* Prevent announcments from occurring. */
-                announce_thres_unsquared = INT_MAX;
+                gint route_x1, route_x2, route_y1, route_y2;
+                gint64 route_dist_squared_1 = INT64_MAX;
+                gint64 route_dist_squared_2 = INT64_MAX;
+                gfloat slope;
 
-                if(_autoroute_data.enabled && !_autoroute_data.in_progress)
+                route_x1 = _near_point->unitx;
+                route_y1 = _near_point->unity;
+
+                /* Try previous point first. */
+                if(_near_point != _route.head && _near_point[-1].unity)
                 {
-                    MACRO_BANNER_SHOW_INFO(_window,
-                            _("Recalculating directions..."));
-                    _autoroute_data.in_progress = TRUE;
-                    show_directions = FALSE;
-                    g_idle_add((GSourceFunc)auto_route_dl_idle, NULL);
+                    route_x2 = _near_point[-1].unitx;
+                    route_y2 = _near_point[-1].unity;
+                    slope = (gfloat)(route_y2 - route_y1)
+                        / (gfloat)(route_x2 - route_x1);
+
+                    if(route_x1 == route_x2)
+                    {
+                        /* Vertical line special case. */
+                        route_dist_squared_1 = (_pos.unitx - route_x1)
+                            * (_pos.unitx - route_x1);
+                    }
+                    else
+                    {
+                        route_dist_squared_1 = fabs((slope * _pos.unitx)
+                            - _pos.unity + (route_y1 - (slope * route_x1)));
+                        route_dist_squared_1 =
+                            route_dist_squared_1 * route_dist_squared_1
+                            / ((slope * slope) + 1);
+                    }
                 }
-                else
+                if(_near_point != _route.tail && _near_point[1].unity)
                 {
-                    /* Reset the route to try and find the nearest point. */
-                    path_reset_route();
+                    route_x2 = _near_point[1].unitx;
+                    route_y2 = _near_point[1].unity;
+                    slope = (gfloat)(route_y2 - route_y1)
+                        / (gfloat)(route_x2 - route_x1);
+
+                    if(route_x1 == route_x2)
+                    {
+                        /* Vertical line special case. */
+                        route_dist_squared_2 = (_pos.unitx - route_x1)
+                            * (_pos.unitx - route_x1);
+                    }
+                    else
+                    {
+                        route_dist_squared_2 = fabs((slope * _pos.unitx)
+                            - _pos.unity + (route_y1 - (slope * route_x1)));
+                        route_dist_squared_2 =
+                            route_dist_squared_2 * route_dist_squared_2
+                            / ((slope * slope) + 1);
+                    }
+                }
+
+                /* Check if our distance from the route is large. */
+                if(MIN(route_dist_squared_1, route_dist_squared_2)
+                        > (2000 * 2000))
+                {
+                    /* Prevent announcments from occurring. */
+                    announce_thres_unsquared = INT_MAX;
+
+                    if(_autoroute_data.enabled && !_autoroute_data.in_progress)
+                    {
+                        MACRO_BANNER_SHOW_INFO(_window,
+                                _("Recalculating directions..."));
+                        _autoroute_data.in_progress = TRUE;
+                        show_directions = FALSE;
+                        g_idle_add((GSourceFunc)auto_route_dl_idle, NULL);
+                    }
+                    else
+                    {
+                        /* Reset the route to try and find the nearest point.*/
+                        path_reset_route();
+                    }
                 }
             }
 

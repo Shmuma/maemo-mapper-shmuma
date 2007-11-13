@@ -1304,15 +1304,6 @@
       </para>
       <list>
         <listitem>
-          <display_text>Pan Sensitivity</display_text> - Controls how often
-          Maemo Mapper re-centers the display, based on how close your
-          position (or the position of your <i>lead</i>) gets to the edge of
-          the screen.  When set to a low value, Maemo Mapper will only
-          re-center the screen when you are near the edge of the screen.
-          When set to the maximum, Maemo Mapper will keep your position as
-          close to the center as possible.
-        </listitem>
-        <listitem>
           <display_text>Lead Amount</display_text> - When Auto-Center is set
           to <display_text>Lead</display_text>, then Maemo Mapper will keep
           the center of the screen focused on an area in front of you.  When
@@ -1325,6 +1316,23 @@
           <display_text>Fixed</display_text> - Controls whether or not your
 	  lead amount is affected by your speed.  If checked, then your
 	  speed will not affect the lead amount.
+        </listitem>
+        <listitem>
+          <display_text>Pan Sensitivity</display_text> - Controls how often
+          Maemo Mapper re-centers the display, based on how close your
+          position (or the position of your <i>lead</i>) gets to the edge of
+          the screen.  When set to a low value, Maemo Mapper will only
+          re-center the screen when you are near the edge of the screen.
+          When set to the maximum, Maemo Mapper will keep your position as
+          close to the center as possible.
+        </listitem>
+        <listitem>
+	  <display_text>Min. Speed</display_text> - Controls how fast you
+	  must be moving in order for Auto-Center (and Auto-Rotate) to
+	  activate.  For example, walkers may wish to set this threshold
+	  low, while drivers with inaccurate GPS receivers may wish to set
+	  this high (to avoid spurious auto-rotates when parked or waiting
+	  at a red light).  The speed is specified in your chosen units.
         </listitem>
         <listitem>
           <display_text>Rotate Sensit.</display_text> - Controls how often

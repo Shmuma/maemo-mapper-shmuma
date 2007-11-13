@@ -233,7 +233,7 @@ cmenu_cb_loc_add_poi(GtkMenuItem *item)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     screen2unit(_cmenu_position_x, _cmenu_position_y, unitx, unity);
-    poi_view_dialog(_window, NULL, unitx, unity);
+    poi_add_dialog(_window, unitx, unity);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -459,7 +459,7 @@ cmenu_cb_way_add_poi(GtkMenuItem *item)
 
     screen2unit(_cmenu_position_x, _cmenu_position_y, unitx, unity);
     if((way = find_nearest_waypoint(unitx, unity)))
-        poi_view_dialog(_window, NULL, way->point->unitx, way->point->unity);
+        poi_add_dialog(_window, way->point->unitx, way->point->unity);
     else
     {
         MACRO_BANNER_SHOW_INFO(_window, _("There are no waypoints."));
@@ -555,7 +555,7 @@ cmenu_cb_poi_edit_poi(GtkMenuItem *item)
     memset(&poi, 0, sizeof(poi));
     screen2unit(_cmenu_position_x, _cmenu_position_y, unitx, unity);
     select_poi(unitx, unity, &poi, FALSE); /* FALSE = not quick */
-    poi_view_dialog(_window, &poi, unitx, unity);
+    poi_view_dialog(_window, &poi);
     if(poi.label)
         g_free(poi.label);
     if(poi.desc)
@@ -593,7 +593,7 @@ void cmenu_init()
 
     /* Setup the map context menu. */
     gtk_menu_append(menu, menu_item
-            = gtk_menu_item_new_with_label(_("Location")));
+            = gtk_menu_item_new_with_label(_("Tap Point")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
             submenu = gtk_menu_new());
 

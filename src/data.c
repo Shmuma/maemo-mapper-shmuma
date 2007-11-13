@@ -178,6 +178,7 @@ gboolean _lead_is_fixed = FALSE;
 gint _center_ratio = 5;
 gint _draw_width = 5;
 gint _rotate_sens = 5;
+gint _ac_min_speed = 2;
 RotateDir _rotate_dir = ROTATE_DIR_UP;
 gint _announce_notice_ratio = 8;
 gboolean _enable_voice = TRUE;

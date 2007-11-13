@@ -156,6 +156,7 @@ extern gboolean _lead_is_fixed;
 extern gint _center_ratio;
 extern gint _draw_width;
 extern gint _rotate_sens;
+extern gint _ac_min_speed;
 extern RotateDir _rotate_dir;
 extern gint _announce_notice_ratio;
 extern gboolean _enable_voice;

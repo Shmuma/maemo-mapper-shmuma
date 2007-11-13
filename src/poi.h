@@ -32,8 +32,8 @@ gboolean select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick);
 
 gboolean category_list_dialog(GtkWidget *parent);
 
-gboolean poi_view_dialog(GtkWidget *parent, PoiInfo *poi,
-        gint unitx, gint unity);
+gboolean poi_add_dialog(GtkWidget *parent, gint unitx, gint unity);
+gboolean poi_view_dialog(GtkWidget *parent, PoiInfo *poi);
 gboolean poi_import_dialog(gint unitx, gint unity);
 gboolean poi_download_dialog(gint unitx, gint unity);
 gboolean poi_browse_dialog(gint unitx, gint unity);

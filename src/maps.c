@@ -1023,7 +1023,8 @@ thread_proc_mut()
 
         if(mut->repo != _curr_repo)
         {
-            /* Do nothing. */
+            /* Do nothing, except report that there is no error. */
+            mut->vfs_result = GNOME_VFS_OK;
         }
         else if(mut->update_type == MAP_UPDATE_DELETE)
         {
@@ -1031,6 +1032,9 @@ thread_proc_mut()
              * about failures (sorry). */
             if(mut->repo->db)
                 mapdb_delete(mut->repo, mut->zoom, mut->tilex, mut->tiley);
+
+            /* Report that there is no error. */
+            mut->vfs_result = GNOME_VFS_OK;
         }
         else for(retries = INITIAL_DOWNLOAD_RETRIES; retries > 0; --retries)
         {
@@ -1052,6 +1056,8 @@ thread_proc_mut()
             if(exists && mut->update_type == MAP_UPDATE_ADD)
             {
                 /* Map already exists, and we're not going to overwrite. */
+                /* Report that there is no error. */
+                mut->vfs_result = GNOME_VFS_OK;
                 break;
             }
 #else
@@ -1063,6 +1069,8 @@ thread_proc_mut()
                 if(mapdb_exists(mut->repo, mut->zoom,
                             mut->tilex,mut->tiley))
                 {
+                    /* Report that there is no error. */
+                    mut->vfs_result = GNOME_VFS_OK;
                     break;
                 }
             }
@@ -1225,15 +1233,21 @@ static gboolean
 repoman_dialog_browse(GtkWidget *widget, BrowseInfo *browse_info)
 {
     GtkWidget *dialog;
+    gchar *basename;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     dialog = GTK_WIDGET(
             hildon_file_chooser_dialog_new(GTK_WINDOW(browse_info->dialog),
-            GTK_FILE_CHOOSER_ACTION_OPEN));
+            GTK_FILE_CHOOSER_ACTION_SAVE));
 
-    gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
-    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+    gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(dialog),
             gtk_entry_get_text(GTK_ENTRY(browse_info->txt)));
+
+    /* Work around a bug in HildonFileChooserDialog. */
+    basename = g_path_get_basename(
+            gtk_entry_get_text(GTK_ENTRY(browse_info->txt)));
+    g_object_set(G_OBJECT(dialog), "autonaming", FALSE, NULL);
+    gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), basename);
 
     if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
@@ -2383,6 +2397,15 @@ mapman_dialog()
     lon_format(lon, buffer);
     gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_botright_lon), buffer);
 
+    /* Initialize zoom levels. */
+    {
+        gint i;
+        for(i = 0; i <= MAX_ZOOM; i++)
+        {
+            gtk_toggle_button_set_active(
+                    GTK_TOGGLE_BUTTON(mapman_info.chk_zoom_levels[i]), FALSE);
+        }
+    }
     gtk_toggle_button_set_active(
             GTK_TOGGLE_BUTTON(mapman_info.chk_zoom_levels[
                 _zoom + (_curr_repo->double_size ? 1 : 0)]), TRUE);

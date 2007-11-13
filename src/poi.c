@@ -106,6 +106,7 @@ poi_db_connect()
     gchar buffer[100];
     gchar **pszResult;
     gint nRow, nColumn;
+    gchar *db_dirname = NULL;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(_poi_db)
@@ -118,7 +119,9 @@ poi_db_connect()
     {
         /* Do nothing. */
     }
-    else if(SQLITE_OK != (sqlite3_open(_poi_db_filename, &_poi_db)))
+    else if(NULL == (db_dirname = g_path_get_dirname(_poi_db_filename))
+            || (g_mkdir_with_parents(db_dirname, 0755), /* comma operator */
+                (SQLITE_OK != (sqlite3_open(_poi_db_filename, &_poi_db)))))
     {
         gchar buffer2[BUFFER_SIZE];
         snprintf(buffer2, sizeof(buffer2),
@@ -198,6 +201,8 @@ poi_db_connect()
     }
     else
         sqlite3_free_table(pszResult);
+
+    g_free(db_dirname);
 
     if(_poi_db)
     {
@@ -635,7 +640,7 @@ category_edit_dialog(GtkWidget *parent, gint cat_id)
     {
         cat_enabled = 1;
         cat_label = g_strdup("");
-        cat_id = 0;
+        cat_id = -1;
         cat_desc = g_strdup("");
 
         dialog = gtk_dialog_new_with_buttons(_("Add Category"),
@@ -1022,7 +1027,7 @@ poi_delete(GtkWidget *widget, DeletePOI *dpoi)
     return TRUE;
 }
 
-static void
+static gboolean
 poi_populate_categories(GtkListStore *store, gint cat_id,
         GtkTreeIter *out_active)
 {
@@ -1042,13 +1047,15 @@ poi_populate_categories(GtkListStore *store, gint cat_id,
 
         if(cid == cat_id || !has_active)
         {
-            *out_active = iter;
+            if(out_active)
+                *out_active = iter;
             has_active = TRUE;
         }
     }
     sqlite3_reset(_stmt_selall_cat);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    return has_active;
 }
 
 static gboolean
@@ -1058,18 +1065,20 @@ poi_edit_cat(GtkWidget *widget, PoiCategoryEditInfo *data)
     if(category_list_dialog(data->dialog))
     {
         GtkTreeIter active;
-        poi_populate_categories(GTK_LIST_STORE(gtk_combo_box_get_model(
+        if(poi_populate_categories(GTK_LIST_STORE(gtk_combo_box_get_model(
                         GTK_COMBO_BOX(data->cmb_category))),
-                data->cat_id, &active);
-        gtk_combo_box_set_active_iter(
-                GTK_COMBO_BOX(data->cmb_category), &active);
+                data->cat_id, &active))
+        {
+            gtk_combo_box_set_active_iter(
+                    GTK_COMBO_BOX(data->cmb_category), &active);
+        }
     }
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
 static GtkWidget*
-poi_create_cat_combo(gint selected_cat_id)
+poi_create_cat_combo()
 {
     GtkWidget *cmb_category;
     GtkTreeModel *model;
@@ -1092,42 +1101,276 @@ poi_create_cat_combo(gint selected_cat_id)
                 GTK_CELL_LAYOUT(cmb_category), renderer, "text", 1, NULL);
 
         poi_populate_categories(GTK_LIST_STORE(gtk_combo_box_get_model(
-                    GTK_COMBO_BOX(cmb_category))), selected_cat_id,
-                &active);
-        if(selected_cat_id)
-            gtk_combo_box_set_active_iter(GTK_COMBO_BOX(cmb_category),&active);
+                        GTK_COMBO_BOX(cmb_category))), -1, &active);
     }
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return cmb_category;
 }
 
 gboolean
-poi_view_dialog(GtkWidget *parent, PoiInfo *poi, gint unitx, gint unity)
+poi_add_dialog(GtkWidget *parent, gint unitx, gint unity)
 {
-    PoiInfo static_poi;
     gchar buffer[16];
-    GtkWidget *dialog;
-    GtkWidget *table;
-    GtkWidget *label;
-    GtkWidget *txt_label;
-    GtkWidget *txt_lat;
-    GtkWidget *txt_lon;
-    GtkWidget *cmb_category;
-    GtkWidget *txt_desc;
-    GtkWidget *btn_delete = NULL;
-    GtkWidget *btn_catedit;
-    GtkWidget *hbox;
-    GtkWidget *txt_scroll;
-    GtkTextBuffer *desc_txt;
-    GtkTextIter begin, end;
-    DeletePOI dpoi = {NULL, NULL, 0};
-    PoiCategoryEditInfo pcedit;
-    gboolean is_edit;
+    static PoiInfo poi;
+    static GtkWidget *dialog;
+    static GtkWidget *table;
+    static GtkWidget *label;
+    static GtkWidget *txt_label;
+    static GtkWidget *txt_lat;
+    static GtkWidget *txt_lon;
+    static GtkWidget *cmb_category;
+    static GtkWidget *txt_desc;
+    static GtkWidget *btn_catedit;
+    static GtkWidget *hbox;
+    static GtkWidget *txt_scroll;
+    static GtkTextBuffer *desc_txt;
+    static GtkTextIter begin, end;
+    static DeletePOI dpoi = {NULL, NULL, 0};
+    static PoiCategoryEditInfo pcedit;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    is_edit = poi ? TRUE : FALSE;
+    if(dialog == NULL)
+    {
+        dialog = gtk_dialog_new_with_buttons(_("Add POI"),
+            GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+            NULL);
 
-    if(is_edit)
+        /* Set the lat/lon strings. */
+        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+                table = gtk_table_new(6, 4, FALSE), TRUE, TRUE, 0);
+
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Lat")),
+                0, 1, 0, 1, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        gtk_table_attach(GTK_TABLE(table),
+                txt_lat = gtk_entry_new(),
+                1, 2, 0, 1, GTK_FILL, 0, 2, 0);
+
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Lon")),
+                2, 3, 0, 1, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        gtk_table_attach(GTK_TABLE(table),
+                txt_lon = gtk_entry_new(),
+                3, 4, 0, 1, GTK_FILL, 0, 2, 0);
+
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Label")),
+                0, 1, 1, 2, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        gtk_table_attach(GTK_TABLE(table),
+                txt_label = gtk_entry_new(),
+                1, 4, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Category")),
+                0, 1, 3, 4, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        gtk_table_attach(GTK_TABLE(table),
+                hbox = gtk_hbox_new(FALSE, 4),
+                1, 4, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+        gtk_box_pack_start(GTK_BOX(hbox),
+                cmb_category = poi_create_cat_combo(),
+                FALSE, FALSE, 0);
+
+        gtk_box_pack_start(GTK_BOX(hbox),
+                btn_catedit = gtk_button_new_with_label(
+                    _("Edit Categories...")),
+                FALSE, FALSE, 0);
+
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Description")),
+                0, 1, 5, 6, GTK_FILL, GTK_FILL, 2, 0);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.0f);
+
+        txt_scroll = gtk_scrolled_window_new(NULL, NULL);
+        gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(txt_scroll),
+                GTK_SHADOW_IN);
+        gtk_table_attach(GTK_TABLE(table),
+                txt_scroll,
+                1, 4, 5, 6, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(txt_scroll),
+                GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+
+        txt_desc = gtk_text_view_new ();
+        gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(txt_desc), GTK_WRAP_WORD);
+
+        gtk_container_add(GTK_CONTAINER(txt_scroll), txt_desc);
+        gtk_widget_set_size_request(GTK_WIDGET(txt_scroll), 550, 120);
+
+        desc_txt = gtk_text_view_get_buffer(GTK_TEXT_VIEW (txt_desc));
+
+        g_signal_connect(G_OBJECT(btn_catedit), "clicked",
+                G_CALLBACK(poi_edit_cat), &pcedit);
+    }
+
+    poi.poi_id = -1;
+    poi.cat_id = -1;
+    poi.clabel = NULL;
+    poi.desc = g_strdup("");
+    unit2latlon(unitx, unity, poi.lat, poi.lon);
+
+    /* Lat/Lon */
+    snprintf(buffer, sizeof(buffer), "%.06f", poi.lat);
+    gtk_entry_set_text(GTK_ENTRY(txt_lat), buffer);
+    snprintf(buffer, sizeof(buffer), "%.06f", poi.lon);
+    gtk_entry_set_text(GTK_ENTRY(txt_lon), buffer);
+
+    /* Label */
+    if(SQLITE_ROW == sqlite3_step(_stmt_nextlabel_poi))
+        poi.label = g_strdup_printf("Point%06d",
+                sqlite3_column_int(_stmt_nextlabel_poi, 0));
+    else
+        poi.label = g_strdup("");
+    sqlite3_reset(_stmt_nextlabel_poi);
+    gtk_entry_set_text(GTK_ENTRY(txt_label), poi.label);
+
+    /* POI Desc. */
+    gtk_text_buffer_set_text(desc_txt, "", -1);
+
+    /* Category. */
+    {
+        GtkTreeIter iter;
+        gint cat_id = -1;
+        gboolean had_cat_id = FALSE;
+
+        if(gtk_combo_box_get_active_iter(
+                GTK_COMBO_BOX(cmb_category), &iter))
+        {
+            gtk_tree_model_get(
+                    gtk_combo_box_get_model(GTK_COMBO_BOX(cmb_category)),&iter,
+                    0, &cat_id,
+                    -1);
+            had_cat_id = TRUE;
+        }
+        gtk_list_store_clear(GTK_LIST_STORE(gtk_combo_box_get_model(
+                        GTK_COMBO_BOX(cmb_category))));
+        if(poi_populate_categories(GTK_LIST_STORE(gtk_combo_box_get_model(
+                    GTK_COMBO_BOX(cmb_category))), cat_id, &iter)
+                && had_cat_id)
+        {
+            gtk_combo_box_set_active_iter(GTK_COMBO_BOX(cmb_category), &iter);
+        }
+    }
+
+    pcedit.dialog = dialog;
+    pcedit.cmb_category = cmb_category;
+    pcedit.cat_id = poi.cat_id;
+
+    gtk_widget_show_all(dialog);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        GtkTreeIter iter;
+        const gchar *text;
+        gchar *error_check;
+
+        text = gtk_entry_get_text(GTK_ENTRY(txt_lat));
+        poi.lat = strdmstod(text, &error_check);
+        if(text == error_check || poi.lat < -90. || poi.lat > 90.) {
+            popup_error(dialog, _("Invalid Latitude"));
+            continue;
+        }
+
+        text = gtk_entry_get_text(GTK_ENTRY(txt_lon));
+        poi.lon = strdmstod(text, &error_check);
+        if(text == error_check || poi.lon < -180. || poi.lon > 180.) {
+            popup_error(dialog, _("Invalid Longitude"));
+            continue;
+        }
+
+        if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_label))))
+        {
+            if(poi.label)
+                g_free(poi.label);
+            poi.label = g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_label)));
+        }
+        else
+        {
+            popup_error(dialog, _("Please specify a name."));
+            continue;
+        }
+
+        if(!gtk_combo_box_get_active_iter(
+                GTK_COMBO_BOX(cmb_category), &iter))
+        {
+            popup_error(dialog, _("Please specify a category."));
+            continue;
+        }
+
+        gtk_text_buffer_get_iter_at_offset(desc_txt, &begin,0 );
+        gtk_text_buffer_get_end_iter (desc_txt, &end);
+        if(poi.desc)
+            g_free(poi.desc);
+        poi.desc = gtk_text_buffer_get_text(desc_txt, &begin, &end, TRUE);
+
+        if(poi.clabel)
+            g_free(poi.clabel);
+        gtk_tree_model_get(
+                gtk_combo_box_get_model(GTK_COMBO_BOX(cmb_category)), &iter,
+                0, &poi.cat_id,
+                1, &poi.clabel,
+                -1);
+
+        /* add poi */
+        if(SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 1, poi.lat)
+        || SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 2, poi.lon)
+        || SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 3, poi.label,
+               -1, g_free)
+        || SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 4, poi.desc,
+               -1, g_free)
+        || SQLITE_OK != sqlite3_bind_int(_stmt_insert_poi, 5, poi.cat_id)
+        || SQLITE_DONE != sqlite3_step(_stmt_insert_poi))
+        {
+            MACRO_BANNER_SHOW_INFO(parent, _("Error adding POI"));
+        }
+
+        sqlite3_reset(_stmt_insert_poi);
+
+        /* We're done. */
+        break;
+    }
+
+    g_free(poi.label);
+    g_free(poi.desc);
+    g_free(dpoi.txt_label);
+
+    map_force_redraw();
+
+    gtk_widget_hide(dialog);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return !dpoi.deleted;
+}
+
+gboolean
+poi_view_dialog(GtkWidget *parent, PoiInfo *poi)
+{
+    gchar buffer[16];
+    GtkTreeIter iter;
+    static GtkWidget *dialog;
+    static GtkWidget *table;
+    static GtkWidget *label;
+    static GtkWidget *txt_label;
+    static GtkWidget *txt_lat;
+    static GtkWidget *txt_lon;
+    static GtkWidget *cmb_category;
+    static GtkWidget *txt_desc;
+    static GtkWidget *btn_delete = NULL;
+    static GtkWidget *btn_catedit;
+    static GtkWidget *hbox;
+    static GtkWidget *txt_scroll;
+    static GtkTextBuffer *desc_txt;
+    static GtkTextIter begin, end;
+    static DeletePOI dpoi = {NULL, NULL, 0};
+    static PoiCategoryEditInfo pcedit;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(dialog == NULL)
     {
         dialog = gtk_dialog_new_with_buttons(_("Edit POI"),
             GTK_WINDOW(parent), GTK_DIALOG_MODAL,
@@ -1137,107 +1380,87 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi, gint unitx, gint unity)
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
                 btn_delete = gtk_button_new_with_label(_("Delete...")));
 
-        dpoi.dialog = dialog;
-        dpoi.txt_label = g_strdup(poi->label);
-        dpoi.id = poi->poi_id;
-        dpoi.deleted = FALSE;
+        gtk_dialog_add_button(GTK_DIALOG(dialog),
+                GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT);
+
+        /* Set the lat/lon strings. */
+        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+                table = gtk_table_new(6, 4, FALSE), TRUE, TRUE, 0);
+
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Lat")),
+                0, 1, 0, 1, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        gtk_table_attach(GTK_TABLE(table),
+                txt_lat = gtk_entry_new(),
+                1, 2, 0, 1, GTK_FILL, 0, 2, 0);
+
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Lon")),
+                2, 3, 0, 1, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        gtk_table_attach(GTK_TABLE(table),
+                txt_lon = gtk_entry_new(),
+                3, 4, 0, 1, GTK_FILL, 0, 2, 0);
+
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Label")),
+                0, 1, 1, 2, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        gtk_table_attach(GTK_TABLE(table),
+                txt_label = gtk_entry_new(),
+                1, 4, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Category")),
+                0, 1, 3, 4, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        gtk_table_attach(GTK_TABLE(table),
+                hbox = gtk_hbox_new(FALSE, 4),
+                1, 4, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+        gtk_box_pack_start(GTK_BOX(hbox),
+                cmb_category = poi_create_cat_combo(),
+                FALSE, FALSE, 0);
+
+        gtk_box_pack_start(GTK_BOX(hbox),
+                btn_catedit = gtk_button_new_with_label(
+                    _("Edit Categories...")),
+                FALSE, FALSE, 0);
+
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Description")),
+                0, 1, 5, 6, GTK_FILL, GTK_FILL, 2, 0);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.0f);
+
+        txt_scroll = gtk_scrolled_window_new(NULL, NULL);
+        gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(txt_scroll),
+                GTK_SHADOW_IN);
+        gtk_table_attach(GTK_TABLE(table),
+                txt_scroll,
+                1, 4, 5, 6, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+
+        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(txt_scroll),
+                GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+
+        txt_desc = gtk_text_view_new ();
+        gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(txt_desc), GTK_WRAP_WORD);
+
+        gtk_container_add(GTK_CONTAINER(txt_scroll), txt_desc);
+        gtk_widget_set_size_request(GTK_WIDGET(txt_scroll), 550, 120);
+
+        desc_txt = gtk_text_view_get_buffer (GTK_TEXT_VIEW (txt_desc));
 
         g_signal_connect(G_OBJECT(btn_delete), "clicked",
                           G_CALLBACK(poi_delete), &dpoi);
 
-        gtk_dialog_add_button(GTK_DIALOG(dialog),
-                GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT);
-    }
-    else
-    {
-        poi = &static_poi;
-
-        if(SQLITE_ROW == sqlite3_step(_stmt_nextlabel_poi))
-            poi->label = g_strdup_printf("Point%06d",
-                    sqlite3_column_int(_stmt_nextlabel_poi, 0));
-        else
-            poi->label = g_strdup("");
-        sqlite3_reset(_stmt_nextlabel_poi);
-
-        unit2latlon(unitx, unity, poi->lat, poi->lon);
-
-        poi->poi_id = 0;
-        poi->cat_id = 0;
-        poi->clabel = NULL;
-        poi->desc = g_strdup("");
-
-        dialog = gtk_dialog_new_with_buttons(_("Add POI"),
-            GTK_WINDOW(parent), GTK_DIALOG_MODAL,
-            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-            NULL);
+        g_signal_connect(G_OBJECT(btn_catedit), "clicked",
+                G_CALLBACK(poi_edit_cat), &pcedit);
     }
 
-    /* Set the lat/lon strings. */
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-            table = gtk_table_new(6, 4, FALSE), TRUE, TRUE, 0);
-
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Lat")),
-            0, 1, 0, 1, GTK_FILL, 0, 2, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            txt_lat = gtk_entry_new(),
-            1, 2, 0, 1, GTK_FILL, 0, 2, 0);
-
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Lon")),
-            2, 3, 0, 1, GTK_FILL, 0, 2, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            txt_lon = gtk_entry_new(),
-            3, 4, 0, 1, GTK_FILL, 0, 2, 0);
-
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Label")),
-            0, 1, 1, 2, GTK_FILL, 0, 2, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            txt_label = gtk_entry_new(),
-            1, 4, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 0);
-
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Category")),
-            0, 1, 3, 4, GTK_FILL, 0, 2, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            hbox = gtk_hbox_new(FALSE, 4),
-            1, 4, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 0);
-    gtk_box_pack_start(GTK_BOX(hbox),
-            cmb_category = poi_create_cat_combo(poi->cat_id),
-            FALSE, FALSE, 0);
-
-    gtk_box_pack_start(GTK_BOX(hbox),
-            btn_catedit = gtk_button_new_with_label(_("Edit Categories...")),
-            FALSE, FALSE, 0);
-
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Description")),
-            0, 1, 5, 6, GTK_FILL, 0, 2, 0);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.0f);
-
-    txt_scroll = gtk_scrolled_window_new(NULL, NULL);
-    gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(txt_scroll),
-                                   GTK_SHADOW_IN);
-    gtk_table_attach(GTK_TABLE(table),
-            txt_scroll,
-            1, 4, 5, 6, GTK_EXPAND | GTK_FILL, 0, 2, 0);
-
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(txt_scroll),
-                                 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-
-    txt_desc = gtk_text_view_new ();
-    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(txt_desc), GTK_WRAP_WORD);
-
-    gtk_container_add(GTK_CONTAINER(txt_scroll), txt_desc);
-    gtk_widget_set_size_request(GTK_WIDGET(txt_scroll), 550, 120);
-
-    desc_txt = gtk_text_view_get_buffer (GTK_TEXT_VIEW (txt_desc));
+    dpoi.dialog = dialog;
+    dpoi.txt_label = g_strdup(poi->label);
+    dpoi.id = poi->poi_id;
+    dpoi.deleted = FALSE;
 
     /* Lat/Lon */
     snprintf(buffer, sizeof(buffer), "%.06f", poi->lat);
@@ -1251,17 +1474,22 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi, gint unitx, gint unity)
     /* poi_desc */
     gtk_text_buffer_set_text(desc_txt, poi->desc, -1);
 
+    /* Category. */
+    gtk_list_store_clear(GTK_LIST_STORE(gtk_combo_box_get_model(
+                    GTK_COMBO_BOX(cmb_category))));
+    if(poi_populate_categories(GTK_LIST_STORE(gtk_combo_box_get_model(
+                GTK_COMBO_BOX(cmb_category))), poi->cat_id, &iter))
+        gtk_combo_box_set_active_iter(GTK_COMBO_BOX(cmb_category), &iter);
+
     /* Connect Signals */
     pcedit.dialog = dialog;
     pcedit.cmb_category = cmb_category;
     pcedit.cat_id = poi->cat_id;
-    g_signal_connect(G_OBJECT(btn_catedit), "clicked",
-            G_CALLBACK(poi_edit_cat), &pcedit);
+
     gtk_widget_show_all(dialog);
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
-        GtkTreeIter iter;
         const gchar *text;
         gchar *error_check;
 
@@ -1312,53 +1540,27 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi, gint unitx, gint unity)
                 1, &poi->clabel,
                 -1);
 
-        if(is_edit)
+        /* edit poi */
+        if(SQLITE_OK != sqlite3_bind_double(
+                    _stmt_update_poi, 1, poi->lat) ||
+           SQLITE_OK != sqlite3_bind_double(
+               _stmt_update_poi, 2, poi->lon) ||
+           SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 3, poi->label,
+                    -1, SQLITE_STATIC) ||
+           SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 4, poi->desc,
+               -1, g_free) ||
+           SQLITE_OK != sqlite3_bind_int(
+               _stmt_update_poi, 5, poi->cat_id) ||
+           SQLITE_OK != sqlite3_bind_int(
+               _stmt_update_poi, 6, poi->poi_id) ||
+           SQLITE_DONE != sqlite3_step(_stmt_update_poi))
         {
-            /* edit poi */
-            if(SQLITE_OK != sqlite3_bind_double(
-                        _stmt_update_poi, 1, poi->lat) ||
-               SQLITE_OK != sqlite3_bind_double(
-                   _stmt_update_poi, 2, poi->lon) ||
-               SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 3, poi->label,
-                        -1, SQLITE_STATIC) ||
-               SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 4, poi->desc,
-                   -1, g_free) ||
-               SQLITE_OK != sqlite3_bind_int(
-                   _stmt_update_poi, 5, poi->cat_id) ||
-               SQLITE_OK != sqlite3_bind_int(
-                   _stmt_update_poi, 6, poi->poi_id) ||
-               SQLITE_DONE != sqlite3_step(_stmt_update_poi))
-            {
-                MACRO_BANNER_SHOW_INFO(parent, _("Error updating POI"));
-            }
-            else
-            {
-                map_force_redraw();
-            }
-            sqlite3_reset(_stmt_update_poi);
+            MACRO_BANNER_SHOW_INFO(parent, _("Error updating POI"));
         }
-        else
-        {
-            /* add poi */
-            if(SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 1, poi->lat)
-            || SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 2, poi->lon)
-            || SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 3, poi->label,
-                   -1, g_free)
-            || SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 4, poi->desc,
-                   -1, g_free)
-            || SQLITE_OK != sqlite3_bind_int(_stmt_insert_poi, 5, poi->cat_id)
-            || SQLITE_DONE != sqlite3_step(_stmt_insert_poi))
-            {
-                MACRO_BANNER_SHOW_INFO(parent, _("Error adding POI"));
-            }
-            else
-            {
-                MACRO_MAP_RENDER_DATA();
-            }
-            sqlite3_reset(_stmt_insert_poi);
-            g_free(poi->label);
-            g_free(poi->desc);
-        }
+
+        sqlite3_reset(_stmt_update_poi);
+
+        /* We're done. */
         break;
     }
 
@@ -1366,7 +1568,7 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi, gint unitx, gint unity)
 
     map_force_redraw();
 
-    gtk_widget_destroy(dialog);
+    gtk_widget_hide(dialog); /* Destroying causes a crash.... ??? */
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return !dpoi.deleted;
@@ -1565,7 +1767,7 @@ poi_list_set_category(GtkWidget *widget, PoiListInfo *pli)
                 FALSE, FALSE, 0);
 
         gtk_box_pack_start(GTK_BOX(hbox),
-                cmb_category = poi_create_cat_combo(0),
+                cmb_category = poi_create_cat_combo(),
                 FALSE, FALSE, 4);
 
         gtk_box_pack_start(GTK_BOX(hbox),
@@ -1713,7 +1915,7 @@ poi_list_view(GtkWidget *widget, PoiListInfo *pli)
                 POI_CLABEL, &(poi.clabel),
                 -1);
 
-        if(poi_view_dialog(pli->dialog, &poi, 0, 0))
+        if(poi_view_dialog(pli->dialog, &poi))
         {
             gtk_list_store_set(store, &iter,
                     POI_POIID, poi.poi_id,
@@ -2163,7 +2365,7 @@ poi_import_dialog(gint unitx, gint unity)
                         FALSE, FALSE, 0);
 
                 gtk_box_pack_start(GTK_BOX(hbox),
-                        cmb_category = poi_create_cat_combo(0),
+                        cmb_category = poi_create_cat_combo(),
                         FALSE, FALSE, 4);
 
                 gtk_box_pack_start(GTK_BOX(hbox),
@@ -2339,7 +2541,7 @@ poi_download_dialog(gint unitx, gint unity)
                 2, 3, 1, 2, GTK_FILL, 0, 2, 4);
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
-                cmb_category = poi_create_cat_combo(0),
+                cmb_category = poi_create_cat_combo(),
                 3, 4, 1, 2, GTK_FILL, 0, 2, 4);
 
         /* Page. */
@@ -2642,7 +2844,7 @@ poi_browse_dialog(gint unitx, gint unity)
                 2, 3, 0, 1, GTK_FILL, 0, 2, 4);
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
-                cmb_category = poi_create_cat_combo(0),
+                cmb_category = poi_create_cat_combo(),
                 3, 4, 0, 1, GTK_FILL, 0, 2, 4);
         /* Add an extra, "<any>" category. */
         {
@@ -2823,7 +3025,6 @@ poi_browse_dialog(gint unitx, gint unity)
 
         if(is_cat)
         {
-            printf("Searching for cat_id = %d\n", cat_id);
             if(SQLITE_OK != sqlite3_bind_int(_stmt_browsecat_poi, 1, cat_id) ||
                SQLITE_OK != sqlite3_bind_text(_stmt_browsecat_poi, 2, query,
                    -1, g_free) ||
@@ -2897,9 +3098,14 @@ map_render_poi()
 
     if(_poi_db && _poi_zoom > _zoom)
     {
+        gint diag_offset = pixel2unit(MAX(_screen_width_pixels,
+                    _screen_height_pixels) / 2);
         buf2unit(0, _screen_height_pixels, unitx, unity);
+        unitx = _center.unitx - diag_offset;
+        unity = _center.unity + diag_offset;
         unit2latlon(unitx, unity, lat1, lon1);
-        buf2unit(_screen_width_pixels, 0, unitx, unity);
+        unitx = _center.unitx + diag_offset;
+        unity = _center.unity - diag_offset;
         unit2latlon(unitx, unity, lat2, lon2);
 
         if(SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 1, lat1) ||

@@ -1,3 +1,21 @@
+maemo-mapper (2.0.4) unstable; urgency=low
+
+  * Added "Min. Speed" option in "Auto-Center" tab of "Settings", which allows
+    you to specify a minimum speed at which you must be traveling in order for
+    Auto-Center (and Auto-Rotate) to activate. (closes #1626)
+  * Fixed bug in Browsing for new Map Cache DB files. (closes #1613)
+  * Fixed crashes that occurred with POI View/Add dialog.
+  * Fixed crashes that occurred when opening previously-saved tracks and
+    routes. (closes #1619)
+  * Fixed spurious error reports when downloading maps that already exist.
+    (closes #1621)
+  * Renamed "Location" context menu to "Tap Point". (closes #1624)
+  * Changed the way zoom levels are initialized in the "Manage Maps" dialog,
+    to be much less arbitrary.
+  * Fixed POI database creation to include creation of the directory.
+
+ -- John Costigan <gnuite@gmail.com>  Mon, 12 Nov 2007 21:00:00 -0500
+
 maemo-mapper (2.0.3) unstable; urgency=low
 
   * Fixed download of map repositories.

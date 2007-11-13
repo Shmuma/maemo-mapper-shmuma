@@ -130,6 +130,10 @@ settings_save()
     gconf_client_set_int(gconf_client,
             GCONF_KEY_ROTATE_SENSITIVITY, _rotate_sens, NULL);
 
+    /* Save Auto-Center/Rotate Minimum Speed. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_AC_MIN_SPEED, _ac_min_speed, NULL);
+
     /* Save Auto-Rotate Sensitivity. */
     gconf_client_set_string(gconf_client,
             GCONF_KEY_ROTATE_DIR, ROTATE_DIR_ENUM_TEXT[_rotate_dir], NULL);
@@ -940,6 +944,7 @@ settings_dialog()
     static GtkWidget *chk_lead_is_fixed = NULL;
     static GtkWidget *num_rotate_sens = NULL;
     static GtkWidget *cmb_rotate_dir = NULL;
+    static GtkWidget *num_ac_min_speed = NULL;
     static GtkWidget *num_announce_notice = NULL;
     static GtkWidget *chk_enable_voice = NULL;
     static GtkWidget *num_draw_width = NULL;
@@ -1052,27 +1057,14 @@ settings_dialog()
                 table = gtk_table_new(3, 3, FALSE),
                 label = gtk_label_new(_("Auto-Center")));
 
-        /* Auto-Center Pan Sensitivity. */
+        /* Lead Amount. */
         gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Pan Sensitivity")),
+                label = gtk_label_new(_("Lead Amount")),
                 0, 1, 0, 1, GTK_FILL, 0, 2, 4);
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
                 label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
                 1, 2, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_container_add(GTK_CONTAINER(label),
-                num_center_ratio = hildon_controlbar_new());
-        hildon_controlbar_set_range(HILDON_CONTROLBAR(num_center_ratio), 1,10);
-        force_min_visible_bars(HILDON_CONTROLBAR(num_center_ratio), 1);
-
-        /* Lead Amount. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Lead Amount")),
-                0, 1, 1, 2, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-                1, 2, 1, 2, GTK_FILL, 0, 2, 4);
         gtk_container_add(GTK_CONTAINER(label),
                 num_lead_ratio = hildon_controlbar_new());
         hildon_controlbar_set_range(HILDON_CONTROLBAR(num_lead_ratio), 1, 10);
@@ -1080,9 +1072,32 @@ settings_dialog()
 
         gtk_table_attach(GTK_TABLE(table),
                 label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-                2, 3, 1, 2, GTK_FILL, 0, 2, 4);
+                2, 3, 0, 1, GTK_FILL, 0, 2, 4);
         gtk_container_add(GTK_CONTAINER(label),
             chk_lead_is_fixed = gtk_check_button_new_with_label(_("Fixed")));
+
+        /* Auto-Center Pan Sensitivity. */
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Pan Sensitivity")),
+                0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+                1, 2, 1, 2, GTK_FILL, 0, 2, 4);
+        gtk_container_add(GTK_CONTAINER(label),
+                num_center_ratio = hildon_controlbar_new());
+        hildon_controlbar_set_range(HILDON_CONTROLBAR(num_center_ratio), 1,10);
+        force_min_visible_bars(HILDON_CONTROLBAR(num_center_ratio), 1);
+
+        gtk_table_attach(GTK_TABLE(table),
+                hbox = gtk_hbox_new(FALSE, 4),
+                2, 3, 1, 2, GTK_FILL, 0, 2, 4);
+        gtk_box_pack_start(GTK_BOX(hbox),
+                label = gtk_label_new(_("Min. Speed")),
+                TRUE, TRUE, 4);
+        gtk_box_pack_start(GTK_BOX(hbox),
+                num_ac_min_speed = hildon_number_editor_new(0, 99),
+                TRUE, TRUE, 4);
 
         /* Auto-Center Rotate Sensitivity. */
         gtk_table_attach(GTK_TABLE(table),
@@ -1339,6 +1354,8 @@ settings_dialog()
     hildon_controlbar_set_value(HILDON_CONTROLBAR(num_rotate_sens),
             _rotate_sens);
     gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_rotate_dir), _rotate_dir);
+    hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_ac_min_speed),
+            _ac_min_speed);
     hildon_controlbar_set_value(HILDON_CONTROLBAR(num_announce_notice),
             _announce_notice_ratio);
     hildon_controlbar_set_value(HILDON_CONTROLBAR(num_draw_width),
@@ -1482,6 +1499,9 @@ settings_dialog()
 
         _rotate_sens = hildon_controlbar_get_value(
                 HILDON_CONTROLBAR(num_rotate_sens));
+
+        _ac_min_speed = hildon_number_editor_get_value(
+                HILDON_NUMBER_EDITOR(num_ac_min_speed));
 
         _rotate_dir = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_rotate_dir));
 
@@ -1691,6 +1711,16 @@ settings_init()
             GCONF_KEY_ROTATE_SENSITIVITY, NULL);
     if(!_rotate_sens)
         _rotate_sens = 5;
+
+    /* Get Auto-Center/Rotate Minimum Speed - Default is 2. */
+    value = gconf_client_get(gconf_client, GCONF_KEY_AC_MIN_SPEED, NULL);
+    if(value)
+    {
+        _ac_min_speed = gconf_value_get_int(value);
+        gconf_value_free(value);
+    }
+    else
+        _ac_min_speed = 2;
 
     /* Get Rotate Dir - Default is ROTATE_DIR_UP. */
     {
@@ -1932,7 +1962,7 @@ settings_init()
         repo_set_curr(repo);
     }
 
-    /* Get last Zoom Level.  Default is 12. */
+    /* Get last Zoom Level.  Default is 16. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ZOOM, NULL);
     if(value)
     {
@@ -1941,7 +1971,7 @@ settings_init()
         gconf_value_free(value);
     }
     else
-        _zoom = 12 / _curr_repo->view_zoom_steps
+        _zoom = 16 / _curr_repo->view_zoom_steps
             * _curr_repo->view_zoom_steps;
     BOUND(_zoom, 0, MAX_ZOOM);
     _next_zoom = _zoom;

@@ -1366,7 +1366,8 @@ map_refresh_mark(gboolean force_redraw)
 
     unit2buf(new_center.unitx, new_center.unity,
             new_center_devx, new_center_devy);
-    if(force_redraw || (_center_mode > 0 && _gps.speed > 0 &&
+    if(force_redraw || (_center_mode > 0
+                && (UNITS_CONVERT[_units] * _gps.speed) >= _ac_min_speed &&
     (((unsigned)(new_center_devx - (_screen_width_pixels * _center_ratio / 20))
                 > ((10 - _center_ratio) * _screen_width_pixels / 10))
  || ((unsigned)(new_center_devy - (_screen_height_pixels * _center_ratio / 20))
@@ -2442,18 +2443,16 @@ display_open_file(GtkWidget *parent, gchar **bytes_out,
                 GTK_FILE_CHOOSER(dialog), *dir);
     if(file && *file)
     {
-        GValue val;
         gtk_file_chooser_set_uri(
                 GTK_FILE_CHOOSER(dialog), *file);
         if(chooser_action == GTK_FILE_CHOOSER_ACTION_SAVE)
         {
             /* Work around a bug in HildonFileChooserDialog. */
-            memset(&val, 0, sizeof(val));
-            g_value_init(&val, G_TYPE_BOOLEAN);
-            g_value_set_boolean(&val, FALSE);
-            g_object_set_property(G_OBJECT(dialog), "autonaming", &val);
-            gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog),
-                    strrchr(*file, '/') + 1);
+            gchar *basename = g_path_get_basename(*file);
+            g_object_set(G_OBJECT(dialog), "autonaming", FALSE, NULL);
+            gtk_file_chooser_set_current_name(
+                    GTK_FILE_CHOOSER(dialog), basename);
+            g_free(basename);
         }
     }
 

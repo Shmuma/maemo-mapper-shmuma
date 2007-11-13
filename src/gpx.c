@@ -420,7 +420,8 @@ gpx_path_parse(Path *to_replace, gchar *buffer, gint size, gint policy_old)
 
             /* Adjust dest->tail to be able to fit src route data
              * plus room for more route data. */
-            path_resize(dest, num_dest_points + num_src_points);
+            path_resize(dest,
+                    num_dest_points + num_src_points + ARRAY_CHUNK_SIZE);
 
             memcpy(dest->tail + 1, src_first,
                     num_src_points * sizeof(Point));
@@ -429,7 +430,7 @@ gpx_path_parse(Path *to_replace, gchar *buffer, gint size, gint policy_old)
 
             /* Append waypoints from src to dest->. */
             path_wresize(dest, (dest->wtail - dest->whead)
-                    + (src->wtail - src->whead) + 2);
+                    + (src->wtail - src->whead) + 2 + ARRAY_CHUNK_SIZE);
             for(curr = src->whead - 1; curr++ != src->wtail; )
             {
                 (++(dest->wtail))->point = dest->head + num_dest_points
@@ -451,8 +452,10 @@ gpx_path_parse(Path *to_replace, gchar *buffer, gint size, gint policy_old)
         MACRO_PATH_FREE((*to_replace));
         /* Overwrite with data.route. */
         (*to_replace) = data.path;
-        path_resize(to_replace, to_replace->tail - to_replace->head + 1);
-        path_wresize(to_replace, to_replace->wtail - to_replace->whead + 1);
+        path_resize(to_replace,
+                to_replace->tail - to_replace->head + 1 + ARRAY_CHUNK_SIZE);
+        path_wresize(to_replace,
+                to_replace->wtail - to_replace->whead + 1 + ARRAY_CHUNK_SIZE);
     }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);

@@ -189,6 +189,7 @@
 #define GCONF_KEY_CENTER_SENSITIVITY GCONF_KEY_PREFIX"/center_sensitivity"
 #define GCONF_KEY_ANNOUNCE_NOTICE GCONF_KEY_PREFIX"/announce_notice"
 #define GCONF_KEY_ROTATE_SENSITIVITY GCONF_KEY_PREFIX"/rotate_sensitivity"
+#define GCONF_KEY_AC_MIN_SPEED GCONF_KEY_PREFIX"/autocenter_min_speed"
 #define GCONF_KEY_ROTATE_DIR GCONF_KEY_PREFIX"/rotate_direction"
 #define GCONF_KEY_DRAW_WIDTH GCONF_KEY_PREFIX"/draw_width"
 #define GCONF_KEY_ENABLE_VOICE GCONF_KEY_PREFIX"/enable_voice"
