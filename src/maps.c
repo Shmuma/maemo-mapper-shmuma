@@ -133,10 +133,10 @@ mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
 #else
     {
         datum d;
-        gint key[] = {
-            GLONG_TO_BE(zoom),
-            GLONG_TO_BE(tilex),
-            GLONG_TO_BE(tiley)
+        gint32 key[] = {
+            GINT32_TO_BE(zoom),
+            GINT32_TO_BE(tilex),
+            GINT32_TO_BE(tiley)
         };
         d.dptr = (gchar*)&key;
         d.dsize = sizeof(key);
@@ -230,10 +230,10 @@ mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley)
 #else
     {
         datum d;
-        gint key[] = {
-            GLONG_TO_BE(zoom),
-            GLONG_TO_BE(tilex),
-            GLONG_TO_BE(tiley)
+        gint32 key[] = {
+            GINT32_TO_BE(zoom),
+            GINT32_TO_BE(tilex),
+            GINT32_TO_BE(tiley)
         };
         d.dptr = (gchar*)&key;
         d.dsize = sizeof(key);
@@ -413,10 +413,10 @@ mapdb_update(gboolean exists, RepoData *repo,
 #else
     {
         datum dkey, dcon;
-        gint key[] = {
-            GLONG_TO_BE(zoom),
-            GLONG_TO_BE(tilex),
-            GLONG_TO_BE(tiley)
+        gint32 key[] = {
+            GINT32_TO_BE(zoom),
+            GINT32_TO_BE(tilex),
+            GINT32_TO_BE(tiley)
         };
         dkey.dptr = (gchar*)&key;
         dkey.dsize = sizeof(key);
@@ -480,10 +480,10 @@ mapdb_delete(RepoData *repo, gint zoom, gint tilex, gint tiley)
 #else
     {
         datum d;
-        gint key[] = {
-            GLONG_TO_BE(zoom),
-            GLONG_TO_BE(tilex),
-            GLONG_TO_BE(tiley)
+        gint32 key[] = {
+            GINT32_TO_BE(zoom),
+            GINT32_TO_BE(tilex),
+            GINT32_TO_BE(tiley)
         };
         d.dptr = (gchar*)&key;
         d.dsize = sizeof(key);
