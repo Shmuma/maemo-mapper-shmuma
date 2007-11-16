@@ -357,6 +357,8 @@ struct _RepoData {
     gint view_zoom_steps;
     gboolean double_size;
     gboolean nextable;
+    gint min_zoom;
+    gint max_zoom;
     RepoType type;
 #ifdef MAPDB_SQLITE
     sqlite3 *db;

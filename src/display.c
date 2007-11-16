@@ -1734,6 +1734,9 @@ thread_render_map(MapRenderTask *mrt)
                 /* No map; download, if we should. */
                 if(!started_download && _auto_download
                         && mrt->repo->type != REPOTYPE_NONE
+                        /* Make sure this map is within dl zoom limits. */
+                        && ((unsigned)(mrt->zoom + zoff - mrt->repo->min_zoom)
+                            <= (mrt->repo->max_zoom - mrt->repo->min_zoom))
                         /* Make sure this map matches the dl_zoom_steps,
                          * or that there currently is no cache. */
                         && (!mrt->repo->db || !((mrt->zoom + zoff

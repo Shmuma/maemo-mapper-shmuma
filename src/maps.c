@@ -68,6 +68,8 @@ struct _RepoEditInfo {
     GtkWidget *chk_double_size;
     GtkWidget *chk_nextable;
     GtkWidget *btn_browse;
+    GtkWidget *num_min_zoom;
+    GtkWidget *num_max_zoom;
     BrowseInfo browse_info;
 };
 
@@ -1392,20 +1394,20 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
     /* Map download URI. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(_("URL Format")),
-            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
+            0, 1, 0, 1, GTK_FILL, 0, 2, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
             rei->txt_url = gtk_entry_new(),
-            1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+            1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 0);
 
     /* Map Directory. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(_("Cache DB")),
-            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+            0, 1, 1, 2, GTK_FILL, 0, 2, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
             hbox = gtk_hbox_new(FALSE, 4),
-            1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+            1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 0);
     gtk_box_pack_start(GTK_BOX(hbox),
             rei->txt_db_filename = gtk_entry_new(),
             TRUE, TRUE, 0);
@@ -1433,11 +1435,11 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
     /* Download Zoom Steps. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(_("Download Zoom Steps")),
-            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
+            0, 1, 0, 1, GTK_FILL, 0, 2, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-            1, 2, 0, 1, GTK_FILL, 0, 2, 4);
+            1, 2, 0, 1, GTK_FILL, 0, 2, 0);
     gtk_container_add(GTK_CONTAINER(label),
             rei->num_dl_zoom_steps = hildon_controlbar_new());
     hildon_controlbar_set_range(
@@ -1449,11 +1451,11 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
     /* Download Zoom Steps. */
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(_("View Zoom Steps")),
-            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+            0, 1, 1, 2, GTK_FILL, 0, 2, 0);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-            1, 2, 1, 2, GTK_FILL, 0, 2, 4);
+            1, 2, 1, 2, GTK_FILL, 0, 2, 0);
     gtk_container_add(GTK_CONTAINER(label),
             rei->num_view_zoom_steps = hildon_controlbar_new());
     hildon_controlbar_set_range(
@@ -1464,13 +1466,13 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
 
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_vseparator_new(),
-            2, 3, 0, 2, GTK_FILL, GTK_FILL, 4, 4);
+            2, 3, 0, 2, GTK_FILL, GTK_FILL, 4, 0);
 
     /* Double-size. */
     gtk_table_attach(GTK_TABLE(table),
             rei->chk_double_size = gtk_check_button_new_with_label(
                 _("Double Pixels")),
-            3, 4, 0, 1, GTK_FILL, GTK_FILL, 0, 4);
+            3, 4, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
     gtk_toggle_button_set_active(
             GTK_TOGGLE_BUTTON(rei->chk_double_size), FALSE);
 
@@ -1478,9 +1480,39 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
     gtk_table_attach(GTK_TABLE(table),
             rei->chk_nextable = gtk_check_button_new_with_label(
                 _("Next-able")),
-            3, 4, 1, 2, GTK_FILL, GTK_FILL, 0, 4);
+            3, 4, 1, 2, GTK_FILL, GTK_FILL, 0, 0);
     gtk_toggle_button_set_active(
             GTK_TOGGLE_BUTTON(rei->chk_nextable), TRUE);
+
+    /* Downloadable Zoom Levels. */
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_label_new(_("Downloadable Zooms:")),
+            0, 1, 2, 3, GTK_FILL, 0, 2, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
+            1, 4, 2, 3, GTK_FILL, 0, 2, 0);
+    gtk_container_add(GTK_CONTAINER(label),
+            hbox = gtk_hbox_new(FALSE, 4));
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_label_new(_("Min.")),
+            TRUE, TRUE, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            rei->num_min_zoom = hildon_number_editor_new(MIN_ZOOM, MAX_ZOOM),
+            FALSE, FALSE, 0);
+    hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(rei->num_min_zoom), 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_label_new(_("")),
+            TRUE, TRUE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            label = gtk_label_new(_("Max.")),
+            TRUE, TRUE, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            rei->num_max_zoom = hildon_number_editor_new(MIN_ZOOM, MAX_ZOOM),
+            FALSE, FALSE, 0);
+    hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(rei->num_max_zoom),20);
 
     rmi->repo_edits = g_list_append(rmi->repo_edits, rei);
 
@@ -1639,6 +1671,12 @@ repoman_download(GtkWidget *widget, RepoManInfo *rmi)
                 gtk_toggle_button_set_active(
                         GTK_TOGGLE_BUTTON(rei->chk_nextable),
                         rd->nextable);
+                hildon_number_editor_set_value(
+                        HILDON_NUMBER_EDITOR(rei->num_min_zoom),
+                        rd->min_zoom);
+                hildon_number_editor_set_value(
+                        HILDON_NUMBER_EDITOR(rei->num_max_zoom),
+                        rd->max_zoom);
             }
             g_free(bytes);
         }
@@ -1755,6 +1793,12 @@ repoman_dialog()
         gtk_toggle_button_set_active(
                 GTK_TOGGLE_BUTTON(rei->chk_nextable),
                 rd->nextable);
+        hildon_number_editor_set_value(
+                HILDON_NUMBER_EDITOR(rei->num_min_zoom),
+                rd->min_zoom);
+        hildon_number_editor_set_value(
+                HILDON_NUMBER_EDITOR(rei->num_max_zoom),
+                rd->max_zoom);
         if(rd == _curr_repo)
             curr_repo_index = i;
     }
@@ -1767,9 +1811,32 @@ repoman_dialog()
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
         /* Iterate through repos and verify each. */
+        gboolean verified = TRUE;
         gint i;
         GList *curr;
         gchar *old_curr_repo_name = _curr_repo->name;
+
+        for(i = 0, curr = rmi.repo_edits; curr; curr = curr->next, i++)
+        {
+            /* Check the ranges for the min and max zoom levels. */
+            RepoEditInfo *rei = curr->data;
+            if(hildon_number_editor_get_value(
+                        HILDON_NUMBER_EDITOR(rei->num_max_zoom))
+                 < hildon_number_editor_get_value(
+                        HILDON_NUMBER_EDITOR(rei->num_min_zoom)))
+            {
+                verified = FALSE;
+                break;
+            }
+        }
+        if(!verified)
+        {
+            gtk_combo_box_set_active(GTK_COMBO_BOX(rmi.cmb_repos), i);
+            popup_error(dialog,
+                    _("Minimum Downloadable Zoom must be less than "
+                        "Maximum Downloadable Zoom."));
+            continue;
+        }
 
         /* We're good to replace.  Remove old _repo_list menu items. */
         menu_maps_remove_repos();
@@ -1796,6 +1863,10 @@ repoman_dialog()
                     GTK_TOGGLE_BUTTON(rei->chk_double_size));
             rd->nextable = gtk_toggle_button_get_active(
                     GTK_TOGGLE_BUTTON(rei->chk_nextable));
+            rd->min_zoom = hildon_number_editor_get_value(
+                    HILDON_NUMBER_EDITOR(rei->num_min_zoom));
+            rd->max_zoom = hildon_number_editor_get_value(
+                    HILDON_NUMBER_EDITOR(rei->num_max_zoom));
             set_repo_type(rd);
 
             _repo_list = g_list_append(_repo_list, rd);

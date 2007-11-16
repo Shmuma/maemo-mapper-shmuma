@@ -248,6 +248,8 @@
 #define REPO_DEFAULT_MAP_URI "http://tile.openstreetmap.org/%0d/%d/%d.png"
 #define REPO_DEFAULT_DL_ZOOM_STEPS (2)
 #define REPO_DEFAULT_VIEW_ZOOM_STEPS (1)
+#define REPO_DEFAULT_MIN_ZOOM (4)
+#define REPO_DEFAULT_MAX_ZOOM (20)
 
 #define XML_DATE_FORMAT "%FT%T"
 

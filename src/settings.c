@@ -262,14 +262,16 @@ settings_save()
             RepoData *rd = curr->data;
             gchar buffer[BUFFER_SIZE];
             snprintf(buffer, sizeof(buffer),
-                    "%s\t%s\t%s\t%d\t%d\t%d\t%d",
+                    "%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d",
                     rd->name,
                     rd->url,
                     rd->db_filename,
                     rd->dl_zoom_steps,
                     rd->view_zoom_steps,
                     rd->double_size,
-                    rd->nextable);
+                    rd->nextable,
+                    rd->min_zoom,
+                    rd->max_zoom);
             temp_list = g_slist_append(temp_list, g_strdup(buffer));
             if(rd == _curr_repo)
                 gconf_client_set_int(gconf_client,
@@ -1627,6 +1629,18 @@ settings_parse_repo(gchar *str)
             || (rd->nextable = strtol(token, &error_check, 10), token == str))
         rd->nextable = TRUE;
 
+    /* Parse min zoom. */
+    token = strsep(&str, "\n\t");
+    if(!token || !*token
+            || (rd->min_zoom = strtol(token, &error_check, 10), token == str))
+        rd->min_zoom = 4;
+
+    /* Parse max zoom. */
+    token = strsep(&str, "\n\t");
+    if(!token || !*token
+            || (rd->max_zoom = strtol(token, &error_check, 10), token == str))
+        rd->max_zoom = 20;
+
     set_repo_type(rd);
 
     vprintf("%s(): return %p\n", __PRETTY_FUNCTION__, rd);
@@ -1956,6 +1970,8 @@ settings_init()
         repo->view_zoom_steps = REPO_DEFAULT_VIEW_ZOOM_STEPS;
         repo->double_size = FALSE;
         repo->nextable = TRUE;
+        repo->min_zoom = REPO_DEFAULT_MIN_ZOOM;
+        repo->max_zoom = REPO_DEFAULT_MAX_ZOOM;
         set_repo_type(repo);
 
         _repo_list = g_list_append(_repo_list, repo);
