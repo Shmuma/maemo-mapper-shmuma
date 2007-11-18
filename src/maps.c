@@ -790,7 +790,8 @@ map_convert_wms_to_wms(gint tilex, gint tiley, gint zoomlevel, gchar* uri)
                 WEXITSTATUS(system_retcode));
     else if(!(in = g_fopen("/tmp/tmpcs2cs","r")))
         g_printerr("Cannot open results of conversion\n");
-    else if(5 != fscanf(in,"%f %f %s %f %f", &lon1, &lat1, cmd, &lon2, &lat2))
+    else if(5 != fscanf(in,"%lf %lf %s %lf %lf",
+                &lon1, &lat1, cmd, &lon2, &lat2))
     {
         g_printerr("Wrong conversion\n");
         fclose(in);
