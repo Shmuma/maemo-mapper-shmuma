@@ -276,7 +276,7 @@ menu_cb_track_insert_break(GtkMenuItem *item)
 static gboolean
 menu_cb_track_insert_mark(GtkMenuItem *item)
 {
-    gfloat lat, lon;
+    gdouble lat, lon;
     gchar tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN], *p_latlon;
     static GtkWidget *dialog = NULL;
     static GtkWidget *table = NULL;
@@ -816,7 +816,7 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
     /* Initialize with the current center position. */
     {
         gchar buffer[32];
-        gfloat lat, lon;
+        gdouble lat, lon;
         unit2latlon(_center.unitx, _center.unity, lat, lon);
         lat_format(lat, buffer);
         gtk_entry_set_text(GTK_ENTRY(txt_lat), buffer);

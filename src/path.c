@@ -462,7 +462,7 @@ gboolean
 route_show_distance_to(Point *point)
 {
     gchar buffer[80];
-    gfloat lat1, lon1, lat2, lon2;
+    gdouble lat1, lon1, lat2, lon2;
     gdouble sum = 0.0;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -558,7 +558,7 @@ static void
 track_show_distance_from(Point *point)
 {
     gchar buffer[80];
-    gfloat lat1, lon1, lat2, lon2;
+    gdouble lat1, lon1, lat2, lon2;
     gdouble sum = 0.0;
     Point *curr;
     unit2latlon(_pos.unitx, _pos.unity, lat1, lon1);
@@ -817,7 +817,7 @@ track_add(time_t time, gboolean newly_fixed)
                     }
                     else
                     {
-                        route_dist_squared_1 = fabs((slope * _pos.unitx)
+                        route_dist_squared_1 = fabsf((slope * _pos.unitx)
                             - _pos.unity + (route_y1 - (slope * route_x1)));
                         route_dist_squared_1 =
                             route_dist_squared_1 * route_dist_squared_1
@@ -839,7 +839,7 @@ track_add(time_t time, gboolean newly_fixed)
                     }
                     else
                     {
-                        route_dist_squared_2 = fabs((slope * _pos.unitx)
+                        route_dist_squared_2 = fabsf((slope * _pos.unitx)
                             - _pos.unity + (route_y1 - (slope * route_x1)));
                         route_dist_squared_2 =
                             route_dist_squared_2 * route_dist_squared_2
@@ -1296,7 +1296,7 @@ route_download(gchar *to)
             gchar strlat[32];
             gchar strlon[32];
             Point *p;
-            gfloat lat, lon;
+            gdouble lat, lon;
 
             /* Use last non-zero route point. */
             for(p = _route.tail; !p->unity; p--) { }
@@ -1381,7 +1381,7 @@ route_download(gchar *to)
 void
 route_add_way_dialog(gint unitx, gint unity)
 {
-    gfloat lat, lon;
+    gdouble lat, lon;
     gchar tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN], *p_latlon;
     static GtkWidget *dialog = NULL;
     static GtkWidget *table = NULL;

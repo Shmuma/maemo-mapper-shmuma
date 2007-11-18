@@ -220,7 +220,7 @@ settings_save()
 
     /* Save last center point. */
     {
-        gfloat center_lat, center_lon;
+        gdouble center_lat, center_lon;
         unit2latlon(_center.unitx, _center.unity, center_lat, center_lon);
 
         /* Save last center latitude. */
@@ -1900,7 +1900,7 @@ settings_init()
 
     /* Get last center point. */
     {
-        gfloat center_lat, center_lon;
+        gdouble center_lat, center_lon;
 
         /* Get last saved latitude.  Default is last saved latitude. */
         value = gconf_client_get(gconf_client, GCONF_KEY_CENTER_LAT, NULL);

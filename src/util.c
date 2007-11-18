@@ -55,10 +55,10 @@ popup_error(GtkWidget *window, const gchar *error)
 }
 
 void
-deg_format(gfloat coor, gchar *scoor, gchar neg_char, gchar pos_char)
+deg_format(gdouble coor, gchar *scoor, gchar neg_char, gchar pos_char)
 {
-    gfloat min;
-    gfloat acoor = fabs(coor);
+    gdouble min;
+    gdouble acoor = fabs(coor);
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     switch(_degformat)
@@ -68,11 +68,11 @@ deg_format(gfloat coor, gchar *scoor, gchar neg_char, gchar pos_char)
             break;
         case DDPDDDDD_NSEW:
             sprintf(scoor, "%.5f° %c", acoor,
-                    coor < 0.f ? neg_char : pos_char);
+                    coor < 0.0 ? neg_char : pos_char);
             break;
         case NSEW_DDPDDDDD:
             sprintf(scoor, "%c %.5f°",
-                    coor < 0.f ? neg_char : pos_char,
+                    coor < 0.0 ? neg_char : pos_char,
                     acoor);
             break;
 
@@ -83,11 +83,11 @@ deg_format(gfloat coor, gchar *scoor, gchar neg_char, gchar pos_char)
         case DD_MMPMMM_NSEW:
             sprintf(scoor, "%d°%06.3f' %c",
                     (int)acoor, (acoor - (int)acoor)*60.0,
-                    coor < 0.f ? neg_char : pos_char);
+                    coor < 0.0 ? neg_char : pos_char);
             break;
         case NSEW_DD_MMPMMM:
             sprintf(scoor, "%c %d° %06.3f'",
-                    coor < 0.f ? neg_char : pos_char,
+                    coor < 0.0 ? neg_char : pos_char,
                     (int)acoor, (acoor - (int)acoor)*60.0);
             break;
 
@@ -100,12 +100,12 @@ deg_format(gfloat coor, gchar *scoor, gchar neg_char, gchar pos_char)
             min = (acoor - (int)acoor)*60.0;
             sprintf(scoor, "%d°%02d'%04.1f\" %c", (int)acoor, (int)min,
                     ((min - (int)min)*60.0),
-                    coor < 0.f ? neg_char : pos_char);
+                    coor < 0.0 ? neg_char : pos_char);
             break;
         case NSEW_DD_MM_SSPS:
             min = (acoor - (int)acoor)*60.0;
             sprintf(scoor, "%c %d° %02d' %04.1f\"",
-                    coor < 0.f ? neg_char : pos_char,
+                    coor < 0.0 ? neg_char : pos_char,
                     (int)acoor, (int)min,
                     ((min - (int)min)*60.0));
             break;
@@ -178,12 +178,12 @@ Point locate_address(GtkWidget *parent, const gchar *addr)
 
 /**
  * Calculate the distance between two lat/lon pairs.  The distance is returned
- * in kilometers and should be converted using UNITS_CONVERT[_units].
+ * in nautical miles and should be converted using UNITS_CONVERT[_units].
  */
-gfloat
-calculate_distance(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2)
+gdouble
+calculate_distance(gdouble lat1, gdouble lon1, gdouble lat2, gdouble lon2)
 {
-    gfloat dlat, dlon, slat, slon, a;
+    gdouble dlat, dlon, slat, slon, a;
 
     /* Convert to radians. */
     lat1 = deg2rad(lat1);
@@ -194,32 +194,32 @@ calculate_distance(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2)
     dlat = lat2 - lat1;
     dlon = lon2 - lon1;
 
-    slat = sinf(dlat / 2.f);
-    slon = sinf(dlon / 2.f);
-    a = (slat * slat) + (cosf(lat1) * cosf(lat2) * slon * slon);
+    slat = sin(dlat / 2.0);
+    slon = sin(dlon / 2.0);
+    a = (slat * slat) + (cos(lat1) * cos(lat2) * slon * slon);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return ((2.f * atan2f(sqrtf(a), sqrtf(1.f - a))) * EARTH_RADIUS);
+    return ((2.0 * atan2(sqrt(a), sqrt(1.0 - a))) * EARTH_RADIUS);
 }
 
 /**
  * Calculate the bearing between two lat/lon pairs.  The bearing is returned
  * as the angle from lat1/lon1 to lat2/lon2.
  */
-gfloat
-calculate_bearing(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2)
+gdouble
+calculate_bearing(gdouble lat1, gdouble lon1, gdouble lat2, gdouble lon2)
 {
-    gfloat x, y;
-    gfloat dlon = deg2rad(lon2 - lon1);
+    gdouble x, y;
+    gdouble dlon = deg2rad(lon2 - lon1);
     lat1 = deg2rad(lat1);
     lat2 = deg2rad(lat2);
 
-    y = sinf(dlon) * cosf(lat2);
-    x = (cosf(lat1) * sinf(lat2)) - (sinf(lat1) * cosf(lat2) * cosf(dlon));
+    y = sin(dlon) * cos(lat2);
+    x = (cos(lat1) * sin(lat2)) - (sin(lat1) * cos(lat2) * cos(dlon));
 
-    dlon = rad2deg(atan2f(y, x));
-    if(dlon < 0.f)
-        dlon += 360.f;
+    dlon = rad2deg(atan2(y, x));
+    if(dlon < 0.0)
+        dlon += 360.0;
     return dlon;
 }
 

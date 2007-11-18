@@ -46,9 +46,9 @@
         (x) = (b); \
 }
 
-#define PI   (3.14159265358979323846f)
+#define PI   (3.14159265358979323846)
 
-#define EARTH_RADIUS (3440.06479f)
+#define EARTH_RADIUS (3443.91847)
 
 /** MAX_ZOOM defines the largest map zoom level we will download.
  * (MAX_ZOOM - 1) is the largest map zoom level that the user can zoom to.
@@ -70,8 +70,8 @@
 
 #define HOURGLASS_SEPARATION (7)
 
-#define deg2rad(deg) ((deg) * (PI / 180.f))
-#define rad2deg(rad) ((rad) * (180.f / PI))
+#define deg2rad(deg) ((deg) * (PI / 180.0))
+#define rad2deg(rad) ((rad) * (180.0 / PI))
 
 #define tile2pixel(TILE) ((TILE) << TILE_SIZE_P2)
 #define pixel2tile(PIXEL) ((PIXEL) >> TILE_SIZE_P2)
@@ -136,8 +136,8 @@
     gdk_pixbuf_rotate_vector(&funitx, &funity, MATRIX, \
             pixel2unit((gint)((BUFX) - _screen_halfwidth_pixels)), \
             pixel2unit((gint)((BUFY) - _screen_halfheight_pixels))); \
-    (UNITX) = funitx + CENTER.unitx; \
-    (UNITY) = funity + CENTER.unity; \
+    (UNITX) = (CENTER).unitx + (gint)funitx; \
+    (UNITY) = (CENTER).unity + (gint)funity; \
 }
 
 #define buf2unit(BUFX, BUFY, UNITX, UNITY) \
@@ -148,8 +148,8 @@
     gdk_pixbuf_rotate_vector(&fpixelx, &fpixely, MATRIX, \
             (gint)(BUFX) - _screen_halfwidth_pixels, \
             (gint)(BUFY) - _screen_halfheight_pixels); \
-    (PIXELX) = fpixelx + unit2pixel(CENTER.unitx); \
-    (PIXELY) = fpixely + unit2pixel(CENTER.unity); \
+    (PIXELX) = unit2pixel((CENTER).unitx) + (gint)fpixelx; \
+    (PIXELY) = unit2pixel((CENTER).unity) + (gint)fpixely; \
 }
 
 #define buf2pixel(BUFX, BUFY, PIXELX, PIXELY) \
@@ -266,21 +266,20 @@
 #define HELP_ID_POILIST HELP_ID_PREFIX"poilist"
 #define HELP_ID_POICAT HELP_ID_PREFIX"poicat"
 
-#define MERCATOR_SPAN (-6.28318377773622f)
-#define MERCATOR_TOP (3.14159188886811f)
+#define MERCATOR_SPAN (-6.28318377773622)
+#define MERCATOR_TOP (3.14159188886811)
 #define latlon2unit(lat, lon, unitx, unity) { \
-    gfloat tmp; \
-    unitx = (lon + 180.f) * (WORLD_SIZE_UNITS / 360.f) + 0.5f; \
-    tmp = sinf(deg2rad(lat)); \
-    unity = 0.5f + (WORLD_SIZE_UNITS / MERCATOR_SPAN) \
-        * (logf((1.f + tmp) / (1.f - tmp)) * 0.5f - MERCATOR_TOP); \
+    gdouble tmp; \
+    unitx = (lon + 180.0) * (WORLD_SIZE_UNITS / 360.0) + 0.5; \
+    tmp = sin(deg2rad(lat)); \
+    unity = 0.5 + (WORLD_SIZE_UNITS / MERCATOR_SPAN) \
+        * (log((1.0 + tmp) / (1.0 - tmp)) * 0.5 - MERCATOR_TOP); \
 }
 
 #define unit2latlon(unitx, unity, lat, lon) { \
-    (lon) = ((unitx) * (360.f / WORLD_SIZE_UNITS)) - 180.f; \
-    (lat) = (360.f * (atanf(expf(((unity) \
-                                  * (MERCATOR_SPAN / WORLD_SIZE_UNITS)) \
-                     + MERCATOR_TOP)))) * (1.f / PI) - 90.f; \
+    (lon) = ((unitx) * (360.0 / WORLD_SIZE_UNITS)) - 180.0; \
+    (lat) = (360.0 * (atan(exp(((unity) * (MERCATOR_SPAN / WORLD_SIZE_UNITS)) \
+                     + MERCATOR_TOP)))) * (1.0 / PI) - 90.0; \
 }
 
 #define MACRO_PATH_INIT(path) { \

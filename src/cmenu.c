@@ -46,7 +46,7 @@
 static void
 cmenu_show_latlon(gint unitx, gint unity)
 {
-  gfloat lat, lon;
+  gdouble lat, lon;
   gchar buffer[80], tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN];
   printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -69,7 +69,7 @@ static void
 cmenu_clip_latlon(gint unitx, gint unity)
 {
     gchar buffer[80];
-    gfloat lat, lon;
+    gdouble lat, lon;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     unit2latlon(unitx, unity, lat, lon);
@@ -88,7 +88,7 @@ cmenu_route_to(gint unitx, gint unity)
     gchar buffer[80];
     gchar strlat[32];
     gchar strlon[32];
-    gfloat lat, lon;
+    gdouble lat, lon;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     unit2latlon(unitx, unity, lat, lon);
@@ -106,7 +106,7 @@ static void
 cmenu_distance_to(gint unitx, gint unity)
 {
     gchar buffer[80];
-    gfloat lat, lon;
+    gdouble lat, lon;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     unit2latlon(unitx, unity, lat, lon);

@@ -30,14 +30,16 @@ void popup_error(GtkWidget *window, const gchar *error);
 
 Point locate_address(GtkWidget *parent, const gchar *address);
 
-gfloat calculate_distance(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2);
-gfloat calculate_bearing(gfloat lat1, gfloat lon1, gfloat lat2, gfloat lon2);
+gdouble calculate_distance(gdouble lat1, gdouble lon1,
+        gdouble lat2, gdouble lon2);
+gdouble calculate_bearing(gdouble lat1, gdouble lon1,
+        gdouble lat2, gdouble lon2);
 
 void force_min_visible_bars(HildonControlbar *control_bar, gint num_bars);
 
 gboolean banner_reset();
 
-void deg_format(gfloat coor, gchar *scoor, gchar neg_char, gchar pos_char);
+void deg_format(gdouble coor, gchar *scoor, gchar neg_char, gchar pos_char);
 
 gdouble strdmstod(const gchar *nptr, gchar **endptr);
 

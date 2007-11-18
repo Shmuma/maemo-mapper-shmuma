@@ -904,8 +904,8 @@ map_render_segment(GdkGC *gc_norm, GdkGC *gc_alt,
     {
         gint x2, y2;
         unit2buf(unitx2, unity2, x2, y2);
-        if(((unsigned)(x2+_draw_width) < _screen_width_pixels+2*_draw_width)
-         ||((unsigned)(y2+_draw_width) < _screen_height_pixels+2*_draw_width))
+        if(((unsigned)(x2+_draw_width) <= _screen_width_pixels+2*_draw_width)
+         &&((unsigned)(y2+_draw_width) <= _screen_height_pixels+2*_draw_width))
         {
             gdk_draw_arc(_map_pixmap, gc_alt,
                     FALSE, /* FALSE: not filled. */
@@ -921,8 +921,8 @@ map_render_segment(GdkGC *gc_norm, GdkGC *gc_alt,
     {
         gint x1, y1;
         unit2buf(unitx1, unity1, x1, y1);
-        if(((unsigned)(x1+_draw_width) < _screen_width_pixels+2*_draw_width)
-         ||((unsigned)(y1+_draw_width) < _screen_height_pixels+2*_draw_width))
+        if(((unsigned)(x1+_draw_width) <= _screen_width_pixels+2*_draw_width)
+         &&((unsigned)(y1+_draw_width) <= _screen_height_pixels+2*_draw_width))
         {
             gdk_draw_arc(_map_pixmap, gc_alt,
                     FALSE, /* FALSE: not filled. */
@@ -1204,7 +1204,7 @@ map_calc_new_center(gint zoom)
             gfloat screen_pixels = _screen_width_pixels
                 + (((gint)_screen_height_pixels
                             - (gint)_screen_width_pixels)
-                        * fabs(cosf(deg2rad(
+                        * fabsf(cosf(deg2rad(
                                 ROTATE_DIR_ENUM_DEGREES[_rotate_dir] -
                                 (_center_rotate ? 0
                              : (_next_map_rotate_angle
@@ -1616,8 +1616,8 @@ thread_render_map(MapRenderTask *mrt)
      * of the screen plus the maximum additional pixels of a rotated tile.
      */
     tile_rothalf_pixels = MAX(
-            fabs(TILE_HALFDIAG_PIXELS * sinf((PI / 4) - angle_rad)),
-            fabs(TILE_HALFDIAG_PIXELS * cosf((PI / 4) - angle_rad)));
+            fabsf(TILE_HALFDIAG_PIXELS * sinf((PI / 4) - angle_rad)),
+            fabsf(TILE_HALFDIAG_PIXELS * cosf((PI / 4) - angle_rad)));
 
     mrt->zoom = _next_zoom;
 
@@ -2108,7 +2108,6 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
             event->area.x, event->area.y,
             event->area.width, event->area.height);
 
-    /* Perform rotation. */
     gdk_draw_drawable(
             _map_widget->window,
             _gc[COLORABLE_MARK],
@@ -2118,25 +2117,37 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
             event->area.width, event->area.height);
 
     /* Draw the mark. */
-    gdk_draw_arc(
-            _map_widget->window,
-            _gps_state == RCVR_FIXED
-                ? _gc[COLORABLE_MARK] : _gc[COLORABLE_MARK_OLD],
-            FALSE, /* not filled. */
-            _mark_bufx1 - _draw_width + _map_offset_devx,
-            _mark_bufy1 - _draw_width + _map_offset_devy,
-            2 * _draw_width, 2 * _draw_width,
-            0, 360 * 64);
-    gdk_draw_line(
-            _map_widget->window,
-            _gps_state == RCVR_FIXED
-                ? (_show_velvec
-                    ? _gc[COLORABLE_MARK_VELOCITY] : _gc[COLORABLE_MARK])
-                : _gc[COLORABLE_MARK_OLD],
-            _mark_bufx1 + _map_offset_devx,
-            _mark_bufy1 + _map_offset_devy,
-            _mark_bufx2 + _map_offset_devx,
-            _mark_bufy2 + _map_offset_devy);
+    if((((unsigned)(_mark_bufx1 + _draw_width)
+                <= _screen_width_pixels+2*_draw_width)
+             &&((unsigned)(_mark_bufy1 + _draw_width)
+                 <= _screen_height_pixels+2*_draw_width))
+        || (((unsigned)(_mark_bufx2 + _draw_width)
+                 <= _screen_width_pixels+2*_draw_width)
+             &&((unsigned)(_mark_bufy2 + _draw_width)
+                 <= _screen_height_pixels+2*_draw_width)))
+    {
+        printf("DRAWING\n");
+        /* TODO: TEST THIS. */
+        gdk_draw_arc(
+                _map_widget->window,
+                _gps_state == RCVR_FIXED
+                    ? _gc[COLORABLE_MARK] : _gc[COLORABLE_MARK_OLD],
+                FALSE, /* not filled. */
+                _mark_bufx1 - _draw_width + _map_offset_devx,
+                _mark_bufy1 - _draw_width + _map_offset_devy,
+                2 * _draw_width, 2 * _draw_width,
+                0, 360 * 64);
+        gdk_draw_line(
+                _map_widget->window,
+                _gps_state == RCVR_FIXED
+                    ? (_show_velvec
+                        ? _gc[COLORABLE_MARK_VELOCITY] : _gc[COLORABLE_MARK])
+                    : _gc[COLORABLE_MARK_OLD],
+                _mark_bufx1 + _map_offset_devx,
+                _mark_bufy1 + _map_offset_devy,
+                _mark_bufx2 + _map_offset_devx,
+                _mark_bufy2 + _map_offset_devy);
+    }
 
     /* draw zoom box if so wanted */
     if(_show_zoomlevel) {
@@ -2179,7 +2190,7 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
             {
                 gchar buffer[16];
                 gfloat distance;
-                gfloat lat1, lon1, lat2, lon2;
+                gdouble lat1, lon1, lat2, lon2;
                 gint width;
 
                 unit2latlon(_center.unitx - pixel2unit(SCALE_WIDTH / 2 - 4),

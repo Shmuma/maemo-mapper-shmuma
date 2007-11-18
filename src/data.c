@@ -31,11 +31,11 @@
 gchar *UNITS_ENUM_TEXT[UNITS_ENUM_COUNT];
 
 /* UNITS_CONVERT, when multiplied, converts from NM. */
-gfloat UNITS_CONVERT[] =
+gdouble UNITS_CONVERT[] =
 {
     1.85200,
-    1.15077945,
-    1.f,
+    1.150779448,
+    1.0,
 };
 
 gchar *UNBLANK_ENUM_TEXT[UNBLANK_ENUM_COUNT];

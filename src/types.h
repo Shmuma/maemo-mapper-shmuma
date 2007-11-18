@@ -332,8 +332,8 @@ typedef struct _PoiInfo PoiInfo;
 struct _PoiInfo {
     gint poi_id;
     gint cat_id;
-    gfloat lat;
-    gfloat lon;
+    gdouble lat;
+    gdouble lon;
     gchar *label;
     gchar *desc;
     gchar *clabel;
@@ -387,8 +387,8 @@ typedef struct _GpsData GpsData;
 struct _GpsData {
     gint fix;
     gint fixquality;
-    gfloat lat;
-    gfloat lon;
+    gdouble lat;
+    gdouble lon;
     gfloat speed;    /* in knots */
     gfloat maxspeed;    /* in knots */
     gfloat heading;

@@ -28,7 +28,7 @@
 
 /* Constants regarding enums and defaults. */
 extern gchar *UNITS_ENUM_TEXT[UNITS_ENUM_COUNT];
-extern gfloat UNITS_CONVERT[UNITS_ENUM_COUNT];
+extern gdouble UNITS_CONVERT[UNITS_ENUM_COUNT];
 extern gchar *UNBLANK_ENUM_TEXT[UNBLANK_ENUM_COUNT];
 extern gchar *INFO_FONT_ENUM_TEXT[INFO_FONT_ENUM_COUNT];
 extern gchar *ROTATE_DIR_ENUM_TEXT[ROTATE_DIR_ENUM_COUNT];

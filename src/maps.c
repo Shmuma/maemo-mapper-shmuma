@@ -745,7 +745,7 @@ map_convert_wms_to_wms(gint tilex, gint tiley, gint zoomlevel, gchar* uri)
     gchar cmd[BUFFER_SIZE], srs[BUFFER_SIZE];
     gchar *ret = NULL;
     FILE* in;
-    gfloat lon1, lat1, lon2, lat2;
+    gdouble lon1, lat1, lon2, lat2;
 
     gchar *widthstr   = strcasestr(uri,"WIDTH=");
     gchar *heightstr  = strcasestr(uri,"HEIGHT=");
@@ -1503,7 +1503,7 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
             FALSE, FALSE, 0);
     hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(rei->num_min_zoom), 4);
     gtk_box_pack_start(GTK_BOX(hbox),
-            label = gtk_label_new(_("")),
+            label = gtk_label_new(""),
             TRUE, TRUE, 4);
     gtk_box_pack_start(GTK_BOX(hbox),
             label = gtk_label_new(_("Max.")),
@@ -1897,8 +1897,8 @@ repoman_dialog()
 }
 
 static gboolean
-mapman_by_area(gfloat start_lat, gfloat start_lon,
-        gfloat end_lat, gfloat end_lon, MapmanInfo *mapman_info,
+mapman_by_area(gdouble start_lat, gdouble start_lon,
+        gdouble end_lat, gdouble end_lon, MapmanInfo *mapman_info,
         MapUpdateType update_type,
         gint download_batch_id)
 {
@@ -2187,7 +2187,7 @@ mapman_dialog()
     static GtkWidget *lbl_center_lon = NULL;
     static MapmanInfo mapman_info;
     gchar buffer[80];
-    gfloat lat, lon;
+    gdouble lat, lon;
     gint z;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
