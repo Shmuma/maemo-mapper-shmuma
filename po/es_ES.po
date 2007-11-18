@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: es_ES\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-11-12 21:16-0500\n"
+"POT-Creation-Date: 2007-11-18 00:48-0500\n"
 "PO-Revision-Date: 2007-06-17 05:52+0200\n"
 "Last-Translator: Jaime Crespo <devel@jynus.com>\n"
 "Language-Team: \n"
@@ -72,11 +72,11 @@ msgstr "Dirección localizada"
 msgid "Address..."
 msgstr "Dirección..."
 
-#: ../src/settings.c:1133
+#: ../src/settings.c:1135
 msgid "Advance Notice"
 msgstr "Notificación previa"
 
-#: ../src/maps.c:2201
+#: ../src/maps.c:2272
 msgid "Along Route - Radius (tiles):"
 msgstr "Por un itinerario - Radio (en cuadrículas):"
 
@@ -84,12 +84,12 @@ msgstr "Por un itinerario - Radio (en cuadrículas):"
 msgid "Altitude"
 msgstr "Altitud"
 
-#: ../src/settings.c:544
+#: ../src/settings.c:546
 msgid "An error occurred while attempting to scan for bluetooth devices."
 msgstr ""
 "Ha ocurrido un error mientras se intentaba buscar dispositivos bluetooth."
 
-#: ../src/maps.c:1607
+#: ../src/maps.c:1639
 msgid ""
 "An error occurred while retrieving the repositories.  The web service may be "
 "temporarily down."
@@ -109,15 +109,15 @@ msgstr ""
 "\n"
 "¿Está seguro de haber modificado el archivo /etc/sudoers?"
 
-#: ../src/settings.c:1129
+#: ../src/settings.c:1131
 msgid "Announce"
 msgstr "Notif."
 
-#: ../src/maps.c:2241
+#: ../src/maps.c:2312
 msgid "Area"
 msgstr "Área"
 
-#: ../src/menu.c:1587 ../src/settings.c:1058
+#: ../src/menu.c:1587 ../src/settings.c:1060
 msgid "Auto-Center"
 msgstr "Autocentrar"
 
@@ -137,7 +137,7 @@ msgstr "Desactivar autocentrado"
 msgid "Auto-Download"
 msgstr "Descarga automática"
 
-#: ../src/settings.c:1228
+#: ../src/settings.c:1230
 #, fuzzy
 msgid "Auto-Download Pre-cache"
 msgstr "Descarga automática"
@@ -177,7 +177,7 @@ msgstr "Reiniciar Bluetooth"
 msgid "Bottom-Left"
 msgstr "Inferior izquierda"
 
-#: ../src/main.c:324 ../src/maps.c:2318
+#: ../src/main.c:324 ../src/maps.c:2389
 msgid "Bottom-Right"
 msgstr "Inferior derecha"
 
@@ -195,8 +195,8 @@ msgstr "Activar/desactivar puntos de interés"
 msgid "Browse POIs"
 msgstr "Activar/desactivar puntos de interés"
 
-#: ../src/maps.c:1413 ../src/menu.c:1450 ../src/settings.c:1051
-#: ../src/settings.c:1285
+#: ../src/maps.c:1415 ../src/menu.c:1450 ../src/settings.c:1053
+#: ../src/settings.c:1287
 msgid "Browse..."
 msgstr "Navegar..."
 
@@ -208,16 +208,16 @@ msgstr "Paradas de autobús, aeropuertos, estaciones de tren, etc."
 msgid "Business"
 msgstr "Negocios"
 
-#: ../src/maps.c:2192
+#: ../src/maps.c:2263
 msgid "By Area (see tab)"
 msgstr "Por área (ver pestaña)"
 
-#: ../src/maps.c:1403
+#: ../src/maps.c:1405
 #, fuzzy
 msgid "Cache DB"
 msgstr "Directorio de caché."
 
-#: ../src/maps.c:1343
+#: ../src/maps.c:1345
 msgid ""
 "Cannot delete the last repository - there must be at lease one repository."
 msgstr ""
@@ -246,7 +246,7 @@ msgstr "Categoría"
 msgid "Checked POI Actions..."
 msgstr ""
 
-#: ../src/maps.c:2145 ../src/menu.c:1418 ../src/menu.c:1438
+#: ../src/maps.c:2216 ../src/menu.c:1418 ../src/menu.c:1438
 msgid "Clear"
 msgstr "Borrar"
 
@@ -263,11 +263,11 @@ msgstr "Cerrar"
 msgid "Close"
 msgstr "Cerrar"
 
-#: ../src/settings.c:756
+#: ../src/settings.c:758
 msgid "Colors"
 msgstr "Colores"
 
-#: ../src/settings.c:990
+#: ../src/settings.c:992
 msgid "Colors..."
 msgstr "Colores..."
 
@@ -275,11 +275,11 @@ msgstr "Colores..."
 msgid "Compass Rose"
 msgstr ""
 
-#: ../src/maps.c:1877 ../src/maps.c:1977
+#: ../src/maps.c:1948 ../src/maps.c:2048
 msgid "Confirm DELETION of"
 msgstr "Confirmar el BORRADO de"
 
-#: ../src/maps.c:1350
+#: ../src/maps.c:1352
 msgid "Confirm delete of repository"
 msgstr "Confirmar el borrado del repositorio"
 
@@ -287,15 +287,15 @@ msgstr "Confirmar el borrado del repositorio"
 msgid "Confirm delete of waypoint"
 msgstr "Confirmar el borrado de la etapa"
 
-#: ../src/maps.c:1883 ../src/maps.c:1983
+#: ../src/maps.c:1954 ../src/maps.c:2054
 msgid "Confirm download of"
 msgstr "Confirmar la descarga de"
 
-#: ../src/settings.c:695
+#: ../src/settings.c:697
 msgid "Continue?"
 msgstr "¿Desea continuar?"
 
-#: ../src/display.c:2374
+#: ../src/display.c:2388
 msgid "Copy"
 msgstr "Copiar"
 
@@ -329,11 +329,11 @@ msgstr "DGPS"
 msgid "Default Category"
 msgstr "¿Desea eliminar la categoría?"
 
-#: ../src/settings.c:1215
+#: ../src/settings.c:1217
 msgid "Degrees Format"
 msgstr "Formato de grados"
 
-#: ../src/maps.c:2182
+#: ../src/maps.c:2253
 msgid "Delete Maps"
 msgstr "Eliminar mapas"
 
@@ -350,13 +350,13 @@ msgstr "¿Desea eliminar la categoría?"
 msgid "Delete selected POI?"
 msgstr "¿Desea eliminar el punto de interés?"
 
-#: ../src/cmenu.c:643 ../src/maps.c:1706 ../src/poi.c:626 ../src/poi.c:1381
+#: ../src/cmenu.c:643 ../src/maps.c:1744 ../src/poi.c:626 ../src/poi.c:1381
 #: ../src/poi.c:2097
 msgid "Delete..."
 msgstr "Eliminar..."
 
 #: ../src/menu.c:311 ../src/path.c:1420 ../src/poi.c:665 ../src/poi.c:960
-#: ../src/poi.c:1185 ../src/poi.c:1431 ../src/settings.c:532
+#: ../src/poi.c:1185 ../src/poi.c:1431 ../src/settings.c:534
 msgid "Description"
 msgstr "Descripción"
 
@@ -377,7 +377,7 @@ msgstr "Distancia"
 msgid "Distance"
 msgstr "Distancia"
 
-#: ../src/maps.c:1472
+#: ../src/maps.c:1474
 msgid "Double Pixels"
 msgstr "Duplicar píxeles"
 
@@ -385,7 +385,7 @@ msgstr "Duplicar píxeles"
 msgid "Down"
 msgstr ""
 
-#: ../src/maps.c:2169
+#: ../src/maps.c:2240
 msgid "Download Maps"
 msgstr "Descargar mapas"
 
@@ -407,15 +407,20 @@ msgstr "Descargar itinerario"
 msgid "Download Route to..."
 msgstr "Descargar itinerario a..."
 
-#: ../src/maps.c:1435
+#: ../src/maps.c:1437
 msgid "Download Zoom Steps"
 msgstr "Intervalos a descargar"
 
-#: ../src/maps.c:1687 ../src/menu.c:1408 ../src/menu.c:1448
+#: ../src/maps.c:1725 ../src/menu.c:1408 ../src/menu.c:1448
 msgid "Download..."
 msgstr "Descargar..."
 
-#: ../src/maps.c:696 ../src/maps.c:709
+#: ../src/maps.c:1489
+#, fuzzy
+msgid "Downloadable Zooms:"
+msgstr "Intervalos a descargar"
+
+#: ../src/maps.c:698 ../src/maps.c:711
 msgid "Downloaded maps will not be cached."
 msgstr ""
 
@@ -449,7 +454,7 @@ msgstr "Colegios, institutos, facultades, etc."
 msgid "Enable GPS"
 msgstr "Activar GPS"
 
-#: ../src/settings.c:1146
+#: ../src/settings.c:1148
 msgid "Enable Voice Synthesis (requires flite)"
 msgstr "Activar síntesis de voz (requiere flite)"
 
@@ -540,7 +545,7 @@ msgstr ""
 msgid "Failed to connect to GPX Directions server"
 msgstr "Ha fallado la conexión al servidor de direcciones GPX"
 
-#: ../src/settings.c:1650
+#: ../src/settings.c:1664
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "Ha fallado la inicialización de GConf. Saliendo."
 
@@ -549,15 +554,15 @@ msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr ""
 "Ha fallado la inicialización de GConf. No se han grabado las preferencias."
 
-#: ../src/display.c:2480 ../src/main.c:493
+#: ../src/display.c:2494 ../src/main.c:493
 msgid "Failed to open file for reading"
 msgstr "El archivo no pudo ser abierto para lectura"
 
-#: ../src/display.c:2481
+#: ../src/display.c:2495
 msgid "Failed to open file for writing"
 msgstr "El archivo no pudo ser abierto para escritura"
 
-#: ../src/maps.c:694 ../src/maps.c:708
+#: ../src/maps.c:696 ../src/maps.c:710
 #, fuzzy
 msgid "Failed to open map database for repository"
 msgstr "No se pudo abrir o crear la base de datos"
@@ -578,7 +583,7 @@ msgstr ""
 msgid "File"
 msgstr ""
 
-#: ../src/settings.c:1041
+#: ../src/settings.c:1043
 msgid "File Path"
 msgstr ""
 
@@ -594,7 +599,7 @@ msgstr "Calibrado"
 msgid "Fix Quality"
 msgstr "Calidad del calibrado"
 
-#: ../src/settings.c:1077
+#: ../src/settings.c:1079
 #, fuzzy
 msgid "Fixed"
 msgstr "Calibrado"
@@ -604,7 +609,7 @@ msgstr "Calibrado"
 msgid "Float RTK"
 msgstr "Float RTK"
 
-#: ../src/display.c:2365
+#: ../src/display.c:2379
 msgid "Format"
 msgstr "Formato de la URL"
 
@@ -612,7 +617,7 @@ msgstr "Formato de la URL"
 msgid "Full Screen"
 msgstr "Pantalla completa"
 
-#: ../src/menu.c:1617 ../src/settings.c:774 ../src/settings.c:1001
+#: ../src/menu.c:1617 ../src/settings.c:776 ../src/settings.c:1003
 msgid "GPS"
 msgstr "GPS"
 
@@ -624,7 +629,7 @@ msgstr "Detalles del GPS"
 msgid "GPS Information"
 msgstr "Información del GPS"
 
-#: ../src/maps.c:2255 ../src/menu.c:1538
+#: ../src/maps.c:2326 ../src/menu.c:1538
 msgid "GPS Location"
 msgstr "Localización del GPS"
 
@@ -633,7 +638,7 @@ msgstr "Localización del GPS"
 msgid "GPSD"
 msgstr "GPS"
 
-#: ../src/settings.c:1022
+#: ../src/settings.c:1024
 msgid "GPSD Host"
 msgstr ""
 
@@ -665,11 +670,11 @@ msgstr "Ir al más cercano"
 msgid "Go to Next"
 msgstr "Ir al siguiente"
 
-#: ../src/settings.c:640
+#: ../src/settings.c:642
 msgid "Hardware Keys"
 msgstr "Teclas hardware"
 
-#: ../src/settings.c:987
+#: ../src/settings.c:989
 msgid "Hardware Keys..."
 msgstr "Teclas hardware..."
 
@@ -697,7 +702,7 @@ msgstr ""
 msgid "Indoor or Outdoor places to have fun."
 msgstr "Sitios de ocio en interiores o al aire libre."
 
-#: ../src/settings.c:1181
+#: ../src/settings.c:1183
 #, fuzzy
 msgid "Info Font Size"
 msgstr "Tamaño de letra de las informaciones"
@@ -718,11 +723,11 @@ msgstr "Insertar marca..."
 msgid "Insert Track Break"
 msgstr "Insertar parada en la traza"
 
-#: ../src/maps.c:2473
+#: ../src/maps.c:2544
 msgid "Invalid Bottom-Right Latitude"
 msgstr "Latitud inferior derecha inválida"
 
-#: ../src/maps.c:2480
+#: ../src/maps.c:2551
 msgid "Invalid Bottom-Right Longitude"
 msgstr "Longitud inferior derecha inválida"
 
@@ -738,11 +743,11 @@ msgstr "Longitud inválida"
 msgid "Invalid NMEA input from receiver!"
 msgstr "¡NMEA del receptor inválido!"
 
-#: ../src/maps.c:2459
+#: ../src/maps.c:2530
 msgid "Invalid Top-Left Latitude"
 msgstr "Latitud superior izquierda inválida"
 
-#: ../src/maps.c:2466
+#: ../src/maps.c:2537
 msgid "Invalid Top-Left Longitude"
 msgstr "Longitud superior izquierda inválida"
 
@@ -777,7 +782,7 @@ msgstr "Etiqueta"
 msgid "Landmark"
 msgstr "Punto de referencia"
 
-#: ../src/display.c:2347 ../src/poi.c:1145 ../src/poi.c:1391
+#: ../src/display.c:2361 ../src/poi.c:1145 ../src/poi.c:1391
 msgid "Lat"
 msgstr "Lat"
 
@@ -793,7 +798,7 @@ msgstr "Lat/Lon"
 msgid "Lat/Lon..."
 msgstr "Lat/Lon..."
 
-#: ../src/cmenu.c:60 ../src/display.c:778 ../src/maps.c:2245 ../src/menu.c:788
+#: ../src/cmenu.c:60 ../src/display.c:778 ../src/maps.c:2316 ../src/menu.c:788
 msgid "Latitude"
 msgstr "Latitud"
 
@@ -801,7 +806,7 @@ msgstr "Latitud"
 msgid "Lead"
 msgstr "Frente"
 
-#: ../src/settings.c:1062
+#: ../src/settings.c:1064
 msgid "Lead Amount"
 msgstr "Espacio frontal"
 
@@ -810,7 +815,7 @@ msgstr "Espacio frontal"
 msgid "Left"
 msgstr "Superior izquierda"
 
-#: ../src/settings.c:1158
+#: ../src/settings.c:1160
 msgid "Line Width"
 msgstr "Anchura de las líneas"
 
@@ -818,7 +823,7 @@ msgstr "Anchura de las líneas"
 msgid "Local time"
 msgstr "Hora local"
 
-#: ../src/poi.c:489 ../src/settings.c:1256
+#: ../src/poi.c:489 ../src/settings.c:1258
 msgid "Location"
 msgstr "Lugar"
 
@@ -826,24 +831,24 @@ msgstr "Lugar"
 msgid "Lodging"
 msgstr "Alojamiento"
 
-#: ../src/display.c:2356 ../src/poi.c:1153 ../src/poi.c:1399
+#: ../src/display.c:2370 ../src/poi.c:1153 ../src/poi.c:1399
 msgid "Lon"
 msgstr "Lon"
 
-#: ../src/cmenu.c:61 ../src/display.c:787 ../src/maps.c:2249 ../src/menu.c:802
+#: ../src/cmenu.c:61 ../src/display.c:787 ../src/maps.c:2320 ../src/menu.c:802
 msgid "Longitude"
 msgstr "Longitud"
 
-#: ../src/settings.c:527
+#: ../src/settings.c:529
 msgid "MAC"
 msgstr "MAC"
 
-#: ../src/settings.c:1006
+#: ../src/settings.c:1008
 #, fuzzy
 msgid "MAC Address"
 msgstr "Dirección"
 
-#: ../src/maps.c:1588
+#: ../src/maps.c:1620
 msgid ""
 "Maemo Mapper will now download and add a list of possibly-duplicate "
 "repositories from the internet.  Continue?"
@@ -851,7 +856,7 @@ msgstr ""
 "Maemo Mapper descargará y añadirá una lista de repositorios (posiblemente "
 "duplicados) desde Internet. ¿Desea continuar?"
 
-#: ../src/maps.c:2134
+#: ../src/maps.c:2205
 msgid "Manage Maps"
 msgstr "Gestionar mapas"
 
@@ -859,7 +864,7 @@ msgstr "Gestionar mapas"
 msgid "Manage Maps..."
 msgstr "Gestionar mapas..."
 
-#: ../src/maps.c:1670
+#: ../src/maps.c:1708
 msgid "Manage Repositories"
 msgstr "Gestionar repositorios"
 
@@ -879,16 +884,29 @@ msgstr "Mapas"
 msgid "Max speed"
 msgstr "Máxima velocidad"
 
-#: ../src/settings.c:1096
+#: ../src/maps.c:1509
+msgid "Max."
+msgstr ""
+
+#: ../src/maps.c:1498
+#, fuzzy
+msgid "Min."
+msgstr "Misc."
+
+#: ../src/settings.c:1098
 #, fuzzy
 msgid "Min. Speed"
 msgstr "Velocidad"
 
-#: ../src/settings.c:1154
+#: ../src/maps.c:1836
+msgid "Minimum Downloadable Zoom must be less than Maximum Downloadable Zoom."
+msgstr ""
+
+#: ../src/settings.c:1156
 msgid "Misc."
 msgstr "Misc."
 
-#: ../src/settings.c:1211
+#: ../src/settings.c:1213
 msgid "Misc. 2"
 msgstr "Misc. 2"
 
@@ -896,7 +914,7 @@ msgstr "Misc. 2"
 msgid "Miscellaneous category for everything else."
 msgstr "Categoría miscelánea para todo lo demás."
 
-#: ../src/maps.c:2425 ../src/menu.c:521
+#: ../src/maps.c:2496 ../src/menu.c:521
 msgid ""
 "NOTE: You must set a Map URI in the current repository in order to download "
 "maps."
@@ -904,7 +922,7 @@ msgstr ""
 "NOTA: Debe indicar una dirección de internet en el repositorio actual para "
 "poder descargar mapas."
 
-#: ../src/maps.c:1287 ../src/maps.c:1527
+#: ../src/maps.c:1289 ../src/maps.c:1559
 msgid "Name"
 msgstr "Nombre"
 
@@ -912,15 +930,15 @@ msgstr "Nombre"
 msgid "Nearest POI"
 msgstr "Pto. de interés más cercano"
 
-#: ../src/maps.c:1277
+#: ../src/maps.c:1279
 msgid "New Name"
 msgstr "Nuevo nombre"
 
-#: ../src/maps.c:1517
+#: ../src/maps.c:1549
 msgid "New Repository"
 msgstr "Nuevo repositorio"
 
-#: ../src/maps.c:1709
+#: ../src/maps.c:1747
 msgid "New..."
 msgstr "Nuevo..."
 
@@ -928,11 +946,11 @@ msgstr "Nuevo..."
 msgid "Next Waypoint"
 msgstr "Siguiente etapa"
 
-#: ../src/maps.c:1480
+#: ../src/maps.c:1482
 msgid "Next-able"
 msgstr "Siguiente"
 
-#: ../src/settings.c:1481
+#: ../src/settings.c:1483
 #, fuzzy
 msgid ""
 "No GPS Receiver provided.\n"
@@ -981,7 +999,7 @@ msgstr "Origen"
 msgid "Other"
 msgstr "Otros"
 
-#: ../src/maps.c:2176
+#: ../src/maps.c:2247
 msgid "Overwrite"
 msgstr "Sobreescribir"
 
@@ -990,7 +1008,7 @@ msgid "Overwrite query with the following text?"
 msgstr ""
 
 #: ../src/cmenu.c:653 ../src/menu.c:1442 ../src/menu.c:1581
-#: ../src/settings.c:819 ../src/settings.c:1271
+#: ../src/settings.c:821 ../src/settings.c:1273
 msgid "POI"
 msgstr "Pto. de interés"
 
@@ -1003,7 +1021,7 @@ msgstr "Categorías de ptos. de interés"
 msgid "POI List"
 msgstr "Puntos de interés"
 
-#: ../src/settings.c:1275
+#: ../src/settings.c:1277
 msgid "POI database"
 msgstr "BB.DD. de ptos. de interés"
 
@@ -1051,7 +1069,7 @@ msgstr "Desplazarse al norte"
 msgid "Pan Right"
 msgstr "Superior derecha"
 
-#: ../src/settings.c:1081
+#: ../src/settings.c:1083
 #, fuzzy
 msgid "Pan Sensitivity"
 msgstr "Sensitividad"
@@ -1084,7 +1102,7 @@ msgstr "Lugares donde pernoctar o residir temporalmente."
 msgid "Please provide a description for the mark."
 msgstr "Por favor, introduzca una descripción para la marca."
 
-#: ../src/settings.c:562
+#: ../src/settings.c:564
 msgid "Please select a bluetooth device from the list."
 msgstr "Por favor, seleccione una dispositivo bluetooth de la lista."
 
@@ -1129,16 +1147,16 @@ msgstr "Por favor, especifique un lugar de llegada."
 msgid "Please specify an origin."
 msgstr "Por favor, especifique un lugar de llegada."
 
-#: ../src/settings.c:1117
+#: ../src/settings.c:1119
 msgid "Points"
 msgstr ""
 
-#: ../src/settings.c:1032
+#: ../src/settings.c:1034
 #, fuzzy
 msgid "Port"
 msgstr "Desplazarse al norte"
 
-#: ../src/maps.c:894
+#: ../src/maps.c:896
 msgid "Processing Maps"
 msgstr ""
 
@@ -1162,11 +1180,11 @@ msgstr "Recalculando direcciones..."
 msgid "Recreation"
 msgstr "Ocio"
 
-#: ../src/maps.c:1703
+#: ../src/maps.c:1741
 msgid "Rename..."
 msgstr "Renombrar..."
 
-#: ../src/maps.c:1558
+#: ../src/maps.c:1590
 msgid "Replace all repositories with the default repository?"
 msgstr ""
 "¿Desea reemplazar todos los repositorios por el repositorio por defecto?"
@@ -1183,15 +1201,15 @@ msgstr "Reiniciar Bluetooth"
 msgid "Reset Viewing Angle"
 msgstr ""
 
-#: ../src/settings.c:726
+#: ../src/settings.c:728
 msgid "Reset all colors to their original defaults?"
 msgstr "¿Desea reiniciar todos los colores a los valores por defecto?"
 
-#: ../src/settings.c:612
+#: ../src/settings.c:614
 msgid "Reset all hardware keys to their original defaults?"
 msgstr "¿Desea reiniciar todas las teclas hardware a los valores por defecto?"
 
-#: ../src/maps.c:1681 ../src/settings.c:646 ../src/settings.c:762
+#: ../src/maps.c:1719 ../src/settings.c:648 ../src/settings.c:764
 msgid "Reset..."
 msgstr "Reiniciar..."
 
@@ -1213,7 +1231,7 @@ msgstr "Superior derecha"
 msgid "Rotate"
 msgstr "Itinerario"
 
-#: ../src/settings.c:1104
+#: ../src/settings.c:1106
 #, fuzzy
 msgid "Rotate Sensit."
 msgstr "Sensitividad"
@@ -1226,7 +1244,7 @@ msgstr ""
 msgid "Rotate View Counter-Clockwise"
 msgstr ""
 
-#: ../src/menu.c:1402 ../src/menu.c:1567 ../src/settings.c:804
+#: ../src/menu.c:1402 ../src/menu.c:1567 ../src/settings.c:806
 msgid "Route"
 msgstr "Itinerario"
 
@@ -1278,11 +1296,11 @@ msgstr "Guardar..."
 msgid "Scale"
 msgstr "Escala"
 
-#: ../src/settings.c:1016
+#: ../src/settings.c:1018
 msgid "Scan..."
 msgstr "Buscar..."
 
-#: ../src/settings.c:538
+#: ../src/settings.c:540
 msgid "Scanning for Bluetooth Devices"
 msgstr "Buscando dispositivos Bluetooth"
 
@@ -1294,7 +1312,7 @@ msgstr "Educación"
 msgid "Searching for GPS receiver"
 msgstr "Buscando receptor GPS"
 
-#: ../src/settings.c:502
+#: ../src/settings.c:504
 msgid "Select Bluetooth Device"
 msgstr "Seleccionar dispositivo Bluetooth"
 
@@ -1331,7 +1349,7 @@ msgstr "Editar categorías..."
 msgid "Set as GPS Location"
 msgstr "Situar GPS"
 
-#: ../src/settings.c:977
+#: ../src/settings.c:979
 msgid "Settings"
 msgstr "Preferencias"
 
@@ -1339,7 +1357,7 @@ msgstr "Preferencias"
 msgid "Settings..."
 msgstr "Preferencias..."
 
-#: ../src/maps.c:2159
+#: ../src/maps.c:2230
 msgid "Setup"
 msgstr "Configuración"
 
@@ -1388,11 +1406,11 @@ msgstr "Mostrar información"
 msgid "Show Lat/Lon"
 msgstr "Mostrar Lat/Lon"
 
-#: ../src/settings.c:1290
+#: ../src/settings.c:1292
 msgid "Show POI below zoom"
 msgstr "Ptos. de int. en zoom menores de"
 
-#: ../src/display.c:2337
+#: ../src/display.c:2351
 msgid "Show Position"
 msgstr "Mostrar posición"
 
@@ -1413,7 +1431,7 @@ msgstr "Desplazarse al sur"
 msgid "Speed"
 msgstr "Velocidad"
 
-#: ../src/settings.c:1246
+#: ../src/settings.c:1248
 msgid "Speed Limit"
 msgstr "Límite de velocidad"
 
@@ -1426,7 +1444,7 @@ msgstr "Estaciones de servicio para repostar gasolina."
 msgid "Tap Point"
 msgstr "Etapa"
 
-#: ../src/maps.c:546
+#: ../src/maps.c:548
 msgid ""
 "The current repository is in a legacy format and will be converted.  You "
 "should delete your old maps if you no longer plan to use them."
@@ -1440,7 +1458,7 @@ msgstr "El itinerario actual está vacío."
 msgid "The current track is empty."
 msgstr "La traza actual está vacía."
 
-#: ../src/settings.c:692
+#: ../src/settings.c:694
 msgid "The following action is mapped to multiple keys"
 msgstr "La siguiente acción está asignada a varias teclas"
 
@@ -1494,7 +1512,7 @@ msgstr "Activar/desactivar límite de velocidad"
 msgid "Toggle Tracks"
 msgstr "Activar/desactivar trazas"
 
-#: ../src/main.c:322 ../src/maps.c:2290
+#: ../src/main.c:322 ../src/maps.c:2361
 msgid "Top-Left"
 msgstr "Superior izquierda"
 
@@ -1502,7 +1520,7 @@ msgstr "Superior izquierda"
 msgid "Top-Right"
 msgstr "Superior derecha"
 
-#: ../src/menu.c:1422 ../src/menu.c:1572 ../src/settings.c:789
+#: ../src/menu.c:1422 ../src/menu.c:1572 ../src/settings.c:791
 msgid "Track"
 msgstr "Traza"
 
@@ -1526,21 +1544,21 @@ msgstr "Se muestran las trazas"
 msgid "Transportation"
 msgstr "Transporte"
 
-#: ../src/maps.c:1394
+#: ../src/maps.c:1396
 msgid "URL Format"
 msgstr "Formato de la URL"
 
-#: ../src/maps.c:726
+#: ../src/maps.c:728
 #, fuzzy
 msgid "Unable to create map database for repository"
 msgstr "No se ha podido crear el directorio de caché para el repositorio"
 
-#: ../src/settings.c:1169
+#: ../src/settings.c:1171
 #, fuzzy
 msgid "Unblank Screen"
 msgstr "Pantalla completa"
 
-#: ../src/settings.c:1198
+#: ../src/settings.c:1200
 msgid "Units"
 msgstr "Unidades"
 
@@ -1568,11 +1586,11 @@ msgstr "Vector de velocidad"
 msgid "View"
 msgstr "Ver"
 
-#: ../src/maps.c:2271
+#: ../src/maps.c:2342
 msgid "View Center"
 msgstr "Centrar vista"
 
-#: ../src/maps.c:1451
+#: ../src/maps.c:1453
 msgid "View Zoom Steps"
 msgstr "Ver pasos del zoom"
 
@@ -1604,7 +1622,7 @@ msgstr ""
 "\"Gestionar mapas\" del menú \"Mapas\" o bien pulse Aceptar para activar la "
 "autodescarga."
 
-#: ../src/maps.c:2214 ../src/menu.c:1480
+#: ../src/maps.c:2285 ../src/menu.c:1480
 msgid "Zoom"
 msgstr "Zoom"
 
@@ -1616,7 +1634,7 @@ msgstr "Acercarse"
 msgid "Zoom Level"
 msgstr "Nivel de zoom"
 
-#: ../src/maps.c:2220
+#: ../src/maps.c:2291
 msgid "Zoom Levels to Download: (0 = most detail)"
 msgstr "Niveles de zoom a descargar: (0 = máximo detalle)"
 
@@ -1628,7 +1646,7 @@ msgstr "Alejarse"
 msgid "Zoom to Level"
 msgstr "Hacer zoom al nivel"
 
-#: ../src/maps.c:1977 ../src/maps.c:1984
+#: ../src/maps.c:2048 ../src/maps.c:2055
 msgid "about"
 msgstr "acerca de"
 
@@ -1640,11 +1658,11 @@ msgstr "en uso"
 msgid "km"
 msgstr "km"
 
-#: ../src/maps.c:1884 ../src/maps.c:1985
+#: ../src/maps.c:1955 ../src/maps.c:2056
 msgid "maps"
 msgstr "mapas"
 
-#: ../src/maps.c:1878 ../src/maps.c:1978
+#: ../src/maps.c:1949 ../src/maps.c:2049
 msgid "maps "
 msgstr "mapas "
 
@@ -1671,7 +1689,7 @@ msgstr "nofix"
 msgid "none"
 msgstr "ninguno"
 
-#: ../src/maps.c:1884 ../src/maps.c:1985
+#: ../src/maps.c:1955 ../src/maps.c:2056
 #, fuzzy
 msgid "up to about"
 msgstr "hasta"

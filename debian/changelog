@@ -1,3 +1,12 @@
+maemo-mapper (2.0.5) unstable; urgency=low
+
+  * Increased precision of latitude/longitude calculations.
+  * Added repository settings for minimum and maximum auto-downloadable zooms.
+  * Fixed bug that caused Maemo Mapper to draw the mark in the wrong place.
+  * Updated translation text.
+
+ -- John Costigan <gnuite@gmail.com>  Sun, 18 Nov 2007 01:00:00 -0500
+
 maemo-mapper (2.0.4) unstable; urgency=low
 
   * Added "Min. Speed" option in "Auto-Center" tab of "Settings", which allows
