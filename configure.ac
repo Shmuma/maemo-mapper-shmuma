@@ -18,7 +18,7 @@
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 2.0.5)
+AM_INIT_AUTOMAKE(maemo-mapper, 2.1)
 
 AC_PROG_CPP
 AC_CONFIG_HEADERS(src/config.h)
@@ -57,12 +57,12 @@ PKG_CHECK_MODULES(CONIC, conic)
 AC_SUBST(CONIC_LIBS)
 AC_SUBST(CONIC_CFLAGS)
 
-AC_CHECK_HEADER(gdbm.h, [has_gdbm=yes], [has_gdbm=no], [])
+AC_CHECK_HEADER(gpsmgr.h, , AC_MSG_ERROR(gpsmgr.h not found. Please install libgpsmgr-dev.))
+AC_CHECK_LIB(gpsmgr, gpsmgr_start, LIBS="$LIBS -lgpsmgr", AC_MSG_ERROR(libgpsmgr.so not found. Please install libgpsmgr.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
 
-if test "$has_gdbm" != "yes"
-then
-	AC_MSG_ERROR(gdbm.h not found. Please install libgdbm-dev.)
-fi
+AC_CHECK_HEADER(gdbm.h, , AC_MSG_ERROR(gdbm.h not found. Please install libgdbm-dev.))
+AC_CHECK_LIB(gdbm, gdbm_open, , AC_MSG_ERROR(libgdbm.so not found. Please install libgdbm.))
+
 
 # Localisation
 localedir=`$PKG_CONFIG osso-af-settings --variable=localedir`

@@ -49,15 +49,29 @@
         When you first start Maemo Mapper, you will be presented with the
         <display_text>Settings</display_text> dialog box.  Most of the
         settings have reasonable defaults, but if you have a GPS receiver,
-        you should fill in the <display_text>MAC</display_text> field with
-        the MAC address of your GPS receiver.  If you don't know the MAC,
-        turn on your GPS receiver and push the
+        you should fill in the <display_text>Bluetooth</display_text> field
+        with the MAC address of your GPS receiver.  If you don't know the
+        MAC, turn on your GPS receiver and push the
         <display_text>Search</display_text> button.  Maemo Mapper will
         attempt to automatically discover the MAC address of your receiver.
         For more information about the <display_text>Settings</display_text>
         dialog box, see <ref refid="help_maemomapper_settings"
           refdoc="Settings"/>.
       </para>
+      <para>
+        Alternatively, you can leave the
+        <display_text>Bluetooth</display_text> field blank, and Maemo Mapper
+        will attempt to automatically search for and use any bluetooth GPS
+        receivers that it can identify.  This is particularly useful if you
+        tend to use multiple different GPS receivers.  This feature is not
+        guaranteed to work on all Nokia devices or with all bluetooth GPS
+        receivers.
+      </para>
+      <note>
+        If you are using Maemo Mapper on a device with an internal GPS
+        receiver, then you should probably use the "File Path" receiver type
+        and specify the path <display_text>/dev/pgps</display_text>.
+      </note>
       <para>
         When you are finished setting up Maemo Mapper to your preferences,
         pressing the <display_text>Ok</display_text> button will lead you to
@@ -754,11 +768,11 @@
         </listitem>
         <listitem>
           <display_text>Downloadable Zooms</display_text> - This setting
-	  governs the minimum and maximum zoom levels Maemo Mapper should
-	  attempt to automatically download for this repository (when
-	  Auto-Download is enabled).  Some repositories support more zoom
-	  levels than others, and supported zoom levels may even vary from
-	  location to location.
+          governs the minimum and maximum zoom levels Maemo Mapper should
+          attempt to automatically download for this repository (when
+          Auto-Download is enabled).  Some repositories support more zoom
+          levels than others, and supported zoom levels may even vary from
+          location to location.
         </listitem>
       </list>
       <para>
@@ -1283,24 +1297,41 @@
       </para>
       <heading>GPS</heading>
       <para>
-        The <display_text>GPS</display_text> tab tells Maemo Mapper which
-        bluetooth device from which to retrieve GPS data.  It is only
-        applicable if you have a bluetooth GPS receiver with which to use
-        Maemo Mapper.
+        The <display_text>GPS</display_text> tab tells Maemo Mapper the
+        source (if any) from which to retrieve GPS data.  It is only
+        applicable if you have access to a GPS source, such as a bluetooth
+        GPS receiver or a GPSD server.  Technically, Maemo Mapper uses GPSD
+        for all of its GPS receiver communication, but you can instruct
+        Maemo Mapper to use GPSD in one of three ways:
       </para>
-      <para>
-        Enter the MAC address in the field provided.  If you don't know the
-        MAC address, turn on your receiver and press the
-        <display_text>Scan...</display_text> button to select it from a
-        list of nearby bluetooth devices.
-      </para>
-      <para>
-        <i>Alternatively</i>, if you are using rfcomm or any other
-        file-system-based NMEA input source, you can provide a pathname
-        (beginning with a leading slash) such as "/dev/rfcomm1".  In this
-        case, Maemo Mapper will read NMEA sentences from the file system
-        instead of via bluetooth.
-      </para>
+      <list>
+        <listitem>
+          <display_text>Bluetooth</display_text> - Select this option
+          if you are using a bluetooth GPS receiver, and enter the
+          MAC address in the field provided.  If you don't know the MAC
+          address, turn on your receiver and press the
+          <display_text>Scan...</display_text> button to select it from a
+          list of nearby bluetooth devices.  Or, leave the field blank and
+          Maemo Mapper will automatically try to use any bluetooth GPS
+          receivers that it can identify.
+        </listitem>
+        <listitem>
+          <display_text>File Path</display_text> - Select this option to use
+          a device file on your file system, such as an RFCOMM device, and
+          specify the pathname of the file in the appropriate field.  This
+          option is also appropriate if you are running Maemo Mapper on a
+          device with an internal GPS receiver, in which case you should
+          probably use the path <display_text>/dev/pgps</display_text>,
+          which is the default.
+        </listitem>
+        <listitem>
+          <display_text>GPSD Host</display_text> - Select this option if you
+          want to connect Maemo Mapper to any GPSD server (local or remote).
+          Enter the hostname and port of the server in the fields provided.
+          The default values (127.0.0.1 on port 2947) cause Maemo Mapper to
+          use the local GPSD server, if available.
+        </listitem>
+      </list>
       <heading>Auto-Center</heading>
       <para>
         The <display_text>Auto-Center</display_text> tab allows you to
@@ -1322,8 +1353,8 @@
         </listitem>
         <listitem>
           <display_text>Fixed</display_text> - Controls whether or not your
-	  lead amount is affected by your speed.  If checked, then your
-	  speed will not affect the lead amount.
+          lead amount is affected by your speed.  If checked, then your
+          speed will not affect the lead amount.
         </listitem>
         <listitem>
           <display_text>Pan Sensitivity</display_text> - Controls how often
@@ -1335,22 +1366,22 @@
           close to the center as possible.
         </listitem>
         <listitem>
-	  <display_text>Min. Speed</display_text> - Controls how fast you
-	  must be moving in order for Auto-Center (and Auto-Rotate) to
-	  activate.  For example, walkers may wish to set this threshold
-	  low, while drivers with inaccurate GPS receivers may wish to set
-	  this high (to avoid spurious auto-rotates when parked or waiting
-	  at a red light).  The speed is specified in your chosen units.
+          <display_text>Min. Speed</display_text> - Controls how fast you
+          must be moving in order for Auto-Center (and Auto-Rotate) to
+          activate.  For example, walkers may wish to set this threshold
+          low, while drivers with inaccurate GPS receivers may wish to set
+          this high (to avoid spurious auto-rotates when parked or waiting
+          at a red light).  The speed is specified in your chosen units.
         </listitem>
         <listitem>
           <display_text>Rotate Sensit.</display_text> - Controls how often
           Maemo Mapper rotates the display based on your heading, depending
-	  on how far your current rotation is from your heading rotation.
+          on how far your current rotation is from your heading rotation.
         </listitem>
         <listitem>
           <display_text>Points</display_text> - Controls which direction
-	  on the screen your heading points to when auto-rotating.  The
-	  default is for your current heading to point up.
+          on the screen your heading points to when auto-rotating.  The
+          default is for your current heading to point up.
         </listitem>
       </list>
       <heading>Announce</heading>
