@@ -24,36 +24,11 @@
 #ifndef MAEMO_MAPPER_SETTINGS_H
 #define MAEMO_MAPPER_SETTINGS_H
 
-#include <dbus/dbus-glib.h>
-
-typedef struct _ScanInfo ScanInfo;
-struct _ScanInfo {
-    GtkWidget *settings_dialog;
-    GtkWidget *txt_gps_bt_mac;
-    GtkWidget *scan_dialog;
-    GtkWidget *banner;
-    GtkListStore *store;
-    gint sid;
-    DBusGProxy *req_proxy;
-    DBusGProxy *sig_proxy;
-};
-
-typedef struct _KeysDialogInfo KeysDialogInfo;
-struct _KeysDialogInfo {
-    GtkWidget *cmb[CUSTOM_KEY_ENUM_COUNT];
-};
-
-typedef struct _ColorsDialogInfo ColorsDialogInfo;
-struct _ColorsDialogInfo {
-    GtkWidget *col[COLORABLE_ENUM_COUNT];
-};
-
-
 RepoData* settings_parse_repo(gchar *str);
 
-void settings_init();
-void settings_save();
+void settings_init(void);
+void settings_save(void);
 
-gboolean settings_dialog();
+gboolean settings_dialog(void);
 
 #endif /* ifndef MAEMO_MAPPER_SETTINGS_H */

@@ -28,7 +28,7 @@
 G_BEGIN_DECLS
 
 
-gfloat* gdk_pixbuf_rotate_matrix_new            ();
+gfloat* gdk_pixbuf_rotate_matrix_new            (void);
 void gdk_pixbuf_rotate_matrix_fill_for_rotation (gfloat*       matrix,
                                                  gfloat        angle);
 void gdk_pixbuf_rotate_matrix_mult_number       (gfloat*       matrix,

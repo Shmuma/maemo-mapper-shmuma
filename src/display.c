@@ -1080,7 +1080,7 @@ window_present()
     if(!been_here++)
     {
         /* Set connection state first, to avoid going into this if twice. */
-        if(_gri.type == GPS_RCVR_NONE && _enable_gps)
+        if(_is_first_time)
         {
             GtkWidget *confirm;
 
@@ -1094,30 +1094,27 @@ window_present()
             if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
                 ossohelp_show(_osso, HELP_ID_INTRO, 0);
             gtk_widget_destroy(confirm);
-            if(settings_dialog())
+
+            /* Present the settings dialog. */
+            settings_dialog();
+            popup_error(_window,
+                _("OpenStreetMap.org provides public, free-to-use maps.  "
+                "You can also download a sample set of repositories from "
+                " the internet by using the \"Download...\" button."));
+
+            /* Present the repository dialog. */
+            repoman_dialog();
+            confirm = hildon_note_new_confirmation(GTK_WINDOW(_window),
+                _("You will now see a blank screen.  You can download"
+                    " maps using the \"Manage Maps\" menu item in the"
+                    " \"Maps\" menu.  Or, press OK now to enable"
+                    " Auto-Download."));
+            if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
             {
-                popup_error(_window,
-                    _("OpenStreetMap.org provides public, free-to-use maps.  "
-                    "You can also download a sample set of repositories from "
-                    " the internet by using the \"Download...\" button."));
-                repoman_dialog();
-                if(_curr_repo->type != REPOTYPE_NONE)
-                {
-                    confirm = hildon_note_new_confirmation(GTK_WINDOW(_window),
-                        _("You will now see a blank screen.  You can download"
-                            " maps using the \"Manage Maps\" menu item in the"
-                            " \"Maps\" menu.  Or, press OK to enable"
-                            " Auto-Download."));
-                    if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
-                    {
-                        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                                    _menu_maps_auto_download_item), TRUE);
-                    }
-                    gtk_widget_destroy(confirm);
-                }
+                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
+                            _menu_maps_auto_download_item), TRUE);
             }
-            else
-                gtk_main_quit();
+            gtk_widget_destroy(confirm);
         }
 
         /* Connect to receiver. */
@@ -2126,8 +2123,6 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
              &&((unsigned)(_mark_bufy2 + _draw_width)
                  <= _screen_height_pixels+2*_draw_width)))
     {
-        printf("DRAWING\n");
-        /* TODO: TEST THIS. */
         gdk_draw_arc(
                 _map_widget->window,
                 _gps_state == RCVR_FIXED

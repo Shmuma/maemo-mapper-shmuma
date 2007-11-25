@@ -24,7 +24,7 @@
 #ifndef MAEMO_MAPPER_POI_H
 #define MAEMO_MAPPER_POI_H
 
-void poi_db_connect();
+void poi_db_connect(void);
 
 gboolean get_nearest_poi(gint unitx, gint unity, PoiInfo *poi);
 
@@ -38,8 +38,8 @@ gboolean poi_import_dialog(gint unitx, gint unity);
 gboolean poi_download_dialog(gint unitx, gint unity);
 gboolean poi_browse_dialog(gint unitx, gint unity);
 
-void map_render_poi();
+void map_render_poi(void);
 
-void poi_destroy();
+void poi_destroy(void);
 
 #endif /* ifndef MAEMO_MAPPER_POI_H */

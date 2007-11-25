@@ -1213,24 +1213,10 @@ menu_cb_enable_gps(GtkMenuItem *item)
 
     if((_enable_gps = gtk_check_menu_item_get_active(
                 GTK_CHECK_MENU_ITEM(_menu_enable_gps_item))))
-    {
-        if(_gri.type != GPS_RCVR_NONE)
-        {
-            rcvr_connect();
-        }
-        else
-        {
-            popup_error(_window,
-                    _("Cannot enable GPS until a GPS receiver "
-                    "is set up in the Settings dialog box."));
-            gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_enable_gps_item), FALSE);
-        }
-    }
+        rcvr_connect();
     else
-    {
         rcvr_disconnect();
-    }
+
     map_move_mark();
     gps_show_info();
     gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_details_item), _enable_gps);
@@ -1465,7 +1451,7 @@ menu_init()
             = gtk_check_menu_item_new_with_label(_("Auto-Download")));
     gtk_check_menu_item_set_active(
             GTK_CHECK_MENU_ITEM(_menu_maps_auto_download_item),_auto_download);
-    menu_maps_add_repos(_curr_repo);
+    menu_maps_add_repos();
 
     gtk_menu_append(menu, gtk_separator_menu_item_new());
 

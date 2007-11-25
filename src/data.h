@@ -82,6 +82,8 @@ extern GpsData _gps;
 extern GpsSatelliteData _gps_sat[12];
 extern gboolean _satdetails_on;
 
+extern gboolean _is_first_time;
+
 
 /** VARIABLES FOR MAINTAINING STATE OF THE CURRENT VIEW. */
 

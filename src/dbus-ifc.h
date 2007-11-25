@@ -21,26 +21,24 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MAEMO_MAPPER_MAPS_H
-#define MAEMO_MAPPER_MAPS_H
+#ifndef MAEMO_MAPPER_DBUS_H
+#define MAEMO_MAPPER_DBUS_H
 
-gboolean mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley);
-GdkPixbuf* mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley);
+#define DBUS_API_SUBJECT_TO_CHANGE
 
-void set_repo_type(RepoData *repo);
-gboolean repo_set_curr(RepoData *rd);
+#define MM_DBUS_SERVICE "com.gnuite.maemo_mapper"
+#define MM_DBUS_PATH "/com/gnuite/maemo_mapper"
+#define MM_DBUS_INTERFACE "com.gnuite.maemo_mapper"
 
-gboolean mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex,
-        gint tiley, gint update_type, gint batch_id, gint priority,
-        ThreadLatch *refresh_latch);
+#define MM_DBUS_METHOD_SET_VIEW_CENTER "set_view_center"
+typedef struct _SetViewCenterArgs SetViewCenterArgs;
+struct _SetViewCenterArgs
+{
+    gdouble lat;
+    gdouble lon;
+    gint zoom; /* Optional - omit to keep zoom the same. */
+};
 
-guint mut_exists_hashfunc(const MapUpdateTask *a);
-gboolean mut_exists_equalfunc(const MapUpdateTask *a, const MapUpdateTask *b);
-gint mut_priority_comparefunc(const MapUpdateTask *a, const MapUpdateTask *b);
-gboolean thread_proc_mut(void);
+void dbus_ifc_init(void);
 
-gboolean repoman_dialog(void);
-
-gboolean mapman_dialog(void);
-
-#endif /* ifndef MAEMO_MAPPER_MAPS_H */
+#endif /* ifndef MAEMO_MAPPER_GPS_H */

@@ -975,7 +975,10 @@ mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
         if(++_num_downloads == 20 && !_download_banner)
             g_idle_add((GSourceFunc)mapdb_initiate_update_banner_idle, NULL);
 
-        if(_num_downloads <= NUM_DOWNLOAD_THREADS)
+        /* This doesn't need to be thread-safe.  Extras in the pool don't
+         * really make a difference. */
+        if(g_thread_pool_get_num_threads(_mut_thread_pool)
+                < g_thread_pool_get_max_threads(_mut_thread_pool))
             g_thread_pool_push(_mut_thread_pool, (gpointer)1, NULL);
     }
 

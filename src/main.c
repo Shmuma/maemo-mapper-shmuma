@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <dbus/dbus-glib.h>
 #include <hildon-widgets/hildon-program.h>
 #include <hildon-widgets/hildon-banner.h>
 #include <gconf/gconf-client.h>
@@ -41,6 +42,7 @@
 #include "defines.h"
 
 #include "cmenu.h"
+#include "dbus-ifc.h"
 #include "display.h"
 #include "gps.h"
 #include "gpx.h"
@@ -157,7 +159,7 @@ maemo_mapper_destroy()
     /* _program and widgets have already been destroyed. */
     _window = NULL;
 
-    rcvr_disconnect();
+    gps_destroy(FALSE);
 
     path_destroy();
 
@@ -186,6 +188,8 @@ maemo_mapper_destroy()
         g_mutex_unlock(_mapdb_mutex);
 #endif
     }
+
+    gps_destroy(TRUE);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -324,7 +328,6 @@ maemo_mapper_init(gint argc, gchar **argv)
     SPEED_LOCATION_ENUM_TEXT[SPEED_LOCATION_BOTTOM_RIGHT] = _("Bottom-Right");
     SPEED_LOCATION_ENUM_TEXT[SPEED_LOCATION_BOTTOM_LEFT] = _("Bottom-Left");
 
-    GPS_RCVR_ENUM_TEXT[GPS_RCVR_NONE] = _("None");
     GPS_RCVR_ENUM_TEXT[GPS_RCVR_BT] = _("Bluetooth");
     GPS_RCVR_ENUM_TEXT[GPS_RCVR_GPSD] = _("GPSD");
     GPS_RCVR_ENUM_TEXT[GPS_RCVR_FILE] = _("File");
@@ -473,6 +476,7 @@ maemo_mapper_init(gint argc, gchar **argv)
     input_init();
     poi_db_connect();
     display_init();
+    dbus_ifc_init();
 
     /* If present, attempt to load the file specified on the command line. */
     if(argc > 1)
@@ -522,21 +526,6 @@ maemo_mapper_init(gint argc, gchar **argv)
     osso_hw_set_event_cb(_osso, NULL, osso_cb_hw_state, NULL);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-}
-
-static gint
-dbus_cb_default(const gchar *interface, const gchar *method,
-        GArray *arguments, gpointer data, osso_rpc_t *retval)
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(!strcmp(method, "top_application"))
-        g_idle_add((GSourceFunc)window_present, NULL);
-
-    retval->type = DBUS_TYPE_INVALID;
-
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return OSSO_OK;
 }
 
 static gboolean
@@ -605,13 +594,84 @@ main(gint argc, gchar *argv[])
     /* Init Gnome-VFS. */
     gnome_vfs_init();
 
-    maemo_mapper_init(argc, argv);
-
-    if(OSSO_OK != osso_rpc_set_default_cb_f(_osso, dbus_cb_default, NULL))
+#ifdef DEBUG
+    /* This is just some helpful DBUS testing code. */
+    if(argc >= 3)
     {
-        g_printerr("osso_rpc_set_default_cb_f failed.\n");
-        return 1;
+        /* Try to set the center to a new lat/lon. */
+        GError *error = NULL;
+        gchar *error_check;
+        gdouble lat, lon;
+        DBusGConnection *bus;
+        DBusGProxy *proxy;
+        
+        bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+        if(!bus || error)
+        {
+            g_printerr("Error: %s\n", error->message);
+            return -1;
+        }
+
+        proxy = dbus_g_proxy_new_for_name(bus,
+                        MM_DBUS_SERVICE, MM_DBUS_PATH, MM_DBUS_INTERFACE);
+
+        lat = g_ascii_strtod((argv[1]), &error_check);
+        if(error_check == argv[1])
+        {
+            g_printerr("Failed to parse string as float: %s\n", argv[1]);
+            return 1;
+        }
+
+        lon = g_ascii_strtod((argv[2]), &error_check);
+        if(error_check == argv[2])
+        {
+            g_printerr("Failed to parse string as float: %s\n", argv[2]);
+            return 2;
+        }
+
+        error = NULL;
+        if(argc >= 4)
+        {
+            /* We are specifying a zoom. */
+            gint zoom;
+
+            zoom = g_ascii_strtod((argv[3]), &error_check);
+            if(error_check == argv[3])
+            {
+                g_printerr("Failed to parse string as integer: %s\n", argv[3]);
+                return 3;
+            }
+            if(!dbus_g_proxy_call(proxy, MM_DBUS_METHOD_SET_VIEW_CENTER,&error,
+                        G_TYPE_DOUBLE, lat, G_TYPE_DOUBLE, lon,
+                        G_TYPE_INT, zoom, G_TYPE_INVALID,
+                        G_TYPE_INVALID)
+                    || error)
+            {
+                g_printerr("Error: %s\n", error->message);
+                return 4;
+            }
+        }
+        else
+        {
+            /* Not specifying a zoom. */
+            if(!dbus_g_proxy_call(proxy, MM_DBUS_METHOD_SET_VIEW_CENTER, &error,
+                        G_TYPE_DOUBLE, lat, G_TYPE_DOUBLE, lon, G_TYPE_INVALID,
+                        G_TYPE_INVALID)
+                    || error)
+            {
+                g_printerr("Error: %s\n", error->message);
+                return -2;
+            }
+        }
+
+        g_object_unref(proxy);
+        dbus_g_connection_unref(bus);
+
+        return 0;
     }
+#endif
+
+    maemo_mapper_init(argc, argv);
 
     gtk_main();
 

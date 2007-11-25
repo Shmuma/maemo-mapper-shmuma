@@ -21,14 +21,16 @@ bin_PROGRAMS = maemo-mapper
 
 maemo_mapper_CFLAGS = $(GTK_CFLAGS) $(OSSO_CFLAGS) $(HILDON_CFLAGS) $(GNOME_VFS_CFLAGS) $(GCONF_CFLAGS) $(LIBXML2_CFLAGS) $(SQLITE_CFLAGS) $(CONIC_CFLAGS)
 
-maemo_mapper_LDADD = $(GTK_LIBS) $(OSSO_LIBS) $(HILDON_LIBS) $(GNOME_VFS_LIBS) $(GCONF_LIBS) $(LIBXML2_LIBS) $(SQLITE_LIBS) $(CONIC_LIBS) -lgdbm
+maemo_mapper_LDADD = $(GTK_LIBS) $(OSSO_LIBS) $(HILDON_LIBS) $(GNOME_VFS_LIBS) $(GCONF_LIBS) $(LIBXML2_LIBS) $(SQLITE_LIBS) $(CONIC_LIBS)
 
 maemo_mapper_SOURCES = \
 	cmenu.c \
 	data.c \
+	dbus-ifc.c \
 	display.c \
 	gdk-pixbuf-rotate.c \
 	gps.c \
+	gpsbt.c \
 	gpx.c \
 	input.c \
 	main.c \

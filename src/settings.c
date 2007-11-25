@@ -28,18 +28,21 @@
 #include <string.h>
 #include <math.h>
 #include <osso-helplib.h>
+#include <dbus/dbus-glib.h>
 #include <bt-dbus.h>
 #include <hildon-widgets/hildon-note.h>
 #include <hildon-widgets/hildon-color-button.h>
 #include <hildon-widgets/hildon-file-chooser-dialog.h>
 #include <hildon-widgets/hildon-number-editor.h>
 #include <hildon-widgets/hildon-banner.h>
+#include <hildon-widgets/hildon-input-mode-hint.h>
 #include <gconf/gconf-client.h>
 
 #include "types.h"
 #include "data.h"
 #include "defines.h"
 
+#include "gps.h"
 #include "display.h"
 #include "gdk-pixbuf-rotate.h"
 #include "maps.h"
@@ -47,6 +50,30 @@
 #include "poi.h"
 #include "settings.h"
 #include "util.h"
+
+typedef struct _ScanInfo ScanInfo;
+struct _ScanInfo {
+    GtkWidget *settings_dialog;
+    GtkWidget *txt_gps_bt_mac;
+    GtkWidget *scan_dialog;
+    GtkWidget *banner;
+    GtkListStore *store;
+    gint sid;
+    DBusGConnection *bus;
+    DBusGProxy *req_proxy;
+    DBusGProxy *sig_proxy;
+};
+
+typedef struct _KeysDialogInfo KeysDialogInfo;
+struct _KeysDialogInfo {
+    GtkWidget *cmb[CUSTOM_KEY_ENUM_COUNT];
+};
+
+typedef struct _ColorsDialogInfo ColorsDialogInfo;
+struct _ColorsDialogInfo {
+    GtkWidget *col[COLORABLE_ENUM_COUNT];
+};
+
 
 /**
  * Save all configuration data to GCONF.
@@ -410,18 +437,17 @@ static gint
 scan_start_search(ScanInfo *scan_info)
 {
     GError *error = NULL;
-    DBusGConnection *dbus_conn;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     /* Initialize D-Bus. */
-    if(NULL == (dbus_conn = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error)))
+    if(NULL == (scan_info->bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error)))
     {
         g_printerr("Failed to open connection to D-Bus: %s.\n",
                 error->message);
         return 1;
     }
 
-    if(NULL == (scan_info->req_proxy = dbus_g_proxy_new_for_name(dbus_conn,
+    if(NULL == (scan_info->req_proxy =dbus_g_proxy_new_for_name(scan_info->bus,
             BTSEARCH_SERVICE,
             BTSEARCH_REQ_PATH,
             BTSEARCH_REQ_INTERFACE)))
@@ -430,7 +456,7 @@ scan_start_search(ScanInfo *scan_info)
         return 2;
     }
 
-    if(NULL == (scan_info->sig_proxy = dbus_g_proxy_new_for_name(dbus_conn,
+    if(NULL == (scan_info->sig_proxy =dbus_g_proxy_new_for_name(scan_info->bus,
             BTSEARCH_SERVICE,
             BTSEARCH_SIG_PATH,
             BTSEARCH_SIG_INTERFACE)))
@@ -567,10 +593,23 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
     gtk_widget_destroy(dialog);
 
     /* Clean up D-Bus. */
-    dbus_g_proxy_call(scan_info->req_proxy, BTSEARCH_STOP_SEARCH_REQ,
-                &error, G_TYPE_INVALID, G_TYPE_INVALID);
-    g_object_unref(scan_info->req_proxy);
-    g_object_unref(scan_info->sig_proxy);
+    if(scan_info->req_proxy)
+    {
+        dbus_g_proxy_call(scan_info->req_proxy, BTSEARCH_STOP_SEARCH_REQ,
+                    &error, G_TYPE_INVALID, G_TYPE_INVALID);
+        g_object_unref(scan_info->req_proxy);
+        scan_info->req_proxy = NULL;
+    }
+    if(scan_info->sig_proxy)
+    {
+        g_object_unref(scan_info->sig_proxy);
+        scan_info->sig_proxy = NULL;
+    }
+    if(scan_info->bus)
+    {
+        dbus_g_connection_unref(scan_info->bus);
+        scan_info->bus = NULL;
+    }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1005,7 +1044,7 @@ settings_dialog()
         /* Receiver MAC Address. */
         gtk_table_attach(GTK_TABLE(table),
                 rad_gps_bt = gtk_radio_button_new_with_label(
-                    NULL, _("MAC Address")),
+                    NULL, _("Bluetooth")),
                 0, 1, 0, 1, GTK_FILL, 0, 2, 4);
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
@@ -1014,43 +1053,46 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_gps_bt_mac = gtk_entry_new(),
                 TRUE, TRUE, 0);
+        g_object_set(G_OBJECT(txt_gps_bt_mac), HILDON_AUTOCAP, FALSE, NULL);
         gtk_box_pack_start(GTK_BOX(hbox),
                 btn_scan = gtk_button_new_with_label(_("Scan...")),
-                FALSE, FALSE, 0);
-
-        /* GPSD Hostname and Port. */
-        gtk_table_attach(GTK_TABLE(table),
-                rad_gps_gpsd = gtk_radio_button_new_with_label_from_widget(
-                    GTK_RADIO_BUTTON(rad_gps_bt), _("GPSD Host")),
-                0, 1, 1, 2, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                hbox = gtk_hbox_new(FALSE, 4),
-                1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                txt_gps_gpsd_host = gtk_entry_new(),
-                TRUE, TRUE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                label = gtk_label_new(_("Port")),
-                FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                num_gps_gpsd_port = hildon_number_editor_new(1, 65535),
                 FALSE, FALSE, 0);
 
         /* File Path (RFComm). */
         gtk_table_attach(GTK_TABLE(table),
                 rad_gps_file = gtk_radio_button_new_with_label_from_widget(
                     GTK_RADIO_BUTTON(rad_gps_bt), _("File Path")),
+                0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        gtk_table_attach(GTK_TABLE(table),
+                hbox = gtk_hbox_new(FALSE, 4),
+                1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+        gtk_box_pack_start(GTK_BOX(hbox),
+                txt_gps_file_path = gtk_entry_new(),
+                TRUE, TRUE, 0);
+        g_object_set(G_OBJECT(txt_gps_file_path), HILDON_AUTOCAP, FALSE, NULL);
+        gtk_box_pack_start(GTK_BOX(hbox),
+                btn_browse_gps = gtk_button_new_with_label(_("Browse...")),
+                FALSE, FALSE, 0);
+
+        /* GPSD Hostname and Port. */
+        gtk_table_attach(GTK_TABLE(table),
+                rad_gps_gpsd = gtk_radio_button_new_with_label_from_widget(
+                    GTK_RADIO_BUTTON(rad_gps_bt), _("GPSD Host")),
                 0, 1, 2, 3, GTK_FILL, 0, 2, 4);
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
                 hbox = gtk_hbox_new(FALSE, 4),
                 1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_box_pack_start(GTK_BOX(hbox),
-                txt_gps_file_path = gtk_entry_new(),
+                txt_gps_gpsd_host = gtk_entry_new(),
                 TRUE, TRUE, 0);
+        g_object_set(G_OBJECT(txt_gps_gpsd_host), HILDON_AUTOCAP, FALSE, NULL);
         gtk_box_pack_start(GTK_BOX(hbox),
-                btn_browse_gps = gtk_button_new_with_label(_("Browse...")),
+                label = gtk_label_new(_("Port")),
+                FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox),
+                num_gps_gpsd_port = hildon_number_editor_new(1, 65535),
                 FALSE, FALSE, 0);
 
 
@@ -1283,6 +1325,7 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_poi_db = gtk_entry_new(),
                 TRUE, TRUE, 0);
+        g_object_set(G_OBJECT(txt_poi_db), HILDON_AUTOCAP, FALSE, NULL);
         gtk_box_pack_start(GTK_BOX(hbox),
                 btn_browse_poi = gtk_button_new_with_label(_("Browse...")),
                 FALSE, FALSE, 0);
@@ -1299,6 +1342,7 @@ settings_dialog()
                 num_poi_zoom = hildon_number_editor_new(0, MAX_ZOOM));
 
         /* Connect signals. */
+        memset(&scan_info, 0, sizeof(scan_info));
         scan_info.settings_dialog = dialog;
         scan_info.txt_gps_bt_mac = txt_gps_bt_mac;
         g_signal_connect(G_OBJECT(btn_scan), "clicked",
@@ -1383,6 +1427,20 @@ settings_dialog()
     {
         GpsRcvrType new_grtype;
 
+        if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(rad_gps_gpsd))
+                && !*gtk_entry_get_text(GTK_ENTRY(txt_gps_gpsd_host)))
+        {
+            popup_error(dialog, _("Please specify a GPSD hostname."));
+            continue;
+        }
+
+        if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(rad_gps_file))
+                && !*gtk_entry_get_text(GTK_ENTRY(txt_gps_file_path)))
+        {
+            popup_error(dialog, _("Please specify a GPS file pathname."));
+            continue;
+        }
+
         /* Set _gri.bt_mac if necessary. */
         if(!*gtk_entry_get_text(GTK_ENTRY(txt_gps_bt_mac)))
         {
@@ -1455,39 +1513,18 @@ settings_dialog()
         }
 
         if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(rad_gps_bt)))
-            new_grtype = _gri.bt_mac ? GPS_RCVR_BT : GPS_RCVR_NONE;
+            new_grtype = GPS_RCVR_BT;
         else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(rad_gps_gpsd)))
-            new_grtype = _gri.gpsd_host ? GPS_RCVR_GPSD : GPS_RCVR_NONE;
+            new_grtype = GPS_RCVR_GPSD;
         else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(rad_gps_file)))
-            new_grtype = _gri.file_path ? GPS_RCVR_FILE : GPS_RCVR_NONE;
+            new_grtype = GPS_RCVR_FILE;
         else
-            new_grtype = GPS_RCVR_NONE;
+            new_grtype = GPS_RCVR_BT;
 
         if(new_grtype != _gri.type)
         {
             _gri.type = new_grtype;
             rcvr_changed = TRUE;
-        }
-
-        if(_gri.type != GPS_RCVR_NONE)
-        {
-            gtk_widget_set_sensitive(
-                    GTK_WIDGET(_menu_gps_details_item), FALSE);
-        }
-        else
-        {
-            if(_enable_gps)
-            {
-                gtk_check_menu_item_set_active(
-                        GTK_CHECK_MENU_ITEM(_menu_enable_gps_item), FALSE);
-                popup_error(dialog, _("No GPS Receiver provided.\n"
-                        "GPS will be disabled."));
-                rcvr_changed = TRUE;
-                gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_details_item),
-                        FALSE);
-                gtk_widget_set_sensitive(GTK_WIDGET(_menu_gps_reset_item),
-                        FALSE);
-            }
         }
 
         _center_ratio = hildon_controlbar_get_value(
@@ -1681,18 +1718,22 @@ settings_init()
     _gri.bt_mac = gconf_client_get_string(
             gconf_client, GCONF_KEY_GPS_BT_MAC, NULL);
 
-    /* Get GPSD Host.  Default is NULL. */
+    /* Get GPSD Host.  Default is localhost. */
     _gri.gpsd_host = gconf_client_get_string(
             gconf_client, GCONF_KEY_GPS_GPSD_HOST, NULL);
+    if(!_gri.gpsd_host)
+        _gri.gpsd_host = g_strdup("127.0.0.1");
 
-    /* Get GPSD Port.  Default is 2947. */
+    /* Get GPSD Port.  Default is GPSD_PORT_DEFAULT (2947). */
     if(!(_gri.gpsd_port = gconf_client_get_int(
             gconf_client, GCONF_KEY_GPS_GPSD_PORT, NULL)))
-        _gri.gpsd_port = 2947;
+        _gri.gpsd_port = GPSD_PORT_DEFAULT;
 
-    /* Get File Path.  Default is NULL. */
+    /* Get File Path.  Default is /dev/pgps. */
     _gri.file_path = gconf_client_get_string(
             gconf_client, GCONF_KEY_GPS_FILE_PATH, NULL);
+    if(!_gri.file_path)
+        _gri.file_path = g_strdup("/dev/pgps");
 
     /* Get Auto-Download.  Default is FALSE. */
     _auto_download = gconf_client_get_bool(gconf_client,
@@ -1910,7 +1951,10 @@ settings_init()
             gconf_value_free(value);
         }
         else
+        {
+            _is_first_time = TRUE;
             center_lat = _gps.lat;
+        }
 
         /* Get last saved longitude.  Default is last saved longitude. */
         value = gconf_client_get(gconf_client, GCONF_KEY_CENTER_LON, NULL);

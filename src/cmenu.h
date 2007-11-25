@@ -24,6 +24,6 @@
 #ifndef MAEMO_MAPPER_CMENU
 #define MAEMO_MAPPER_CMENU
 
-void cmenu_init();
+void cmenu_init(void);
 
 #endif /* ifndef MAEMO_MAPPER_CMENU */

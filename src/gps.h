@@ -26,11 +26,12 @@
 
 void set_conn_state(ConnState new_conn_state);
 
-gboolean rcvr_connect();
-void rcvr_disconnect();
+gboolean rcvr_connect(void);
+void rcvr_disconnect(void);
 
-void reset_bluetooth();
+void reset_bluetooth(void);
 
-void gps_init();
+void gps_init(void);
+void gps_destroy(gboolean last);
 
 #endif /* ifndef MAEMO_MAPPER_GPS_H */

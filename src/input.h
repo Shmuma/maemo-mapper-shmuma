@@ -24,6 +24,6 @@
 #ifndef MAEMO_MAPPER_INPUT_H
 #define MAEMO_MAPPER_INPUT_H
 
-void input_init();
+void input_init(void);
 
 #endif /* ifndef MAEMO_MAPPER_INPUT_H */

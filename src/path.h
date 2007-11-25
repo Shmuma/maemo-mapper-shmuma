@@ -27,32 +27,32 @@
 void path_resize(Path *path, gint size);
 void path_wresize(Path *path, gint wsize);
 
-void path_save_route_to_db();
+void path_save_route_to_db(void);
 
-void route_find_nearest_point();
+void route_find_nearest_point(void);
 gboolean route_show_distance_to(Point *point);
-void route_show_distance_to_next();
-void route_show_distance_to_last();
+void route_show_distance_to_next(void);
+void route_show_distance_to_last(void);
 
-void track_show_distance_from_last();
-void track_show_distance_from_first();
+void track_show_distance_from_last(void);
+void track_show_distance_from_first(void);
 
 gboolean track_add(time_t time, gboolean newly_fixed);
-void track_clear();
+void track_clear(void);
 void track_insert_break(gboolean temporary);
 
-void path_reset_route();
+void path_reset_route(void);
 
-void cancel_autoroute();
+void cancel_autoroute(void);
 
 WayPoint * find_nearest_waypoint(gint unitx, gint unity);
 
 gboolean route_download(gchar *to);
 void route_add_way_dialog(gint unitx, gint unity);
 
-WayPoint* path_get_next_way();
+WayPoint* path_get_next_way(void);
 
-void path_init();
-void path_destroy();
+void path_init(void);
+void path_destroy(void);
 
 #endif /* ifndef MAEMO_MAPPER_PATH_H */

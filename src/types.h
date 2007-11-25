@@ -277,7 +277,6 @@ typedef enum
 
 typedef enum
 {
-    GPS_RCVR_NONE,
     GPS_RCVR_BT,
     GPS_RCVR_GPSD,
     GPS_RCVR_FILE,

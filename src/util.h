@@ -37,7 +37,7 @@ gdouble calculate_bearing(gdouble lat1, gdouble lon1,
 
 void force_min_visible_bars(HildonControlbar *control_bar, gint num_bars);
 
-gboolean banner_reset();
+gboolean banner_reset(void);
 
 void deg_format(gdouble coor, gchar *scoor, gchar neg_char, gchar pos_char);
 

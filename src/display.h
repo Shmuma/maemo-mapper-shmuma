@@ -40,16 +40,16 @@ void gps_details(void);
 
 void map_render_segment(GdkGC *gc_norm, GdkGC *gc_alt,
         gint unitx1, gint unity1, gint unitx2, gint unity2);
-void map_render_paths();
+void map_render_paths(void);
 
-void update_gcs();
+void update_gcs(void);
 
-gboolean window_present();
+gboolean window_present(void);
 
 void map_pan(gint delta_unitx, gint delta_unity);
-void map_move_mark();
+void map_move_mark(void);
 void map_refresh_mark(gboolean force_redraw);
-void map_force_redraw();
+void map_force_redraw(void);
 
 
 void map_center_unit_full(Point new_center, gint zoom, gint rotate_angle);
@@ -71,6 +71,6 @@ gboolean display_open_file(GtkWidget *parent, gchar **bytes_out,
         GnomeVFSHandle **handle_out, gint *size_out, gchar **dir, gchar **file,
         GtkFileChooserAction chooser_action);
 
-void display_init();
+void display_init(void);
 
 #endif /* ifndef MAEMO_MAPPER_DISPLAY_H */

@@ -103,6 +103,8 @@ GpsData _gps;
 GpsSatelliteData _gps_sat[12];
 gboolean _satdetails_on = FALSE;
 
+gboolean _is_first_time = FALSE;
+
 
 /** VARIABLES FOR MAINTAINING STATE OF THE CURRENT VIEW. */
 
@@ -123,7 +125,6 @@ gint _screen_width_pixels = 0;
 gint _screen_height_pixels = 0;
 gint _screen_halfwidth_pixels = 0;
 gint _screen_halfheight_pixels = 0;
-
 
 /** The current track and route. */
 Path _track;
