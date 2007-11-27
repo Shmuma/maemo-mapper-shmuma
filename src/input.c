@@ -579,7 +579,7 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
 
         _mouse_is_dragging = FALSE;
 
-        screen2unit(_screen_halfwidth_pixels, _screen_halfheight_pixels,
+        screen2unit(_view_halfwidth_pixels, _view_halfheight_pixels,
                 clkpt.unitx, clkpt.unity);
 
         if(_center_mode > 0)

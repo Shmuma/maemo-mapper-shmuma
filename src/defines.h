@@ -92,8 +92,8 @@
     gdk_pixbuf_rotate_vector(&fdevx, &fdevy, (MATRIX), \
             (gint)((UNITX) - (CENTER).unitx), \
             (gint)((UNITY) - (CENTER).unity)); \
-    (BUFX) = unit2pixel((gint)(fdevx)) + _screen_halfwidth_pixels; \
-    (BUFY) = unit2pixel((gint)(fdevy)) + _screen_halfheight_pixels; \
+    (BUFX) = unit2pixel((gint)(fdevx)) + _view_halfwidth_pixels; \
+    (BUFY) = unit2pixel((gint)(fdevy)) + _view_halfheight_pixels; \
 }
 
 #define unit2buf(UNITX, UNITY, BUFX, BUFY) \
@@ -104,8 +104,8 @@
     gdk_pixbuf_rotate_vector(&fdevx, &fdevy, MATRIX, \
             (gint)((PIXELX) - unit2zpixel((CENTER).unitx, (ZOOM))), \
             (gint)((PIXELY) - unit2zpixel((CENTER).unity, (ZOOM)))); \
-    (BUFX) = fdevx + _screen_halfwidth_pixels; \
-    (BUFY) = fdevy + _screen_halfheight_pixels; \
+    (BUFX) = fdevx + _view_halfwidth_pixels; \
+    (BUFY) = fdevy + _view_halfheight_pixels; \
 }
 
 #define pixel2buf(PIXELX, PIXELY, BUFX, BUFY) \
@@ -136,8 +136,8 @@
 #define buf2unit_full(BUFX, BUFY, UNITX, UNITY, CENTER, MATRIX) { \
     gfloat funitx, funity; \
     gdk_pixbuf_rotate_vector(&funitx, &funity, MATRIX, \
-            pixel2unit((gint)((BUFX) - _screen_halfwidth_pixels)), \
-            pixel2unit((gint)((BUFY) - _screen_halfheight_pixels))); \
+            pixel2unit((gint)((BUFX) - _view_halfwidth_pixels)), \
+            pixel2unit((gint)((BUFY) - _view_halfheight_pixels))); \
     (UNITX) = (CENTER).unitx + (gint)funitx; \
     (UNITY) = (CENTER).unity + (gint)funity; \
 }
@@ -148,8 +148,8 @@
 #define buf2pixel_full(BUFX, BUFY, PIXELX, PIXELY, CENTER, MATRIX) { \
     gfloat fpixelx, fpixely; \
     gdk_pixbuf_rotate_vector(&fpixelx, &fpixely, MATRIX, \
-            (gint)(BUFX) - _screen_halfwidth_pixels, \
-            (gint)(BUFY) - _screen_halfheight_pixels); \
+            (gint)(BUFX) - _view_halfwidth_pixels, \
+            (gint)(BUFY) - _view_halfheight_pixels); \
     (PIXELX) = unit2pixel((CENTER).unitx) + (gint)fpixelx; \
     (PIXELY) = unit2pixel((CENTER).unity) + (gint)fpixely; \
 }
@@ -322,8 +322,8 @@
     gtk_widget_queue_draw_area( \
             _map_widget, \
             0, 0, \
-            _screen_width_pixels, \
-            _screen_height_pixels)
+            _view_width_pixels, \
+            _view_height_pixels)
 
 /* Render all on-map metadata an annotations, including POI and paths. */
 #define MACRO_MAP_RENDER_DATA() { \
@@ -352,7 +352,7 @@
             if(!_fullscreen) \
                 break; \
         case UNBLANK_WHEN_MOVING: \
-            if(!MOVING) \
+            if(!(MOVING)) \
                 break; \
         case UNBLANK_WITH_GPS: \
             printf("Unblanking screen...\n"); \

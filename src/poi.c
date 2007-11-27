@@ -392,8 +392,8 @@ select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick)
                                G_TYPE_BOOLEAN,/* Selected */
                                G_TYPE_INT,    /* POI ID */
                                G_TYPE_INT,    /* Category ID */
-                               G_TYPE_FLOAT,  /* Latitude */
-                               G_TYPE_FLOAT,  /* Longitude */
+                               G_TYPE_DOUBLE,  /* Latitude */
+                               G_TYPE_DOUBLE,  /* Longitude */
                                G_TYPE_STRING, /* Lat/Lon */
                                G_TYPE_FLOAT,  /* Bearing */
                                G_TYPE_FLOAT,  /* Distance */
@@ -2152,8 +2152,8 @@ poi_list_dialog(GtkWidget *parent, gint unitx, gint unity, GList *poi_list)
                                    G_TYPE_BOOLEAN,/* Selected */
                                    G_TYPE_INT,    /* POI ID */
                                    G_TYPE_INT,    /* Category ID */
-                                   G_TYPE_FLOAT,  /* Latitude */
-                                   G_TYPE_FLOAT,  /* Longitude */
+                                   G_TYPE_DOUBLE, /* Latitude */
+                                   G_TYPE_DOUBLE, /* Longitude */
                                    G_TYPE_STRING, /* Lat/Lon */
                                    G_TYPE_FLOAT,  /* Bearing */
                                    G_TYPE_FLOAT,  /* Distance */
@@ -3098,9 +3098,9 @@ map_render_poi()
 
     if(_poi_db && _poi_zoom > _zoom)
     {
-        gint diag_offset = pixel2unit(MAX(_screen_width_pixels,
-                    _screen_height_pixels) / 2);
-        buf2unit(0, _screen_height_pixels, unitx, unity);
+        gint diag_offset = pixel2unit(MAX(_view_width_pixels,
+                    _view_height_pixels) / 2);
+        buf2unit(0, _view_height_pixels, unitx, unity);
         unitx = _center.unitx - diag_offset;
         unity = _center.unity + diag_offset;
         unit2latlon(unitx, unity, lat1, lon1);

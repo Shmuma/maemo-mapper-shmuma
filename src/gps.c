@@ -413,14 +413,14 @@ gps_parse_gsv(gchar *sentence)
                 BOUND(fraction, 0.0, 1.0);
                 hildon_banner_set_fraction(
                         HILDON_BANNER(_fix_banner), fraction);
+
+                /* Keep awake while they watch the progress bar. */
+                UNBLANK_SCREEN(TRUE, FALSE);
             }
             running_total = 0;
             num_sats_used = 0;
         }
         satcnt = 0;
-
-        /* Keep awake while they watch the progress bar. */
-        UNBLANK_SCREEN(TRUE, FALSE);
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);

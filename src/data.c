@@ -121,10 +121,10 @@ GdkRectangle _redraw_wait_bounds = { 0, 0, 0, 0};
 
 
 /** CACHED SCREEN INFORMATION THAT IS DEPENDENT ON THE CURRENT VIEW. */
-gint _screen_width_pixels = 0;
-gint _screen_height_pixels = 0;
-gint _screen_halfwidth_pixels = 0;
-gint _screen_halfheight_pixels = 0;
+gint _view_width_pixels = 0;
+gint _view_height_pixels = 0;
+gint _view_halfwidth_pixels = 0;
+gint _view_halfheight_pixels = 0;
 
 /** The current track and route. */
 Path _track;
@@ -142,6 +142,7 @@ GtkWidget *_waypoint_banner = NULL;
 GtkWidget *_download_banner = NULL;
 
 /** DOWNLOAD PROGRESS. */
+gboolean _conic_is_connected = FALSE;
 GMutex *_mapdb_mutex = NULL;
 GMutex *_mouse_mutex = NULL;
 volatile gint _num_downloads = 0;

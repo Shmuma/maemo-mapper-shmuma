@@ -61,7 +61,6 @@ static HildonProgram *_program = NULL;
 
 static ConIcConnection *_conic_conn = NULL;
 static gboolean _conic_is_connecting = FALSE;
-static volatile gboolean _conic_is_connected = FALSE;
 static gboolean _conic_conn_failed = FALSE;
 static GMutex *_conic_connection_mutex = NULL;
 static GCond *_conic_connection_cond = NULL;
@@ -81,9 +80,7 @@ conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
         /* We're connected. */
         _conic_conn_failed = FALSE;
         if(_download_banner != NULL)
-        {
             gtk_widget_show(_download_banner);
-        }
     }
     else
     {
@@ -91,9 +88,7 @@ conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
         /* Mark as a failed connection, if we had been trying to connect. */
         _conic_conn_failed = _conic_is_connecting;
         if(_download_banner != NULL)
-        {
             gtk_widget_hide(_download_banner);
-        }
     }
 
     _conic_is_connecting = FALSE; /* No longer trying to connect. */
@@ -605,7 +600,7 @@ main(gint argc, gchar *argv[])
         DBusGConnection *bus;
         DBusGProxy *proxy;
         
-        bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
+        bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
         if(!bus || error)
         {
             g_printerr("Error: %s\n", error->message);
@@ -641,7 +636,8 @@ main(gint argc, gchar *argv[])
                 g_printerr("Failed to parse string as integer: %s\n", argv[3]);
                 return 3;
             }
-            if(!dbus_g_proxy_call(proxy, MM_DBUS_METHOD_SET_VIEW_CENTER,&error,
+            if(!dbus_g_proxy_call(proxy, MM_DBUS_METHOD_SET_VIEW_POSITION,
+                        &error,
                         G_TYPE_DOUBLE, lat, G_TYPE_DOUBLE, lon,
                         G_TYPE_INT, zoom, G_TYPE_INVALID,
                         G_TYPE_INVALID)
@@ -654,7 +650,8 @@ main(gint argc, gchar *argv[])
         else
         {
             /* Not specifying a zoom. */
-            if(!dbus_g_proxy_call(proxy, MM_DBUS_METHOD_SET_VIEW_CENTER, &error,
+            if(!dbus_g_proxy_call(proxy, MM_DBUS_METHOD_SET_VIEW_POSITION,
+                        &error,
                         G_TYPE_DOUBLE, lat, G_TYPE_DOUBLE, lon, G_TYPE_INVALID,
                         G_TYPE_INVALID)
                     || error)

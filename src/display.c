@@ -37,6 +37,7 @@
 #include "data.h"
 #include "defines.h"
 
+#include "dbus-ifc.h"
 #include "display.h"
 #include "gdk-pixbuf-rotate.h"
 #include "gps.h"
@@ -904,8 +905,8 @@ map_render_segment(GdkGC *gc_norm, GdkGC *gc_alt,
     {
         gint x2, y2;
         unit2buf(unitx2, unity2, x2, y2);
-        if(((unsigned)(x2+_draw_width) <= _screen_width_pixels+2*_draw_width)
-         &&((unsigned)(y2+_draw_width) <= _screen_height_pixels+2*_draw_width))
+        if(((unsigned)(x2+_draw_width) <= _view_width_pixels+2*_draw_width)
+         &&((unsigned)(y2+_draw_width) <= _view_height_pixels+2*_draw_width))
         {
             gdk_draw_arc(_map_pixmap, gc_alt,
                     FALSE, /* FALSE: not filled. */
@@ -921,8 +922,8 @@ map_render_segment(GdkGC *gc_norm, GdkGC *gc_alt,
     {
         gint x1, y1;
         unit2buf(unitx1, unity1, x1, y1);
-        if(((unsigned)(x1+_draw_width) <= _screen_width_pixels+2*_draw_width)
-         &&((unsigned)(y1+_draw_width) <= _screen_height_pixels+2*_draw_width))
+        if(((unsigned)(x1+_draw_width) <= _view_width_pixels+2*_draw_width)
+         &&((unsigned)(y1+_draw_width) <= _view_height_pixels+2*_draw_width))
         {
             gdk_draw_arc(_map_pixmap, gc_alt,
                     FALSE, /* FALSE: not filled. */
@@ -940,9 +941,9 @@ map_render_segment(GdkGC *gc_norm, GdkGC *gc_alt,
         unit2buf(unitx1, unity1, x1, y1);
         unit2buf(unitx2, unity2, x2, y2);
         /* Make sure this line could possibly be visible. */
-        if(!((x1 > _screen_width_pixels && x2 > _screen_width_pixels)
+        if(!((x1 > _view_width_pixels && x2 > _view_width_pixels)
                 || (x1 < 0 && x2 < 0)
-                || (y1 > _screen_height_pixels && y2 > _screen_height_pixels)
+                || (y1 > _view_height_pixels && y2 > _view_height_pixels)
                 || (y1 < 0 && y2 < 0)))
             gdk_draw_line(_map_pixmap, gc_norm, x1, y1, x2, y2);
     }
@@ -1178,7 +1179,7 @@ map_force_redraw()
             _map_pixbuf,
             0, 0,
             0, 0,
-            _screen_width_pixels, _screen_height_pixels,
+            _view_width_pixels, _view_height_pixels,
             GDK_RGB_DITHER_NONE, 0, 0);
 
     MACRO_MAP_RENDER_DATA();
@@ -1187,7 +1188,7 @@ map_force_redraw()
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
-static Point
+Point
 map_calc_new_center(gint zoom)
 {
     Point new_center;
@@ -1198,9 +1199,9 @@ map_calc_new_center(gint zoom)
         case CENTER_LEAD:
         {
             gfloat tmp = deg2rad(_gps.heading);
-            gfloat screen_pixels = _screen_width_pixels
-                + (((gint)_screen_height_pixels
-                            - (gint)_screen_width_pixels)
+            gfloat screen_pixels = _view_width_pixels
+                + (((gint)_view_height_pixels
+                            - (gint)_view_width_pixels)
                         * fabsf(cosf(deg2rad(
                                 ROTATE_DIR_ENUM_DEGREES[_rotate_dir] -
                                 (_center_rotate ? 0
@@ -1253,8 +1254,8 @@ map_center_unit_full(Point new_center,
         mrt->old_offsetx = _map_offset_devx;
         mrt->old_offsety = _map_offset_devy;
         mrt->new_center = _next_center = new_center;
-        mrt->screen_width_pixels = _screen_width_pixels;
-        mrt->screen_height_pixels = _screen_height_pixels;
+        mrt->screen_width_pixels = _view_width_pixels;
+        mrt->screen_height_pixels = _view_height_pixels;
         mrt->zoom = _next_zoom = zoom;
         mrt->rotate_angle = _next_map_rotate_angle = rotate_angle;
 
@@ -1365,10 +1366,10 @@ map_refresh_mark(gboolean force_redraw)
             new_center_devx, new_center_devy);
     if(force_redraw || (_center_mode > 0
                 && (UNITS_CONVERT[_units] * _gps.speed) >= _ac_min_speed &&
-    (((unsigned)(new_center_devx - (_screen_width_pixels * _center_ratio / 20))
-                > ((10 - _center_ratio) * _screen_width_pixels / 10))
- || ((unsigned)(new_center_devy - (_screen_height_pixels * _center_ratio / 20))
-                > ((10 - _center_ratio) * _screen_height_pixels / 10))
+    (((unsigned)(new_center_devx - (_view_width_pixels * _center_ratio / 20))
+                > ((10 - _center_ratio) * _view_width_pixels / 10))
+ || ((unsigned)(new_center_devy - (_view_height_pixels * _center_ratio / 20))
+                > ((10 - _center_ratio) * _view_height_pixels / 10))
             || (_center_rotate &&
               abs(_next_map_rotate_angle - _gps.heading)
                   > (4*(10-_rotate_sens))))))
@@ -1522,15 +1523,25 @@ map_replace_pixbuf_idle(MapRenderTask *mrt)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(!_mouse_is_down
-            && mrt->screen_width_pixels == _screen_width_pixels
-            && mrt->screen_height_pixels == _screen_height_pixels)
+            && mrt->screen_width_pixels == _view_width_pixels
+            && mrt->screen_height_pixels == _view_height_pixels)
     {
         g_object_unref(_map_pixbuf);
         _map_pixbuf = mrt->pixbuf;
+
+        if(_center.unitx != mrt->new_center.unitx
+                || _center.unity != mrt->new_center.unity
+                || _zoom != mrt->zoom
+                || _map_rotate_angle != mrt->rotate_angle)
+        {
+            dbus_ifc_fire_view_position_changed(
+                    mrt->new_center, mrt->zoom, mrt->rotate_angle);
+        }
+
         _center = mrt->new_center;
         _zoom = mrt->zoom;
-
         _map_rotate_angle = mrt->rotate_angle;
+
         gdk_pixbuf_rotate_matrix_fill_for_rotation(
                 _map_rotate_matrix,
                 deg2rad(ROTATE_DIR_ENUM_DEGREES[_rotate_dir]
@@ -1541,6 +1552,7 @@ map_replace_pixbuf_idle(MapRenderTask *mrt)
                     - ROTATE_DIR_ENUM_DEGREES[_rotate_dir]));
 
         g_slice_free(MapRenderTask, mrt);
+
         --_redraw_count;
 
         _map_offset_devx = 0;
@@ -1548,6 +1560,7 @@ map_replace_pixbuf_idle(MapRenderTask *mrt)
 
         map_set_mark();
         map_force_redraw();
+
     }
     else
     {
@@ -1664,14 +1677,14 @@ thread_render_map(MapRenderTask *mrt)
 
             /* Skip this tile under the following conditions:
              * devx < -tile_rothalf_pixels
-             * devx > _screen_width_pixels + tile_rothalf_pixels
+             * devx > _view_width_pixels + tile_rothalf_pixels
              * devy < -tile_rothalf_pixels
-             * devy > _screen_height_pixels + tile_rothalf_pixels
+             * devy > _view_height_pixels + tile_rothalf_pixels
              */
             if(((unsigned)(devx + tile_rothalf_pixels))
-                    < (_screen_width_pixels + (2 * tile_rothalf_pixels))
+                    < (_view_width_pixels + (2 * tile_rothalf_pixels))
                 && ((unsigned)(devy + tile_rothalf_pixels))
-                    < (_screen_height_pixels + (2 * tile_rothalf_pixels)))
+                    < (_view_height_pixels + (2 * tile_rothalf_pixels)))
             {
                 tile_dev[2 * (y * num_tilex + x)] = devx;
                 tile_dev[2 * (y * num_tilex + x) + 1] = devy;
@@ -1843,7 +1856,7 @@ thread_render_map(MapRenderTask *mrt)
 gboolean
 map_cb_configure(GtkWidget *widget, GdkEventConfigure *event)
 {
-    gint old_screen_width_pixels, old_screen_height_pixels;
+    gint old_view_width_pixels, old_view_height_pixels;
     GdkPixbuf *old_map_pixbuf;
     printf("%s(%d, %d)\n", __PRETTY_FUNCTION__,
             _map_widget->allocation.width, _map_widget->allocation.height);
@@ -1853,32 +1866,32 @@ map_cb_configure(GtkWidget *widget, GdkEventConfigure *event)
         /* Special case - first allocation - not persistent. */
         return TRUE;
 
-    old_screen_width_pixels = _screen_width_pixels;
-    old_screen_height_pixels = _screen_height_pixels;
-    _screen_width_pixels = _map_widget->allocation.width;
-    _screen_height_pixels = _map_widget->allocation.height;
-    _screen_halfwidth_pixels = _screen_width_pixels / 2;
-    _screen_halfheight_pixels = _screen_height_pixels / 2;
+    old_view_width_pixels = _view_width_pixels;
+    old_view_height_pixels = _view_height_pixels;
+    _view_width_pixels = _map_widget->allocation.width;
+    _view_height_pixels = _map_widget->allocation.height;
+    _view_halfwidth_pixels = _view_width_pixels / 2;
+    _view_halfheight_pixels = _view_height_pixels / 2;
 
     g_object_unref(_map_pixmap);
     _map_pixmap = gdk_pixmap_new(
                 _map_widget->window,
-                _screen_width_pixels, _screen_height_pixels,
+                _view_width_pixels, _view_height_pixels,
                 -1); /* -1: use bit depth of widget->window. */
 
     old_map_pixbuf = _map_pixbuf;
     _map_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-            _screen_width_pixels, _screen_height_pixels);
+            _view_width_pixels, _view_height_pixels);
 
     {
-        gint oldnew_diffx = (gint)(_screen_width_pixels
-                - old_screen_width_pixels) / 2;
-        gint oldnew_diffy = (gint)(_screen_height_pixels
-                - old_screen_height_pixels) / 2;
+        gint oldnew_diffx = (gint)(_view_width_pixels
+                - old_view_width_pixels) / 2;
+        gint oldnew_diffy = (gint)(_view_height_pixels
+                - old_view_height_pixels) / 2;
         gdk_pixbuf_copy_area(old_map_pixbuf,
                 MAX(0, -oldnew_diffx), MAX(0, -oldnew_diffy),
-                MIN(_screen_width_pixels, old_screen_width_pixels),
-                MIN(_screen_height_pixels, old_screen_height_pixels),
+                MIN(_view_width_pixels, old_view_width_pixels),
+                MIN(_view_height_pixels, old_view_height_pixels),
                 _map_pixbuf,
                 MAX(0, oldnew_diffx), MAX(0, oldnew_diffy));
     }
@@ -1886,11 +1899,11 @@ map_cb_configure(GtkWidget *widget, GdkEventConfigure *event)
     g_object_unref(old_map_pixbuf);
 
     /* Set _scale_rect. */
-    _scale_rect.x = (_screen_width_pixels - SCALE_WIDTH) / 2;
+    _scale_rect.x = (_view_width_pixels - SCALE_WIDTH) / 2;
     _scale_rect.width = SCALE_WIDTH;
     pango_layout_set_text(_scale_layout, "0", -1);
     pango_layout_get_pixel_size(_scale_layout, NULL, &_scale_rect.height);
-    _scale_rect.y = _screen_height_pixels - _scale_rect.height - 1;
+    _scale_rect.y = _view_height_pixels - _scale_rect.height - 1;
 
     /* Set _zoom rect. */
     pango_layout_set_text(_zoom_layout, "00", -1);
@@ -1900,14 +1913,18 @@ map_cb_configure(GtkWidget *widget, GdkEventConfigure *event)
     pango_layout_set_width(_zoom_layout, _zoom_rect.width);
     pango_layout_context_changed(_zoom_layout);
     _zoom_rect.x = _scale_rect.x - _zoom_rect.width;
-    _zoom_rect.y = _screen_height_pixels - _zoom_rect.height - 1;
+    _zoom_rect.y = _view_height_pixels - _zoom_rect.height - 1;
 
     /* Set _comprose_rect. */
-    _comprose_rect.x = _screen_width_pixels - 25 - _comprose_rect.width;
-    _comprose_rect.y = _screen_height_pixels - 25 - _comprose_rect.height;
+    _comprose_rect.x = _view_width_pixels - 25 - _comprose_rect.width;
+    _comprose_rect.y = _view_height_pixels - 25 - _comprose_rect.height;
 
     map_set_mark();
     map_force_redraw();
+
+    /* Fire the screen_dimensions_changed DBUS signal. */
+    dbus_ifc_fire_view_dimensions_changed(
+            _view_width_pixels, _view_height_pixels);
 
     /* If Auto-Center is set to Lead, then recalc center. */
     if(_center_mode == CENTER_LEAD)
@@ -2115,13 +2132,13 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
 
     /* Draw the mark. */
     if((((unsigned)(_mark_bufx1 + _draw_width)
-                <= _screen_width_pixels+2*_draw_width)
+                <= _view_width_pixels+2*_draw_width)
              &&((unsigned)(_mark_bufy1 + _draw_width)
-                 <= _screen_height_pixels+2*_draw_width))
+                 <= _view_height_pixels+2*_draw_width))
         || (((unsigned)(_mark_bufx2 + _draw_width)
-                 <= _screen_width_pixels+2*_draw_width)
+                 <= _view_width_pixels+2*_draw_width)
              &&((unsigned)(_mark_bufy2 + _draw_width)
-                 <= _screen_height_pixels+2*_draw_width)))
+                 <= _view_height_pixels+2*_draw_width)))
     {
         gdk_draw_arc(
                 _map_widget->window,

@@ -752,8 +752,8 @@ track_add(time_t time, gboolean newly_fixed)
 
         announce_thres_unsquared = (20+_gps.speed) * _announce_notice_ratio*32;
 
-        if(!_track.tail->unity || (_pos.unitx - _track.tail->unitx)
-                || (_pos.unity - _track.tail->unity))
+        if(!_track.tail->unity || (_pos.unitx != _track.tail->unitx)
+                || (_pos.unity != _track.tail->unity))
         {
             ret = TRUE;
             /* Update the nearest-waypoint data. */
@@ -1013,7 +1013,7 @@ track_insert_break(gboolean temporary)
         /** Instead of calling map_render_paths(), we'll just add the waypoint
          * ourselves. */
         /* Make sure this circle will be visible. */
-        if((x1 < _screen_width_pixels) && (y1 < _screen_height_pixels))
+        if((x1 < _view_width_pixels) && (y1 < _view_height_pixels))
             gdk_draw_arc(_map_pixmap, _gc[COLORABLE_TRACK_BREAK],
                     FALSE, /* FALSE: not filled. */
                     x1 - _draw_width,

@@ -893,8 +893,14 @@ static gboolean
 mapdb_initiate_update_banner_idle()
 {
     if(!_download_banner && _num_downloads != _curr_download)
+    {
         _download_banner = hildon_banner_show_progress(
                 _window, NULL, _("Processing Maps"));
+        /* If we're not connected, then hide the banner immediately.  It will
+         * be unhidden if/when we're connected. */
+        if(!_conic_is_connected)
+            gtk_widget_hide(_download_banner);
+    }
     return FALSE;
 }
 
@@ -2449,10 +2455,10 @@ mapman_dialog()
 
     /* Initialize to the bounds of the screen. */
     unit2latlon(
-            _center.unitx - pixel2unit(MAX(_screen_width_pixels,
-                    _screen_height_pixels) / 2),
-            _center.unity - pixel2unit(MAX(_screen_width_pixels,
-                    _screen_height_pixels) / 2), lat, lon);
+            _center.unitx - pixel2unit(MAX(_view_width_pixels,
+                    _view_height_pixels) / 2),
+            _center.unity - pixel2unit(MAX(_view_width_pixels,
+                    _view_height_pixels) / 2), lat, lon);
     BOUND(lat, -90.f, 90.f);
     BOUND(lon, -180.f, 180.f);
     lat_format(lat, buffer);
@@ -2461,10 +2467,10 @@ mapman_dialog()
     gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_topleft_lon), buffer);
 
     unit2latlon(
-            _center.unitx + pixel2unit(MAX(_screen_width_pixels,
-                    _screen_height_pixels) / 2),
-            _center.unity + pixel2unit(MAX(_screen_width_pixels,
-                    _screen_height_pixels) / 2), lat, lon);
+            _center.unitx + pixel2unit(MAX(_view_width_pixels,
+                    _view_height_pixels) / 2),
+            _center.unity + pixel2unit(MAX(_view_width_pixels,
+                    _view_height_pixels) / 2), lat, lon);
     BOUND(lat, -90.f, 90.f);
     BOUND(lon, -180.f, 180.f);
     lat_format(lat, buffer);

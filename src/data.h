@@ -100,10 +100,10 @@ extern GdkRectangle _redraw_wait_bounds;
 
 
 /** CACHED SCREEN INFORMATION THAT IS DEPENDENT ON THE CURRENT VIEW. */
-extern gint _screen_width_pixels;
-extern gint _screen_height_pixels;
-extern gint _screen_halfwidth_pixels;
-extern gint _screen_halfheight_pixels;
+extern gint _view_width_pixels;
+extern gint _view_height_pixels;
+extern gint _view_halfwidth_pixels;
+extern gint _view_halfheight_pixels;
 
 
 /** The current track and route. */
@@ -122,6 +122,7 @@ extern GtkWidget *_waypoint_banner;
 extern GtkWidget *_download_banner;
 
 /** DOWNLOAD PROGRESS. */
+extern gboolean _conic_is_connected;
 extern GMutex *_mapdb_mutex;
 extern GMutex *_mouse_mutex;
 extern volatile gint _num_downloads;
