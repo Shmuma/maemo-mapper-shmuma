@@ -19,7 +19,7 @@ else
 fi
 
 # Test if this is the armel build (as opposed to the x86 build)
-GCC_HOST_IS_ARMEL=`gcc --version | head -n 1 | grep armel`
+GCC_HOST_IS_ARMEL=`gcc --version | head -n 1 | grep arm`
 if [ "x$GCC_HOST_IS_ARMEL" != "x" ]; then
     DBP_EXTRA=-B
 fi
