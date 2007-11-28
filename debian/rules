@@ -30,12 +30,20 @@ else
 	CFLAGS += -DNDEBUG
 endif
 
+# Check maemo version we are building for
+MAEMO_VERSION=$(shell pkg-config libosso --modversion | cut -d . -f 1)
+ifeq ($(MAEMO_VERSION), 1)
+	BUILD_LEGACY = yes
+else
+	BUILD_LEGACY = no
+endif
+
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
 	./autogen.sh
 	# Add here commands to configure the package.
-	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr --disable-static
+	CFLAGS="$(CFLAGS)" ./configure --prefix=/usr --disable-static --enable-legacy=$(BUILD_LEGACY)
 	touch configure-stamp
 
 

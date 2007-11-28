@@ -18,7 +18,7 @@
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 2.1.1)
+AM_INIT_AUTOMAKE(maemo-mapper, 2.2)
 
 AC_PROG_CPP
 AC_CONFIG_HEADERS(src/config.h)
@@ -28,14 +28,6 @@ AC_PROG_LIBTOOL
 PKG_CHECK_MODULES(GTK, gtk+-2.0)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTK_CFLAGS)
-
-PKG_CHECK_MODULES(OSSO, libosso >= 1 libossohelp)
-AC_SUBST(OSSO_LIBS)
-AC_SUBST(OSSO_CFLAGS)
-
-PKG_CHECK_MODULES(HILDON, hildon-libs >= 0.9.50 hildon-fm)
-AC_SUBST(HILDON_LIBS)
-AC_SUBST(HILDON_CFLAGS)
 
 PKG_CHECK_MODULES(GNOME_VFS, gnome-vfs-2.0 >= 2.8.4.11 gnome-vfs-module-2.0 >= 2.8.4.11)
 AC_SUBST(GNOME_VFS_LIBS)
@@ -57,11 +49,41 @@ PKG_CHECK_MODULES(CONIC, conic)
 AC_SUBST(CONIC_LIBS)
 AC_SUBST(CONIC_CFLAGS)
 
-AC_CHECK_HEADER(gpsmgr.h, , AC_MSG_ERROR(gpsmgr.h not found. Please install libgpsmgr-dev.))
-AC_CHECK_LIB(gpsmgr, gpsmgr_start, LIBS="$LIBS -lgpsmgr", AC_MSG_ERROR(libgpsmgr.so not found. Please install libgpsmgr.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
-
 AC_CHECK_HEADER(gdbm.h, , AC_MSG_ERROR(gdbm.h not found. Please install libgdbm-dev.))
-AC_CHECK_LIB(gdbm, gdbm_open, , AC_MSG_ERROR(libgdbm.so not found. Please install libgdbm.))
+AC_CHECK_LIB(gdbm, gdbm_open, , AC_MSG_ERROR(libgdbm.so not found. Please install libgdbm.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
+
+AC_CHECK_HEADER(gpsmgr.h, , AC_MSG_ERROR(gpsmgr.h not found. Please install libgpsmgr-dev.))
+AC_CHECK_LIB(gpsmgr, gpsmgr_start, , AC_MSG_ERROR(libgpsmgr.so not found. Please install libgpsmgr.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
+
+AC_ARG_ENABLE(legacy, 
+        AS_HELP_STRING([--enable-legacy],[Enable building for Chinook]),
+        [case "${enableval}" in
+                yes) HAVE_LEGACY=yes ;;
+                no)  HAVE_LEGACY=no ;;
+                *) AC_MSG_ERROR(bad value ${enableval} for --enable-legacy) ;;
+        esac],
+        [HAVE_LEGACY=no])
+
+AS_IF([test "x$HAVE_LEGACY" = xyes], 
+        [
+                PKG_CHECK_MODULES(OSSO, libosso >= 1 libossohelp)
+                PKG_CHECK_MODULES(HILDON, hildon-libs >= 0.9.50 hildon-fm)
+                AC_DEFINE(LEGACY, 1, Build for OS2006/OS2007)
+        ],
+        [
+                PKG_CHECK_MODULES(OSSO, libosso >= 1 hildon-help)
+                PKG_CHECK_MODULES(HILDON, hildon-1 hildon-fm-2)
+                AC_CHECK_HEADER(gps.h, , AC_MSG_ERROR(gps.h not found. Please install libgps-dev.))
+                AC_CHECK_LIB(gps, gps_open, , AC_MSG_ERROR(libgps.so not found. Please install libgps.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
+                AC_CHECK_HEADER(gpsbt.h, , AC_MSG_ERROR(gpsbt.h not found. Please install libgpsbt-dev.))
+                AC_CHECK_LIB(gpsbt, gpsbt_start, , AC_MSG_ERROR(libgpsbt.so not found. Please install libgpsbt.), -lgps -lgpsmgr -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
+        ])
+
+AC_SUBST(OSSO_LIBS)
+AC_SUBST(OSSO_CFLAGS)
+
+AC_SUBST(HILDON_LIBS)
+AC_SUBST(HILDON_CFLAGS)
 
 
 # Localisation
