@@ -21,19 +21,30 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
 
 #define _GNU_SOURCE
 
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <osso-helplib.h>
 #include <bt-dbus.h>
-#include <hildon-widgets/hildon-note.h>
-#include <hildon-widgets/hildon-banner.h>
-#include <hildon-widgets/hildon-system-sound.h>
-#include <hildon-widgets/hildon-input-mode-hint.h>
 #include <sqlite3.h>
+
+#ifndef LEGACY
+#    include <hildon/hildon-help.h>
+#    include <hildon/hildon-note.h>
+#    include <hildon/hildon-banner.h>
+#    include <hildon/hildon-sound.h>
+#else
+#    include <osso-helplib.h>
+#    include <hildon-widgets/hildon-note.h>
+#    include <hildon-widgets/hildon-banner.h>
+#    include <hildon-widgets/hildon-system-sound.h>
+#    include <hildon-widgets/hildon-input-mode-hint.h>
+#endif
 
 #include "types.h"
 #include "data.h"
@@ -749,13 +760,30 @@ track_add(time_t time, gboolean newly_fixed)
     {
         gboolean moving = FALSE;
         gboolean approaching_waypoint = FALSE;
+        gint xdiff, ydiff, dopcand;
 
         announce_thres_unsquared = (20+_gps.speed) * _announce_notice_ratio*32;
 
-        if(!_track.tail->unity || (_pos.unitx != _track.tail->unitx)
-                || (_pos.unity != _track.tail->unity))
+        if(!_track.tail->unity
+                || ((xdiff = _pos.unitx - _track.tail->unitx), /* comma op */
+                    (ydiff = _pos.unity - _track.tail->unity), /* comma op */
+                    /* Check if xdiff or ydiff are huge. */
+                    ((abs(xdiff) >> 12) || (abs(ydiff) >> 12)
+                    /* Okay, let's see if we've moved enough to justify adding
+                     * to the track.  It depends on our error.  I'd like to
+                     * make the threshold roughly linear with respect to the
+                     * P/HDOP (completely arbitrary, I know), but I also
+                     * want to keep the threshold at a minimum of 2
+                     * zoom-level-4 pixel, and I want dop's of less than 2 to
+                     * also have a 1-pixel threshold.  I also throw in some
+                     * PDOP into the mix, just for fun. */
+                    || ((dopcand = 8 * (_gps.pdop - 6 +(_gps.hdop*_gps.hdop))),
+                        ((xdiff * xdiff) + (ydiff * ydiff)
+                             >= (MAX(2, dopcand) << 8))))))
         {
+            /* We moved enough to actually register a move. */
             ret = TRUE;
+
             /* Update the nearest-waypoint data. */
             if(_route.head != _route.tail
                     && (newly_fixed ? (route_find_nearest_point(), TRUE)
@@ -817,7 +845,7 @@ track_add(time_t time, gboolean newly_fixed)
                     }
                     else
                     {
-                        route_dist_squared_1 = fabsf((slope * _pos.unitx)
+                        route_dist_squared_1 = abs((slope * _pos.unitx)
                             - _pos.unity + (route_y1 - (slope * route_x1)));
                         route_dist_squared_1 =
                             route_dist_squared_1 * route_dist_squared_1
@@ -839,7 +867,7 @@ track_add(time_t time, gboolean newly_fixed)
                     }
                     else
                     {
-                        route_dist_squared_2 = fabsf((slope * _pos.unitx)
+                        route_dist_squared_2 = abs((slope * _pos.unitx)
                             - _pos.unity + (route_y1 - (slope * route_x1)));
                         route_dist_squared_2 =
                             route_dist_squared_2 * route_dist_squared_2
@@ -1136,7 +1164,11 @@ route_download(gchar *to)
                 NULL);
 
         /* Enable the help button. */
+#ifndef LEGACY
+        hildon_help_dialog_help_enable(
+#else
         ossohelp_dialog_help_enable(
+#endif
                 GTK_DIALOG(dialog), HELP_ID_DOWNROUTE, _osso);
 
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
@@ -1190,7 +1222,12 @@ route_download(gchar *to)
                 oti.txt_from = gtk_entry_new(),
                 1, 4, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_from), 25);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(oti.txt_from), "hildon-input-mode",
+                                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(oti.txt_from), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 
         /* Destination. */
         gtk_table_attach(GTK_TABLE(table),
@@ -1201,7 +1238,12 @@ route_download(gchar *to)
                 oti.txt_to = gtk_entry_new(),
                 1, 4, 4, 5, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_to), 25);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(oti.txt_to), "hildon-input-mode",
+                                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(oti.txt_to), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 
 
         /* Set up auto-completion. */
@@ -1223,7 +1265,7 @@ route_download(gchar *to)
         g_signal_connect(G_OBJECT(oti.rad_use_text), "toggled",
                           G_CALLBACK(origin_type_selected), &oti);
 
-        //gtk_widget_set_sensitive(oti.chk_auto, FALSE);
+        gtk_widget_set_sensitive(oti.chk_auto, FALSE);
     }
 
     /* Initialize fields. */
@@ -1581,7 +1623,8 @@ path_init()
                     "delete from route_way",
                     -1, &_route_stmt_delete_way, NULL)
             || SQLITE_OK != sqlite3_prepare(_path_db,
-                    "insert into route_path (num, unitx, unity, time, altitude) "
+                    "insert into route_path "
+                    "(num, unitx, unity, time, altitude) "
                     "values (NULL, ?, ?, ?, ?)",
                     -1, &_route_stmt_insert_path, NULL)
             || SQLITE_OK != sqlite3_prepare(_path_db,
@@ -1595,7 +1638,8 @@ path_init()
                     "delete from track_way",
                     -1, &_track_stmt_delete_way, NULL)
             || SQLITE_OK != sqlite3_prepare(_path_db,
-                    "insert into track_path (num, unitx, unity, time, altitude) "
+                    "insert into track_path "
+                    "(num, unitx, unity, time, altitude) "
                     "values (NULL, ?, ?, ?, ?)",
                     -1, &_track_stmt_insert_path, NULL)
             || SQLITE_OK != sqlite3_prepare(_path_db,

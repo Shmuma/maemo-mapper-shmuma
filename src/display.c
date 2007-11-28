@@ -21,17 +21,29 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
 
 #define _GNU_SOURCE
 
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <osso-helplib.h>
-#include <hildon-widgets/hildon-note.h>
-#include <hildon-widgets/hildon-file-chooser-dialog.h>
-#include <hildon-widgets/hildon-banner.h>
-#include <hildon-widgets/hildon-system-sound.h>
+
+#ifndef LEGACY
+#    include <hildon/hildon-help.h>
+#    include <hildon/hildon-note.h>
+#    include <hildon/hildon-file-chooser-dialog.h>
+#    include <hildon/hildon-banner.h>
+#    include <hildon/hildon-sound.h>
+#else
+#    include <osso-helplib.h>
+#    include <hildon-widgets/hildon-note.h>
+#    include <hildon-widgets/hildon-file-chooser-dialog.h>
+#    include <hildon-widgets/hildon-banner.h>
+#    include <hildon-widgets/hildon-system-sound.h>
+#endif
 
 #include "types.h"
 #include "data.h"
@@ -61,7 +73,7 @@ static GtkWidget *_sdi_use = NULL;
 static GtkWidget *_sdi_fix = NULL;
 static GtkWidget *_sdi_fqu = NULL;
 static GtkWidget *_sdi_msp = NULL;
-static gboolean _redraw_count = 0;
+static gint _redraw_count = 0;
 
 static gint _mark_bufx1 = -1;
 static gint _mark_bufx2 = -1;
@@ -75,6 +87,7 @@ static GdkRectangle _scale_rect = { 0, 0, 0, 0};
 static GdkRectangle _zoom_rect = { 0, 0, 0, 0};
 static gint _dl_errors = 0;
 
+static volatile gint _pending_replaces = 0;
 
 /** Pango stuff. */
 GdkRectangle _comprose_rect = { 0, 0, 0, 0};
@@ -126,7 +139,8 @@ speed_limit(void)
         if(!_speed_excess)
         {
             _speed_excess = TRUE;
-            g_timeout_add(5000, (GSourceFunc)speed_excess, NULL);
+            g_timeout_add_full(G_PRIORITY_HIGH_IDLE,
+                    5000, (GSourceFunc)speed_excess, NULL, NULL);
         }
     }
     else
@@ -1093,7 +1107,13 @@ window_present()
                         " Otherwise, press Cancel to continue."));
 
             if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
+            {
+#ifndef LEGACY
+                hildon_help_show(_osso, HELP_ID_INTRO, 0);
+#else
                 ossohelp_show(_osso, HELP_ID_INTRO, 0);
+#endif
+            }
             gtk_widget_destroy(confirm);
 
             /* Present the settings dialog. */
@@ -1127,7 +1147,8 @@ window_present()
     if(done_here)
     {
         gtk_window_present(GTK_WINDOW(_window));
-        g_timeout_add(250, (GSourceFunc)banner_reset, NULL);
+        g_timeout_add_full(G_PRIORITY_HIGH_IDLE,
+                250, (GSourceFunc)banner_reset, NULL, NULL);
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -1249,7 +1270,6 @@ map_center_unit_full(Point new_center,
         BOUND(new_center.unity, 0, WORLD_SIZE_UNITS);
 
         mrt = g_slice_new(MapRenderTask);
-        ++_redraw_count;
         mrt->repo = _curr_repo;
         mrt->old_offsetx = _map_offset_devx;
         mrt->old_offsety = _map_offset_devy;
@@ -1259,13 +1279,16 @@ map_center_unit_full(Point new_center,
         mrt->zoom = _next_zoom = zoom;
         mrt->rotate_angle = _next_map_rotate_angle = rotate_angle;
 
+
         gtk_widget_queue_draw_area(
                 _map_widget,
                 _redraw_wait_bounds.x,
                 _redraw_wait_bounds.y,
-                _redraw_wait_bounds.width + (_redraw_count - 1)
-                        * HOURGLASS_SEPARATION,
+                _redraw_wait_bounds.width
+                    + (_redraw_count * HOURGLASS_SEPARATION),
                 _redraw_wait_bounds.height);
+
+        ++_redraw_count;
 
         g_thread_pool_push(_mrt_thread_pool, mrt, NULL);
     }
@@ -1427,7 +1450,9 @@ map_download_refresh_idle(MapUpdateTask *mut)
                         TILE_SIZE_PIXELS,
                         TILE_SIZE_PIXELS,
                         &boundx, &boundy, &width, &height);
-            /* Un-multiply the matrix that we used for blitting. */
+            /* Un-multiply the matrix that we used for blitting.  Good thing
+             * we're multiplying by powers of two, or this wouldn't work
+             * consistently... */
             if(zoff)
                 gdk_pixbuf_rotate_matrix_mult_number(
                         _map_rotate_matrix, 1.f / (1 << zoff));
@@ -1522,7 +1547,7 @@ map_replace_pixbuf_idle(MapRenderTask *mrt)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(!_mouse_is_down
+    if(!--_pending_replaces && !_mouse_is_down
             && mrt->screen_width_pixels == _view_width_pixels
             && mrt->screen_height_pixels == _view_height_pixels)
     {
@@ -1551,8 +1576,6 @@ map_replace_pixbuf_idle(MapRenderTask *mrt)
                 deg2rad(_map_rotate_angle
                     - ROTATE_DIR_ENUM_DEGREES[_rotate_dir]));
 
-        g_slice_free(MapRenderTask, mrt);
-
         --_redraw_count;
 
         _map_offset_devx = 0;
@@ -1560,22 +1583,15 @@ map_replace_pixbuf_idle(MapRenderTask *mrt)
 
         map_set_mark();
         map_force_redraw();
-
     }
     else
     {
         /* Ignore this new pixbuf. We have newer ones coming. */
         g_object_unref(mrt->pixbuf);
-        g_slice_free(MapRenderTask, mrt);
-        gtk_widget_queue_draw_area(
-                _map_widget,
-                _redraw_wait_bounds.x,
-                _redraw_wait_bounds.y,
-                _redraw_wait_bounds.width + (_redraw_count - 1)
-                        * HOURGLASS_SEPARATION,
-                _redraw_wait_bounds.height * _redraw_count);
         --_redraw_count;
     }
+
+    g_slice_free(MapRenderTask, mrt);
 
     vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
     return FALSE;
@@ -1594,7 +1610,7 @@ thread_render_map(MapRenderTask *mrt)
     gfloat *tile_dev;
     ThreadLatch *refresh_latch = NULL;
     gint cache_amount;
-    static gint8 auto_download_batch_id = CHAR_MIN;
+    static gint8 auto_download_batch_id = INT8_MIN;
     printf("%s(%d, %d, %d, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             mrt->screen_width_pixels, mrt->screen_height_pixels,
             mrt->new_center.unitx, mrt->new_center.unity, mrt->zoom,
@@ -1604,13 +1620,6 @@ thread_render_map(MapRenderTask *mrt)
     if(g_thread_pool_unprocessed(_mrt_thread_pool))
     {
         g_slice_free(MapRenderTask, mrt);
-        gtk_widget_queue_draw_area(
-                _map_widget,
-                _redraw_wait_bounds.x,
-                _redraw_wait_bounds.y,
-                _redraw_wait_bounds.width + (_redraw_count - 1)
-                        * HOURGLASS_SEPARATION,
-                _redraw_wait_bounds.height * _redraw_count);
         --_redraw_count;
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
@@ -1811,7 +1820,9 @@ thread_render_map(MapRenderTask *mrt)
                         TILE_SIZE_PIXELS >> zoff,
                         &boundx, &boundy, &width, &height);
                 g_object_unref(tile_pixbuf);
-                /* Un-multiply the matrix that we used for blitting. */
+                /* Un-multiply the matrix that we used for blitting.  Good
+                 * thing we're multiplying by powers of two, or this wouldn't
+                 * work consistently... */
                 if(zoff)
                     gdk_pixbuf_rotate_matrix_mult_number(
                             matrix, 1.f / (1 << zoff));
@@ -1822,7 +1833,8 @@ thread_render_map(MapRenderTask *mrt)
 
     /* Don't replace the pixbuf unless/until the mouse is released. */
     g_mutex_lock(_mouse_mutex);
-    g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+    ++_pending_replaces;
+    g_idle_add_full(G_PRIORITY_HIGH_IDLE + 20,
             (GSourceFunc)map_replace_pixbuf_idle, mrt, NULL);
     g_mutex_unlock(_mouse_mutex);
 
@@ -2626,8 +2638,8 @@ display_init()
     /* heading_panel_expose() */
     pango_context = gtk_widget_get_pango_context(_map_widget);
     _heading_panel_layout = pango_layout_new(pango_context);
-    pango_font = pango_font_description_new();
-    pango_font_description_set_family(pango_font,"Sans Serif");
+    _heading_panel_fontdesc =  pango_font_description_new();
+    pango_font_description_set_family(_heading_panel_fontdesc, "Sans Serif");
 
     /* draw_sat_details() */
     pango_context = gtk_widget_get_pango_context(_map_widget);
@@ -2656,13 +2668,13 @@ display_init()
     {
         GError *error = NULL;
         gchar *icon_path = "/usr/share/icons/hicolor/scalable/hildon"
-                           "/qgn_list_gene_image_file_wait.png";
+                           "/maemo-mapper-wait.png";
         _redraw_wait_bounds.x = 0;
         _redraw_wait_bounds.y = 0;
         _redraw_wait_icon = gdk_pixbuf_new_from_file(icon_path, &error);
         if(!_redraw_wait_icon || error)
         {
-            printf("Error parsing pixbuf: %s\n",
+            g_printerr("Error parsing pixbuf: %s\n",
                     error ? error->message : icon_path);
             _redraw_wait_bounds.width = 0;
             _redraw_wait_bounds.height = 0;

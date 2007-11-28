@@ -21,16 +21,27 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
+
 #define _GNU_SOURCE
 
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <hildon-widgets/hildon-note.h>
-#include <hildon-widgets/hildon-banner.h>
+
 #include <libgnomevfs/gnome-vfs.h>
 #include <libgnomevfs/gnome-vfs-inet-connection.h>
 #include <errno.h>
+
+#ifndef LEGACY
+#    include <hildon/hildon-note.h>
+#    include <hildon/hildon-banner.h>
+#else
+#    include <hildon-widgets/hildon-note.h>
+#    include <hildon-widgets/hildon-banner.h>
+#endif
 
 #include "types.h"
 #include "data.h"
@@ -44,7 +55,7 @@
 
 static volatile GThread *_gps_thread = NULL;
 static GMutex *_gps_init_mutex = NULL;
-static volatile gint _gps_rcvr_retry_count = 0;
+static gint _gps_rcvr_retry_count = 0;
 
 static gint _gmtoffset = 0;
 
@@ -195,7 +206,7 @@ gps_parse_rmc(gchar *sentence)
     /* Add new data to track. */
     if(_gps_state == RCVR_FIXED)
     {
-        if(track_add(_pos.time, newly_fixed))
+        if(track_add(_pos.time, newly_fixed) || newly_fixed)
         {
             /* Move mark to new location. */
             map_refresh_mark(FALSE);
@@ -229,7 +240,7 @@ gps_parse_gga(gchar *sentence)
                    7 = Manual input mode
                    8 = Simulation mode
      7. Number of satellites being tracked
-     8. Horizontal dilution of position
+     8. Horizontal dilution of precision
      9. Altitude, Meters, above mean sea level
      10. Alt unit (meters)
      11. Height of geoid (mean sea level) above WGS84 ellipsoid
@@ -262,7 +273,7 @@ gps_parse_gga(gchar *sentence)
     /* Skip number of satellites */
     token = strsep(&sentence, DELIM);
 
-    /* Parse Horizontal dilution of position */
+    /* Parse Horizontal dilution of precision */
     token = strsep(&sentence, DELIM);
     if(token && *token)
         MACRO_PARSE_INT(_gps.hdop, token);
@@ -409,7 +420,7 @@ gps_parse_gsv(gchar *sentence)
             if(_gps_state == RCVR_UP)
             {
                 gdouble fraction = running_total * sqrtf(num_sats_used)
-                    / num_sats_used / 100.0;
+                    / num_sats_used / 150.0;
                 BOUND(fraction, 0.0, 1.0);
                 hildon_banner_set_fraction(
                         HILDON_BANNER(_fix_banner), fraction);
@@ -476,6 +487,9 @@ gps_parse_nmea_idle(gchar *nmea)
 
     if(_enable_gps && _gps_state >= RCVR_DOWN)
     {
+        if(_gps_state < RCVR_UP)
+            set_conn_state(RCVR_UP);
+
         if(!strncmp(nmea + 3, "GSV", 3))
         {
             if(_gps_state == RCVR_UP || _gps_info || _satdetails_on)
@@ -735,6 +749,7 @@ thread_read_nmea(GpsRcvrInfo *gri)
                     buf_curr -= (eol - buf + 1);
                 }
             }
+            _gps_rcvr_retry_count = 0;
         }
     }
 

@@ -21,6 +21,10 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef LEGACY
+#  include "/usr/include/gpsbt.h"
+#else
+
 /*
 GPS BT management API. The API is used by those applications that
 wish to use services provided by gps daemon i.e., they wish to receive
@@ -56,9 +60,9 @@ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WAR
 typedef struct {
   gpsmgr_t mgr;
   char **rfcomms; /* what devices where found (null terminated array),
-		   * not used if compiled with USE_AUTOMATIC_DISCONNECT
-		   * (see gpsbt.c for details)
-		   */
+                   * not used if compiled with USE_AUTOMATIC_DISCONNECT
+                   * (see gpsbt.c for details)
+                   */
   int timeout; /* timeout for dbus messages */
 } gpsbt_t;
 
@@ -117,13 +121,13 @@ typedef struct {
  */
 
 extern int gpsbt_start(char *bda,
-		       int debug_level,
-		       int gpsd_debug_level,
-		       short port,
-		       char *error_buf,
-		       int error_buf_max_len,
-		       int timeout_ms,
-		       gpsbt_t *ctx);
+                       int debug_level,
+                       int gpsd_debug_level,
+                       short port,
+                       char *error_buf,
+                       int error_buf_max_len,
+                       int timeout_ms,
+                       gpsbt_t *ctx);
 
 
 /* Stop function stops the gpsd if it was running and nobody
@@ -141,3 +145,5 @@ extern int gpsbt_start(char *bda,
 extern int gpsbt_stop(gpsbt_t *ctx);
 
 #endif /* gpsbt_included */
+
+#endif

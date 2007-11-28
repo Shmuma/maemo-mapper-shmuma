@@ -21,17 +21,29 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
 
 #define _GNU_SOURCE
 
 #include <string.h>
 #include <math.h>
-#include <osso-helplib.h>
-#include <hildon-widgets/hildon-note.h>
-#include <hildon-widgets/hildon-file-chooser-dialog.h>
-#include <hildon-widgets/hildon-number-editor.h>
-#include <hildon-widgets/hildon-banner.h>
-#include <hildon-widgets/hildon-input-mode-hint.h>
+
+#ifndef LEGACY
+#    include <hildon/hildon-help.h>
+#    include <hildon/hildon-note.h>
+#    include <hildon/hildon-file-chooser-dialog.h>
+#    include <hildon/hildon-number-editor.h>
+#    include <hildon/hildon-banner.h>
+#else
+#    include <osso-helplib.h>
+#    include <hildon-widgets/hildon-note.h>
+#    include <hildon-widgets/hildon-file-chooser-dialog.h>
+#    include <hildon-widgets/hildon-number-editor.h>
+#    include <hildon-widgets/hildon-banner.h>
+#    include <hildon-widgets/hildon-input-mode-hint.h>
+#endif
 
 #include <sqlite3.h>
 
@@ -911,7 +923,11 @@ category_list_dialog(GtkWidget *parent)
                 NULL);
 
         /* Enable the help button. */
+#ifndef LEGACY
+        hildon_help_dialog_help_enable(
+#else
         ossohelp_dialog_help_enable(
+#endif
                 GTK_DIALOG(dialog), HELP_ID_POICAT, _osso);
 
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
@@ -2225,7 +2241,11 @@ poi_list_dialog(GtkWidget *parent, gint unitx, gint unity, GList *poi_list)
         g_object_unref(G_OBJECT(store));
 
         /* Enable the help button. */
+#ifndef LEGACY
+        hildon_help_dialog_help_enable(
+#else
         ossohelp_dialog_help_enable(
+#endif
                 GTK_DIALOG(pli.dialog), HELP_ID_POILIST, _osso);
 
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(pli.dialog)->action_area),
@@ -2503,7 +2523,11 @@ poi_download_dialog(gint unitx, gint unity)
                 NULL);
 
         /* Enable the help button. */
+#ifndef LEGACY
+        hildon_help_dialog_help_enable(
+#else
         ossohelp_dialog_help_enable(
+#endif
                 GTK_DIALOG(dialog), HELP_ID_DOWNPOI, _osso);
 
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
@@ -2568,7 +2592,12 @@ poi_download_dialog(gint unitx, gint unity)
                 oti.txt_origin = gtk_entry_new(),
                 1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_origin), 25);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(oti.txt_origin), "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(oti.txt_origin), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 
         /* Query. */
         gtk_table_attach(GTK_TABLE(table2),
@@ -2579,7 +2608,12 @@ poi_download_dialog(gint unitx, gint unity)
                 oti.txt_query = gtk_entry_new(),
                 1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_query), 25);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(oti.txt_query), "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(oti.txt_query), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 
         /* Set up auto-completion. */
         origin_comp = gtk_entry_completion_new();
@@ -2816,7 +2850,11 @@ poi_browse_dialog(gint unitx, gint unity)
                 NULL);
 
         /* Enable the help button. */
+#ifndef LEGACY
+        hildon_help_dialog_help_enable(
+#else
         ossohelp_dialog_help_enable(
+#endif
                 GTK_DIALOG(dialog), HELP_ID_BROWSEPOI, _osso);
 
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
@@ -2871,7 +2909,12 @@ poi_browse_dialog(gint unitx, gint unity)
                 oti.txt_origin = gtk_entry_new(),
                 1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_origin), 25);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(oti.txt_origin), "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(oti.txt_origin), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 
         /* Destination. */
         gtk_table_attach(GTK_TABLE(table2),
@@ -2882,7 +2925,12 @@ poi_browse_dialog(gint unitx, gint unity)
                 oti.txt_query = gtk_entry_new(),
                 1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_query), 25);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(oti.txt_query), "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(oti.txt_query), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 
         /* Set up auto-completion. */
         origin_comp = gtk_entry_completion_new();

@@ -39,6 +39,8 @@
 #include "display.h"
 #include "dbus-ifc.h"
 
+static DBusConnection *_bus = NULL;
+
 /***********************
  * BELOW: DBUS METHODS *
  ***********************/
@@ -105,7 +107,8 @@ dbus_ifc_handle_set_view_center(GArray *args, osso_rpc_t *retval)
     {
         /* Latitude and/or Longitude are not defined.  Calculate next. */
         Point new_center = map_calc_new_center(svca->new_zoom);
-        unit2latlon(new_center.unitx, new_center.unity, svca->new_lat, svca->new_lon);
+        unit2latlon(new_center.unitx, new_center.unity,
+                svca->new_lat, svca->new_lon);
     }
 
     /* Argument 1: double: latitude. */
@@ -165,112 +168,57 @@ dbus_ifc_controller(const gchar *interface, const gchar *method,
  * BELOW: DBUS SIGNALS *
  ***********************/
 
-static gboolean
-dbus_ifc_view_position_changed_idle(ViewPositionChangedArgs *args)
-{
-    DBusConnection *bus = NULL;
-    DBusError error;
-    DBusMessage *message = NULL;
-    printf("%s(%f, %f, %d, %f)\n", __PRETTY_FUNCTION__, args->new_lat,
-            args->new_lon, args->new_zoom, args->new_viewing_angle);
-
-    dbus_error_init(&error);
-
-    if(NULL == (bus = dbus_bus_get(DBUS_BUS_SESSION, &error))
-            || NULL == (message = dbus_message_new_signal(MM_DBUS_PATH,
-                    MM_DBUS_INTERFACE, MM_DBUS_SIGNAL_VIEW_POSITION_CHANGED))
-            || !dbus_message_append_args(message,
-                DBUS_TYPE_DOUBLE, &args->new_lat,
-                DBUS_TYPE_DOUBLE, &args->new_lon,
-                DBUS_TYPE_INT32, &args->new_zoom,
-                DBUS_TYPE_DOUBLE, &args->new_viewing_angle,
-                DBUS_TYPE_INVALID)
-            || !dbus_connection_send(bus, message, NULL))
-    {
-        g_printerr("Error sending view_position_changed signal: %s: %s\n",
-                (dbus_error_is_set(&error)
-                 ? error.name : "<no error message>"),
-                (dbus_error_is_set(&error)
-                 ? error.message : ""));
-    }
-
-    if(message)
-        dbus_message_unref(message);
-    if(bus)
-        dbus_connection_unref(bus);
-
-    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-    return FALSE;
-}
-
 void
 dbus_ifc_fire_view_position_changed(
         Point new_center, gint new_zoom, gdouble new_viewing_angle)
 {
-    ViewPositionChangedArgs *args;
+    DBusMessage *message = NULL;
+    gdouble new_lat, new_lon;
     printf("%s(%d, %d, %d, %f)\n", __PRETTY_FUNCTION__, new_center.unitx,
             new_center.unity, new_zoom, new_viewing_angle);
 
-    args = g_new(ViewPositionChangedArgs, 1);
-    unit2latlon(new_center.unitx, new_center.unity,
-            args->new_lat, args->new_lon);
-    args->new_zoom = new_zoom;
-    args->new_viewing_angle = new_viewing_angle;
+    unit2latlon(new_center.unitx, new_center.unity, new_lat, new_lon);
 
-    g_idle_add((GSourceFunc)dbus_ifc_view_position_changed_idle, args);
-
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-}
-
-static gboolean
-dbus_ifc_view_dimensions_changed_idle(ViewDimensionsChangedArgs *args)
-{
-    DBusConnection *bus = NULL;
-    DBusError error;
-    DBusMessage *message = NULL;
-    printf("%s(%d, %d)\n", __PRETTY_FUNCTION__,
-            args->new_view_width_pixels, args->new_view_height_pixels);
-
-    dbus_error_init(&error);
-
-    if(NULL == (bus = dbus_bus_get(DBUS_BUS_SESSION, &error))
-            || NULL == (message = dbus_message_new_signal(MM_DBUS_PATH,
-                    MM_DBUS_INTERFACE, MM_DBUS_SIGNAL_VIEW_DIMENSIONS_CHANGED))
+    if(NULL == (message = dbus_message_new_signal(MM_DBUS_PATH,
+                    MM_DBUS_INTERFACE, MM_DBUS_SIGNAL_VIEW_POSITION_CHANGED))
             || !dbus_message_append_args(message,
-                DBUS_TYPE_INT32, &args->new_view_width_pixels,
-                DBUS_TYPE_INT32, &args->new_view_height_pixels,
+                DBUS_TYPE_DOUBLE, &new_lat,
+                DBUS_TYPE_DOUBLE, &new_lon,
+                DBUS_TYPE_INT32, &new_zoom,
+                DBUS_TYPE_DOUBLE, &new_viewing_angle,
                 DBUS_TYPE_INVALID)
-            || !dbus_connection_send(bus, message, NULL))
+            || !dbus_connection_send(_bus, message, NULL))
     {
-        g_printerr("Error sending view_dimensions_changed signal: %s: %s\n",
-                (dbus_error_is_set(&error)
-                 ? error.name : "<no error message>"),
-                (dbus_error_is_set(&error)
-                 ? error.message : ""));
+        g_printerr("Error sending view_position_changed signal.\n");
     }
 
     if(message)
         dbus_message_unref(message);
-    if(bus)
-        dbus_connection_unref(bus);
 
-    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-    return FALSE;
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 void
 dbus_ifc_fire_view_dimensions_changed(
         gint new_view_width_pixels, gint new_view_height_pixels)
 {
-    ViewDimensionsChangedArgs *args;
+    DBusMessage *message = NULL;
     printf("%s(%d, %d)\n", __PRETTY_FUNCTION__,
             new_view_width_pixels, new_view_height_pixels);
 
-    args = g_new(ViewDimensionsChangedArgs, 1);
-    args->new_view_width_pixels = new_view_width_pixels;
-    args->new_view_height_pixels = new_view_height_pixels;
+    if(NULL == (message = dbus_message_new_signal(MM_DBUS_PATH,
+                    MM_DBUS_INTERFACE, MM_DBUS_SIGNAL_VIEW_DIMENSIONS_CHANGED))
+            || !dbus_message_append_args(message,
+                DBUS_TYPE_INT32, &new_view_width_pixels,
+                DBUS_TYPE_INT32, &new_view_height_pixels,
+                DBUS_TYPE_INVALID)
+            || !dbus_connection_send(_bus, message, NULL))
+    {
+        g_printerr("Error sending view_dimensions_changed signal.\n");
+    }
 
-    g_idle_add((GSourceFunc)dbus_ifc_view_dimensions_changed_idle, args);
+    if(message)
+        dbus_message_unref(message);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -282,6 +230,7 @@ dbus_ifc_fire_view_dimensions_changed(
 void
 dbus_ifc_init()
 {
+    DBusError error;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(OSSO_OK != osso_rpc_set_default_cb_f(_osso, dbus_ifc_cb_default, NULL))
@@ -290,6 +239,16 @@ dbus_ifc_init()
     if(OSSO_OK != osso_rpc_set_cb_f(_osso, MM_DBUS_SERVICE,
                 MM_DBUS_PATH, MM_DBUS_INTERFACE, dbus_ifc_controller, NULL))
         g_printerr("osso_rpc_set_cb_f failed.\n");
+
+    dbus_error_init(&error);
+    if(NULL == (_bus = dbus_bus_get(DBUS_BUS_SESSION, &error)))
+    {
+        g_printerr("Error getting session bus: %s: %s\n",
+                (dbus_error_is_set(&error)
+                 ? error.name : "<no error message>"),
+                (dbus_error_is_set(&error)
+                 ? error.message : ""));
+    }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }

@@ -42,6 +42,10 @@ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WAR
 
 /* $Id:$ */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
+
 #define _GNU_SOURCE
 
 #include <errno.h>
@@ -59,6 +63,8 @@ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WAR
 #include <dbus/dbus-glib.h>
 
 #include "gpsbt.h"
+
+#ifdef LEGACY
 
 /* Set following #if to 1 if you want to use automatic bt dev disconnect.
  * This does not seem to work correctly currently (disconnects too fast)
@@ -143,30 +149,30 @@ static int debug_level;
 
 #ifdef DEBUG
 #if (__GNUC__ > 2) && ((__GNUC__ > 3) || (__GNUC_MINOR__ > 2))
-#define PDEBUG(fmt...) do {						\
-    if (debug_level) {							\
-      struct timeval tv;						\
-      gettimeofday(&tv, 0);						\
-      printf("DEBUG[%d]:%ld.%ld:%s:%s():%d: ",				\
-	     getpid(),							\
-	     tv.tv_sec, tv.tv_usec,					\
-	     __FILE__, __FUNCTION__, __LINE__);				\
-      printf(fmt);							\
-      fflush(stdout);							\
-    }									\
+#define PDEBUG(fmt...) do {                                                \
+    if (debug_level) {                                                     \
+      struct timeval tv;                                                   \
+      gettimeofday(&tv, 0);                                                \
+      printf("DEBUG[%d]:%ld.%ld:%s:%s():%d: ",                             \
+             getpid(),                                                     \
+             tv.tv_sec, tv.tv_usec,                                        \
+             __FILE__, __FUNCTION__, __LINE__);                            \
+      printf(fmt);                                                         \
+      fflush(stdout);                                                      \
+    }                                                                      \
   }while(0)
 #else
-#define PDEBUG(fmt...) do {						\
-    if (debug_level) {							\
-      struct timeval tv;						\
-      gettimeofday(&tv, 0);						\
-      printf("DEBUG[%d]:%ld.%ld:%s:%s():%d: ",				\
-	     getpid(),							\
-	     tv.tv_sec, tv.tv_usec,					\
-	     __FILE__, __FUNCTION__, __LINE__);				\
-      printf(##fmt);							\
-      fflush(stdout);							\
-    }									\
+#define PDEBUG(fmt...) do {                                                \
+    if (debug_level) {                                                     \
+      struct timeval tv;                                                   \
+      gettimeofday(&tv, 0);                                                \
+      printf("DEBUG[%d]:%ld.%ld:%s:%s():%d: ",                             \
+             getpid(),                                                     \
+             tv.tv_sec, tv.tv_usec,                                        \
+             __FILE__, __FUNCTION__, __LINE__);                            \
+      printf(##fmt);                                                       \
+      fflush(stdout);                                                      \
+    }                                                                      \
   }while(0)
 #endif
 #else
@@ -203,9 +209,9 @@ static inline DBusGConnection *get_dbus_gconn(GError **error)
 
 /* ----------------------------------------------------------------------- */
 static int set_error_msg(char *errbuf,
-			 int errbuf_max_len,
-			 char *msg,
-			 ...)
+                         int errbuf_max_len,
+                         char *msg,
+                         ...)
 {
   int st, len;
   va_list args;
@@ -232,13 +238,13 @@ static int set_error_msg(char *errbuf,
 
 /* ----------------------------------------------------------------------- */
 extern int gpsbt_start(char *bda,
-		       int our_debug_level,
-		       int gpsd_debug_level,
-		       short port,
-		       char *error_buf,
-		       int error_buf_max_len,
-		       int timeout_ms,
-		       gpsbt_t *ctx)
+                       int our_debug_level,
+                       int gpsd_debug_level,
+                       short port,
+                       char *error_buf,
+                       int error_buf_max_len,
+                       int timeout_ms,
+                       gpsbt_t *ctx)
 {
   int i, j, k, st, num_bondings = 0,
     bonding_cnt = 0, num_classes = 0, num_rfcomms = 0,
@@ -261,18 +267,18 @@ extern int gpsbt_start(char *bda,
 
 
 #if (__GNUC__ > 2) && ((__GNUC__ > 3) || (__GNUC_MINOR__ > 2))
-#define ERRSTR(fmt, args...)					\
-  if (error_buf && error_buf_max_len>0) {			\
-    set_error_msg(error_buf, error_buf_max_len, fmt, args);	\
-  } else {							\
-    PDEBUG(fmt, args);						\
+#define ERRSTR(fmt, args...)                                     \
+  if (error_buf && error_buf_max_len>0) {                        \
+    set_error_msg(error_buf, error_buf_max_len, fmt, args);      \
+  } else {                                                       \
+    PDEBUG(fmt, args);                                           \
   }
 #else
-#define ERRSTR(fmt, args...)					\
-  if (error_buf && error_buf_max_len>0) {			\
-    set_error_msg(error_buf, error_buf_max_len, fmt, ##args);	\
-  } else {							\
-    PDEBUG(fmt, ##args);					\
+#define ERRSTR(fmt, args...)                                     \
+  if (error_buf && error_buf_max_len>0) {                        \
+    set_error_msg(error_buf, error_buf_max_len, fmt, ##args);    \
+  } else {                                                       \
+    PDEBUG(fmt, ##args);                                         \
   }
 #endif  
 
@@ -321,15 +327,15 @@ extern int gpsbt_start(char *bda,
   if (st) {
 
     if (st!=2) { /* gpsd is running, value 2 would mean that gpsd is not
-		  * running but we have a lock acquired
-		  */
+                  * running but we have a lock acquired
+                  */
 
       st = gpsmgr_start(gpsd_prog, NULL, gpsd_ctrl_sock,
-			gpsd_debug_level, port, &ctx->mgr);
+                        gpsd_debug_level, port, &ctx->mgr);
       if (!st) {
-	/* everything is ok */
-	PDEBUG("%s already running, doing nothing\n",gpsd_prog);
-	goto OUT;
+        /* everything is ok */
+        PDEBUG("%s already running, doing nothing\n",gpsd_prog);
+        goto OUT;
       }
 
       PDEBUG("gpsmgr_start() returned %d [%s, %d]\n",st,strerror(errno),errno);
@@ -350,12 +356,12 @@ extern int gpsbt_start(char *bda,
     goto OUT;
   }
 
-#define CHECK_ERROR(s,o,i,m,t)						\
-  if (st<0) {								\
-    ERRSTR("Cannot send msg (service=%s, object=%s, interface=%s, "	\
-	   "method=%s) [%s]\n", s, o, i, m,				\
-	   error.message ? error.message : "<no error msg>");		\
-    goto OUT;								\
+#define CHECK_ERROR(s,o,i,m,t)                                             \
+  if (st<0) {                                                              \
+    ERRSTR("Cannot send msg (service=%s, object=%s, interface=%s, "        \
+           "method=%s) [%s]\n", s, o, i, m,                                \
+           error.message ? error.message : "<no error msg>");              \
+    goto OUT;                                                              \
   }
 
 
@@ -398,27 +404,27 @@ extern int gpsbt_start(char *bda,
 
         /* Allocate bondings array, note that we DO allocate one extra array
          * element for marking end of array.
-	 */
-	bondings = (bonding_t *)realloc(bondings,
-					(bonding_cnt+num_bondings+1)*sizeof(bonding_t));
-	if (!bondings) {
-	  st = -1;
-	  errno = ENOMEM;
-	  goto OUT;
-	}
-	bondings[bonding_cnt+num_bondings].bonding=
-	  bondings[bonding_cnt+num_bondings].adapter=NULL; /* just in case */
+         */
+        bondings = (bonding_t *)realloc(bondings,
+                (bonding_cnt+num_bondings+1)*sizeof(bonding_t));
+        if (!bondings) {
+          st = -1;
+          errno = ENOMEM;
+          goto OUT;
+        }
+        bondings[bonding_cnt+num_bondings].bonding=
+          bondings[bonding_cnt+num_bondings].adapter=NULL; /* just in case */
 
 
-	j = 0;
-	while (j<num_bondings && tmp_bondings[j]) {
-	  bondings[bonding_cnt].bonding = strdup(tmp_bondings[j]);
-	  free(tmp_bondings[j]);
+        j = 0;
+        while (j<num_bondings && tmp_bondings[j]) {
+          bondings[bonding_cnt].bonding = strdup(tmp_bondings[j]);
+          free(tmp_bondings[j]);
 
-	  bondings[bonding_cnt].adapter = adapters[i]; /* no allocation! */
-	  
-	  PDEBUG("Bondings[%d]=%s (adapter=%s)\n", bonding_cnt,
-		 bondings[bonding_cnt].bonding, bondings[bonding_cnt].adapter);
+          bondings[bonding_cnt].adapter = adapters[i]; /* no allocation! */
+          
+          PDEBUG("Bondings[%d]=%s (adapter=%s)\n", bonding_cnt,
+                 bondings[bonding_cnt].bonding, bondings[bonding_cnt].adapter);
 
           /* Get all remote service classes for this bonding. */
           error = NULL;
@@ -449,7 +455,8 @@ extern int gpsbt_start(char *bda,
               } else {
                 onoff = "OFF";
               }
-              PDEBUG("Addr=%s, Class[%d]=%s (adapter=%s), positioning bit %s\n",
+              PDEBUG("Addr=%s, Class[%d]=%s (adapter=%s), "
+                      "positioning bit %s\n",
                      bondings[bonding_cnt].bonding, k, tmp_classes[k],
                      bondings[bonding_cnt].adapter, onoff);
               free(tmp_classes[k]);
@@ -462,9 +469,9 @@ extern int gpsbt_start(char *bda,
           }
 
           num_classes = 0;
-	  bonding_cnt++;
-	  j++;
-	}
+          bonding_cnt++;
+          j++;
+        }
       }
 
       free(tmp_bondings);
@@ -478,13 +485,13 @@ extern int gpsbt_start(char *bda,
     if (debug_level) {
       int i=0;
       if (bonding_cnt) {
-	PDEBUG("Bondings [%d]:\n", bonding_cnt);
-	while (bondings[i].bonding && i<bonding_cnt) {
-	  PDEBUG("\t%s\n", bondings[i].bonding);
-	  i++;
-	}
+        PDEBUG("Bondings [%d]:\n", bonding_cnt);
+        while (bondings[i].bonding && i<bonding_cnt) {
+          PDEBUG("\t%s\n", bondings[i].bonding);
+          i++;
+        }
       } else {
-	PDEBUG("No bondings exists.\n");
+        PDEBUG("No bondings exists.\n");
       }
     }
 #endif
@@ -511,7 +518,8 @@ extern int gpsbt_start(char *bda,
           if (check_device_name(tmp)) {
 
             /* Found a GPS device */
-            posdev = (bonding_t *)realloc(posdev, (num_posdev+1)*sizeof(bonding_t));
+            posdev = (bonding_t *)realloc(posdev,
+                    (num_posdev+1)*sizeof(bonding_t));
             if (!posdev) {
               st = -1;
               errno = ENOMEM;
@@ -525,9 +533,9 @@ extern int gpsbt_start(char *bda,
             PDEBUG("Addr=%s, (adapter=%s), Name=\"%s\"\n",
                    bondings[i].bonding, bondings[i].adapter, tmp);
           }
-	}
+        }
         g_object_unref(proxy);
-	i++;
+        i++;
       }
     }
 
@@ -563,9 +571,9 @@ extern int gpsbt_start(char *bda,
           G_TYPE_STRING, posdev[i].bonding,
           G_TYPE_STRING, spp,
 #ifdef USE_AUTOMATIC_DISCONNECT
-		       G_TYPE_BOOLEAN, TRUE, /* automatic disconnect (does not work, the system disconnects too fast) */
+                       G_TYPE_BOOLEAN, TRUE,
 #else
-		       G_TYPE_BOOLEAN, FALSE, /* no automatic disconnect (this seems to work ok) */
+                       G_TYPE_BOOLEAN, FALSE,
 #endif
           G_TYPE_INVALID,
           G_TYPE_STRING, &tmp,
@@ -581,22 +589,22 @@ extern int gpsbt_start(char *bda,
             "com.nokia.btcond.error.connected")) {
 
       ERROR:
-	ERRSTR("Cannot send msg (service=%s, object=%s, interface=%s, "
-	       "method=%s) [%s]\n",
-	       BTCOND_DBUS,
-	       BTCOND_PATH,
-	       BTCOND_INTERFACE,
-	       BTCOND_CONNECT,
-	       error->message ? error->message : "<no error msg>");
-	continue;
+        ERRSTR("Cannot send msg (service=%s, object=%s, interface=%s, "
+               "method=%s) [%s]\n",
+               BTCOND_DBUS,
+               BTCOND_PATH,
+               BTCOND_INTERFACE,
+               BTCOND_CONNECT,
+               error->message ? error->message : "<no error msg>");
+        continue;
 
       } else if(!tmp || !*tmp) {
 
-	/* hack: rfcommX device name is at the end of error message */
-	char *last_space = strstr(error->message, " rfcomm");
-	if (!last_space) {
-	  goto ERROR;
-	}
+        /* hack: rfcommX device name is at the end of error message */
+        char *last_space = strstr(error->message, " rfcomm");
+        if (!last_space) {
+          goto ERROR;
+        }
 
         g_free(tmp);
         tmp = g_strdup_printf("/dev/%s", last_space+1);
@@ -614,7 +622,8 @@ extern int gpsbt_start(char *bda,
       rfcomms[num_rfcomms] = tmp;
       num_rfcomms++;
 
-      PDEBUG("BT addr=%s, RFCOMM %s now exists (adapter=%s)\n", posdev[i].bonding, tmp, posdev[i].adapter);
+      PDEBUG("BT addr=%s, RFCOMM %s now exists (adapter=%s)\n",
+              posdev[i].bonding, tmp, posdev[i].adapter);
 
       tmp = NULL;
     }
@@ -646,10 +655,11 @@ extern int gpsbt_start(char *bda,
 #endif
 
       /* Just start the beast (to be done if everything is ok) */
-      st = gpsmgr_start(gpsd_prog, rfcomms, gpsd_ctrl_sock, gpsd_debug_level, port, &ctx->mgr);
+      st = gpsmgr_start(gpsd_prog, rfcomms, gpsd_ctrl_sock,
+              gpsd_debug_level, port, &ctx->mgr);
       if (!st) {
-	/* everything is ok */
-	goto OUT;
+        /* everything is ok */
+        goto OUT;
       }
     }
   }
@@ -662,8 +672,8 @@ extern int gpsbt_start(char *bda,
   if (posdev) {
     for (i=0; i<num_posdev; i++) {
       if (posdev[i].bonding) {
-	free(posdev[i].bonding);
-	memset(&posdev[i], 0, sizeof(bonding_t)); /* just in case */
+        free(posdev[i].bonding);
+        memset(&posdev[i], 0, sizeof(bonding_t)); /* just in case */
       }
     }
     free(posdev);
@@ -673,8 +683,8 @@ extern int gpsbt_start(char *bda,
   if (bondings) {
     for (i=0; i<num_bondings; i++) {
       if (bondings[i].bonding) {
-	free(bondings[i].bonding);
-	memset(&bondings[i], 0, sizeof(bonding_t)); /* just in case */
+        free(bondings[i].bonding);
+        memset(&bondings[i], 0, sizeof(bonding_t)); /* just in case */
       }
     }
     free(bondings);
@@ -685,8 +695,8 @@ extern int gpsbt_start(char *bda,
   if (rfcomms) {
     for (i=0; i<num_rfcomms; i++) {
       if (rfcomms[i]) {
-	free(rfcomms[i]);
-	rfcomms[i]=0;
+        free(rfcomms[i]);
+        rfcomms[i]=0;
       }
     }
     free(rfcomms);
@@ -737,29 +747,30 @@ extern int gpsbt_stop(gpsbt_t *ctx)
        * we are the only one using the dev.
        */
       if (st>0) {
-	skip_dbus = 1;
-	PDEBUG("Skipping rfcomm device deletion as we are not the only location user\n");
+        skip_dbus = 1;
+        PDEBUG("Skipping rfcomm device deletion as we are "
+                "not the only location user\n");
       }
     }
 
     while (ctx->rfcomms[i]) {
 
       if (!skip_dbus) {
-	/* Disconnect the device */
+        /* Disconnect the device */
         proxy = dbus_g_proxy_new_for_name(bus,
             BTCOND_DBUS, BTCOND_PATH, BTCOND_INTERFACE);
         error = NULL;
         if(!dbus_g_proxy_call(proxy, BTCOND_DISCONNECT, &error,
               G_TYPE_STRING, ctx->rfcomms[i], G_TYPE_INVALID, G_TYPE_INVALID)
             || error){
-	  PDEBUG("Cannot send msg (service=%s, object=%s, interface=%s, "
-	   "method=%s) [%s]\n",
-		 BTCOND_DBUS,
-		 BTCOND_PATH,
-		 BTCOND_INTERFACE,
-		 BTCOND_DISCONNECT,
-		 error->message ? error->message : "<no error msg>");
-	}
+          PDEBUG("Cannot send msg (service=%s, object=%s, interface=%s, "
+           "method=%s) [%s]\n",
+                 BTCOND_DBUS,
+                 BTCOND_PATH,
+                 BTCOND_INTERFACE,
+                 BTCOND_DISCONNECT,
+                 error->message ? error->message : "<no error msg>");
+        }
         g_object_unref(proxy);
       }
 
@@ -780,3 +791,4 @@ extern int gpsbt_stop(gpsbt_t *ctx)
   return st;
 }
 
+#endif

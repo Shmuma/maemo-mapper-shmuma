@@ -21,10 +21,18 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
+
 #ifndef MAEMO_MAPPER_UTIL_H
 #define MAEMO_MAPPER_UTIL_H
 
-#include <hildon-widgets/hildon-controlbar.h>
+#ifndef LEGACY
+#    include <hildon/hildon-controlbar.h>
+#else
+#    include <hildon-widgets/hildon-controlbar.h>
+#endif
 
 void popup_error(GtkWidget *window, const gchar *error);
 

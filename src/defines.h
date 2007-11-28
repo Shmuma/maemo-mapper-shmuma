@@ -368,9 +368,6 @@
 #define TRACKS_MASK 0x00000001
 #define ROUTES_MASK 0x00000002
 
-#define g_timeout_add(I, F, D) g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE, \
-          (I), (F), (D), NULL)
-
 #define MACRO_BANNER_SHOW_INFO(A, S) { \
     gchar *my_macro_buffer = g_markup_printf_escaped( \
             "<span size='%s'>%s</span>", \

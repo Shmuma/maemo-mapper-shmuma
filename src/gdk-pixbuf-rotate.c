@@ -205,7 +205,7 @@ gdk_pixbuf_rotate_matrix_determinant(const gfloat* matrix)
 }
 
 
-#define ROTATE_CUT_EDGES (0.0) /* cut small part of texel on edges - to avoid artefacts */
+#define ROTATE_CUT_EDGES (0.0) /* cut small part of edges, to avoid artefacts*/
 
 /**
  * gdk_pixbuf_rotate:

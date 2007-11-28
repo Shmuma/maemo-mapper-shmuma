@@ -21,6 +21,9 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
 
 #define _GNU_SOURCE
 
@@ -29,14 +32,23 @@
 #include <math.h>
 #include <glib/gstdio.h>
 #include <fcntl.h>
-#include <osso-helplib.h>
-#include <hildon-widgets/hildon-note.h>
-#include <hildon-widgets/hildon-file-chooser-dialog.h>
-#include <hildon-widgets/hildon-number-editor.h>
-#include <hildon-widgets/hildon-banner.h>
-#include <hildon-widgets/hildon-input-mode-hint.h>
-
 #include <locale.h>
+
+#ifndef LEGACY
+#    include <hildon/hildon-help.h>
+#    include <hildon/hildon-note.h>
+#    include <hildon/hildon-file-chooser-dialog.h>
+#    include <hildon/hildon-number-editor.h>
+#    include <hildon/hildon-banner.h>
+#else
+#    include <osso-helplib.h>
+#    include <hildon-widgets/hildon-note.h>
+#    include <hildon-widgets/hildon-file-chooser-dialog.h>
+#    include <hildon-widgets/hildon-number-editor.h>
+#    include <hildon-widgets/hildon-banner.h>
+#    include <hildon-widgets/hildon-input-mode-hint.h>
+#endif
+
 
 #include "types.h"
 #include "data.h"
@@ -1721,7 +1733,11 @@ repoman_dialog()
                 NULL);
 
         /* Enable the help button. */
+#ifndef LEGACY
+        hildon_help_dialog_help_enable(
+#else
         ossohelp_dialog_help_enable(
+#endif
                 GTK_DIALOG(dialog), HELP_ID_REPOMAN, _osso);
 
         /* Reset button. */
@@ -2218,7 +2234,11 @@ mapman_dialog()
                 NULL);
 
         /* Enable the help button. */
+#ifndef LEGACY
+        hildon_help_dialog_help_enable(
+#else
         ossohelp_dialog_help_enable(
+#endif
                 GTK_DIALOG(mapman_info.dialog), HELP_ID_MAPMAN, _osso);
 
         /* Clear button. */
@@ -2377,22 +2397,32 @@ mapman_dialog()
         gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_topleft_lat), 12);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lat), 1.f);
         g_object_set(G_OBJECT(mapman_info.txt_topleft_lat),
+#ifndef LEGACY
+                "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
                 HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
         g_object_set(G_OBJECT(mapman_info.txt_topleft_lat),
                 HILDON_AUTOCAP,
                 FALSE, NULL);
+#endif
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 mapman_info.txt_topleft_lon = gtk_entry_new(),
                 2, 3, 3, 4, GTK_FILL, 0, 4, 0);
         gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_topleft_lon), 12);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lon), 1.f);
         g_object_set(G_OBJECT(mapman_info.txt_topleft_lon),
+#ifndef LEGACY
+                "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
                 HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
         g_object_set(G_OBJECT(mapman_info.txt_topleft_lon),
                 HILDON_AUTOCAP,
                 FALSE, NULL);
+#endif
 
         /* Bottom Right. */
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
@@ -2405,22 +2435,32 @@ mapman_dialog()
         gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_botright_lat), 12);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lat), 1.f);
         g_object_set(G_OBJECT(mapman_info.txt_botright_lat),
+#ifndef LEGACY
+                "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
                 HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
         g_object_set(G_OBJECT(mapman_info.txt_botright_lat),
                 HILDON_AUTOCAP,
                 FALSE, NULL);
+#endif
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 mapman_info.txt_botright_lon = gtk_entry_new(),
                 2, 3, 4, 5, GTK_FILL, 0, 4, 0);
         gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_botright_lat), 12);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lon), 1.f);
         g_object_set(G_OBJECT(mapman_info.txt_botright_lon),
+#ifndef LEGACY
+                "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
                 HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
         g_object_set(G_OBJECT(mapman_info.txt_botright_lon),
                 HILDON_AUTOCAP,
                 FALSE, NULL);
+#endif
 
         /* Default action is to download by area. */
         gtk_toggle_button_set_active(

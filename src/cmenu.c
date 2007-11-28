@@ -21,14 +21,23 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
+
 #define _GNU_SOURCE
 
 #include <string.h>
 #include <math.h>
 #include <gtk/gtk.h>
-#include <hildon-widgets/hildon-note.h>
-#include <hildon-widgets/hildon-banner.h>
 
+#ifndef LEGACY
+#    include <hildon/hildon-note.h>
+#    include <hildon/hildon-banner.h>
+#else
+#    include <hildon-widgets/hildon-note.h>
+#    include <hildon-widgets/hildon-banner.h>
+#endif
 
 #include "types.h"
 #include "data.h"

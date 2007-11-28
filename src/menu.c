@@ -21,13 +21,24 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
+
 #define _GNU_SOURCE
 
 #include <math.h>
-#include <osso-helplib.h>
-#include <hildon-widgets/hildon-program.h>
-#include <hildon-widgets/hildon-banner.h>
-#include <hildon-widgets/hildon-input-mode-hint.h>
+
+#ifndef LEGACY
+#    include <hildon/hildon-help.h>
+#    include <hildon/hildon-program.h>
+#    include <hildon/hildon-banner.h>
+#else
+#    include <osso-helplib.h>
+#    include <hildon-widgets/hildon-program.h>
+#    include <hildon-widgets/hildon-banner.h>
+#    include <hildon-widgets/hildon-input-mode-hint.h>
+#endif
 
 #include "types.h"
 #include "data.h"
@@ -794,9 +805,14 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
                 1, 2, 0, 1, GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(txt_lat), 16);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(txt_lat), "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(txt_lat), HILDON_AUTOCAP, FALSE, NULL);
         g_object_set(G_OBJECT(txt_lat), HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
+#endif
 
         gtk_table_attach(GTK_TABLE(table),
                 label = gtk_label_new(_("Longitude")),
@@ -808,9 +824,14 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
                 1, 2, 1, 2, GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(txt_lon), 16);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(txt_lon), "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(txt_lon), HILDON_AUTOCAP, FALSE, NULL);
         g_object_set(G_OBJECT(txt_lon), HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
+#endif
     }
 
     /* Initialize with the current center position. */
@@ -1138,7 +1159,8 @@ menu_cb_view_ac_lead(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(_menu_view_ac_lead_item)))
+    if(gtk_check_menu_item_get_active(
+                GTK_CHECK_MENU_ITEM(_menu_view_ac_lead_item)))
     {
         _center_mode = CENTER_LEAD;
         MACRO_BANNER_SHOW_INFO(_window, _("Auto-Center Mode: Lead"));
@@ -1171,7 +1193,8 @@ menu_cb_view_ac_none(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item)))
+    if(gtk_check_menu_item_get_active(
+                GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item)))
     {
         _center_mode = -_center_mode;
         MACRO_BANNER_SHOW_INFO(_window, _("Auto-Center Off"));
@@ -1290,7 +1313,11 @@ menu_cb_help(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+#ifndef LEGACY
+    hildon_help_show(_osso, HELP_ID_INTRO, 0);
+#else
     ossohelp_show(_osso, HELP_ID_INTRO, 0);
+#endif
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1301,7 +1328,11 @@ menu_cb_about(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+#ifndef LEGACY
+    hildon_help_show(_osso, HELP_ID_ABOUT, HILDON_HELP_SHOW_DIALOG);
+#else
     ossohelp_show(_osso, HELP_ID_ABOUT, OSSO_HELP_SHOW_DIALOG);
+#endif
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;

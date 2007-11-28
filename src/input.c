@@ -21,12 +21,22 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
+
 #define _GNU_SOURCE
 
 #include <math.h>
 #include <gdk/gdkkeysyms.h>
-#include <hildon-widgets/hildon-defines.h>
-#include <hildon-widgets/hildon-banner.h>
+
+#ifndef LEGACY
+#    include <hildon/hildon-defines.h>
+#    include <hildon/hildon-banner.h>
+#else
+#    include <hildon-widgets/hildon-defines.h>
+#    include <hildon-widgets/hildon-banner.h>
+#endif
 
 #include "types.h"
 #include "data.h"
@@ -234,9 +244,9 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                         ;
                 }
                 key_pan_timeout(_action[custom_key]);
-                _key_pan_timeout_sid = g_timeout_add(
+                _key_pan_timeout_sid = g_timeout_add_full(G_PRIORITY_HIGH_IDLE,
                         250, (GSourceFunc)key_pan_timeout,
-                        (gpointer)(_action[custom_key]));
+                        (gpointer)(_action[custom_key]), NULL);
             }
             break;
 
@@ -300,9 +310,9 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                             _("Zoom to Level"), _key_zoom_new);
                     MACRO_BANNER_SHOW_INFO(_window, buffer);
                 }
-                _key_zoom_timeout_sid = g_timeout_add(
+                _key_zoom_timeout_sid =g_timeout_add_full(G_PRIORITY_HIGH_IDLE,
                         500, (GSourceFunc)key_zoom_timeout,
-                        (gpointer)(_action[custom_key]));
+                        (gpointer)(_action[custom_key]), NULL);
             }
             break;
 
@@ -447,8 +457,8 @@ window_cb_key_release(GtkWidget* widget, GdkEventKey *event)
             {
                 g_source_remove(_key_zoom_timeout_sid);
                 _key_zoom_timeout_sid = 0;
-                _key_zoom_timeout_sid = g_timeout_add(
-                        500, (GSourceFunc)key_zoom_timeout, NULL);
+                _key_zoom_timeout_sid =g_timeout_add_full(G_PRIORITY_HIGH_IDLE,
+                        500, (GSourceFunc)key_zoom_timeout, NULL, NULL);
             }
             _key_zoom_is_down = FALSE;
             return TRUE;
@@ -464,8 +474,8 @@ window_cb_key_release(GtkWidget* widget, GdkEventKey *event)
             if(_key_pan_timeout_sid)
             {
                 g_source_remove(_key_pan_timeout_sid);
-                _key_pan_timeout_sid = g_timeout_add(
-                        500, (GSourceFunc)key_pan_timeout, NULL);
+                _key_pan_timeout_sid = g_timeout_add_full(G_PRIORITY_HIGH_IDLE,
+                        500, (GSourceFunc)key_pan_timeout, NULL, NULL);
             }
             _key_pan_is_down = FALSE;
             _key_pan_incr_devx = 0;

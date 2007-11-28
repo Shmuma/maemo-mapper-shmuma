@@ -21,13 +21,21 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
 
 #define _GNU_SOURCE
 
 #include <ctype.h>
 #include <string.h>
 #include <math.h>
-#include <hildon-widgets/hildon-note.h>
+
+#ifndef LEGACY
+#    include <hildon/hildon-note.h>
+#else
+#    include <hildon-widgets/hildon-note.h>
+#endif
 
 #include "types.h"
 #include "data.h"
@@ -228,6 +236,7 @@ calculate_bearing(gdouble lat1, gdouble lon1, gdouble lat2, gdouble lon2)
 void
 force_min_visible_bars(HildonControlbar *control_bar, gint num_bars)
 {
+#ifdef LEGACY
     GValue val;
     printf("%s()\n", __PRETTY_FUNCTION__);
     memset(&val, 0, sizeof(val));
@@ -235,6 +244,7 @@ force_min_visible_bars(HildonControlbar *control_bar, gint num_bars)
     g_value_set_int(&val, num_bars);
     g_object_set_property(G_OBJECT(control_bar), "minimum-visible-bars", &val);
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+#endif
 }
 
 gboolean

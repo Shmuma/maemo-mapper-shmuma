@@ -21,22 +21,35 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
 
 #define _GNU_SOURCE
 
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <osso-helplib.h>
 #include <dbus/dbus-glib.h>
 #include <bt-dbus.h>
-#include <hildon-widgets/hildon-note.h>
-#include <hildon-widgets/hildon-color-button.h>
-#include <hildon-widgets/hildon-file-chooser-dialog.h>
-#include <hildon-widgets/hildon-number-editor.h>
-#include <hildon-widgets/hildon-banner.h>
-#include <hildon-widgets/hildon-input-mode-hint.h>
 #include <gconf/gconf-client.h>
+
+#ifndef LEGACY
+#    include <hildon/hildon-help.h>
+#    include <hildon/hildon-note.h>
+#    include <hildon/hildon-color-button.h>
+#    include <hildon/hildon-file-chooser-dialog.h>
+#    include <hildon/hildon-number-editor.h>
+#    include <hildon/hildon-banner.h>
+#else
+#    include <osso-helplib.h>
+#    include <hildon-widgets/hildon-note.h>
+#    include <hildon-widgets/hildon-color-button.h>
+#    include <hildon-widgets/hildon-file-chooser-dialog.h>
+#    include <hildon-widgets/hildon-number-editor.h>
+#    include <hildon-widgets/hildon-banner.h>
+#    include <hildon-widgets/hildon-input-mode-hint.h>
+#endif
 
 #include "types.h"
 #include "data.h"
@@ -907,6 +920,47 @@ settings_dialog_colors(GtkWidget *widget, GtkWidget *parent)
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
+#ifndef LEGACY
+        hildon_color_button_get_color(
+                HILDON_COLOR_BUTTON(cdi.col[COLORABLE_MARK]), 
+                &_color[COLORABLE_MARK]);
+
+        hildon_color_button_get_color(
+                HILDON_COLOR_BUTTON(cdi.col[COLORABLE_MARK_VELOCITY]), 
+                &_color[COLORABLE_MARK_VELOCITY]);
+
+        hildon_color_button_get_color(
+                HILDON_COLOR_BUTTON(cdi.col[COLORABLE_MARK_OLD]),
+                &_color[COLORABLE_MARK_OLD]);
+
+        hildon_color_button_get_color(
+                HILDON_COLOR_BUTTON(cdi.col[COLORABLE_TRACK]),
+                &_color[COLORABLE_TRACK]);
+
+        hildon_color_button_get_color(
+                HILDON_COLOR_BUTTON(cdi.col[COLORABLE_TRACK_MARK]),
+                &_color[COLORABLE_TRACK_MARK]);
+
+        hildon_color_button_get_color(
+                HILDON_COLOR_BUTTON(cdi.col[COLORABLE_TRACK_BREAK]),
+                &_color[COLORABLE_TRACK_BREAK]);
+
+        hildon_color_button_get_color(
+                HILDON_COLOR_BUTTON(cdi.col[COLORABLE_ROUTE]),
+                &_color[COLORABLE_ROUTE]);
+
+        hildon_color_button_get_color(
+                HILDON_COLOR_BUTTON(cdi.col[COLORABLE_ROUTE_WAY]),
+                &_color[COLORABLE_ROUTE_WAY]);
+
+        hildon_color_button_get_color(
+                HILDON_COLOR_BUTTON(cdi.col[COLORABLE_ROUTE_BREAK]),
+                &_color[COLORABLE_ROUTE_BREAK]);
+
+        hildon_color_button_get_color(
+                HILDON_COLOR_BUTTON(cdi.col[COLORABLE_POI]),
+                &_color[COLORABLE_POI]);
+#else
         GdkColor *color;
 
         color = hildon_color_button_get_color(
@@ -949,6 +1003,8 @@ settings_dialog_colors(GtkWidget *widget, GtkWidget *parent)
                 HILDON_COLOR_BUTTON(cdi.col[COLORABLE_POI]));
         _color[COLORABLE_POI] = *color;
 
+#endif
+        
         update_gcs();
         break;
     }
@@ -1021,7 +1077,11 @@ settings_dialog()
                 NULL);
 
         /* Enable the help button. */
+#ifndef LEGACY
+        hildon_help_dialog_help_enable(
+#else
         ossohelp_dialog_help_enable(
+#endif 
                 GTK_DIALOG(dialog), HELP_ID_SETTINGS, _osso);
 
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
@@ -1053,7 +1113,12 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_gps_bt_mac = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(txt_gps_bt_mac), "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(txt_gps_bt_mac), HILDON_AUTOCAP, FALSE, NULL);
+#endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 btn_scan = gtk_button_new_with_label(_("Scan...")),
                 FALSE, FALSE, 0);
@@ -1070,7 +1135,12 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_gps_file_path = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(txt_gps_file_path), "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(txt_gps_file_path), HILDON_AUTOCAP, FALSE, NULL);
+#endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 btn_browse_gps = gtk_button_new_with_label(_("Browse...")),
                 FALSE, FALSE, 0);
@@ -1087,7 +1157,12 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_gps_gpsd_host = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(txt_gps_gpsd_host), "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(txt_gps_gpsd_host), HILDON_AUTOCAP, FALSE, NULL);
+#endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 label = gtk_label_new(_("Port")),
                 FALSE, FALSE, 0);
@@ -1325,7 +1400,12 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_poi_db = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifndef LEGACY
+        g_object_set(G_OBJECT(txt_poi_db), "hildon-input-mode",
+                HILDON_GTK_INPUT_MODE_FULL, NULL);
+#else
         g_object_set(G_OBJECT(txt_poi_db), HILDON_AUTOCAP, FALSE, NULL);
+#endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 btn_browse_poi = gtk_button_new_with_label(_("Browse...")),
                 FALSE, FALSE, 0);
