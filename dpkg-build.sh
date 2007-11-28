@@ -26,6 +26,6 @@ fi
 
 sed -i "1,1s/(\([0-9.][0-9.]*\)[-a-zA-Z0-9]*)/(\1$VERSION_SUFFIX)/" $CHANGELOG
 
-dpkg-buildpackage -rfakeroot -I.svn $DBP_EXTRA
+dpkg-buildpackage -rfakeroot -i $DBP_EXTRA
 
 sed -i "1,1s/(\([0-9.][0-9.]*\)[-a-zA-Z0-9]*)/(\1)/" $CHANGELOG
