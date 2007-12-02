@@ -61,6 +61,20 @@
           refdoc="Asetukset"/> ohjeesta.
       </para>
       <para>
+        Vaihtoehtoisesti voit jättää 
+        <display_text>Bluetooth</display_text> kentän tyhjäksi, jolloin Maemo
+	Mapper yrittää automaattisesti etsiä ja käyttää mitä tahansa bluetooth
+	GPS:ksi tunnistamaansa laitetta.  Tämä on käytännöllistä silloin, kun
+	käytössä on useita GPS-vastaanottimia.  Tämän ominaisuuden toimivuus
+	ei ole taattua kaikissa Nokian laitteissa tai kaikkien bluetooth GPS-
+	vastaanottimien kanssa.
+      </para>
+      <note>
+        Mikäli käytät Maemo Mapperia laitteen sisäisellä GPS-vastaanottimella,
+	sinun on syytä määrittää vastaanottimeksi "Tiedostopolku" ja antaa
+	poluksi <display_text>/dev/pgps</display_text>.
+      </note>
+      <para>
         Kun olet muuttanut asetukset haluamiksesi voit jatkaa koskettamalla
         <display_text>Ok</display_text> nappia.  Tämä avaa
         <display_text>Karttavarastojen hallinta</display_text> 
@@ -359,6 +373,9 @@
            <graphic filename="2686KEY_full_screen"/> näppäintä.
         </listitem>
         <listitem>
+          <display_text>Asteikko</display_text> - Kytkee asteikon näytön päälle tai pois.
+        </listitem>
+        <listitem>
           <display_text>Reittisuunnitelma</display_text> - Kytkee 
 	  reitisuunitelman näytön päälle tai pois.
         </listitem>
@@ -442,7 +459,7 @@
 	  kuin muut kohdepisteet. 
         </listitem>
         <listitem>
-          <display_text>Lähinmpään POI-pisteeseen</display_text> - Keskittää kartan
+          <display_text>Lähimpään POI-pisteeseen</display_text> - Keskittää kartan
 	  lähimpään POI-pisteeseen.
         </listitem>
       </list>
@@ -776,6 +793,13 @@
           karttavarasto" toiminto yksinkertaisesti ohittaa kyseisen
           karttavaraston.
 	</listitem>
+        <listitem>
+          <display_text>Haettavat zoom-tasot</display_text> - Tämä asetus määrittää
+	  karttavaraston minimi ja maksimi zoom-tasot, joilta Maemo Mapper yrittää
+	  automaattisesti noutaa kartat (kun automaattinen nouto on aktivoitu).
+	  Osa karttavarastoista tukee useampia zoom-tasoja kuin toiset ja tuetut
+	  zoom-tasot vaihtelevat myös alueittain saman karttavarston sisällä.
+        </listitem>
       </list>
       <para>
         Karttavarastokohtaisten valintojen lisäksi sivulla on muutama näppäin,
@@ -1293,23 +1317,40 @@
       <heading>GPS</heading>
       <para>
         <display_text>GPS</display_text>-välilehti kertoo Maemo Mapperille
-        bluetooth laitteen, miltä GPS-paikkatieto on saatavissa. Tämä valinta
-        on käytettävissä Maemo Mapperin kanssa vain, jos sinulla on bluetooth
-        yhteensopiva GPS-vastaanotin.
+        laitteen, miltä GPS-paikkatieto on saatavissa. Tämä valinta on käytettävissä
+	Maemo Mapperin kanssa vain, jos sinulla on saatavilla GPS-vastaanotin tai
+	GPSD-palvelin.  Teknisesti Maemo Mapper käyttää GPSD-palvelinta kaikkeen
+	GPS-vastaanottimen kommunikaatioon, mutta GPSD-palvelinta voidaan
+	käyttää myös seuraavilla kolmella tavalla:
       </para>
-      <para>
-        GPS-vastaanottimen bluetooth MAC-osoite tulee syöttää MAC-kenttään.
-        Mikäli et tiedä vastaanottimesi MAC-osoitetta, kytke vastaanotin päälle
-        ja kosketa <display_text>Etsi...</display_text> nappia, jolloin Maemo
-        Mapper etsii lähellä olevat bluetooth laittet.
-      </para>
-      <para>
-        <i>Vaihtoehtoisesti</i>, mikäli käytät rfcomm tai jotain muuta
-        tiedostojärjestelmäpohjaista NMEA syötettä lähteenä, voit syöttää
-        kenttään lähteen polun. Polku voisi olla esimerkiksi (alkaa aina
-        vino viivalla) "/dev/rfcomm1".  Tässä tapauksessa Maemo Mapper
-        lukee NMEA lauseet tiedostojärjestelmästä bluetoothin sijaan.
-      </para>
+      <list>
+        <listitem>
+          <display_text>Bluetooth</display_text> - Valitse tämä valinta, jos
+	  käytät bluetoot GPS-vastaanotinta. Bluetooth MAC-osoite tulee syöttää
+	  MAC-kenttään.  Mikäli et tiedä vastaanottimesi MAC-osoitetta, kytke
+	  vastaanotin päälle ja kosketa <display_text>Etsi...</display_text>
+	  nappia, jolloin Maemo Mapper etsii lähellä olevat bluetooth laittet.
+	  Tai vaihtoehtoisesti kenttä voidaan jättää tyhjäksi, jolloin Maemo Mapper
+	  käyttää automaattisesti bluetooth GPS-vastaanottimeksi tunnistamaansa
+	  laitetta.
+        </listitem>
+        <listitem>
+          <display_text>Tiedostopolku</display_text> - Valitse tämä, mikäli
+	  GPS-laite on määritetty laitteen tiedostojärjestelmässä.  Määritä
+	  tekstikenttään polku ja tiedosto GPS-laitteeseen.  Tätä valintaa
+	  voidaan käyttää myös laitteen sisäisen GPS:n kanss, jolloin tulee
+	  käyttää oletuksena olevaa <display_text>/dev/pgps</display_text>,
+          asetusta.
+        </listitem>
+        <listitem>
+          <display_text>GPSD-isäntä</display_text> - Valitse tämä valinta, mikäli
+	  haluat yhdistää Maemo Mapperin haluamaasi GPSD-palvelimeen (paikalliseen-
+	  tai etäpalvelimeen).  Aseta kenttään palvelimen nimi ja portti.  
+	  Oletusastukseski määritetty (127.0.0.1 portissa 2947) asettaa Maemo
+	  Mapperin käyttämään paikallista GPSD-palvelinta, mikäli se on
+	  käytettävissä.
+        </listitem>
+      </list>
       <heading>Automaattinen keskitys</heading>
       <para>
         <display_text>Autom. keskitys</display_text> välilehti antaa sinulle
@@ -1322,7 +1363,21 @@
       </para>
       <list>
         <listitem>
-          <display_text>Herkkyys</display_text> - Määrittää kuinka usein
+          <display_text>Etumatkan määrä</display_text> - Kun
+          <display_text>Etumatka</display_text> on valittuna, Maemo Mapper
+          pitää näytön keskittettynä sijaintisi eteen.  Liikkuessasi
+          tämä valinta näyttää karttaa etupainotteisesti, jolloin sinun on 
+          mahdollista nähdä tulevat tiet ajoissa.  Keskityspisteen etäisyyden
+          laskemiseen käytetään kahta muuttujaa: keskityshetken nopeus ja 
+          <display_text>Etumatkan määrä</display_text> valinnan arvo.
+        </listitem>
+        <listitem>
+          <display_text>Kiinteä</display_text> - Määrittelee vaikuttaako
+	  nopeutesi etumatkan määräään.  Jos valittuna, nopeus ei vaikuta
+	  näytettävään etumatkaan.
+        </listitem>
+        <listitem>
+          <display_text>Vieritysherkkyys</display_text> - Määrittää kuinka usein
           Maemo Mapper keskittää kartan, perustuen siihen kuinka lähelle
           sijaintisi (tai edessä olevan pisteen, kun <i>etumatka</i> on 
           valittuna) menee näytön reunaa.  Kun asetus on pienimmillään, Maemo
@@ -1331,13 +1386,25 @@
           mahdollisimman lähellä näytön keskustaa.
         </listitem>
         <listitem>
-          <display_text>Etumatkan määrä</display_text> - Kun
-          <display_text>Etumatka</display_text> on valittuna, Maemo Mapper
-          pitää näytön keskittettynä sijaintisi eteen.  Liikkuessasi
-          tämä valinta näyttää karttaa etupainotteisesti, jolloin sinun on 
-          mahdollista nähdä tulevat tiet ajoissa.  Keskityspisteen etäisyyden
-          laskemiseen käytetään kahta muuttujaa: keskityshetken nopeus ja 
-          <display_text>Etumatkan määrä</display_text> valinnan arvo.
+          <display_text>Min. Nopeus</display_text> - Määrittää kuinka nopeasti
+	  sinun tulee liikkua, jotta automaattinen keskitys (ja automaattinen
+	  kartan kääntäminen) aktivoituu.  Esimerkiksi jalankulkija saattaa
+	  haluta keskityksen ja kääntymisen aktivoituvan nopeasti asettamalla
+	  arvon matalaksi ja epätarkalla GPS-vastaanottimella varustettu 
+	  autoilija saattaa haluta keskityksen ja kääntymisen tapahtuvan
+	  harvemmin asttamalla asetuksen suuremmaksi, jotta pysäköitäessa tai
+	  liikennevaloihin pysähdyttäessä kartta ei pyöri epämääräisesti.
+	  Nopeus annetaan valitsemissasi yksiköissä.
+        </listitem>
+        <listitem>
+          <display_text>Kääntämisherkkyys</display_text> - Määrittää kuinka
+	  usein Maemo Mapper kääntää karttaa perustuen kartan suuntaan ja 
+	  poikkeaamaan verrattuna sen hetkiseen suuntimaasi.
+        </listitem>
+        <listitem>
+          <display_text>Pisteet</display_text> - Määrittää mihin suuntaan
+	  näytöllä suuntima osoittaa, kun automaattinen kääntäminen on käytössä
+	  Oletuksena suuntima osoittaa ylös.
         </listitem>
       </list>
       <heading>Ilmoitus</heading>
@@ -1451,9 +1518,9 @@
           näyttöä nopeusrajoituksen varoitus on nähtävissä.
         </listitem>
       </list>
-      <heading>POI</heading>
+      <heading>POI-pisteet</heading>
       <para>
-        <display_text>POI</display_text>-välilehti antaa mahdollisuuden
+        <display_text>POI-pisteet</display_text>-välilehti antaa mahdollisuuden
         määritellä POI-tietokannan sijainnin ja sen, kuinka POI-pisteet
         näytetään näytöllä.
       </para>
