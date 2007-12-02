@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2007-11-28 17:09-0500\n"
-"PO-Revision-Date: 2007-12-02 14:37+0200\n"
+"PO-Revision-Date: 2007-12-02 15:40+0200\n"
 "Last-Translator: Marko Vertainen <marko.vertainen@iki.fi>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
 "MIME-Version: 1.0\n"
@@ -1149,7 +1149,7 @@ msgstr "Määrittele lähtöpiste."
 
 #: ../src/settings.c:1236
 msgid "Points"
-msgstr "Pisteet"
+msgstr "Suuntaus"
 
 #: ../src/settings.c:1167
 msgid "Port"

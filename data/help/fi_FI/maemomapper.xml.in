@@ -1402,7 +1402,7 @@
 	  poikkeaamaan verrattuna sen hetkiseen suuntimaasi.
         </listitem>
         <listitem>
-          <display_text>Pisteet</display_text> - Määrittää mihin suuntaan
+          <display_text>Suunta</display_text> - Määrittää mihin suuntaan
 	  näytöllä suuntima osoittaa, kun automaattinen kääntäminen on käytössä
 	  Oletuksena suuntima osoittaa ylös.
         </listitem>
