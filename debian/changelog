@@ -1,3 +1,12 @@
+maemo-mapper (2.3) unstable; urgency=low
+
+  * Added an in-memory map cache to improve pan performance (thanks to Tim
+    Terriberry for the patch).
+  * Fixed bug with infinitely repeating auto-route-update error messages.
+  * Added option to completely disable all announcements.
+
+ -- John Costigan <gnuite@gmail.com>  Sat, 12 Jan 2008 13:07:00 -0500
+
 maemo-mapper (2.2) unstable; urgency=low
 
   * Modified the build system and the code to support OS2008.  It has been
