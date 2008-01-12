@@ -161,6 +161,7 @@ extern gint _draw_width;
 extern gint _rotate_sens;
 extern gint _ac_min_speed;
 extern RotateDir _rotate_dir;
+extern gboolean _enable_announce;
 extern gint _announce_notice_ratio;
 extern gboolean _enable_voice;
 extern GSList *_loc_list;

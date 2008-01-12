@@ -109,6 +109,445 @@ struct _MapmanInfo {
     GtkWidget *chk_zoom_levels[MAX_ZOOM + 1];
 };
 
+typedef struct _MapCacheKey MapCacheKey;
+struct _MapCacheKey {
+    RepoData      *repo;
+    gint           zoom;
+    gint           tilex;
+    gint           tiley;
+};
+
+typedef struct _MapCacheEntry MapCacheEntry;
+struct _MapCacheEntry {
+    MapCacheKey    key;
+    int            list;
+    guint          size;
+    guint          data_sz;
+    gchar         *data;
+    GdkPixbuf     *pixbuf;
+    MapCacheEntry *next;
+    MapCacheEntry *prev;
+};
+
+typedef struct _MapCacheList MapCacheList;
+struct _MapCacheList {
+    MapCacheEntry *head;
+    MapCacheEntry *tail;
+    size_t         size;
+    size_t         data_sz;
+};
+
+typedef struct _MapCache MapCache;
+struct _MapCache {
+    MapCacheList  lists[4];
+    size_t        cache_size;
+    size_t        p;
+    size_t        thits;
+    size_t        bhits;
+    size_t        misses;
+    GHashTable   *entries;
+};
+
+static MapCache _map_cache;
+
+
+static guint
+mapdb_get_data(RepoData *repo, gint zoom, gint tilex, gint tiley, gchar **data)
+{
+    guint size;
+    vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
+            repo->name, zoom, tilex, tiley);
+    *data = NULL;
+    size = 0;
+
+    if(!repo->db)
+    {
+        /* There is no cache.  Return NULL. */
+        vprintf("%s(): return %u\n", __PRETTY_FUNCTION__,size);
+        return size;
+    }
+
+#ifdef MAPDB_SQLITE
+    /* Attempt to retrieve map from database. */
+    if(SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 1, zoom)
+    && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 2, tilex)
+    && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 3, tiley)
+    && SQLITE_ROW == sqlite3_step(repo->stmt_map_select))
+    {
+        const gchar *bytes = NULL;
+        size = sqlite3_column_bytes(repo->stmt_map_select, 0);
+
+        /* "Pixbufs" of size less than or equal to MAX_PIXBUF_DUP_SIZE are
+         * actually keys into the dups table. */
+        if(size <= MAX_PIXBUF_DUP_SIZE)
+        {
+            gint hash = sqlite3_column_int(repo->stmt_map_select, 0);
+            if(SQLITE_OK == sqlite3_bind_int(repo->stmt_dup_select, 1, hash)
+            && SQLITE_ROW == sqlite3_step(repo->stmt_dup_select))
+            {
+                bytes = sqlite3_column_blob(repo->stmt_dup_select, 0);
+                size = sqlite3_column_bytes(repo->stmt_dup_select, 0);
+            }
+            else
+            {
+                /* Not there?  Delete the entry, then. */
+                if(SQLITE_OK != sqlite3_bind_int(
+                            repo->stmt_map_delete, 1, zoom)
+                || SQLITE_OK != sqlite3_bind_int(
+                    repo->stmt_map_delete, 2, tilex)
+                || SQLITE_OK != sqlite3_bind_int(
+                    repo->stmt_map_delete, 3, tiley)
+                || SQLITE_DONE != sqlite3_step(repo->stmt_map_delete))
+                {
+                    printf("Error in stmt_map_delete: %s\n", 
+                                sqlite3_errmsg(repo->db));
+                }
+                sqlite3_reset(repo->stmt_map_delete);
+
+                /* We have no bytes to return to the caller. */
+                bytes = NULL;
+                size = 0;
+            }
+            /* Don't reset the statement yet - we need the blob. */
+        }
+        else
+        {
+            bytes = sqlite3_column_blob(repo->stmt_map_select, 0);
+        }
+        if(bytes)
+        {
+            *data = g_slice_alloc(size);
+            memcpy(*data, bytes, size);
+        }
+        if(size <= MAX_PIXBUF_DUP_SIZE)
+            sqlite3_reset(repo->stmt_dup_select);
+    }
+    sqlite3_reset(repo->stmt_map_select);
+#else
+    {
+        datum d;
+        gint32 key[] = {
+            GINT32_TO_BE(zoom),
+            GINT32_TO_BE(tilex),
+            GINT32_TO_BE(tiley)
+        };
+        d.dptr = (gchar*)&key;
+        d.dsize = sizeof(key);
+        d = gdbm_fetch(repo->db, d);
+        if(d.dptr)
+        {
+            size = d.dsize;
+            *data = g_slice_alloc(size);
+            memcpy(*data, d.dptr, size);
+            free(d.dptr);
+        }
+    }
+#endif
+
+    vprintf("%s(): return %u\n", __PRETTY_FUNCTION__, size);
+    return size;
+}
+
+static void map_cache_list_remove(MapCacheList *_list, MapCacheEntry *_entry)
+{
+    _list->size -= _entry->size;
+    _list->data_sz -= _entry->data_sz;
+    *(_entry->prev != NULL?&_entry->prev->next:&_list->head) = _entry->next;
+    *(_entry->next != NULL?&_entry->next->prev:&_list->tail) = _entry->prev;
+}
+
+static void map_cache_list_prepend(MapCacheList *_list, int _li,
+ MapCacheEntry *_entry)
+{
+    _entry->prev = NULL;
+    _entry->next = _list[_li].head;
+    *(_list[_li].head != NULL?&_list[_li].head->prev:&_list[_li].tail) = _entry;
+    _list[_li].head = _entry;
+    _list[_li].size += _entry->size;
+    _list[_li].data_sz += _entry->data_sz;
+    _entry->list = _li;
+}
+
+static guint map_cache_key_hash(gconstpointer _key){
+    const MapCacheKey *key;
+    key = (const MapCacheKey *)_key;
+    return g_direct_hash(key->repo)+g_int_hash(&key->zoom)+
+     g_int_hash(&key->tilex)+g_int_hash(&key->tiley);
+}
+
+static gboolean map_cache_key_equal(gconstpointer _v1, gconstpointer _v2){
+    const MapCacheKey *key1;
+    const MapCacheKey *key2;
+    key1 = (const MapCacheKey *)_v1;
+    key2 = (const MapCacheKey *)_v2;
+    return key1->tilex == key2->tilex && key1->tiley == key2->tiley &&
+     key1->zoom == key2->zoom && key1->repo == key2->repo;
+}
+
+static void map_cache_entry_make_pixbuf(MapCacheEntry *_entry){
+    if (_entry->data != NULL)
+    {
+        GError *error;
+        GdkPixbufLoader *loader;
+        error = NULL;
+        loader = gdk_pixbuf_loader_new();
+        gdk_pixbuf_loader_write(loader, _entry->data, _entry->data_sz, NULL);
+        gdk_pixbuf_loader_close(loader, &error);
+        if(!error)
+        {
+            _entry->pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
+            _entry->size = _entry->data_sz+
+             gdk_pixbuf_get_rowstride(_entry->pixbuf)*
+             gdk_pixbuf_get_height(_entry->pixbuf);
+            g_object_unref(loader);
+            return;
+        }
+        g_object_unref(loader);
+        g_slice_free1(_entry->data_sz, _entry->data);
+        _entry->data = NULL;
+        _entry->data_sz = 0;
+    }
+    _entry->pixbuf = NULL;
+    _entry->size = _entry->data_sz;
+}
+
+static void map_cache_entry_free_pixbuf(MapCacheEntry *_entry){
+    if(_entry->pixbuf!=NULL)
+    {
+        g_object_unref(_entry->pixbuf);
+        _entry->pixbuf = NULL;
+    }
+}
+
+static void map_cache_entry_free(MapCacheEntry *_entry){
+    if(_entry->list >= 0)
+        map_cache_list_remove(_map_cache.lists+_entry->list, _entry);
+    map_cache_entry_free_pixbuf(_entry);
+    g_slice_free1(_entry->data_sz, _entry->data);
+    g_slice_free(MapCacheEntry, _entry);
+}
+
+static gboolean
+map_cache_replace(size_t _size, gboolean _b2)
+{
+    gboolean ret;
+    size_t total_size;
+    total_size = _map_cache.lists[0].size+_map_cache.lists[1].data_sz
+     +_map_cache.lists[2].size+_map_cache.lists[3].data_sz;
+    ret = FALSE;
+    while(total_size+_size > _map_cache.cache_size)
+    {
+        MapCacheEntry *entry;
+        int list;
+        if(_map_cache.lists[0].tail != NULL &&
+         (_map_cache.lists[0].size > _map_cache.p ||
+         (_b2 && _map_cache.lists[0].size == _map_cache.p)))
+            list = 0;
+        else
+            list = 2;
+        entry = _map_cache.lists[list].tail;
+        if(entry == NULL)
+            break;
+        map_cache_list_remove(_map_cache.lists+list, entry);
+        map_cache_list_prepend(_map_cache.lists, list+1, entry);
+        total_size -= entry->size - entry->data_sz;
+        ret = TRUE;
+        _b2 = FALSE;
+    }
+    return ret;
+}
+
+static void
+map_cache_evict(size_t _size)
+{
+    size_t total_size;
+    size_t max_size;
+    total_size = _map_cache.lists[0].size+_map_cache.lists[1].size
+     +_map_cache.lists[2].size+_map_cache.lists[3].size;
+    max_size = _map_cache.cache_size<<1;
+    for(;;)
+    {
+        if(_map_cache.lists[0].size+_map_cache.lists[1].size+_size >
+         _map_cache.cache_size)
+        {
+            if(_map_cache.lists[1].tail != NULL)
+            {
+                g_hash_table_remove(_map_cache.entries,
+                 &_map_cache.lists[1].tail->key);
+                map_cache_replace(_size, FALSE);
+            }
+            else if(_map_cache.lists[0].tail != NULL)
+            {
+                g_hash_table_remove(_map_cache.entries,
+                 &_map_cache.lists[0].tail->key);
+            }
+            else break;
+        }
+        else if(total_size+_size > _map_cache.cache_size)
+        {
+            if(total_size+_size > max_size &&
+             _map_cache.lists[3].tail != NULL)
+            {
+                g_hash_table_remove(_map_cache.entries,
+                 &_map_cache.lists[3].tail->key);
+                map_cache_replace(_size, FALSE);
+            }
+            else if(!map_cache_replace(_size, FALSE))
+                break;
+        }
+        else break;
+        total_size = _map_cache.lists[0].size+_map_cache.lists[1].size
+         +_map_cache.lists[2].size+_map_cache.lists[3].size;
+    }
+}
+
+static GdkPixbuf *
+map_cache_get(RepoData *repo, gint zoom, gint tilex, gint tiley)
+{
+    MapCacheKey key;
+    MapCacheEntry *entry;
+    key.repo = repo;
+    key.zoom = zoom;
+    key.tilex = tilex;
+    key.tiley = tiley;
+    entry = (MapCacheEntry *)g_hash_table_lookup(_map_cache.entries, &key);
+    if(entry != NULL)
+    {
+        map_cache_list_remove(_map_cache.lists+entry->list, entry);
+        if(entry->pixbuf == NULL)
+        {
+            size_t bsize;
+            size_t dp;
+            map_cache_entry_make_pixbuf(entry);
+            bsize = _map_cache.lists[entry->list].size+entry->size;
+            if(bsize < 1)
+                bsize = 1;
+            dp = _map_cache.lists[entry->list^2].size/bsize;
+            if(dp < 1)
+                dp = 1;
+            if(entry->list == 1)
+            {
+                _map_cache.p += dp;
+                if(_map_cache.p > _map_cache.cache_size)
+                    _map_cache.p = _map_cache.cache_size;
+                map_cache_replace(entry->size, FALSE);
+            }
+            else
+            {
+                if(dp > _map_cache.p)
+                    _map_cache.p = 0;
+                else
+                    _map_cache.p -= dp;
+                map_cache_replace(entry->size, TRUE);
+            }
+            _map_cache.bhits++;
+        }
+        else
+            _map_cache.thits++;
+        map_cache_list_prepend(_map_cache.lists, 2, entry);
+    }
+    else
+    {
+        gchar *data;
+        guint  data_sz;
+        data_sz = mapdb_get_data(repo, zoom, tilex, tiley, &data);
+        entry = g_slice_new(MapCacheEntry);
+        *&entry->key = *&key;
+        entry->data = data;
+        entry->data_sz = data_sz;
+        map_cache_entry_make_pixbuf(entry);
+        map_cache_evict(entry->size);
+        map_cache_list_prepend(_map_cache.lists, 0, entry);
+        g_hash_table_insert(_map_cache.entries, &entry->key, entry);
+        _map_cache.misses++;
+    }
+    if(entry->pixbuf != NULL)
+        g_object_ref(entry->pixbuf);
+    return entry->pixbuf;
+}
+
+static void
+map_cache_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
+ gchar *data,guint size)
+{
+    MapCacheKey key;
+    MapCacheEntry *entry;
+    key.repo = repo;
+    key.zoom = zoom;
+    key.tilex = tilex;
+    key.tiley = tiley;
+    entry = (MapCacheEntry *)g_hash_table_lookup(_map_cache.entries, &key);
+    if(entry != NULL)
+    {
+        g_slice_free1(entry->data_sz, entry->data);
+        entry->data = g_slice_alloc(size);
+        memcpy(entry->data, data, size);
+        entry->data_sz = size;
+        if(entry->pixbuf != NULL)
+        {
+            map_cache_entry_free_pixbuf(entry);
+            map_cache_list_remove(_map_cache.lists+entry->list, entry);
+            map_cache_list_prepend(_map_cache.lists, entry->list+1, entry);
+        }
+    }
+}
+
+static void
+map_cache_remove(RepoData *repo, gint zoom, gint tilex, gint tiley)
+{
+    MapCacheKey key;
+    key.repo = repo;
+    key.zoom = zoom;
+    key.tilex = tilex;
+    key.tiley = tiley;
+    g_hash_table_remove(_map_cache.entries, &key);
+}
+
+void
+map_cache_init(size_t cache_size)
+{
+    g_mutex_lock(_mapdb_mutex);
+    if(_map_cache.entries == NULL)
+        _map_cache.entries = g_hash_table_new_full(map_cache_key_hash,
+         map_cache_key_equal, NULL, (GDestroyNotify)map_cache_entry_free);
+    _map_cache.cache_size = cache_size;
+    if(_map_cache.p > cache_size)
+        _map_cache.p = cache_size;
+    map_cache_evict(0);
+    g_mutex_unlock(_mapdb_mutex);
+}
+
+size_t
+map_cache_resize(size_t cache_size)
+{
+    size_t total_size;
+    g_mutex_lock(_mapdb_mutex);
+    _map_cache.cache_size = cache_size;
+    total_size = _map_cache.lists[0].size+_map_cache.lists[1].data_sz
+     +_map_cache.lists[2].size+_map_cache.lists[3].data_sz;
+    g_mutex_unlock(_mapdb_mutex);
+    return total_size;
+}
+
+void
+map_cache_destroy(void)
+{
+    g_mutex_lock(_mapdb_mutex);
+    if(_map_cache.entries != NULL)
+    {
+        g_hash_table_destroy(_map_cache.entries);
+        _map_cache.entries = NULL;
+        printf("thits: %u (%0.2f%%)  bhits: %u (%0.2f%%)  "
+         "misses: %u (%0.2f%%)\n",
+         _map_cache.thits, 100*_map_cache.thits/(double)(
+         _map_cache.thits+_map_cache.bhits+_map_cache.misses),
+         _map_cache.bhits, 100*_map_cache.bhits/(double)(
+         _map_cache.thits+_map_cache.bhits+_map_cache.misses),
+         _map_cache.misses, 100*_map_cache.misses/(double)(
+         _map_cache.thits+_map_cache.bhits+_map_cache.misses));
+    }
+    g_mutex_unlock(_mapdb_mutex);
+}
 
 gboolean
 mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
@@ -125,6 +564,24 @@ mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
         g_mutex_unlock(_mapdb_mutex);
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
+    }
+
+    /* Search the cache first. */
+    {
+        MapCacheKey key;
+        MapCacheEntry *entry;
+        key.repo = repo;
+        key.zoom = zoom;
+        key.tilex = tilex;
+        key.tiley = tiley;
+        entry = (MapCacheEntry *)g_hash_table_lookup(_map_cache.entries, &key);
+        if(entry != NULL)
+        {
+            gboolean ret;
+            ret = entry->data != NULL;
+            g_mutex_unlock(_mapdb_mutex);
+            return ret;
+        }
     }
 
 #ifdef MAPDB_SQLITE
@@ -165,107 +622,12 @@ mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
 GdkPixbuf*
 mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
-    GdkPixbuf *pixbuf = NULL;
+    GdkPixbuf *pixbuf;
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
-
     g_mutex_lock(_mapdb_mutex);
-
-    if(!repo->db)
-    {
-        /* There is no cache.  Return NULL. */
-        g_mutex_unlock(_mapdb_mutex);
-        vprintf("%s(): return NULL\n", __PRETTY_FUNCTION__);
-        return NULL;
-    }
-
-#ifdef MAPDB_SQLITE
-    /* Attempt to retrieve map from database. */
-    if(SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 1, zoom)
-    && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 2, tilex)
-    && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 3, tiley)
-    && SQLITE_ROW == sqlite3_step(repo->stmt_map_select))
-    {
-        const gchar *bytes = NULL;
-        gint size = sqlite3_column_bytes(repo->stmt_map_select, 0);
-
-        /* "Pixbufs" of size less than or equal to MAX_PIXBUF_DUP_SIZE are
-         * actually keys into the dups table. */
-        if(size <= MAX_PIXBUF_DUP_SIZE)
-        {
-            gint hash = sqlite3_column_int(repo->stmt_map_select, 0);
-            if(SQLITE_OK == sqlite3_bind_int(repo->stmt_dup_select, 1, hash)
-            && SQLITE_ROW == sqlite3_step(repo->stmt_dup_select))
-            {
-                bytes = sqlite3_column_blob(repo->stmt_dup_select, 0);
-                size = sqlite3_column_bytes(repo->stmt_dup_select, 0);
-            }
-            else
-            {
-                /* Not there?  Delete the entry, then. */
-                if(SQLITE_OK != sqlite3_bind_int(
-                            repo->stmt_map_delete, 1, zoom)
-                || SQLITE_OK != sqlite3_bind_int(
-                    repo->stmt_map_delete, 2, tilex)
-                || SQLITE_OK != sqlite3_bind_int(
-                    repo->stmt_map_delete, 3, tiley)
-                || SQLITE_DONE != sqlite3_step(repo->stmt_map_delete))
-                {
-                    printf("Error in stmt_map_delete: %s\n", 
-                                sqlite3_errmsg(repo->db));
-                }
-                sqlite3_reset(repo->stmt_map_delete);
-
-                /* We have no bytes to return to the caller. */
-                bytes = NULL;
-            }
-            /* Don't reset the statement yet - we need the blob. */
-        }
-        else
-        {
-            bytes = sqlite3_column_blob(repo->stmt_map_select, 0);
-        }
-        if(bytes)
-        {
-            GError *error = NULL;
-            GdkPixbufLoader *loader = gdk_pixbuf_loader_new();
-            gdk_pixbuf_loader_write(loader, bytes, size, NULL);
-            gdk_pixbuf_loader_close(loader, &error);
-            if(!error)
-                pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
-            g_object_unref(loader);
-        }
-        if(size <= MAX_PIXBUF_DUP_SIZE)
-            sqlite3_reset(repo->stmt_dup_select);
-    }
-    sqlite3_reset(repo->stmt_map_select);
-#else
-    {
-        datum d;
-        gint32 key[] = {
-            GINT32_TO_BE(zoom),
-            GINT32_TO_BE(tilex),
-            GINT32_TO_BE(tiley)
-        };
-        d.dptr = (gchar*)&key;
-        d.dsize = sizeof(key);
-        d = gdbm_fetch(repo->db, d);
-        if(d.dptr)
-        {
-            GError *error = NULL;
-            GdkPixbufLoader *loader = gdk_pixbuf_loader_new();
-            gdk_pixbuf_loader_write(loader, d.dptr, d.dsize, NULL);
-            g_free(d.dptr);
-            gdk_pixbuf_loader_close(loader, &error);
-            if(!error)
-                pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
-            g_object_unref(loader);
-        }
-    }
-#endif
-
+    pixbuf = map_cache_get(repo, zoom, tilex, tiley);
     g_mutex_unlock(_mapdb_mutex);
-
     vprintf("%s(): return %p\n", __PRETTY_FUNCTION__, pixbuf);
     return pixbuf;
 }
@@ -322,6 +684,7 @@ mapdb_update(gboolean exists, RepoData *repo,
             repo->name, zoom, tilex, tiley);
 
     g_mutex_lock(_mapdb_mutex);
+    map_cache_update(repo, zoom, tilex, tiley, bytes, size);
 
     if(!repo->db)
     {
@@ -451,6 +814,7 @@ mapdb_delete(RepoData *repo, gint zoom, gint tilex, gint tiley)
             repo->name, zoom, tilex, tiley);
 
     g_mutex_lock(_mapdb_mutex);
+    map_cache_remove(repo, zoom, tilex, tiley);
 
     if(!repo->db)
     {

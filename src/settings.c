@@ -64,6 +64,70 @@
 #include "settings.h"
 #include "util.h"
 
+#define GCONF_KEY_PREFIX "/apps/maemo/maemo-mapper"
+#define GCONF_KEY_GPS_RCVR_TYPE GCONF_KEY_PREFIX"/gps_rcvr_type"
+#define GCONF_KEY_GPS_BT_MAC GCONF_KEY_PREFIX"/receiver_mac"
+#define GCONF_KEY_GPS_GPSD_HOST GCONF_KEY_PREFIX"/gps_gpsd_host"
+#define GCONF_KEY_GPS_GPSD_PORT GCONF_KEY_PREFIX"/gps_gpsd_port"
+#define GCONF_KEY_GPS_FILE_PATH GCONF_KEY_PREFIX"/gps_file_path"
+#define GCONF_KEY_AUTO_DOWNLOAD GCONF_KEY_PREFIX"/auto_download"
+#define GCONF_KEY_AUTO_DOWNLOAD_PRECACHE \
+                                      GCONF_KEY_PREFIX"/auto_download_precache"
+#define GCONF_KEY_CENTER_SENSITIVITY GCONF_KEY_PREFIX"/center_sensitivity"
+#define GCONF_KEY_ENABLE_ANNOUNCE GCONF_KEY_PREFIX"/enable_announce"
+#define GCONF_KEY_ANNOUNCE_NOTICE GCONF_KEY_PREFIX"/announce_notice"
+#define GCONF_KEY_ROTATE_SENSITIVITY GCONF_KEY_PREFIX"/rotate_sensitivity"
+#define GCONF_KEY_AC_MIN_SPEED GCONF_KEY_PREFIX"/autocenter_min_speed"
+#define GCONF_KEY_ROTATE_DIR GCONF_KEY_PREFIX"/rotate_direction"
+#define GCONF_KEY_DRAW_WIDTH GCONF_KEY_PREFIX"/draw_width"
+#define GCONF_KEY_ENABLE_VOICE GCONF_KEY_PREFIX"/enable_voice"
+#define GCONF_KEY_VOICE_SPEED GCONF_KEY_PREFIX"/voice_speed"
+#define GCONF_KEY_VOICE_PITCH GCONF_KEY_PREFIX"/voice_pitch"
+#define GCONF_KEY_FULLSCREEN GCONF_KEY_PREFIX"/fullscreen"
+#define GCONF_KEY_UNITS GCONF_KEY_PREFIX"/units"
+#define GCONF_KEY_SPEED_LIMIT_ON GCONF_KEY_PREFIX"/speed_limit_on"
+#define GCONF_KEY_SPEED_LIMIT GCONF_KEY_PREFIX"/speed_limit"
+#define GCONF_KEY_SPEED_LOCATION GCONF_KEY_PREFIX"/speed_location"
+#define GCONF_KEY_UNBLANK_SIZE GCONF_KEY_PREFIX"/unblank_option"
+#define GCONF_KEY_INFO_FONT_SIZE GCONF_KEY_PREFIX"/info_font_size"
+
+#define GCONF_KEY_POI_DB GCONF_KEY_PREFIX"/poi_db"
+#define GCONF_KEY_POI_ZOOM GCONF_KEY_PREFIX"/poi_zoom"
+
+#define GCONF_KEY_AUTOCENTER_MODE GCONF_KEY_PREFIX"/autocenter_mode"
+#define GCONF_KEY_AUTOCENTER_ROTATE GCONF_KEY_PREFIX"/autocenter_rotate"
+#define GCONF_KEY_LEAD_AMOUNT GCONF_KEY_PREFIX"/lead_amount"
+#define GCONF_KEY_LEAD_IS_FIXED GCONF_KEY_PREFIX"/lead_is_fixed"
+#define GCONF_KEY_LAST_LAT GCONF_KEY_PREFIX"/last_latitude"
+#define GCONF_KEY_LAST_LON GCONF_KEY_PREFIX"/last_longitude"
+#define GCONF_KEY_LAST_ALT GCONF_KEY_PREFIX"/last_altitude"
+#define GCONF_KEY_LAST_SPEED GCONF_KEY_PREFIX"/last_speed"
+#define GCONF_KEY_LAST_HEADING GCONF_KEY_PREFIX"/last_heading"
+#define GCONF_KEY_LAST_TIME GCONF_KEY_PREFIX"/last_timestamp"
+#define GCONF_KEY_CENTER_LAT GCONF_KEY_PREFIX"/center_latitude"
+#define GCONF_KEY_CENTER_LON GCONF_KEY_PREFIX"/center_longitude"
+#define GCONF_KEY_CENTER_ANGLE GCONF_KEY_PREFIX"/center_angle"
+#define GCONF_KEY_ZOOM GCONF_KEY_PREFIX"/zoom"
+#define GCONF_KEY_ROUTEDIR GCONF_KEY_PREFIX"/route_directory"
+#define GCONF_KEY_TRACKFILE GCONF_KEY_PREFIX"/track_file"
+#define GCONF_KEY_SHOWZOOMLEVEL GCONF_KEY_PREFIX"/show_zoomlevel"
+#define GCONF_KEY_SHOWSCALE GCONF_KEY_PREFIX"/show_scale"
+#define GCONF_KEY_SHOWCOMPROSE GCONF_KEY_PREFIX"/show_comprose"
+#define GCONF_KEY_SHOWTRACKS GCONF_KEY_PREFIX"/show_tracks"
+#define GCONF_KEY_SHOWROUTES GCONF_KEY_PREFIX"/show_routes"
+#define GCONF_KEY_SHOWVELVEC GCONF_KEY_PREFIX"/show_velocity_vector" 
+#define GCONF_KEY_SHOWPOIS GCONF_KEY_PREFIX"/show_poi" 
+#define GCONF_KEY_ENABLE_GPS GCONF_KEY_PREFIX"/enable_gps" 
+#define GCONF_KEY_ROUTE_LOCATIONS GCONF_KEY_PREFIX"/route_locations" 
+#define GCONF_KEY_REPOSITORIES GCONF_KEY_PREFIX"/repositories" 
+#define GCONF_KEY_CURRREPO GCONF_KEY_PREFIX"/curr_repo" 
+#define GCONF_KEY_GPS_INFO GCONF_KEY_PREFIX"/gps_info" 
+#define GCONF_KEY_ROUTE_DL_URL GCONF_KEY_PREFIX"/route_dl_url" 
+#define GCONF_KEY_ROUTE_DL_RADIUS GCONF_KEY_PREFIX"/route_dl_radius" 
+#define GCONF_KEY_POI_DL_URL GCONF_KEY_PREFIX"/poi_dl_url" 
+#define GCONF_KEY_DEG_FORMAT GCONF_KEY_PREFIX"/deg_format" 
+
+
 typedef struct _ScanInfo ScanInfo;
 struct _ScanInfo {
     GtkWidget *settings_dialog;
@@ -181,6 +245,10 @@ settings_save()
     /* Save Draw Line Width. */
     gconf_client_set_int(gconf_client,
             GCONF_KEY_DRAW_WIDTH, _draw_width, NULL);
+
+    /* Save Announce Flag. */
+    gconf_client_set_bool(gconf_client,
+            GCONF_KEY_ENABLE_ANNOUNCE, _enable_announce, NULL);
 
     /* Save Announce Advance Notice Ratio. */
     gconf_client_set_int(gconf_client,
@@ -1044,6 +1112,7 @@ settings_dialog()
     static GtkWidget *num_ac_min_speed = NULL;
     static GtkWidget *num_announce_notice = NULL;
     static GtkWidget *chk_enable_voice = NULL;
+    static GtkWidget *chk_enable_announce = NULL;
     static GtkWidget *num_draw_width = NULL;
     static GtkWidget *cmb_units = NULL;
     static GtkWidget *cmb_degformat = NULL;
@@ -1247,14 +1316,22 @@ settings_dialog()
                 table = gtk_table_new(2, 3, FALSE),
                 label = gtk_label_new(_("Announce")));
 
+        /* Enable Waypoint Announcements. */
+        gtk_table_attach(GTK_TABLE(table),
+                chk_enable_announce = gtk_check_button_new_with_label(
+                    _("Enable Waypoint Announcements")),
+                0, 2, 0, 1, GTK_FILL, 0, 2, 4);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_enable_announce),
+                _enable_announce);
+
         /* Announcement Advance Notice. */
         gtk_table_attach(GTK_TABLE(table),
                 label = gtk_label_new(_("Advance Notice")),
-                0, 1, 0, 1, GTK_FILL, 0, 2, 4);
+                0, 1, 1, 2, GTK_FILL, 0, 2, 4);
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
                 num_announce_notice = hildon_controlbar_new(),
-                1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+                1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         hildon_controlbar_set_range(
                 HILDON_CONTROLBAR(num_announce_notice), 1, 20);
         force_min_visible_bars(HILDON_CONTROLBAR(num_announce_notice), 1);
@@ -1263,7 +1340,7 @@ settings_dialog()
         gtk_table_attach(GTK_TABLE(table),
                 chk_enable_voice = gtk_check_button_new_with_label(
                     _("Enable Voice Synthesis (requires flite)")),
-                0, 2, 1, 2, GTK_FILL, 0, 2, 4);
+                0, 2, 2, 3, GTK_FILL, 0, 2, 4);
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_enable_voice),
                 _enable_voice);
 
@@ -1649,6 +1726,9 @@ settings_dialog()
         _announce_notice_ratio = hildon_controlbar_get_value(
                 HILDON_CONTROLBAR(num_announce_notice));
 
+        _enable_announce = gtk_toggle_button_get_active(
+                GTK_TOGGLE_BUTTON(chk_enable_announce));
+
         _enable_voice = gtk_toggle_button_get_active(
                 GTK_TOGGLE_BUTTON(chk_enable_voice));
 
@@ -1776,6 +1856,31 @@ settings_init()
     gchar *str;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    /* Initialize some constants. */
+    CUSTOM_KEY_GCONF[CUSTOM_KEY_UP] = GCONF_KEY_PREFIX"/key_up";
+    CUSTOM_KEY_GCONF[CUSTOM_KEY_DOWN] = GCONF_KEY_PREFIX"/key_down";
+    CUSTOM_KEY_GCONF[CUSTOM_KEY_LEFT] = GCONF_KEY_PREFIX"/key_left";
+    CUSTOM_KEY_GCONF[CUSTOM_KEY_RIGHT] = GCONF_KEY_PREFIX"/key_right";
+    CUSTOM_KEY_GCONF[CUSTOM_KEY_SELECT] = GCONF_KEY_PREFIX"/key_select";
+    CUSTOM_KEY_GCONF[CUSTOM_KEY_INCREASE] = GCONF_KEY_PREFIX"/key_increase";
+    CUSTOM_KEY_GCONF[CUSTOM_KEY_DECREASE] = GCONF_KEY_PREFIX"/key_decrease";
+    CUSTOM_KEY_GCONF[CUSTOM_KEY_FULLSCREEN]= GCONF_KEY_PREFIX"/key_fullscreen";
+    CUSTOM_KEY_GCONF[CUSTOM_KEY_ESC] = GCONF_KEY_PREFIX"/key_esc";
+
+    COLORABLE_GCONF[COLORABLE_MARK] = GCONF_KEY_PREFIX"/color_mark";
+    COLORABLE_GCONF[COLORABLE_MARK_VELOCITY]
+        = GCONF_KEY_PREFIX"/color_mark_velocity";
+    COLORABLE_GCONF[COLORABLE_MARK_OLD] = GCONF_KEY_PREFIX"/color_mark_old";
+    COLORABLE_GCONF[COLORABLE_TRACK] = GCONF_KEY_PREFIX"/color_track";
+    COLORABLE_GCONF[COLORABLE_TRACK_MARK] =GCONF_KEY_PREFIX"/color_track_mark";
+    COLORABLE_GCONF[COLORABLE_TRACK_BREAK]
+        = GCONF_KEY_PREFIX"/color_track_break";
+    COLORABLE_GCONF[COLORABLE_ROUTE] = GCONF_KEY_PREFIX"/color_route";
+    COLORABLE_GCONF[COLORABLE_ROUTE_WAY] = GCONF_KEY_PREFIX"/color_route_way";
+    COLORABLE_GCONF[COLORABLE_ROUTE_BREAK]
+        = GCONF_KEY_PREFIX"/color_route_break";
+    COLORABLE_GCONF[COLORABLE_POI] = GCONF_KEY_PREFIX"/color_poi";
+
     if(!gconf_client)
     {
         popup_error(_window, _("Failed to initialize GConf.  Quitting."));
@@ -1876,6 +1981,16 @@ settings_init()
             GCONF_KEY_DRAW_WIDTH, NULL);
     if(!_draw_width)
         _draw_width = 5;
+
+    /* Get Enable Announcements flag.  Default is TRUE. */
+    value = gconf_client_get(gconf_client, GCONF_KEY_ENABLE_ANNOUNCE, NULL);
+    if(value)
+    {
+        _enable_announce = gconf_value_get_bool(value);
+        gconf_value_free(value);
+    }
+    else
+        _enable_announce = TRUE;
 
     /* Get Announce Advance Notice - Default is 30. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ANNOUNCE_NOTICE, NULL);

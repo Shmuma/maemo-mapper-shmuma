@@ -74,6 +74,10 @@ static gboolean _conic_conn_failed = FALSE;
 static GMutex *_conic_connection_mutex = NULL;
 static GCond *_conic_connection_cond = NULL;
 
+/* Dynamically-sized in-memory map cache. */
+static size_t _map_cache_size = (32*1024*1024);
+static gboolean _map_cache_enabled = TRUE;
+
 static void
 conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
 {
@@ -192,6 +196,7 @@ maemo_mapper_destroy()
         g_mutex_unlock(_mapdb_mutex);
 #endif
     }
+    map_cache_destroy();
 
     gps_destroy(TRUE);
 
@@ -230,16 +235,6 @@ maemo_mapper_init(gint argc, gchar **argv)
     INFO_FONT_ENUM_TEXT[INFO_FONT_LARGE] = "large";
     INFO_FONT_ENUM_TEXT[INFO_FONT_XLARGE] = "x-large";
     INFO_FONT_ENUM_TEXT[INFO_FONT_XXLARGE] = "xx-large";
-
-    CUSTOM_KEY_GCONF[CUSTOM_KEY_UP] = GCONF_KEY_PREFIX"/key_up";
-    CUSTOM_KEY_GCONF[CUSTOM_KEY_DOWN] = GCONF_KEY_PREFIX"/key_down";
-    CUSTOM_KEY_GCONF[CUSTOM_KEY_LEFT] = GCONF_KEY_PREFIX"/key_left";
-    CUSTOM_KEY_GCONF[CUSTOM_KEY_RIGHT] = GCONF_KEY_PREFIX"/key_right";
-    CUSTOM_KEY_GCONF[CUSTOM_KEY_SELECT] = GCONF_KEY_PREFIX"/key_select";
-    CUSTOM_KEY_GCONF[CUSTOM_KEY_INCREASE] = GCONF_KEY_PREFIX"/key_increase";
-    CUSTOM_KEY_GCONF[CUSTOM_KEY_DECREASE] = GCONF_KEY_PREFIX"/key_decrease";
-    CUSTOM_KEY_GCONF[CUSTOM_KEY_FULLSCREEN]= GCONF_KEY_PREFIX"/key_fullscreen";
-    CUSTOM_KEY_GCONF[CUSTOM_KEY_ESC] = GCONF_KEY_PREFIX"/key_esc";
 
     CUSTOM_KEY_ICON[CUSTOM_KEY_UP] = HWK_BUTTON_UP;
     CUSTOM_KEY_ICON[CUSTOM_KEY_LEFT] = HWK_BUTTON_LEFT;
@@ -305,20 +300,6 @@ maemo_mapper_init(gint argc, gchar **argv)
     CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_RESET_BLUETOOTH]
         = _("Reset Bluetooth");
 
-    COLORABLE_GCONF[COLORABLE_MARK] = GCONF_KEY_PREFIX"/color_mark";
-    COLORABLE_GCONF[COLORABLE_MARK_VELOCITY]
-        = GCONF_KEY_PREFIX"/color_mark_velocity";
-    COLORABLE_GCONF[COLORABLE_MARK_OLD] = GCONF_KEY_PREFIX"/color_mark_old";
-    COLORABLE_GCONF[COLORABLE_TRACK] = GCONF_KEY_PREFIX"/color_track";
-    COLORABLE_GCONF[COLORABLE_TRACK_MARK] =GCONF_KEY_PREFIX"/color_track_mark";
-    COLORABLE_GCONF[COLORABLE_TRACK_BREAK]
-        = GCONF_KEY_PREFIX"/color_track_break";
-    COLORABLE_GCONF[COLORABLE_ROUTE] = GCONF_KEY_PREFIX"/color_route";
-    COLORABLE_GCONF[COLORABLE_ROUTE_WAY] = GCONF_KEY_PREFIX"/color_route_way";
-    COLORABLE_GCONF[COLORABLE_ROUTE_BREAK]
-        = GCONF_KEY_PREFIX"/color_route_break";
-    COLORABLE_GCONF[COLORABLE_POI] = GCONF_KEY_PREFIX"/color_poi";
-
     DEG_FORMAT_ENUM_TEXT[DDPDDDDD] = "-dd.ddddd°";
     DEG_FORMAT_ENUM_TEXT[DD_MMPMMM] = "-dd°mm.mmm'";
     DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS] = "-dd°mm'ss.s\"";
@@ -352,6 +333,7 @@ maemo_mapper_init(gint argc, gchar **argv)
     _conic_connection_cond = g_cond_new();
 
     settings_init();
+    map_cache_init(_map_cache_size);
 
     /* Initialize _program. */
     _program = HILDON_PROGRAM(hildon_program_get_instance());
@@ -543,15 +525,33 @@ osso_cb_hw_state_idle(osso_hw_state_t *state)
             state->save_unsaved_data_ind, state->shutdown_ind,
             state->memory_low_ind, state->sig_device_mode_ind);
 
+    if(state->shutdown_ind)
+    {
+        maemo_mapper_destroy();
+        exit(1);
+    }
+
     if(state->save_unsaved_data_ind)
     {
         settings_save();
         _must_save_data = TRUE;
     }
-    else if(state->shutdown_ind)
+
+    if(state->memory_low_ind)
     {
-        maemo_mapper_destroy();
-        exit(1);
+        // Disable the map cache and set the next max cache size to
+        // slightly less than the current cache size.
+        _map_cache_size = map_cache_resize(0) * 0.8;
+        _map_cache_enabled = FALSE;
+    }
+    else
+    {
+        if(!_map_cache_enabled)
+        {
+            // Restore the map cache.
+            map_cache_resize(_map_cache_size);
+            _map_cache_enabled = TRUE;
+        }
     }
 
     g_free(state);

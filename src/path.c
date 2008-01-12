@@ -709,8 +709,9 @@ auto_route_dl_idle()
     g_ascii_dtostr(lonstr, 32, _gps.lon);
     snprintf(latlonstr, sizeof(latlonstr), "%s, %s", latstr, lonstr);
 
-    route_download_and_setup(_window, _autoroute_data.source_url, latlonstr,
-            _autoroute_data.dest, _autoroute_data.avoid_highways,0);
+    if(!route_download_and_setup(_window, _autoroute_data.source_url, latlonstr,
+            _autoroute_data.dest, _autoroute_data.avoid_highways,0))
+        cancel_autoroute();
 
     _autoroute_data.in_progress = FALSE;
 
@@ -919,8 +920,9 @@ track_add(time_t time, gboolean newly_fixed)
         }
 
         /* Check if we should announce upcoming waypoints. */
-        if(_initial_distance_waypoint || _next_way_dist_squared
-                    < (announce_thres_unsquared * announce_thres_unsquared))
+        if(_enable_announce
+                && (_initial_distance_waypoint || _next_way_dist_squared
+                    < (announce_thres_unsquared * announce_thres_unsquared)))
         {
             if(show_directions)
             {
