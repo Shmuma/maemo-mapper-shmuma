@@ -222,11 +222,11 @@ maemo_mapper_init(gint argc, gchar **argv)
     ROTATE_DIR_ENUM_TEXT[ROTATE_DIR_DOWN] = _("Down");
     ROTATE_DIR_ENUM_TEXT[ROTATE_DIR_LEFT] = _("Left");
 
-    UNBLANK_ENUM_TEXT[UNBLANK_WITH_GPS] = "When Receiving Any GPS Data";
-    UNBLANK_ENUM_TEXT[UNBLANK_WHEN_MOVING] = "When Moving";
-    UNBLANK_ENUM_TEXT[UNBLANK_FULLSCREEN] = "When Moving (Full Screen Only)";
-    UNBLANK_ENUM_TEXT[UNBLANK_WAYPOINT] = "When Approaching a Waypoint";
-    UNBLANK_ENUM_TEXT[UNBLANK_NEVER] = "Never";
+    UNBLANK_ENUM_TEXT[UNBLANK_WITH_GPS] = _("When Receiving Any GPS Data");
+    UNBLANK_ENUM_TEXT[UNBLANK_WHEN_MOVING] = _("When Moving");
+    UNBLANK_ENUM_TEXT[UNBLANK_FULLSCREEN] = _("When Moving (Full Screen Only)");
+    UNBLANK_ENUM_TEXT[UNBLANK_WAYPOINT] = _("When Approaching a Waypoint");
+    UNBLANK_ENUM_TEXT[UNBLANK_NEVER] = _("Never");
 
     INFO_FONT_ENUM_TEXT[INFO_FONT_XXSMALL] = "xx-small";
     INFO_FONT_ENUM_TEXT[INFO_FONT_XSMALL] = "x-small";
