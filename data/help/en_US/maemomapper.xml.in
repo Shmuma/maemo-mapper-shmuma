@@ -69,8 +69,8 @@
       </para>
       <note>
         If you are using Maemo Mapper on a device with an internal GPS
-        receiver, then you should probably use the "File Path" receiver type
-        and specify the path <display_text>/dev/pgps</display_text>.
+        receiver, then you should probably use the "Bluetooth" receiver type
+        and leave the field empty.
       </note>
       <para>
         When you are finished setting up Maemo Mapper to your preferences,
@@ -1313,16 +1313,15 @@
           <display_text>Scan...</display_text> button to select it from a
           list of nearby bluetooth devices.  Or, leave the field blank and
           Maemo Mapper will automatically try to use any bluetooth GPS
-          receivers that it can identify.
+          receivers that it can identify.  This
+          option is also appropriate if you are running Maemo Mapper on a
+          device with an internal GPS receiver, in which case you should
+          leave the field blank.
         </listitem>
         <listitem>
           <display_text>File Path</display_text> - Select this option to use
           a device file on your file system, such as an RFCOMM device, and
-          specify the pathname of the file in the appropriate field.  This
-          option is also appropriate if you are running Maemo Mapper on a
-          device with an internal GPS receiver, in which case you should
-          probably use the path <display_text>/dev/pgps</display_text>,
-          which is the default.
+          specify the pathname of the file in the appropriate field.
         </listitem>
         <listitem>
           <display_text>GPSD Host</display_text> - Select this option if you
