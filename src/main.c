@@ -130,13 +130,13 @@ conic_recommend_connected()
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
-void
+gboolean
 conic_ensure_connected()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
 #ifndef DEBUG
-    while(!_conic_is_connected)
+    while(_window && !_conic_is_connected)
     {   
         g_mutex_lock(_conic_connection_mutex);
         /* If we're not connected, and if we're not connecting, and if we're
@@ -152,7 +152,9 @@ conic_ensure_connected()
     }
 #endif
 
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__,
+            _window && _conic_is_connected);
+    return _window && _conic_is_connected;
 }
 
 /**
@@ -180,6 +182,9 @@ maemo_mapper_destroy()
     g_mutex_unlock(_mut_priority_mutex);
 
     /* Allow remaining downloads to finish. */
+    g_mutex_lock(_conic_connection_mutex);
+    g_cond_broadcast(_conic_connection_cond);
+    g_mutex_unlock(_conic_connection_mutex);
     g_thread_pool_free(_mut_thread_pool, TRUE, TRUE);
 
     if(_curr_repo->db)

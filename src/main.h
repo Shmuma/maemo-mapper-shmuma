@@ -27,6 +27,6 @@
 gint main(gint argc, gchar *argv[]);
 
 void conic_recommend_connected(void);
-void conic_ensure_connected(void);
+gboolean conic_ensure_connected(void);
 
 #endif /* ifndef MAEMO_MAPPER_MAIN_H */

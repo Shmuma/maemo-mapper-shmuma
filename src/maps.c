@@ -80,6 +80,7 @@ struct _RepoEditInfo {
     GtkWidget *chk_double_size;
     GtkWidget *chk_nextable;
     GtkWidget *btn_browse;
+    GtkWidget *btn_compact;
     GtkWidget *num_min_zoom;
     GtkWidget *num_max_zoom;
     BrowseInfo browse_info;
@@ -107,6 +108,15 @@ struct _MapmanInfo {
 
     /* The "Zoom" tab. */
     GtkWidget *chk_zoom_levels[MAX_ZOOM + 1];
+};
+
+typedef struct _CompactInfo CompactInfo;
+struct _CompactInfo {
+    GtkWidget *dialog;
+    GtkWidget *txt;
+    GtkWidget *banner;
+    const gchar *db_filename;
+    gchar *status_msg;
 };
 
 typedef struct _MapCacheKey MapCacheKey;
@@ -1383,14 +1393,11 @@ thread_proc_mut()
     /* Make sure things are inititalized. */
     gnome_vfs_init();
 
-    while(TRUE)
+    while(conic_ensure_connected())
     {
         gint retries;
         gboolean refresh_sent = FALSE;
         MapUpdateTask *mut = NULL;
-
-        /* Wait until we are connected. */
-        conic_ensure_connected();
 
         /* Get the next MUT from the mut tree. */
         g_mutex_lock(_mut_priority_mutex);
@@ -1652,6 +1659,124 @@ repoman_dialog_browse(GtkWidget *widget, BrowseInfo *browse_info)
 }
 
 static gboolean
+repoman_compact_complete_idle(CompactInfo *ci)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    gtk_widget_destroy(GTK_WIDGET(ci->banner));
+    popup_error(ci->dialog, ci->status_msg);
+    gtk_widget_destroy(ci->dialog);
+    g_free(ci);
+
+    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+    return FALSE;
+}
+
+static void
+thread_repoman_compact(CompactInfo *ci)
+{
+    GDBM_FILE db;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(!(db = gdbm_open((gchar*)ci->db_filename, 0, GDBM_WRITER | GDBM_FAST,
+                    0644, NULL)))
+        ci->status_msg = _("Failed to open map database for compacting.");
+    else
+    {
+        if(gdbm_reorganize(db))
+            ci->status_msg = _("An error occurred while trying to "
+                        "compact the database.");
+        else
+            ci->status_msg = _("Successfully compacted database.");
+        gdbm_close(db);
+    }
+
+    g_idle_add((GSourceFunc)repoman_compact_complete_idle, ci);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static void
+repoman_dialog_compact(GtkWidget *widget, BrowseInfo *browse_info)
+{
+    CompactInfo *ci;
+    GtkWidget *sw;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    ci = g_new0(CompactInfo, 1);
+
+    ci->dialog = gtk_dialog_new_with_buttons(_("Compact Database"),
+            GTK_WINDOW(browse_info->dialog), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+            NULL);
+
+    sw = gtk_scrolled_window_new (NULL, NULL);
+    gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (sw),
+            GTK_SHADOW_ETCHED_IN);
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (sw),
+            GTK_POLICY_NEVER,
+            GTK_POLICY_ALWAYS);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(ci->dialog)->vbox),
+            sw, TRUE, TRUE, 0);
+
+    gtk_container_add(GTK_CONTAINER(sw), ci->txt = gtk_text_view_new());
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(ci->txt), FALSE);
+    gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(ci->txt), FALSE);
+    gtk_text_buffer_set_text(
+            gtk_text_view_get_buffer(GTK_TEXT_VIEW(ci->txt)),
+            _("Generally, deleted maps create an empty space in the "
+                "database that is later reused when downloading new maps.  "
+                "Compacting the database reorganizes it such that all "
+                "that blank space is eliminated.  This is the only way "
+                "that the size of the database can decrease.\n"
+                "This reorganization requires creating a new file and "
+                "inserting all the maps in the old database file into the "
+                "new file. The new file is then renamed to the same name "
+                "as the old file and dbf is updated to contain all the "
+                "correct information about the new file.  Note that this "
+                "can require free space on disk of an amount up to the size "
+                "of the map database.\n"
+                "This process may take several minutes, especially if "
+                "your map database is large.  As a rough estimate, you can "
+                "expect to wait approximately 2-5 seconds per megabyte of "
+                "map data (34-85 minutes per gigabyte).  There is no progress "
+                "indicator, although you can watch the new file grow in any "
+                "file manager.  Do not attempt to close Maemo Mapper while "
+                "the compacting operation is in progress."),
+            -1);
+    {
+        GtkTextIter iter;
+        gtk_text_buffer_get_iter_at_offset(
+                gtk_text_view_get_buffer(GTK_TEXT_VIEW(ci->txt)),
+                &iter, 0);
+        gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(ci->txt),
+                &iter, 0.0, FALSE, 0, 0);
+    }
+
+    gtk_widget_set_size_request(GTK_WIDGET(sw), 600, 200);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(ci->txt), GTK_WRAP_WORD);
+
+    gtk_widget_show_all(ci->dialog);
+
+    if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(ci->dialog)))
+    {
+        gtk_widget_set_sensitive(GTK_DIALOG(ci->dialog)->action_area, FALSE);
+        ci->db_filename = gtk_entry_get_text(GTK_ENTRY(browse_info->txt));
+        ci->banner = hildon_banner_show_animation(ci->dialog, NULL,
+                _("Compacting database..."));
+
+        g_thread_create((GThreadFunc)thread_repoman_compact, ci, FALSE, NULL);
+    }
+    else
+    {
+        gtk_widget_destroy(ci->dialog);
+    }
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+static gboolean
 repoman_dialog_rename(GtkWidget *widget, RepoManInfo *rmi)
 {
     static GtkWidget *hbox = NULL;
@@ -1800,6 +1925,9 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
     gtk_box_pack_start(GTK_BOX(hbox),
             rei->btn_browse = gtk_button_new_with_label(_("Browse...")),
             FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox),
+            rei->btn_compact = gtk_button_new_with_label(_("Compact...")),
+            FALSE, FALSE, 0);
 
     /* Initialize cache dir */
     {
@@ -1907,6 +2035,9 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
     rei->browse_info.txt = rei->txt_db_filename;
     g_signal_connect(G_OBJECT(rei->btn_browse), "clicked",
                       G_CALLBACK(repoman_dialog_browse),
+                      &rei->browse_info);
+    g_signal_connect(G_OBJECT(rei->btn_compact), "clicked",
+                      G_CALLBACK(repoman_dialog_compact),
                       &rei->browse_info);
 
     gtk_widget_show_all(vbox);
