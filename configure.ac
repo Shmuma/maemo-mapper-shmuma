@@ -18,7 +18,7 @@
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 2.3)
+AM_INIT_AUTOMAKE(maemo-mapper, 2.3.1)
 
 AC_PROG_CPP
 AC_CONFIG_HEADERS(src/config.h)
@@ -92,7 +92,7 @@ AC_PROG_INTLTOOL([0.23])
 GETTEXT_PACKAGE=$PACKAGE
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], "${GETTEXT_PACKAGE}", [Name of gettext package])
-ALL_LINGUAS="en_US en_GB nl_NL it_IT bg_BG fi_FI"
+ALL_LINGUAS="en_US en_GB nl_NL it_IT bg_BG fi_FI sv_SE"
 AM_GLIB_GNU_GETTEXT
 
 

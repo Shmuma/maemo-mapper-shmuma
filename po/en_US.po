@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-01-12 17:41-0500\n"
+"POT-Creation-Date: 2008-01-21 01:54-0500\n"
 "PO-Revision-Date: 2006-10-28 22:19-0400\n"
 "Last-Translator: John Costigan <gnuite@gmail.com>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
@@ -71,7 +71,7 @@ msgstr ""
 msgid "Advance Notice"
 msgstr ""
 
-#: ../src/maps.c:2666
+#: ../src/maps.c:2797
 msgid "Along Route - Radius (tiles):"
 msgstr ""
 
@@ -83,10 +83,14 @@ msgstr ""
 msgid "An error occurred while attempting to scan for bluetooth devices."
 msgstr ""
 
-#: ../src/maps.c:2025
+#: ../src/maps.c:2156
 msgid ""
 "An error occurred while retrieving the repositories.  The web service may be "
 "temporarily down."
+msgstr ""
+
+#: ../src/maps.c:1687
+msgid "An error occurred while trying to compact the database."
 msgstr ""
 
 #: ../src/gps.c:889
@@ -101,7 +105,7 @@ msgstr ""
 msgid "Announce"
 msgstr ""
 
-#: ../src/maps.c:2706
+#: ../src/maps.c:2837
 msgid "Area"
 msgstr ""
 
@@ -153,15 +157,15 @@ msgstr ""
 msgid "Bear."
 msgstr ""
 
-#: ../src/main.c:318 ../src/settings.c:1176
+#: ../src/main.c:322 ../src/settings.c:1176
 msgid "Bluetooth"
 msgstr ""
 
-#: ../src/main.c:316
+#: ../src/main.c:320
 msgid "Bottom-Left"
 msgstr ""
 
-#: ../src/main.c:315 ../src/maps.c:2793
+#: ../src/main.c:319 ../src/maps.c:2924
 msgid "Bottom-Right"
 msgstr ""
 
@@ -177,7 +181,7 @@ msgstr ""
 msgid "Browse POIs"
 msgstr ""
 
-#: ../src/maps.c:1801 ../src/menu.c:1467 ../src/settings.c:1214
+#: ../src/maps.c:1926 ../src/menu.c:1467 ../src/settings.c:1214
 #: ../src/settings.c:1487
 msgid "Browse..."
 msgstr ""
@@ -190,15 +194,15 @@ msgstr ""
 msgid "Business"
 msgstr ""
 
-#: ../src/maps.c:2657
+#: ../src/maps.c:2788
 msgid "By Area (see tab)"
 msgstr ""
 
-#: ../src/maps.c:1791
+#: ../src/maps.c:1916
 msgid "Cache DB"
 msgstr ""
 
-#: ../src/maps.c:1731
+#: ../src/maps.c:1856
 msgid ""
 "Cannot delete the last repository - there must be at lease one repository."
 msgstr ""
@@ -216,11 +220,11 @@ msgstr ""
 msgid "Checked POI Actions..."
 msgstr ""
 
-#: ../src/maps.c:2610 ../src/menu.c:1435 ../src/menu.c:1455
+#: ../src/maps.c:2741 ../src/menu.c:1435 ../src/menu.c:1455
 msgid "Clear"
 msgstr ""
 
-#: ../src/main.c:291
+#: ../src/main.c:295
 msgid "Clear Track"
 msgstr ""
 
@@ -240,15 +244,27 @@ msgstr ""
 msgid "Colors..."
 msgstr ""
 
+#: ../src/maps.c:1708
+msgid "Compact Database"
+msgstr ""
+
+#: ../src/maps.c:1929
+msgid "Compact..."
+msgstr ""
+
+#: ../src/maps.c:1767
+msgid "Compacting database..."
+msgstr ""
+
 #: ../src/menu.c:1579
 msgid "Compass Rose"
 msgstr ""
 
-#: ../src/maps.c:2338 ../src/maps.c:2438
+#: ../src/maps.c:2469 ../src/maps.c:2569
 msgid "Confirm DELETION of"
 msgstr ""
 
-#: ../src/maps.c:1738
+#: ../src/maps.c:1863
 msgid "Confirm delete of repository"
 msgstr ""
 
@@ -256,7 +272,7 @@ msgstr ""
 msgid "Confirm delete of waypoint"
 msgstr ""
 
-#: ../src/maps.c:2344 ../src/maps.c:2444
+#: ../src/maps.c:2475 ../src/maps.c:2575
 msgid "Confirm download of"
 msgstr ""
 
@@ -298,7 +314,7 @@ msgstr ""
 msgid "Degrees Format"
 msgstr ""
 
-#: ../src/maps.c:2647
+#: ../src/maps.c:2778
 msgid "Delete Maps"
 msgstr ""
 
@@ -314,7 +330,7 @@ msgstr ""
 msgid "Delete selected POI?"
 msgstr ""
 
-#: ../src/cmenu.c:652 ../src/maps.c:2134 ../src/poi.c:638 ../src/poi.c:1397
+#: ../src/cmenu.c:652 ../src/maps.c:2265 ../src/poi.c:638 ../src/poi.c:1397
 #: ../src/poi.c:2113
 msgid "Delete..."
 msgstr ""
@@ -340,15 +356,15 @@ msgstr ""
 msgid "Distance"
 msgstr ""
 
-#: ../src/maps.c:1860
+#: ../src/maps.c:1988
 msgid "Double Pixels"
 msgstr ""
 
-#: ../src/main.c:222 ../src/menu.c:1530
+#: ../src/main.c:226 ../src/menu.c:1530
 msgid "Down"
 msgstr ""
 
-#: ../src/maps.c:2634
+#: ../src/maps.c:2765
 msgid "Download Maps"
 msgstr ""
 
@@ -368,19 +384,19 @@ msgstr ""
 msgid "Download Route to..."
 msgstr ""
 
-#: ../src/maps.c:1823
+#: ../src/maps.c:1951
 msgid "Download Zoom Steps"
 msgstr ""
 
-#: ../src/maps.c:2115 ../src/menu.c:1425 ../src/menu.c:1465
+#: ../src/maps.c:2246 ../src/menu.c:1425 ../src/menu.c:1465
 msgid "Download..."
 msgstr ""
 
-#: ../src/maps.c:1875
+#: ../src/maps.c:2003
 msgid "Downloadable Zooms:"
 msgstr ""
 
-#: ../src/maps.c:1074 ../src/maps.c:1087
+#: ../src/maps.c:1084 ../src/maps.c:1097
 msgid "Downloaded maps will not be cached."
 msgstr ""
 
@@ -452,7 +468,7 @@ msgstr ""
 msgid "Error opening GPS device."
 msgstr ""
 
-#: ../src/main.c:497 ../src/menu.c:134 ../src/menu.c:246 ../src/path.c:690
+#: ../src/main.c:501 ../src/menu.c:134 ../src/menu.c:246 ../src/path.c:690
 #: ../src/poi.c:2436 ../src/poi.c:2814
 msgid "Error parsing GPX file."
 msgstr ""
@@ -509,7 +525,7 @@ msgstr ""
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr ""
 
-#: ../src/display.c:2518 ../src/main.c:485
+#: ../src/display.c:2518 ../src/main.c:489
 msgid "Failed to open file for reading"
 msgstr ""
 
@@ -517,7 +533,11 @@ msgstr ""
 msgid "Failed to open file for writing"
 msgstr ""
 
-#: ../src/maps.c:1072 ../src/maps.c:1086
+#: ../src/maps.c:1683
+msgid "Failed to open map database for compacting."
+msgstr ""
+
+#: ../src/maps.c:1082 ../src/maps.c:1096
 msgid "Failed to open map database for repository"
 msgstr ""
 
@@ -533,7 +553,7 @@ msgstr ""
 msgid "Failed to write to path database. Tracks and routes may not be saved."
 msgstr ""
 
-#: ../src/main.c:320
+#: ../src/main.c:324
 msgid "File"
 msgstr ""
 
@@ -581,11 +601,11 @@ msgstr ""
 msgid "GPS Information"
 msgstr ""
 
-#: ../src/maps.c:2720 ../src/menu.c:1555
+#: ../src/maps.c:2851 ../src/menu.c:1555
 msgid "GPS Location"
 msgstr ""
 
-#: ../src/main.c:319
+#: ../src/main.c:323
 msgid "GPSD"
 msgstr ""
 
@@ -599,6 +619,25 @@ msgstr ""
 
 #: ../src/poi.c:195
 msgid "General places of business."
+msgstr ""
+
+#: ../src/maps.c:1728
+msgid ""
+"Generally, deleted maps create an empty space in the database that is later "
+"reused when downloading new maps.  Compacting the database reorganizes it "
+"such that all that blank space is eliminated.  This is the only way that the "
+"size of the database can decrease.\n"
+"This reorganization requires creating a new file and inserting all the maps "
+"in the old database file into the new file. The new file is then renamed to "
+"the same name as the old file and dbf is updated to contain all the correct "
+"information about the new file.  Note that this can require free space on "
+"disk of an amount up to the size of the map database.\n"
+"This process may take several minutes, especially if your map database is "
+"large.  As a rough estimate, you can expect to wait approximately 2-5 "
+"seconds per megabyte of map data (34-85 minutes per gigabyte).  There is no "
+"progress indicator, although you can watch the new file grow in any file "
+"manager.  Do not attempt to close Maemo Mapper while the compacting "
+"operation is in progress."
 msgstr ""
 
 #: ../src/menu.c:1547 ../src/poi.c:2252
@@ -669,15 +708,15 @@ msgstr ""
 msgid "Insert Mark..."
 msgstr ""
 
-#: ../src/main.c:290
+#: ../src/main.c:294
 msgid "Insert Track Break"
 msgstr ""
 
-#: ../src/maps.c:2958
+#: ../src/maps.c:3089
 msgid "Invalid Bottom-Right Latitude"
 msgstr ""
 
-#: ../src/maps.c:2965
+#: ../src/maps.c:3096
 msgid "Invalid Bottom-Right Longitude"
 msgstr ""
 
@@ -693,11 +732,11 @@ msgstr ""
 msgid "Invalid NMEA input from receiver!"
 msgstr ""
 
-#: ../src/maps.c:2944
+#: ../src/maps.c:3075
 msgid "Invalid Top-Left Latitude"
 msgstr ""
 
-#: ../src/maps.c:2951
+#: ../src/maps.c:3082
 msgid "Invalid Top-Left Longitude"
 msgstr ""
 
@@ -744,7 +783,7 @@ msgstr ""
 msgid "Lat/Lon..."
 msgstr ""
 
-#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:2710 ../src/menu.c:799
+#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:2841 ../src/menu.c:799
 msgid "Latitude"
 msgstr ""
 
@@ -756,7 +795,7 @@ msgstr ""
 msgid "Lead Amount"
 msgstr ""
 
-#: ../src/main.c:223 ../src/menu.c:1532
+#: ../src/main.c:227 ../src/menu.c:1532
 msgid "Left"
 msgstr ""
 
@@ -780,7 +819,7 @@ msgstr ""
 msgid "Lon"
 msgstr ""
 
-#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:2714 ../src/menu.c:818
+#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:2845 ../src/menu.c:818
 msgid "Longitude"
 msgstr ""
 
@@ -788,13 +827,13 @@ msgstr ""
 msgid "MAC"
 msgstr ""
 
-#: ../src/maps.c:2006
+#: ../src/maps.c:2137
 msgid ""
 "Maemo Mapper will now download and add a list of possibly-duplicate "
 "repositories from the internet.  Continue?"
 msgstr ""
 
-#: ../src/maps.c:2595
+#: ../src/maps.c:2726
 msgid "Manage Maps"
 msgstr ""
 
@@ -802,7 +841,7 @@ msgstr ""
 msgid "Manage Maps..."
 msgstr ""
 
-#: ../src/maps.c:2094
+#: ../src/maps.c:2225
 msgid "Manage Repositories"
 msgstr ""
 
@@ -822,11 +861,11 @@ msgstr ""
 msgid "Max speed"
 msgstr ""
 
-#: ../src/maps.c:1895
+#: ../src/maps.c:2023
 msgid "Max."
 msgstr ""
 
-#: ../src/maps.c:1884
+#: ../src/maps.c:2012
 msgid "Min."
 msgstr ""
 
@@ -834,7 +873,7 @@ msgstr ""
 msgid "Min. Speed"
 msgstr ""
 
-#: ../src/maps.c:2226
+#: ../src/maps.c:2357
 msgid "Minimum Downloadable Zoom must be less than Maximum Downloadable Zoom."
 msgstr ""
 
@@ -850,13 +889,13 @@ msgstr ""
 msgid "Miscellaneous category for everything else."
 msgstr ""
 
-#: ../src/maps.c:2910 ../src/menu.c:532
+#: ../src/maps.c:3041 ../src/menu.c:532
 msgid ""
 "NOTE: You must set a Map URI in the current repository in order to download "
 "maps."
 msgstr ""
 
-#: ../src/maps.c:1675 ../src/maps.c:1945
+#: ../src/maps.c:1800 ../src/maps.c:2076
 msgid "Name"
 msgstr ""
 
@@ -864,15 +903,19 @@ msgstr ""
 msgid "Nearest POI"
 msgstr ""
 
-#: ../src/maps.c:1665
+#: ../src/main.c:233
+msgid "Never"
+msgstr ""
+
+#: ../src/maps.c:1790
 msgid "New Name"
 msgstr ""
 
-#: ../src/maps.c:1935
+#: ../src/maps.c:2066
 msgid "New Repository"
 msgstr ""
 
-#: ../src/maps.c:2137
+#: ../src/maps.c:2268
 msgid "New..."
 msgstr ""
 
@@ -880,7 +923,7 @@ msgstr ""
 msgid "Next Waypoint"
 msgstr ""
 
-#: ../src/maps.c:1868
+#: ../src/maps.c:1996
 msgid "Next-able"
 msgstr ""
 
@@ -919,7 +962,7 @@ msgstr ""
 msgid "Other"
 msgstr ""
 
-#: ../src/maps.c:2641
+#: ../src/maps.c:2772
 msgid "Overwrite"
 msgstr ""
 
@@ -966,23 +1009,23 @@ msgstr ""
 msgid "Pan"
 msgstr ""
 
-#: ../src/main.c:264
+#: ../src/main.c:268
 msgid "Pan Down"
 msgstr ""
 
-#: ../src/main.c:262
+#: ../src/main.c:266
 msgid "Pan East"
 msgstr ""
 
-#: ../src/main.c:265
+#: ../src/main.c:269
 msgid "Pan Left"
 msgstr ""
 
-#: ../src/main.c:259
+#: ../src/main.c:263
 msgid "Pan North"
 msgstr ""
 
-#: ../src/main.c:266
+#: ../src/main.c:270
 msgid "Pan Right"
 msgstr ""
 
@@ -990,15 +1033,15 @@ msgstr ""
 msgid "Pan Sensitivity"
 msgstr ""
 
-#: ../src/main.c:261
+#: ../src/main.c:265
 msgid "Pan South"
 msgstr ""
 
-#: ../src/main.c:263
+#: ../src/main.c:267
 msgid "Pan Up"
 msgstr ""
 
-#: ../src/main.c:260
+#: ../src/main.c:264
 msgid "Pan West"
 msgstr ""
 
@@ -1074,7 +1117,7 @@ msgstr ""
 msgid "Port"
 msgstr ""
 
-#: ../src/maps.c:1274
+#: ../src/maps.c:1284
 msgid "Processing Maps"
 msgstr ""
 
@@ -1098,11 +1141,11 @@ msgstr ""
 msgid "Recreation"
 msgstr ""
 
-#: ../src/maps.c:2131
+#: ../src/maps.c:2262
 msgid "Rename..."
 msgstr ""
 
-#: ../src/maps.c:1976
+#: ../src/maps.c:2107
 msgid "Replace all repositories with the default repository?"
 msgstr ""
 
@@ -1110,11 +1153,11 @@ msgstr ""
 msgid "Reset"
 msgstr ""
 
-#: ../src/main.c:301 ../src/menu.c:1649
+#: ../src/main.c:305 ../src/menu.c:1649
 msgid "Reset Bluetooth"
 msgstr ""
 
-#: ../src/main.c:268
+#: ../src/main.c:272
 msgid "Reset Viewing Angle"
 msgstr ""
 
@@ -1126,7 +1169,7 @@ msgstr ""
 msgid "Reset all hardware keys to their original defaults?"
 msgstr ""
 
-#: ../src/maps.c:2109 ../src/settings.c:768 ../src/settings.c:884
+#: ../src/maps.c:2240 ../src/settings.c:768 ../src/settings.c:884
 msgid "Reset..."
 msgstr ""
 
@@ -1138,7 +1181,7 @@ msgstr ""
 msgid "Restaurant"
 msgstr ""
 
-#: ../src/main.c:221 ../src/menu.c:1534
+#: ../src/main.c:225 ../src/menu.c:1534
 msgid "Right"
 msgstr ""
 
@@ -1150,11 +1193,11 @@ msgstr ""
 msgid "Rotate Sensit."
 msgstr ""
 
-#: ../src/main.c:270
+#: ../src/main.c:274
 msgid "Rotate View Clockwise"
 msgstr ""
 
-#: ../src/main.c:272
+#: ../src/main.c:276
 msgid "Rotate View Counter-Clockwise"
 msgstr ""
 
@@ -1166,7 +1209,7 @@ msgstr ""
 msgid "Route Downloaded"
 msgstr ""
 
-#: ../src/main.c:494 ../src/menu.c:131
+#: ../src/main.c:498 ../src/menu.c:131
 msgid "Route Opened"
 msgstr ""
 
@@ -1230,7 +1273,7 @@ msgstr ""
 msgid "Select Bluetooth Device"
 msgstr ""
 
-#: ../src/main.c:285
+#: ../src/main.c:289
 msgid "Select Next Repository"
 msgstr ""
 
@@ -1269,7 +1312,7 @@ msgstr ""
 msgid "Settings..."
 msgstr ""
 
-#: ../src/maps.c:2624
+#: ../src/maps.c:2755
 msgid "Setup"
 msgstr ""
 
@@ -1285,11 +1328,11 @@ msgstr ""
 msgid "Show Description"
 msgstr ""
 
-#: ../src/main.c:295 ../src/menu.c:1453
+#: ../src/main.c:299 ../src/menu.c:1453
 msgid "Show Distance from Beginning"
 msgstr ""
 
-#: ../src/main.c:293
+#: ../src/main.c:297
 msgid "Show Distance from Last Break"
 msgstr ""
 
@@ -1301,11 +1344,11 @@ msgstr ""
 msgid "Show Distance to"
 msgstr ""
 
-#: ../src/main.c:289 ../src/menu.c:1431
+#: ../src/main.c:293 ../src/menu.c:1431
 msgid "Show Distance to End of Route"
 msgstr ""
 
-#: ../src/main.c:287 ../src/menu.c:1429
+#: ../src/main.c:291 ../src/menu.c:1429
 msgid "Show Distance to Next Waypoint"
 msgstr ""
 
@@ -1349,11 +1392,15 @@ msgstr ""
 msgid "Stations for purchasing fuel for vehicles."
 msgstr ""
 
+#: ../src/maps.c:1690
+msgid "Successfully compacted database."
+msgstr ""
+
 #: ../src/cmenu.c:605
 msgid "Tap Point"
 msgstr ""
 
-#: ../src/maps.c:924
+#: ../src/maps.c:934
 msgid ""
 "The current repository is in a legacy format and will be converted.  You "
 "should delete your old maps if you no longer plan to use them."
@@ -1384,47 +1431,47 @@ msgstr ""
 msgid "There is no next waypoint."
 msgstr ""
 
-#: ../src/main.c:274
+#: ../src/main.c:278
 msgid "Toggle Auto-Center"
 msgstr ""
 
-#: ../src/main.c:276
+#: ../src/main.c:280
 msgid "Toggle Auto-Rotate"
 msgstr ""
 
-#: ../src/main.c:278
+#: ../src/main.c:282
 msgid "Toggle Fullscreen"
 msgstr ""
 
-#: ../src/main.c:296
+#: ../src/main.c:300
 msgid "Toggle GPS"
 msgstr ""
 
-#: ../src/main.c:297
+#: ../src/main.c:301
 msgid "Toggle GPS Info"
 msgstr ""
 
-#: ../src/main.c:283
+#: ../src/main.c:287
 msgid "Toggle POIs"
 msgstr ""
 
-#: ../src/main.c:282
+#: ../src/main.c:286
 msgid "Toggle Scale"
 msgstr ""
 
-#: ../src/main.c:299
+#: ../src/main.c:303
 msgid "Toggle Speed Limit"
 msgstr ""
 
-#: ../src/main.c:281
+#: ../src/main.c:285
 msgid "Toggle Tracks"
 msgstr ""
 
-#: ../src/main.c:313 ../src/maps.c:2755
+#: ../src/main.c:317 ../src/maps.c:2886
 msgid "Top-Left"
 msgstr ""
 
-#: ../src/main.c:314
+#: ../src/main.c:318
 msgid "Top-Right"
 msgstr ""
 
@@ -1452,11 +1499,11 @@ msgstr ""
 msgid "Transportation"
 msgstr ""
 
-#: ../src/maps.c:1782
+#: ../src/maps.c:1907
 msgid "URL Format"
 msgstr ""
 
-#: ../src/maps.c:1104
+#: ../src/maps.c:1114
 msgid "Unable to create map database for repository"
 msgstr ""
 
@@ -1472,7 +1519,7 @@ msgstr ""
 msgid "Unknown error while locating address."
 msgstr ""
 
-#: ../src/main.c:220 ../src/menu.c:1528
+#: ../src/main.c:224 ../src/menu.c:1528
 msgid "Up"
 msgstr ""
 
@@ -1492,11 +1539,11 @@ msgstr ""
 msgid "View"
 msgstr ""
 
-#: ../src/maps.c:2736
+#: ../src/maps.c:2867
 msgid "View Center"
 msgstr ""
 
-#: ../src/maps.c:1839
+#: ../src/maps.c:1967
 msgid "View Zoom Steps"
 msgstr ""
 
@@ -1516,6 +1563,22 @@ msgstr ""
 msgid "West"
 msgstr ""
 
+#: ../src/main.c:232
+msgid "When Approaching a Waypoint"
+msgstr ""
+
+#: ../src/main.c:230
+msgid "When Moving"
+msgstr ""
+
+#: ../src/main.c:231
+msgid "When Moving (Full Screen Only)"
+msgstr ""
+
+#: ../src/main.c:229
+msgid "When Receiving Any GPS Data"
+msgstr ""
+
 #: ../src/display.c:1129
 msgid ""
 "You will now see a blank screen.  You can download maps using the \"Manage "
@@ -1523,11 +1586,11 @@ msgid ""
 "Download."
 msgstr ""
 
-#: ../src/maps.c:2679 ../src/menu.c:1497
+#: ../src/maps.c:2810 ../src/menu.c:1497
 msgid "Zoom"
 msgstr ""
 
-#: ../src/main.c:279 ../src/menu.c:1501
+#: ../src/main.c:283 ../src/menu.c:1501
 msgid "Zoom In"
 msgstr ""
 
@@ -1535,11 +1598,11 @@ msgstr ""
 msgid "Zoom Level"
 msgstr ""
 
-#: ../src/maps.c:2685
+#: ../src/maps.c:2816
 msgid "Zoom Levels to Download: (0 = most detail)"
 msgstr ""
 
-#: ../src/main.c:280 ../src/menu.c:1503
+#: ../src/main.c:284 ../src/menu.c:1503
 msgid "Zoom Out"
 msgstr ""
 
@@ -1547,7 +1610,7 @@ msgstr ""
 msgid "Zoom to Level"
 msgstr ""
 
-#: ../src/maps.c:2438 ../src/maps.c:2445
+#: ../src/maps.c:2569 ../src/maps.c:2576
 msgid "about"
 msgstr ""
 
@@ -1555,15 +1618,15 @@ msgstr ""
 msgid "in use"
 msgstr ""
 
-#: ../src/main.c:216
+#: ../src/main.c:220
 msgid "km"
 msgstr ""
 
-#: ../src/maps.c:2345 ../src/maps.c:2446
+#: ../src/maps.c:2476 ../src/maps.c:2577
 msgid "maps"
 msgstr ""
 
-#: ../src/maps.c:2339 ../src/maps.c:2439
+#: ../src/maps.c:2470 ../src/maps.c:2570
 msgid "maps "
 msgstr ""
 
@@ -1571,11 +1634,11 @@ msgstr ""
 msgid "maps failed to download."
 msgstr ""
 
-#: ../src/main.c:217
+#: ../src/main.c:221
 msgid "mi."
 msgstr ""
 
-#: ../src/main.c:218
+#: ../src/main.c:222
 msgid "n.m."
 msgstr ""
 
@@ -1587,6 +1650,6 @@ msgstr ""
 msgid "none"
 msgstr ""
 
-#: ../src/maps.c:2345 ../src/maps.c:2446
+#: ../src/maps.c:2476 ../src/maps.c:2577
 msgid "up to about"
 msgstr ""

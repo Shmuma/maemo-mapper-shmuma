@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-01-12 17:41-0500\n"
+"POT-Creation-Date: 2008-01-21 01:54-0500\n"
 "PO-Revision-Date: 2007-12-02 15:40+0200\n"
 "Last-Translator: Marko Vertainen <marko.vertainen@iki.fi>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
@@ -71,7 +71,7 @@ msgstr "Osoitteeseen..."
 msgid "Advance Notice"
 msgstr "Ennakkovaroitus"
 
-#: ../src/maps.c:2666
+#: ../src/maps.c:2797
 msgid "Along Route - Radius (tiles):"
 msgstr "Reitin varrelta - Säde:"
 
@@ -83,13 +83,18 @@ msgstr "Korkeus"
 msgid "An error occurred while attempting to scan for bluetooth devices."
 msgstr "Tapahtui virhe bluetooth laitteita haettaessa."
 
-#: ../src/maps.c:2025
+#: ../src/maps.c:2156
 msgid ""
 "An error occurred while retrieving the repositories.  The web service may be "
 "temporarily down."
 msgstr ""
 "Tapahtui virhe varastoja haettaessa. Palvelu saattaa olla väliaikaisesti "
 "pois käytöstä."
+
+#: ../src/maps.c:1687
+#, fuzzy
+msgid "An error occurred while trying to compact the database."
+msgstr "Tapahtui virhe bluetooth laitteita haettaessa."
 
 #: ../src/gps.c:889
 msgid ""
@@ -107,7 +112,7 @@ msgstr ""
 msgid "Announce"
 msgstr "Ilmoitus"
 
-#: ../src/maps.c:2706
+#: ../src/maps.c:2837
 msgid "Area"
 msgstr "Alue"
 
@@ -159,15 +164,15 @@ msgstr "Vältä valtateitä"
 msgid "Bear."
 msgstr "Suunt."
 
-#: ../src/main.c:318 ../src/settings.c:1176
+#: ../src/main.c:322 ../src/settings.c:1176
 msgid "Bluetooth"
 msgstr "Bluetooth"
 
-#: ../src/main.c:316
+#: ../src/main.c:320
 msgid "Bottom-Left"
 msgstr "Ala-vasen"
 
-#: ../src/main.c:315 ../src/maps.c:2793
+#: ../src/main.c:319 ../src/maps.c:2924
 msgid "Bottom-Right"
 msgstr "Ala-oikea"
 
@@ -183,7 +188,7 @@ msgstr "Selaa POI-pisteitä..."
 msgid "Browse POIs"
 msgstr "Selaa POI-pisteitä"
 
-#: ../src/maps.c:1801 ../src/menu.c:1467 ../src/settings.c:1214
+#: ../src/maps.c:1926 ../src/menu.c:1467 ../src/settings.c:1214
 #: ../src/settings.c:1487
 msgid "Browse..."
 msgstr "Selaa..."
@@ -196,15 +201,15 @@ msgstr "Bussi- ja rautatieasemat, lentokentät ym."
 msgid "Business"
 msgstr "Liike-elämä"
 
-#: ../src/maps.c:2657
+#: ../src/maps.c:2788
 msgid "By Area (see tab)"
 msgstr "Alueelta (katso välilehti)"
 
-#: ../src/maps.c:1791
+#: ../src/maps.c:1916
 msgid "Cache DB"
 msgstr "Tallennustietokanta"
 
-#: ../src/maps.c:1731
+#: ../src/maps.c:1856
 msgid ""
 "Cannot delete the last repository - there must be at lease one repository."
 msgstr ""
@@ -224,11 +229,11 @@ msgstr "Kategoria"
 msgid "Checked POI Actions..."
 msgstr "Toiminnot valituille POI:lle..."
 
-#: ../src/maps.c:2610 ../src/menu.c:1435 ../src/menu.c:1455
+#: ../src/maps.c:2741 ../src/menu.c:1435 ../src/menu.c:1455
 msgid "Clear"
 msgstr "Tyhjennä"
 
-#: ../src/main.c:291
+#: ../src/main.c:295
 msgid "Clear Track"
 msgstr "Tyhjennä reittijälki"
 
@@ -248,15 +253,29 @@ msgstr "Värit"
 msgid "Colors..."
 msgstr "Värit..."
 
+#: ../src/maps.c:1708
+msgid "Compact Database"
+msgstr ""
+
+#: ../src/maps.c:1929
+#, fuzzy
+msgid "Compact..."
+msgstr "Tuo..."
+
+#: ../src/maps.c:1767
+#, fuzzy
+msgid "Compacting database..."
+msgstr "Tuo..."
+
 #: ../src/menu.c:1579
 msgid "Compass Rose"
 msgstr "Kompassiruusu"
 
-#: ../src/maps.c:2338 ../src/maps.c:2438
+#: ../src/maps.c:2469 ../src/maps.c:2569
 msgid "Confirm DELETION of"
 msgstr "Vahvista"
 
-#: ../src/maps.c:1738
+#: ../src/maps.c:1863
 msgid "Confirm delete of repository"
 msgstr "Vahvista varaston poisto"
 
@@ -264,7 +283,7 @@ msgstr "Vahvista varaston poisto"
 msgid "Confirm delete of waypoint"
 msgstr "Vahvista kohdepisteen poisto"
 
-#: ../src/maps.c:2344 ../src/maps.c:2444
+#: ../src/maps.c:2475 ../src/maps.c:2575
 msgid "Confirm download of"
 msgstr "Vahvista"
 
@@ -308,7 +327,7 @@ msgstr "Oletus kategoria"
 msgid "Degrees Format"
 msgstr "Asteiden muoto"
 
-#: ../src/maps.c:2647
+#: ../src/maps.c:2778
 msgid "Delete Maps"
 msgstr "Poista kartat"
 
@@ -324,7 +343,7 @@ msgstr "Poista kategoria?"
 msgid "Delete selected POI?"
 msgstr "Poista valittu POI?"
 
-#: ../src/cmenu.c:652 ../src/maps.c:2134 ../src/poi.c:638 ../src/poi.c:1397
+#: ../src/cmenu.c:652 ../src/maps.c:2265 ../src/poi.c:638 ../src/poi.c:1397
 #: ../src/poi.c:2113
 msgid "Delete..."
 msgstr "Poista..."
@@ -350,15 +369,15 @@ msgstr "Etäis."
 msgid "Distance"
 msgstr "Etäisyys"
 
-#: ../src/maps.c:1860
+#: ../src/maps.c:1988
 msgid "Double Pixels"
 msgstr "Tuplapikselit"
 
-#: ../src/main.c:222 ../src/menu.c:1530
+#: ../src/main.c:226 ../src/menu.c:1530
 msgid "Down"
 msgstr "Alas"
 
-#: ../src/maps.c:2634
+#: ../src/maps.c:2765
 msgid "Download Maps"
 msgstr "Lataa kartat"
 
@@ -378,19 +397,19 @@ msgstr "Lataa reittisuunnitelma"
 msgid "Download Route to..."
 msgstr "Lataa reittisuunnitelma kohteeseen..."
 
-#: ../src/maps.c:1823
+#: ../src/maps.c:1951
 msgid "Download Zoom Steps"
 msgstr "Lataa zoom-tasot"
 
-#: ../src/maps.c:2115 ../src/menu.c:1425 ../src/menu.c:1465
+#: ../src/maps.c:2246 ../src/menu.c:1425 ../src/menu.c:1465
 msgid "Download..."
 msgstr "Lataa..."
 
-#: ../src/maps.c:1875
+#: ../src/maps.c:2003
 msgid "Downloadable Zooms:"
 msgstr "Haettavat zoom-tasot:"
 
-#: ../src/maps.c:1074 ../src/maps.c:1087
+#: ../src/maps.c:1084 ../src/maps.c:1097
 msgid "Downloaded maps will not be cached."
 msgstr "Ladattuja karttoja ei tallenneta pysyvään muistiin."
 
@@ -462,7 +481,7 @@ msgstr "Virhe kategorian poistossa"
 msgid "Error opening GPS device."
 msgstr "Virhe avattaessa GPS-laitetta."
 
-#: ../src/main.c:497 ../src/menu.c:134 ../src/menu.c:246 ../src/path.c:690
+#: ../src/main.c:501 ../src/menu.c:134 ../src/menu.c:246 ../src/path.c:690
 #: ../src/poi.c:2436 ../src/poi.c:2814
 msgid "Error parsing GPX file."
 msgstr "Virhe tulkittaessa GPX-tiedostoa."
@@ -519,7 +538,7 @@ msgstr "GConf alustus epäonnistui.  Lopetetaan."
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "GConf alustus epäonnistui.  Asetuksia ei tallennettu."
 
-#: ../src/display.c:2518 ../src/main.c:485
+#: ../src/display.c:2518 ../src/main.c:489
 msgid "Failed to open file for reading"
 msgstr "Tiedoston avaus lukemista varten epäonnistui"
 
@@ -527,7 +546,12 @@ msgstr "Tiedoston avaus lukemista varten epäonnistui"
 msgid "Failed to open file for writing"
 msgstr "Tiedoston avaus kirjoitusta varten epäonnistui"
 
-#: ../src/maps.c:1072 ../src/maps.c:1086
+#: ../src/maps.c:1683
+#, fuzzy
+msgid "Failed to open map database for compacting."
+msgstr "Karttavaraston tietokannan avaus epäonnistui"
+
+#: ../src/maps.c:1082 ../src/maps.c:1096
 msgid "Failed to open map database for repository"
 msgstr "Karttavaraston tietokannan avaus epäonnistui"
 
@@ -547,7 +571,7 @@ msgstr ""
 "Tietojen tallennus reittitietokantaan epäonnistui.  Reittisuunnitelmaa ja -"
 "jälkeä ei tallennettu."
 
-#: ../src/main.c:320
+#: ../src/main.c:324
 msgid "File"
 msgstr "Tiedosto"
 
@@ -595,11 +619,11 @@ msgstr "GPS:n yksityiskohdat"
 msgid "GPS Information"
 msgstr "GPS-tieto"
 
-#: ../src/maps.c:2720 ../src/menu.c:1555
+#: ../src/maps.c:2851 ../src/menu.c:1555
 msgid "GPS Location"
 msgstr "GPS-sijaintiin"
 
-#: ../src/main.c:319
+#: ../src/main.c:323
 msgid "GPSD"
 msgstr "GPSD"
 
@@ -614,6 +638,25 @@ msgstr "Yleiset maamerkit."
 #: ../src/poi.c:195
 msgid "General places of business."
 msgstr "Yleiset liike-elämän kohteet."
+
+#: ../src/maps.c:1728
+msgid ""
+"Generally, deleted maps create an empty space in the database that is later "
+"reused when downloading new maps.  Compacting the database reorganizes it "
+"such that all that blank space is eliminated.  This is the only way that the "
+"size of the database can decrease.\n"
+"This reorganization requires creating a new file and inserting all the maps "
+"in the old database file into the new file. The new file is then renamed to "
+"the same name as the old file and dbf is updated to contain all the correct "
+"information about the new file.  Note that this can require free space on "
+"disk of an amount up to the size of the map database.\n"
+"This process may take several minutes, especially if your map database is "
+"large.  As a rough estimate, you can expect to wait approximately 2-5 "
+"seconds per megabyte of map data (34-85 minutes per gigabyte).  There is no "
+"progress indicator, although you can watch the new file grow in any file "
+"manager.  Do not attempt to close Maemo Mapper while the compacting "
+"operation is in progress."
+msgstr ""
 
 #: ../src/menu.c:1547 ../src/poi.c:2252
 msgid "Go to"
@@ -683,15 +726,15 @@ msgstr "Lisää merkki"
 msgid "Insert Mark..."
 msgstr "Lisää merkki..."
 
-#: ../src/main.c:290
+#: ../src/main.c:294
 msgid "Insert Track Break"
 msgstr "Lisää katkaisupiste reittijälkeen"
 
-#: ../src/maps.c:2958
+#: ../src/maps.c:3089
 msgid "Invalid Bottom-Right Latitude"
 msgstr "Virheellinen ala-oikea latitudi"
 
-#: ../src/maps.c:2965
+#: ../src/maps.c:3096
 msgid "Invalid Bottom-Right Longitude"
 msgstr "Virheellinen ala-oikea longitudi"
 
@@ -707,11 +750,11 @@ msgstr "Virheellinen longitudi"
 msgid "Invalid NMEA input from receiver!"
 msgstr "Virheellinen NMEA-syöte vastaanottimelta!"
 
-#: ../src/maps.c:2944
+#: ../src/maps.c:3075
 msgid "Invalid Top-Left Latitude"
 msgstr "Virheellinen ylä-vasen latitudi"
 
-#: ../src/maps.c:2951
+#: ../src/maps.c:3082
 msgid "Invalid Top-Left Longitude"
 msgstr "Virheellinen ylä-vasen longitudi"
 
@@ -760,7 +803,7 @@ msgstr "Lat/Lon"
 msgid "Lat/Lon..."
 msgstr "Lat/Lon..."
 
-#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:2710 ../src/menu.c:799
+#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:2841 ../src/menu.c:799
 msgid "Latitude"
 msgstr "Latitudi"
 
@@ -772,7 +815,7 @@ msgstr "Etumatka"
 msgid "Lead Amount"
 msgstr "Etumatkan määrä"
 
-#: ../src/main.c:223 ../src/menu.c:1532
+#: ../src/main.c:227 ../src/menu.c:1532
 msgid "Left"
 msgstr "Vasemmalle"
 
@@ -796,7 +839,7 @@ msgstr "Majapaikka"
 msgid "Lon"
 msgstr "Lon"
 
-#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:2714 ../src/menu.c:818
+#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:2845 ../src/menu.c:818
 msgid "Longitude"
 msgstr "Longitudi"
 
@@ -804,7 +847,7 @@ msgstr "Longitudi"
 msgid "MAC"
 msgstr "MAC"
 
-#: ../src/maps.c:2006
+#: ../src/maps.c:2137
 msgid ""
 "Maemo Mapper will now download and add a list of possibly-duplicate "
 "repositories from the internet.  Continue?"
@@ -812,7 +855,7 @@ msgstr ""
 "Maemo Mapper lataa ja lisää listan karttavarastoja Internetistä. Osa "
 "karttavarastoista saattaa olla jo olemassa. Jatketaanko?"
 
-#: ../src/maps.c:2595
+#: ../src/maps.c:2726
 msgid "Manage Maps"
 msgstr "Karttojen hallinta"
 
@@ -820,7 +863,7 @@ msgstr "Karttojen hallinta"
 msgid "Manage Maps..."
 msgstr "Karttojen hallinta..."
 
-#: ../src/maps.c:2094
+#: ../src/maps.c:2225
 msgid "Manage Repositories"
 msgstr "Karttavarastojen hallinta"
 
@@ -840,11 +883,11 @@ msgstr "Kartat"
 msgid "Max speed"
 msgstr "Maks. nopeus"
 
-#: ../src/maps.c:1895
+#: ../src/maps.c:2023
 msgid "Max."
 msgstr "Max."
 
-#: ../src/maps.c:1884
+#: ../src/maps.c:2012
 msgid "Min."
 msgstr "Min."
 
@@ -852,7 +895,7 @@ msgstr "Min."
 msgid "Min. Speed"
 msgstr "Min. Nopeus"
 
-#: ../src/maps.c:2226
+#: ../src/maps.c:2357
 msgid "Minimum Downloadable Zoom must be less than Maximum Downloadable Zoom."
 msgstr "Ladattava minimi zoom-taso pitää olla pienempi kuin maksimi zoom-taso."
 
@@ -868,7 +911,7 @@ msgstr "Sekal. 2"
 msgid "Miscellaneous category for everything else."
 msgstr "Sekalainen kategoria kaikelle muulle."
 
-#: ../src/maps.c:2910 ../src/menu.c:532
+#: ../src/maps.c:3041 ../src/menu.c:532
 msgid ""
 "NOTE: You must set a Map URI in the current repository in order to download "
 "maps."
@@ -876,7 +919,7 @@ msgstr ""
 "HUOM: Karttojen URI täytyy asettaa karttavarastojen hallinnassa, jotta "
 "kartat voidaan ladata."
 
-#: ../src/maps.c:1675 ../src/maps.c:1945
+#: ../src/maps.c:1800 ../src/maps.c:2076
 msgid "Name"
 msgstr "Nimi"
 
@@ -884,15 +927,19 @@ msgstr "Nimi"
 msgid "Nearest POI"
 msgstr "Lähimpään POI-pisteeseen"
 
-#: ../src/maps.c:1665
+#: ../src/main.c:233
+msgid "Never"
+msgstr ""
+
+#: ../src/maps.c:1790
 msgid "New Name"
 msgstr "Uusi nimi"
 
-#: ../src/maps.c:1935
+#: ../src/maps.c:2066
 msgid "New Repository"
 msgstr "Uusi karttavarasto"
 
-#: ../src/maps.c:2137
+#: ../src/maps.c:2268
 msgid "New..."
 msgstr "Uusi..."
 
@@ -900,7 +947,7 @@ msgstr "Uusi..."
 msgid "Next Waypoint"
 msgstr "Seuraavaan kohdepisteeseen"
 
-#: ../src/maps.c:1868
+#: ../src/maps.c:1996
 msgid "Next-able"
 msgstr "Pikavalittava"
 
@@ -942,7 +989,7 @@ msgstr "Lähtöpiste"
 msgid "Other"
 msgstr "Muu"
 
-#: ../src/maps.c:2641
+#: ../src/maps.c:2772
 msgid "Overwrite"
 msgstr "Ylikirjoita"
 
@@ -991,23 +1038,23 @@ msgstr "Sivu"
 msgid "Pan"
 msgstr "Vieritä"
 
-#: ../src/main.c:264
+#: ../src/main.c:268
 msgid "Pan Down"
 msgstr "Vieritä alas"
 
-#: ../src/main.c:262
+#: ../src/main.c:266
 msgid "Pan East"
 msgstr "Vieritä itään"
 
-#: ../src/main.c:265
+#: ../src/main.c:269
 msgid "Pan Left"
 msgstr "Vieritä vasemmalle"
 
-#: ../src/main.c:259
+#: ../src/main.c:263
 msgid "Pan North"
 msgstr "Vieritä pohjoiseen"
 
-#: ../src/main.c:266
+#: ../src/main.c:270
 msgid "Pan Right"
 msgstr "Vieritä oikealle"
 
@@ -1015,15 +1062,15 @@ msgstr "Vieritä oikealle"
 msgid "Pan Sensitivity"
 msgstr "Vieritysherkkyys"
 
-#: ../src/main.c:261
+#: ../src/main.c:265
 msgid "Pan South"
 msgstr "Vieritä etelään"
 
-#: ../src/main.c:263
+#: ../src/main.c:267
 msgid "Pan Up"
 msgstr "Vieritä ylös"
 
-#: ../src/main.c:260
+#: ../src/main.c:264
 msgid "Pan West"
 msgstr "Vieritä länteen"
 
@@ -1099,7 +1146,7 @@ msgstr "Suuntaus"
 msgid "Port"
 msgstr "Portti"
 
-#: ../src/maps.c:1274
+#: ../src/maps.c:1284
 msgid "Processing Maps"
 msgstr "Käsitellään karttoja"
 
@@ -1123,11 +1170,11 @@ msgstr "Lasketaan uusi reittisuunnitelma..."
 msgid "Recreation"
 msgstr "Harrastuspaikka"
 
-#: ../src/maps.c:2131
+#: ../src/maps.c:2262
 msgid "Rename..."
 msgstr "Nimeä uud..."
 
-#: ../src/maps.c:1976
+#: ../src/maps.c:2107
 msgid "Replace all repositories with the default repository?"
 msgstr "Korvataanko kaikki karttavarastot oletusvarastolla?"
 
@@ -1135,11 +1182,11 @@ msgstr "Korvataanko kaikki karttavarastot oletusvarastolla?"
 msgid "Reset"
 msgstr "Nollaa"
 
-#: ../src/main.c:301 ../src/menu.c:1649
+#: ../src/main.c:305 ../src/menu.c:1649
 msgid "Reset Bluetooth"
 msgstr "Nollaa bluetooth"
 
-#: ../src/main.c:268
+#: ../src/main.c:272
 msgid "Reset Viewing Angle"
 msgstr "Nollaa katselukulma"
 
@@ -1151,7 +1198,7 @@ msgstr "Korvataanko kaikki värit oletusväreillä?"
 msgid "Reset all hardware keys to their original defaults?"
 msgstr "Korvataanko kaikki näppäinvalinnat oletusasetuksilla?"
 
-#: ../src/maps.c:2109 ../src/settings.c:768 ../src/settings.c:884
+#: ../src/maps.c:2240 ../src/settings.c:768 ../src/settings.c:884
 msgid "Reset..."
 msgstr "Nollaa..."
 
@@ -1163,7 +1210,7 @@ msgstr "Asunto"
 msgid "Restaurant"
 msgstr "Ravintola"
 
-#: ../src/main.c:221 ../src/menu.c:1534
+#: ../src/main.c:225 ../src/menu.c:1534
 msgid "Right"
 msgstr "Oikealle"
 
@@ -1175,11 +1222,11 @@ msgstr "Käännä"
 msgid "Rotate Sensit."
 msgstr "Kääntämisherkkyys"
 
-#: ../src/main.c:270
+#: ../src/main.c:274
 msgid "Rotate View Clockwise"
 msgstr "Käännä näkymää myötäpäivään"
 
-#: ../src/main.c:272
+#: ../src/main.c:276
 msgid "Rotate View Counter-Clockwise"
 msgstr "Käännä näkymää vastapäivään"
 
@@ -1191,7 +1238,7 @@ msgstr "Reittisuunnitelma"
 msgid "Route Downloaded"
 msgstr "Reittisuunnitelma ladattu"
 
-#: ../src/main.c:494 ../src/menu.c:131
+#: ../src/main.c:498 ../src/menu.c:131
 msgid "Route Opened"
 msgstr "Reittisuunnitelma avattu"
 
@@ -1255,7 +1302,7 @@ msgstr "Etsitään GPS-vastaanotinta"
 msgid "Select Bluetooth Device"
 msgstr "Valitse bluetooth laite"
 
-#: ../src/main.c:285
+#: ../src/main.c:289
 msgid "Select Next Repository"
 msgstr "Valitse seuraava karttavarasto"
 
@@ -1296,7 +1343,7 @@ msgstr "Asetukset"
 msgid "Settings..."
 msgstr "Asetukset..."
 
-#: ../src/maps.c:2624
+#: ../src/maps.c:2755
 msgid "Setup"
 msgstr "Valinnat"
 
@@ -1312,11 +1359,11 @@ msgstr "Näytä"
 msgid "Show Description"
 msgstr "Näytä kuvaus"
 
-#: ../src/main.c:295 ../src/menu.c:1453
+#: ../src/main.c:299 ../src/menu.c:1453
 msgid "Show Distance from Beginning"
 msgstr "Näytä etäisyys lähtöpisteestä"
 
-#: ../src/main.c:293
+#: ../src/main.c:297
 msgid "Show Distance from Last Break"
 msgstr "Näytä etäisyys katkaisupisteestä"
 
@@ -1328,11 +1375,11 @@ msgstr "Näytä etäisyys edellisestä merkistä"
 msgid "Show Distance to"
 msgstr "Näytä etäisyys kohteeseen"
 
-#: ../src/main.c:289 ../src/menu.c:1431
+#: ../src/main.c:293 ../src/menu.c:1431
 msgid "Show Distance to End of Route"
 msgstr "Näytä etäisyys reitin loppupisteeseen"
 
-#: ../src/main.c:287 ../src/menu.c:1429
+#: ../src/main.c:291 ../src/menu.c:1429
 msgid "Show Distance to Next Waypoint"
 msgstr "Näytä etäisyys seur. kohdepisteeseen"
 
@@ -1376,11 +1423,15 @@ msgstr "Nopeusrajoitus"
 msgid "Stations for purchasing fuel for vehicles."
 msgstr "Huoltoasemat ja autokorjaamot."
 
+#: ../src/maps.c:1690
+msgid "Successfully compacted database."
+msgstr ""
+
 #: ../src/cmenu.c:605
 msgid "Tap Point"
 msgstr "Kosketuspiste"
 
-#: ../src/maps.c:924
+#: ../src/maps.c:934
 msgid ""
 "The current repository is in a legacy format and will be converted.  You "
 "should delete your old maps if you no longer plan to use them."
@@ -1413,47 +1464,47 @@ msgstr "Kohdepiste puuttuu."
 msgid "There is no next waypoint."
 msgstr "Seuraava kohdepiste puuttuu."
 
-#: ../src/main.c:274
+#: ../src/main.c:278
 msgid "Toggle Auto-Center"
 msgstr "Automaattinen keskitys päällä/pois"
 
-#: ../src/main.c:276
+#: ../src/main.c:280
 msgid "Toggle Auto-Rotate"
 msgstr "Autom. kääntäminen päällä/pois"
 
-#: ../src/main.c:278
+#: ../src/main.c:282
 msgid "Toggle Fullscreen"
 msgstr "Koko näyttö päällä/pois"
 
-#: ../src/main.c:296
+#: ../src/main.c:300
 msgid "Toggle GPS"
 msgstr "GPS päällä/pois"
 
-#: ../src/main.c:297
+#: ../src/main.c:301
 msgid "Toggle GPS Info"
 msgstr "GPS-info päällä/pois"
 
-#: ../src/main.c:283
+#: ../src/main.c:287
 msgid "Toggle POIs"
 msgstr "POI-pisteet päällä/pois"
 
-#: ../src/main.c:282
+#: ../src/main.c:286
 msgid "Toggle Scale"
 msgstr "Asteikko päällä/pois"
 
-#: ../src/main.c:299
+#: ../src/main.c:303
 msgid "Toggle Speed Limit"
 msgstr "Nopeusrajoitus päällä/pois"
 
-#: ../src/main.c:281
+#: ../src/main.c:285
 msgid "Toggle Tracks"
 msgstr "Reittijäljet päällä/pois"
 
-#: ../src/main.c:313 ../src/maps.c:2755
+#: ../src/main.c:317 ../src/maps.c:2886
 msgid "Top-Left"
 msgstr "Ylä-vasen"
 
-#: ../src/main.c:314
+#: ../src/main.c:318
 msgid "Top-Right"
 msgstr "Ylä-oikea"
 
@@ -1481,11 +1532,11 @@ msgstr "Reittijäljet on nyt nähtävissä"
 msgid "Transportation"
 msgstr "Liikenne"
 
-#: ../src/maps.c:1782
+#: ../src/maps.c:1907
 msgid "URL Format"
 msgstr "URL:n muotoilu"
 
-#: ../src/maps.c:1104
+#: ../src/maps.c:1114
 msgid "Unable to create map database for repository"
 msgstr "Tietokannan luonti karttavarastolle epäonnistui"
 
@@ -1501,7 +1552,7 @@ msgstr "Yksiköt"
 msgid "Unknown error while locating address."
 msgstr "Tunnistamaton virhe osoitteen etsinnässä."
 
-#: ../src/main.c:220 ../src/menu.c:1528
+#: ../src/main.c:224 ../src/menu.c:1528
 msgid "Up"
 msgstr "Ylös"
 
@@ -1521,11 +1572,11 @@ msgstr "Nopeusvektori"
 msgid "View"
 msgstr "Näytä"
 
-#: ../src/maps.c:2736
+#: ../src/maps.c:2867
 msgid "View Center"
 msgstr "Näytä keskusta"
 
-#: ../src/maps.c:1839
+#: ../src/maps.c:1967
 msgid "View Zoom Steps"
 msgstr "Näytä zoom-tasot"
 
@@ -1545,6 +1596,22 @@ msgstr "Kohdepiste"
 msgid "West"
 msgstr "Länteen"
 
+#: ../src/main.c:232
+msgid "When Approaching a Waypoint"
+msgstr ""
+
+#: ../src/main.c:230
+msgid "When Moving"
+msgstr ""
+
+#: ../src/main.c:231
+msgid "When Moving (Full Screen Only)"
+msgstr ""
+
+#: ../src/main.c:229
+msgid "When Receiving Any GPS Data"
+msgstr ""
+
 #: ../src/display.c:1129
 msgid ""
 "You will now see a blank screen.  You can download maps using the \"Manage "
@@ -1555,11 +1622,11 @@ msgstr ""
 "hallinta\" valikkoa \"Kartat\" valikosta. Jos valitset OK, niin "
 "automaattinen karttojen lataus otetaan käyttöön."
 
-#: ../src/maps.c:2679 ../src/menu.c:1497
+#: ../src/maps.c:2810 ../src/menu.c:1497
 msgid "Zoom"
 msgstr "Zoom-tasot"
 
-#: ../src/main.c:279 ../src/menu.c:1501
+#: ../src/main.c:283 ../src/menu.c:1501
 msgid "Zoom In"
 msgstr "Tarkenna"
 
@@ -1567,11 +1634,11 @@ msgstr "Tarkenna"
 msgid "Zoom Level"
 msgstr "Zoom-taso"
 
-#: ../src/maps.c:2685
+#: ../src/maps.c:2816
 msgid "Zoom Levels to Download: (0 = most detail)"
 msgstr "Ladattavat zoom-tasot : (0 = tarkin)"
 
-#: ../src/main.c:280 ../src/menu.c:1503
+#: ../src/main.c:284 ../src/menu.c:1503
 msgid "Zoom Out"
 msgstr "Loitonna"
 
@@ -1579,7 +1646,7 @@ msgstr "Loitonna"
 msgid "Zoom to Level"
 msgstr "Zoomaa tasolle"
 
-#: ../src/maps.c:2438 ../src/maps.c:2445
+#: ../src/maps.c:2569 ../src/maps.c:2576
 msgid "about"
 msgstr "noin"
 
@@ -1587,15 +1654,15 @@ msgstr "noin"
 msgid "in use"
 msgstr "käytössä"
 
-#: ../src/main.c:216
+#: ../src/main.c:220
 msgid "km"
 msgstr "km"
 
-#: ../src/maps.c:2345 ../src/maps.c:2446
+#: ../src/maps.c:2476 ../src/maps.c:2577
 msgid "maps"
 msgstr "kartan palan lataus"
 
-#: ../src/maps.c:2339 ../src/maps.c:2439
+#: ../src/maps.c:2470 ../src/maps.c:2570
 msgid "maps "
 msgstr "kartan palan poisto"
 
@@ -1603,11 +1670,11 @@ msgstr "kartan palan poisto"
 msgid "maps failed to download."
 msgstr "kartan lataus epäonnistui."
 
-#: ../src/main.c:217
+#: ../src/main.c:221
 msgid "mi."
 msgstr "mi."
 
-#: ../src/main.c:218
+#: ../src/main.c:222
 msgid "n.m."
 msgstr "n.m."
 
@@ -1619,7 +1686,7 @@ msgstr "nofix"
 msgid "none"
 msgstr "ei lainkaan"
 
-#: ../src/maps.c:2345 ../src/maps.c:2446
+#: ../src/maps.c:2476 ../src/maps.c:2577
 msgid "up to about"
 msgstr "noin"
 

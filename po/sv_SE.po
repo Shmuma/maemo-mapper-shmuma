@@ -1,104 +1,96 @@
-# This is an en_US "translation" file for Maemo Mapper.  To translate this to
-# another language, first copy this file to a filename with the appropriate
-# language/country code, then modify the "msgstr" strings with the correct
-# translation.
-#
-# Copyright (C) 2006 John Costigan
+# Swedish translation for maemo-mapper.
+# Copyright (C) 2007 Free Software Foundation, Inc.
 # This file is distributed under the same license as the maemo-mapper package.
-# John Costigan <gnuite@gmail.com>, 2006.
+# Daniel Nylander <po@danielnylander.se>, 2007.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: maemo-mapper 1.2.4\n"
+"Project-Id-Version: maemo-mapper\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-01-21 01:54-0500\n"
-"PO-Revision-Date: 2006-10-28 22:19-0400\n"
-"Last-Translator: David Davidov <dave@del.bg>\n"
-"Language-Team: John Costigan <gnuite@gmail.com>\n"
+"PO-Revision-Date: 2008-01-16 22:56+0100\n"
+"Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
+"Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ../src/poi.c:981
 msgid "# POIs"
-msgstr ""
+msgstr "# PAI:er"
 
 #: ../src/menu.c:1661
-#, fuzzy
 msgid "About..."
-msgstr "относно"
+msgstr "Om..."
 
 #: ../src/poi.c:658
 msgid "Add Category"
-msgstr "Добави категория"
+msgstr "Lägg till kategori"
 
 #: ../src/poi.c:1150
 msgid "Add POI"
-msgstr "Добави POI"
+msgstr "Lägg till PAI"
 
 #: ../src/cmenu.c:627 ../src/cmenu.c:655
-#, fuzzy
 msgid "Add POI..."
-msgstr "Добави POI..."
+msgstr "Lägg till PAI..."
 
 #: ../src/cmenu.c:623 ../src/cmenu.c:675
 msgid "Add Route Point"
-msgstr "Добави Route Point"
+msgstr "Lägg till ruttpunkt"
 
 #: ../src/path.c:1439
-#, fuzzy
 msgid "Add Waypoint"
-msgstr "Добави Точки по пътя"
+msgstr "Lägg till vägpunkt"
 
 #: ../src/cmenu.c:625 ../src/cmenu.c:677
-#, fuzzy
 msgid "Add Waypoint..."
-msgstr "Добави Точки по пътя..."
+msgstr "Lägg till vägpunkt..."
 
 #: ../src/poi.c:937
-#, fuzzy
 msgid "Add..."
-msgstr "Добави POI..."
+msgstr "Lägg till..."
 
 #: ../src/menu.c:905
-#, fuzzy
 msgid "Address"
-msgstr "Добави"
+msgstr "Adress"
 
 #: ../src/menu.c:930
 msgid "Address Located"
-msgstr ""
+msgstr "Adress hittad"
 
 #: ../src/menu.c:1553
-#, fuzzy
 msgid "Address..."
-msgstr "Добави POI..."
+msgstr "Adress..."
 
 #: ../src/settings.c:1329
 msgid "Advance Notice"
-msgstr "Придвижване инфо"
+msgstr ""
 
 #: ../src/maps.c:2797
 msgid "Along Route - Radius (tiles):"
-msgstr "Около маршрут - Радиус (блокчета):"
+msgstr "Längs rutt - radie (rutor):"
 
 #: ../src/display.c:820
 msgid "Altitude"
-msgstr "Височина"
+msgstr "Höjd"
 
 #: ../src/settings.c:653
 msgid "An error occurred while attempting to scan for bluetooth devices."
-msgstr ""
+msgstr "Ett fel inträffade vid försök att söka efter blåtandsenheter."
 
 #: ../src/maps.c:2156
 msgid ""
 "An error occurred while retrieving the repositories.  The web service may be "
 "temporarily down."
 msgstr ""
+"Ett fel inträffade vid hämtning av förråden.  Webbtjänsten kan temporärt "
+"vara otillgänglig."
 
 #: ../src/maps.c:1687
+#, fuzzy
 msgid "An error occurred while trying to compact the database."
-msgstr ""
+msgstr "Ett fel inträffade vid försök att söka efter blåtandsenheter."
 
 #: ../src/gps.c:889
 msgid ""
@@ -107,134 +99,126 @@ msgid ""
 "Did you make sure to modify\n"
 "the /etc/sudoers file?"
 msgstr ""
-"Грешка при опит за ресет на Bluetooth радиото.\n"
+"Ett fel inträffade vid försök att nollställa blåtandsradion.\n"
 "\n"
-"Променихте ли файла\n"
-"/etc/sudoers?"
+"Har du verkligen ändrat i\n"
+"filen /etc/sudoers?"
 
 #: ../src/settings.c:1317
 msgid "Announce"
-msgstr "Анонси"
+msgstr ""
 
 #: ../src/maps.c:2837
 msgid "Area"
-msgstr "Зона"
+msgstr "Område"
 
 #: ../src/menu.c:1604 ../src/settings.c:1246
 msgid "Auto-Center"
-msgstr "Авто-Центр."
+msgstr ""
 
 #: ../src/menu.c:1183
 msgid "Auto-Center Mode: Lat/Lon"
-msgstr "Авто-Центриране: Дълж/Шир"
+msgstr ""
 
 #: ../src/menu.c:1166
 msgid "Auto-Center Mode: Lead"
-msgstr "Авто-Центриране: Изпреварващо"
+msgstr ""
 
 #: ../src/menu.c:1200
 msgid "Auto-Center Off"
-msgstr "Авто-Центриране Изкл."
+msgstr ""
 
 #: ../src/menu.c:1482
 msgid "Auto-Download"
-msgstr "Авто-Изтегляне"
+msgstr "Automatisk hämtning"
 
 #: ../src/settings.c:1424
-#, fuzzy
 msgid "Auto-Download Pre-cache"
-msgstr "Авто-Изтегляне"
+msgstr ""
 
 #: ../src/menu.c:1518
-#, fuzzy
 msgid "Auto-Rotate"
-msgstr "Авто-Обновяване"
+msgstr "Automatisk rotering"
 
 #: ../src/menu.c:642
 msgid "Auto-Rotate Disabled"
-msgstr ""
+msgstr "Automatisk rotering inaktiverad"
 
 #: ../src/menu.c:637
 msgid "Auto-Rotate Enabled"
-msgstr ""
+msgstr "Automatisk rotering aktiverad"
 
 #: ../src/path.c:1208
 msgid "Auto-Update"
-msgstr "Авто-Обновяване"
+msgstr "Automatisk uppdatering"
 
 #: ../src/path.c:1214
 msgid "Avoid Highways"
-msgstr ""
+msgstr "Undvik motorvägar"
 
 #: ../src/poi.c:2223
-#, fuzzy
 msgid "Bear."
-msgstr "Изчистване"
+msgstr "Rikt."
 
 #: ../src/main.c:322 ../src/settings.c:1176
-#, fuzzy
 msgid "Bluetooth"
-msgstr "Рестарт Bluetooth"
+msgstr "Bluetooth"
 
 #: ../src/main.c:320
-#, fuzzy
 msgid "Bottom-Left"
-msgstr "Долу/Дясно"
+msgstr "Nedre vänster"
 
 #: ../src/main.c:319 ../src/maps.c:2924
 msgid "Bottom-Right"
-msgstr "Долу/Дясно"
+msgstr "Nedre höger"
 
 #: ../src/path.c:1058
 msgid "Break already inserted."
 msgstr ""
 
 #: ../src/cmenu.c:620
-#, fuzzy
 msgid "Browse POI..."
-msgstr "Вкл/изкл GPS"
+msgstr "Bläddra i PAI..."
 
 #: ../src/poi.c:2846
-#, fuzzy
 msgid "Browse POIs"
-msgstr "Вкл/изкл GPS"
+msgstr "Bläddra PAI:er"
 
 #: ../src/maps.c:1926 ../src/menu.c:1467 ../src/settings.c:1214
 #: ../src/settings.c:1487
 msgid "Browse..."
-msgstr "Избор..."
+msgstr "Bläddra..."
 
 #: ../src/poi.c:189
 msgid "Bus stops, airports, train stations, etc."
-msgstr ""
+msgstr "Busshållplatser, flygplatser, tågstationer etc."
 
 #: ../src/poi.c:194
 msgid "Business"
-msgstr ""
+msgstr "Företag"
 
 #: ../src/maps.c:2788
 msgid "By Area (see tab)"
-msgstr "Зона (виж таб)"
+msgstr "Efter område (se flik)"
 
 #: ../src/maps.c:1916
-#, fuzzy
 msgid "Cache DB"
-msgstr "Кеш Директория"
+msgstr ""
 
 #: ../src/maps.c:1856
 msgid ""
 "Cannot delete the last repository - there must be at lease one repository."
-msgstr "Не мога да изтрия последното хранилище - трябва да остане поне едно."
+msgstr ""
+"Kan inte ta bort det sista förrådet - det måste finnas minst ett förråd."
 
 #: ../src/menu.c:1469
-#, fuzzy
 msgid "Categories..."
-msgstr "POI Категории..."
+msgstr "Kategorier..."
 
 #: ../src/poi.c:511 ../src/poi.c:1185 ../src/poi.c:1431 ../src/poi.c:1782
 #: ../src/poi.c:2205 ../src/poi.c:2384 ../src/poi.c:2564 ../src/poi.c:2881
 msgid "Category"
-msgstr "Категория"
+msgstr "Kategori"
 
 #: ../src/poi.c:2098 ../src/poi.c:2259
 msgid "Checked POI Actions..."
@@ -242,41 +226,41 @@ msgstr ""
 
 #: ../src/maps.c:2741 ../src/menu.c:1435 ../src/menu.c:1455
 msgid "Clear"
-msgstr "Изчистване"
+msgstr "Töm"
 
 #: ../src/main.c:295
-#, fuzzy
 msgid "Clear Track"
-msgstr "Вкл/изкл Път"
+msgstr "Töm spår"
 
 #: ../src/menu.c:1511
-#, fuzzy
 msgid "Clockwise"
-msgstr "Затваряне"
+msgstr "Medsols"
 
 #: ../src/menu.c:1663
 msgid "Close"
-msgstr "Затваряне"
+msgstr "Stäng"
 
 #: ../src/settings.c:878
 msgid "Colors"
-msgstr "Цветове"
+msgstr "Färger"
 
 #: ../src/settings.c:1160
 msgid "Colors..."
-msgstr "Цветове..."
+msgstr "Färger..."
 
 #: ../src/maps.c:1708
 msgid "Compact Database"
 msgstr ""
 
 #: ../src/maps.c:1929
+#, fuzzy
 msgid "Compact..."
-msgstr ""
+msgstr "Importera..."
 
 #: ../src/maps.c:1767
+#, fuzzy
 msgid "Compacting database..."
-msgstr ""
+msgstr "Importera..."
 
 #: ../src/menu.c:1579
 msgid "Compass Rose"
@@ -284,42 +268,39 @@ msgstr ""
 
 #: ../src/maps.c:2469 ../src/maps.c:2569
 msgid "Confirm DELETION of"
-msgstr "Потвърдете ИЗТРИВАНЕ на"
+msgstr "Bekräfta BORTTAGNING av"
 
 #: ../src/maps.c:1863
 msgid "Confirm delete of repository"
-msgstr "Потвърдете изтриване хранилище"
+msgstr "Bekräfta borttagning av förråd"
 
 #: ../src/cmenu.c:398
 msgid "Confirm delete of waypoint"
-msgstr "Потвърдете изтриване на точка по пътя"
+msgstr "Bekräfta borttagning av vägpunkt"
 
 #: ../src/maps.c:2475 ../src/maps.c:2575
 msgid "Confirm download of"
-msgstr "Потвърдете изтегляне на"
+msgstr "Bekräfta hämtning av"
 
 #: ../src/settings.c:817
 msgid "Continue?"
-msgstr ""
+msgstr "Fortsätt?"
 
 #: ../src/display.c:2412
 msgid "Copy"
 msgstr ""
 
 #: ../src/cmenu.c:645
-#, fuzzy
 msgid "Copy Description"
-msgstr "Описание"
+msgstr "Kopiera beskrivning"
 
 #: ../src/cmenu.c:643
-#, fuzzy
 msgid "Copy Lat/Lon"
-msgstr "Покажи Шир/Дълж"
+msgstr "Kopiera Lat/Long"
 
 #: ../src/menu.c:1513
-#, fuzzy
 msgid "Counter"
-msgstr "Маршрут"
+msgstr "Motsols"
 
 #: ../src/path.c:1522
 msgid ""
@@ -329,61 +310,57 @@ msgstr ""
 
 #: ../src/display.c:293
 msgid "DGPS"
-msgstr ""
+msgstr "DGPS"
 
 #: ../src/poi.c:2374
-#, fuzzy
 msgid "Default Category"
-msgstr "Изтриване категория?"
+msgstr "Standardkategori"
 
 #: ../src/settings.c:1411
 msgid "Degrees Format"
-msgstr ""
+msgstr "Format för grader"
 
 #: ../src/maps.c:2778
 msgid "Delete Maps"
-msgstr "Изтриване Карти"
+msgstr "Ta bort kartor"
 
 #: ../src/poi.c:1020
 msgid "Delete POI?"
-msgstr "Изтриване POI?"
+msgstr "Ta bort PAI?"
 
 #: ../src/poi.c:559
 msgid "Delete category?"
-msgstr "Изтриване категория?"
+msgstr "Ta bort kategori?"
 
 #: ../src/poi.c:2012
-#, fuzzy
 msgid "Delete selected POI?"
-msgstr "Изтриване POI?"
+msgstr "Ta bort markerad PAI?"
 
 #: ../src/cmenu.c:652 ../src/maps.c:2265 ../src/poi.c:638 ../src/poi.c:1397
 #: ../src/poi.c:2113
 msgid "Delete..."
-msgstr "Изтриване..."
+msgstr "Ta bort..."
 
 #: ../src/menu.c:322 ../src/path.c:1464 ../src/poi.c:677 ../src/poi.c:976
 #: ../src/poi.c:1201 ../src/poi.c:1447 ../src/settings.c:641
 msgid "Description"
-msgstr "Описание"
+msgstr "Beskrivning"
 
 #: ../src/path.c:1236
 msgid "Destination"
-msgstr "Край"
+msgstr "Mål"
 
 #: ../src/menu.c:1646
 msgid "Details..."
-msgstr "Подробности..."
+msgstr "Detaljer..."
 
 #: ../src/poi.c:2213
-#, fuzzy
 msgid "Dist."
-msgstr "Покажи разстояние до"
+msgstr "Avst."
 
 #: ../src/cmenu.c:123 ../src/path.c:529 ../src/path.c:589
-#, fuzzy
 msgid "Distance"
-msgstr "Покажи разстояние до"
+msgstr "Avstånd"
 
 #: ../src/maps.c:1988
 msgid "Double Pixels"
@@ -391,67 +368,63 @@ msgstr ""
 
 #: ../src/main.c:226 ../src/menu.c:1530
 msgid "Down"
-msgstr ""
+msgstr "Ned"
 
 #: ../src/maps.c:2765
 msgid "Download Maps"
-msgstr "Изтегляне Карти"
+msgstr "Hämta kartor"
 
 #: ../src/cmenu.c:618
-#, fuzzy
 msgid "Download POI..."
-msgstr "Изтегляне Карти"
+msgstr "Hämta PAI..."
 
 #: ../src/poi.c:2519
-#, fuzzy
 msgid "Download POIs"
-msgstr "Изтегляне Карти"
+msgstr "Hämta PAI:er"
 
 #: ../src/path.c:1162
 msgid "Download Route"
-msgstr "Изтегляне Маршрут"
+msgstr "Hämta rutt"
 
 #: ../src/cmenu.c:616 ../src/cmenu.c:650 ../src/cmenu.c:672
 msgid "Download Route to..."
-msgstr "Изтегляне на маршрут в..."
+msgstr "Hämta rutt till..."
 
 #: ../src/maps.c:1951
 msgid "Download Zoom Steps"
-msgstr "Изтегляне Мащаб Стъпки"
+msgstr ""
 
 #: ../src/maps.c:2246 ../src/menu.c:1425 ../src/menu.c:1465
 msgid "Download..."
-msgstr "Изтегляне..."
+msgstr "Hämta..."
 
 #: ../src/maps.c:2003
-#, fuzzy
 msgid "Downloadable Zooms:"
-msgstr "Изтегляне Мащаб Стъпки"
+msgstr ""
 
 #: ../src/maps.c:1084 ../src/maps.c:1097
 msgid "Downloaded maps will not be cached."
-msgstr ""
+msgstr "Hämtade kartor kommer inte att mellanlagras."
 
 #: ../src/menu.c:1543
 msgid "East"
-msgstr ""
+msgstr "Öst"
 
 #: ../src/poi.c:1197 ../src/poi.c:1443 ../src/poi.c:1791 ../src/poi.c:2393
 msgid "Edit Categories..."
-msgstr "Редакт. категории..."
+msgstr "Redigera kategorier..."
 
 #: ../src/poi.c:632
 msgid "Edit Category"
-msgstr "Редакт. категория"
+msgstr "Redigera kategori"
 
 #: ../src/poi.c:1391
 msgid "Edit POI"
-msgstr "Редакт. POI"
+msgstr "Redigera PAI"
 
 #: ../src/poi.c:934 ../src/poi.c:2255
-#, fuzzy
 msgid "Edit..."
-msgstr "Редакт."
+msgstr "Redigera..."
 
 #: ../src/poi.c:193
 msgid "Elementary schools, college campuses, etc."
@@ -459,11 +432,11 @@ msgstr ""
 
 #: ../src/menu.c:1638
 msgid "Enable GPS"
-msgstr "Използвай GPS"
+msgstr "Aktivera GPS"
 
 #: ../src/settings.c:1342
 msgid "Enable Voice Synthesis (requires flite)"
-msgstr "Разреши гласов синтез (изисква flite)"
+msgstr "Aktivera röstsyntes (kräver flite)"
 
 #: ../src/settings.c:1322
 msgid "Enable Waypoint Announcements"
@@ -471,126 +444,113 @@ msgstr ""
 
 #: ../src/poi.c:701 ../src/poi.c:966
 msgid "Enabled"
-msgstr "Разреши"
+msgstr "Aktiverad"
 
 #: ../src/poi.c:1345
-#, fuzzy
 msgid "Error adding POI"
-msgstr "Проблем при добавяне на POI"
+msgstr "Fel när PAI lades till"
 
 #: ../src/poi.c:764
-#, fuzzy
 msgid "Error adding category"
-msgstr "Проблем при добавяне категория"
+msgstr "Fel när kategori lades till"
 
 #: ../src/gps.c:576
-#, fuzzy
 msgid "Error connecting to GPS receiver."
-msgstr "Търси GPS приемник"
+msgstr "Fel vid anslutning till GPS-mottagare."
 
 #: ../src/gps.c:673
-#, fuzzy
 msgid "Error connecting to GPSD server."
-msgstr "Търси GPS приемник"
+msgstr "Fel vid anslutning till GPSD-server."
 
 #: ../src/poi.c:574 ../src/poi.c:1031 ../src/poi.c:2041
-#, fuzzy
 msgid "Error deleting POI"
-msgstr "Проблем при изтриване на POI"
+msgstr "Fel vid borttagning av PAI"
 
 #: ../src/poi.c:583
-#, fuzzy
 msgid "Error deleting category"
-msgstr "Проблем при изтриване категория"
+msgstr "Fel vid borttagning av kategori"
 
 #: ../src/gps.c:621
-#, fuzzy
 msgid "Error opening GPS device."
-msgstr "Грешка при разчитане (parsing) GPX файл."
+msgstr "Fel vid öppnande av GPS-enhet."
 
 #: ../src/main.c:501 ../src/menu.c:134 ../src/menu.c:246 ../src/path.c:690
 #: ../src/poi.c:2436 ../src/poi.c:2814
 msgid "Error parsing GPX file."
-msgstr "Грешка при разчитане (parsing) GPX файл."
+msgstr "Fel vid tolkning av GPX-fil."
 
 #: ../src/gps.c:698
-#, fuzzy
 msgid "Error reading GPS data."
-msgstr "Грешка при разчитане (parsing) GPX файл."
+msgstr "Fel vid läsning av GPS-data."
 
 #: ../src/poi.c:808
-#, fuzzy
 msgid "Error updating Category"
-msgstr "Проблем при обновяване на Категория"
+msgstr "Fel vid uppdatering av kategori"
 
 #: ../src/poi.c:1574 ../src/poi.c:1867
-#, fuzzy
 msgid "Error updating POI"
-msgstr "Проблем при обновяване на POI"
+msgstr "Fel vid uppdatering av PAI"
 
 #: ../src/poi.c:749
-#, fuzzy
 msgid "Error updating category"
-msgstr "Проблем при обновяване на категория"
+msgstr "Fel vid uppdatering av kategori"
 
 #: ../src/gpx.c:481 ../src/gpx.c:808
 msgid "Error while writing to file"
-msgstr "Грешка при запис във файл"
+msgstr "Fel vid skrivning till fil"
 
 #: ../src/poi.c:140
-#, fuzzy
 msgid "Error with POI database"
-msgstr "Проблем с POI база данни"
+msgstr ""
 
 #: ../src/menu.c:165 ../src/menu.c:268 ../src/poi.c:2081
 msgid "Error writing GPX file."
-msgstr "Грешка при запис на GPX файл."
+msgstr "Fel vid skrivning av GPX-fil."
 
 #: ../src/gps.c:828
 msgid "Establishing GPS fix"
-msgstr "Установяване GPS фикс"
+msgstr ""
 
 #: ../src/display.c:297
 msgid "Estimated"
-msgstr ""
+msgstr "Beräknad"
 
 #: ../src/poi.c:2118
 msgid "Export to GPX..."
-msgstr ""
+msgstr "Exportera till GPX..."
 
 #: ../src/util.c:147
 msgid "Failed to connect to GPX Directions server"
-msgstr "Неуспешно свързване с  GPX сървър за инструкции"
+msgstr ""
 
 #: ../src/settings.c:1886
 msgid "Failed to initialize GConf.  Quitting."
-msgstr "Неуспешна инициализация на GConf.  Прекъсвам."
+msgstr "Misslyckades med att initiera GConf.  Avslutar."
 
 #: ../src/settings.c:176
 msgid "Failed to initialize GConf.  Settings were not saved."
-msgstr "Неуспешна инициализация на GConf.  Запазих настройките."
+msgstr "Misslyckades med att initiera GConf.  Inställningarna sparades inte."
 
 #: ../src/display.c:2518 ../src/main.c:489
 msgid "Failed to open file for reading"
-msgstr "Неуспех при отваряне за четене"
+msgstr "Misslyckades med att öppna fil för läsning"
 
 #: ../src/display.c:2519
 msgid "Failed to open file for writing"
-msgstr "Неуспех при отваряне за запис"
+msgstr "Misslyckades med att öppna fil för skrivning"
 
 #: ../src/maps.c:1683
 #, fuzzy
 msgid "Failed to open map database for compacting."
-msgstr "Неуспешно отваряне/създаване на база данни"
+msgstr "Misslyckades med att öppna kartdatabas för förråd"
 
 #: ../src/maps.c:1082 ../src/maps.c:1096
-#, fuzzy
 msgid "Failed to open map database for repository"
-msgstr "Неуспешно отваряне/създаване на база данни"
+msgstr "Misslyckades med att öppna kartdatabas för förråd"
 
 #: ../src/poi.c:207
 msgid "Failed to open or create database"
-msgstr "Неуспешно отваряне/създаване на база данни"
+msgstr "Misslyckades med att öppna eller skapa databas"
 
 #: ../src/path.c:1660
 msgid "Failed to open path database. Tracks and routes will not be saved."
@@ -599,72 +559,72 @@ msgstr ""
 #: ../src/path.c:206 ../src/path.c:232 ../src/path.c:251
 msgid "Failed to write to path database. Tracks and routes may not be saved."
 msgstr ""
+"Misslyckades med att skriva till vägdatabas. Spår och rutter kommer inte att "
+"sparas."
 
 #: ../src/main.c:324
 msgid "File"
-msgstr ""
+msgstr "Arkiv"
 
 #: ../src/settings.c:1198
 msgid "File Path"
-msgstr ""
+msgstr "Filsökväg"
 
 #: ../src/gpx.c:482 ../src/gpx.c:809
 msgid "File is incomplete."
-msgstr "Незавършен файл."
+msgstr "Filen är inte fullständig."
 
 #: ../src/display.c:865
 msgid "Fix"
-msgstr "Фикс"
+msgstr ""
 
 #: ../src/display.c:874
 msgid "Fix Quality"
-msgstr "Фикс качество"
+msgstr ""
 
 #: ../src/settings.c:1265
-#, fuzzy
 msgid "Fixed"
-msgstr "Фикс"
+msgstr "Fast"
 
 #: ../src/display.c:296
 msgid "Float RTK"
 msgstr ""
 
 #: ../src/display.c:2403
-#, fuzzy
 msgid "Format"
-msgstr "URI формат"
+msgstr ""
 
 #: ../src/menu.c:1628
 msgid "Full Screen"
-msgstr "Пълноекранно"
+msgstr "Helskärm"
 
 #: ../src/menu.c:1634 ../src/settings.c:896 ../src/settings.c:1171
 msgid "GPS"
-msgstr ""
+msgstr "GPS"
 
 #: ../src/display.c:768
 msgid "GPS Details"
-msgstr "GPS подробности"
+msgstr "GPS-detaljer"
 
 #: ../src/display.c:781
 msgid "GPS Information"
-msgstr "GPS Информация"
+msgstr "GPS-information"
 
 #: ../src/maps.c:2851 ../src/menu.c:1555
 msgid "GPS Location"
-msgstr "GPS позиция"
+msgstr "GPS-plats"
 
 #: ../src/main.c:323
 msgid "GPSD"
-msgstr ""
+msgstr "GPSD"
 
 #: ../src/settings.c:1220
 msgid "GPSD Host"
-msgstr ""
+msgstr "GPSD-värd"
 
 #: ../src/poi.c:197
 msgid "General landmarks."
-msgstr ""
+msgstr "Allmänna landmärken."
 
 #: ../src/poi.c:195
 msgid "General places of business."
@@ -691,254 +651,240 @@ msgstr ""
 
 #: ../src/menu.c:1547 ../src/poi.c:2252
 msgid "Go to"
-msgstr ""
+msgstr "Gå till"
 
 #: ../src/menu.c:895
 msgid "Go to Address"
-msgstr ""
+msgstr "Gå till adress"
 
 #: ../src/menu.c:789
-#, fuzzy
 msgid "Go to Lat/Lon"
-msgstr "Покажи Шир/Дълж"
+msgstr "Gå till Lat/Long"
 
 #: ../src/cmenu.c:680
 msgid "Go to Nearest"
-msgstr ""
+msgstr "Gå till närmsta"
 
 #: ../src/cmenu.c:658
 msgid "Go to Next"
-msgstr ""
+msgstr "Gå till nästa"
 
 #: ../src/settings.c:762
 msgid "Hardware Keys"
-msgstr ""
+msgstr "Hårdvarutangenter"
 
 #: ../src/settings.c:1157
 msgid "Hardware Keys..."
-msgstr ""
+msgstr "Hårdvarutangenter..."
 
 #: ../src/display.c:829
 msgid "Heading"
-msgstr "Посока"
+msgstr "Riktning"
 
 #: ../src/menu.c:1659
-#, fuzzy
 msgid "Help..."
-msgstr "Помощ"
+msgstr "Hjälp..."
 
 #: ../src/poi.c:181
 msgid "Houses, apartments, or other residences of import."
-msgstr ""
+msgstr "Hus, lägenheter eller andra bostäder."
 
 #: ../src/poi.c:958
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: ../src/menu.c:1463
 msgid "Import..."
-msgstr ""
+msgstr "Importera..."
 
 #: ../src/poi.c:187
 msgid "Indoor or Outdoor places to have fun."
 msgstr ""
 
 #: ../src/settings.c:1377
-#, fuzzy
 msgid "Info Font Size"
-msgstr "GPS Информация"
+msgstr ""
 
 #: ../src/menu.c:1447
-#, fuzzy
 msgid "Insert Break"
-msgstr "Вмъкване прекъсване"
+msgstr ""
 
 #: ../src/menu.c:302
-#, fuzzy
 msgid "Insert Mark"
-msgstr "Вмъкване прекъсване"
+msgstr "Infoga märke"
 
 #: ../src/menu.c:1449
-#, fuzzy
 msgid "Insert Mark..."
-msgstr "Вмъкване прекъсване"
+msgstr ""
 
 #: ../src/main.c:294
-#, fuzzy
 msgid "Insert Track Break"
-msgstr "Вмъкване прекъсване"
+msgstr ""
 
 #: ../src/maps.c:3089
 msgid "Invalid Bottom-Right Latitude"
-msgstr "Невалидна ширина долу/дясно"
+msgstr ""
 
 #: ../src/maps.c:3096
 msgid "Invalid Bottom-Right Longitude"
-msgstr "Невалидна дължина долу/дясно"
+msgstr ""
 
 #: ../src/menu.c:860 ../src/poi.c:1291 ../src/poi.c:1515
-#, fuzzy
 msgid "Invalid Latitude"
-msgstr "Невалидна ширина"
+msgstr "Ogiltig latitud"
 
 #: ../src/menu.c:867 ../src/poi.c:1298 ../src/poi.c:1522
-#, fuzzy
 msgid "Invalid Longitude"
-msgstr "Невалидна дължина"
+msgstr "Ogiltig longitud"
 
 #: ../src/gps.c:71 ../src/gps.c:82
 msgid "Invalid NMEA input from receiver!"
-msgstr "Невалидни NMEA данни от приемника!"
+msgstr "Ogiltig NMEA-inmatning från mottagare!"
 
 #: ../src/maps.c:3075
 msgid "Invalid Top-Left Latitude"
-msgstr "Невалидна ширина горе/ляво"
+msgstr ""
 
 #: ../src/maps.c:3082
 msgid "Invalid Top-Left Longitude"
-msgstr "Невалидна дължина горе/ляво"
+msgstr ""
 
 #: ../src/util.c:158
-#, fuzzy
 msgid "Invalid address."
-msgstr "Невалидна ширина"
+msgstr "Ogiltig adress."
 
 #: ../src/poi.c:2796
-#, fuzzy
 msgid "Invalid origin or query."
-msgstr "Невалидна дължина"
+msgstr "Ogiltigt ursprung eller fråga."
 
 #: ../src/path.c:669
 msgid "Invalid source or destination."
-msgstr ""
+msgstr "Ogiltig källa eller mål."
 
 #: ../src/display.c:1105
 msgid ""
 "It looks like this is your first time running Maemo Mapper.  Press OK to "
 "view the the help pages. Otherwise, press Cancel to continue."
 msgstr ""
+"Det ser ut som om du använder Maemo Mapper för första gången.  Tryck på OK "
+"för att visa hjälpsidorna. Om inte, tryck på Avbryt för att fortsätta."
 
 #: ../src/poi.c:506 ../src/poi.c:669 ../src/poi.c:971 ../src/poi.c:1177
 #: ../src/poi.c:1423 ../src/poi.c:2232
 msgid "Label"
-msgstr "Етикет"
+msgstr "Etikett"
 
 #: ../src/poi.c:196
 msgid "Landmark"
-msgstr ""
+msgstr "Landmärke"
 
 #: ../src/display.c:2385 ../src/poi.c:1161 ../src/poi.c:1407
-#, fuzzy
 msgid "Lat"
-msgstr "Шир/Дълж"
+msgstr "Lat"
 
 #: ../src/menu.c:312 ../src/path.c:1449
-#, fuzzy
 msgid "Lat, Lon:"
-msgstr "Шир, Дълж"
+msgstr "Lat, Long:"
 
 #: ../src/menu.c:1608
 msgid "Lat/Lon"
-msgstr "Шир/Дълж"
+msgstr "Lat/Long"
 
 #: ../src/menu.c:1551
-#, fuzzy
 msgid "Lat/Lon..."
-msgstr "Шир/Дълж..."
+msgstr "Lat/Long..."
 
 #: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:2841 ../src/menu.c:799
 msgid "Latitude"
-msgstr "Ширина"
+msgstr "Latitud"
 
 #: ../src/menu.c:1614
 msgid "Lead"
-msgstr "Изпреварващо"
+msgstr ""
 
 #: ../src/settings.c:1250
 msgid "Lead Amount"
-msgstr "Изпрев. дължина"
+msgstr ""
 
 #: ../src/main.c:227 ../src/menu.c:1532
-#, fuzzy
 msgid "Left"
-msgstr "Горе/Ляво"
+msgstr "Vänster"
 
 #: ../src/settings.c:1354
 msgid "Line Width"
-msgstr "Дебелина"
+msgstr "Radbredd"
 
 #: ../src/display.c:838
 msgid "Local time"
-msgstr "Местно време"
+msgstr "Lokal tid"
 
 #: ../src/poi.c:501 ../src/settings.c:1452
 msgid "Location"
-msgstr "Позиция"
+msgstr "Plats"
 
 #: ../src/poi.c:190
 msgid "Lodging"
-msgstr ""
+msgstr "Logi"
 
 #: ../src/display.c:2394 ../src/poi.c:1169 ../src/poi.c:1415
-#, fuzzy
 msgid "Lon"
-msgstr "Шир/Дълж"
+msgstr "Long"
 
 #: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:2845 ../src/menu.c:818
 msgid "Longitude"
-msgstr "Дължина"
+msgstr "Longitud"
 
 #: ../src/settings.c:636
 msgid "MAC"
-msgstr ""
+msgstr "MAC"
 
 #: ../src/maps.c:2137
 msgid ""
 "Maemo Mapper will now download and add a list of possibly-duplicate "
 "repositories from the internet.  Continue?"
 msgstr ""
+"Maemo Mapper kommer nu att hämta och lägga till en lista över tänkbara "
+"dubbletter av förråd från Internet.  Fortsätt?"
 
 #: ../src/maps.c:2726
 msgid "Manage Maps"
-msgstr "Управление Карти"
+msgstr "Hantera kartor"
 
 #: ../src/menu.c:1478
 msgid "Manage Maps..."
-msgstr "Управление Карти..."
+msgstr "Hantera kartor..."
 
 #: ../src/maps.c:2225
 msgid "Manage Repositories"
-msgstr "Управление Хранилища"
+msgstr "Hantera förråd"
 
 #: ../src/menu.c:1480
 msgid "Manage Repositories..."
-msgstr "Управление Хранилища..."
+msgstr "Hantera förråd..."
 
 #: ../src/display.c:298
 msgid "Manual"
-msgstr "Ръчно"
+msgstr "Manuell"
 
 #: ../src/menu.c:1473
 msgid "Maps"
-msgstr "Карти"
+msgstr "Kartor"
 
 #: ../src/display.c:883
 msgid "Max speed"
-msgstr "Макс. скорост"
+msgstr "Max hastighet"
 
 #: ../src/maps.c:2023
 msgid "Max."
-msgstr ""
+msgstr "Max."
 
 #: ../src/maps.c:2012
-#, fuzzy
 msgid "Min."
-msgstr "Други"
+msgstr "Min."
 
 #: ../src/settings.c:1284
-#, fuzzy
 msgid "Min. Speed"
-msgstr "Скорост"
+msgstr "Min. hastighet"
 
 #: ../src/maps.c:2357
 msgid "Minimum Downloadable Zoom must be less than Maximum Downloadable Zoom."
@@ -946,33 +892,29 @@ msgstr ""
 
 #: ../src/settings.c:1350
 msgid "Misc."
-msgstr "Други"
+msgstr "Div."
 
 #: ../src/settings.c:1407
 msgid "Misc. 2"
-msgstr "Други 2"
+msgstr "Div. 2"
 
 #: ../src/poi.c:199
 msgid "Miscellaneous category for everything else."
-msgstr ""
+msgstr "Blandad kategori för allting annat."
 
 #: ../src/maps.c:3041 ../src/menu.c:532
-#, fuzzy
 msgid ""
 "NOTE: You must set a Map URI in the current repository in order to download "
 "maps."
 msgstr ""
-"Задайте URI на картов сървър в \"Управление на Хранилища\" за да изтегляте "
-"карти."
 
 #: ../src/maps.c:1800 ../src/maps.c:2076
 msgid "Name"
-msgstr "Име"
+msgstr "Namn"
 
 #: ../src/menu.c:1559
-#, fuzzy
 msgid "Nearest POI"
-msgstr "Избор POI"
+msgstr "Närmsta PAI"
 
 #: ../src/main.c:233
 msgid "Never"
@@ -980,20 +922,19 @@ msgstr ""
 
 #: ../src/maps.c:1790
 msgid "New Name"
-msgstr "Ново Име"
+msgstr "Nytt namn"
 
 #: ../src/maps.c:2066
 msgid "New Repository"
-msgstr "Ново Хранилище"
+msgstr "Nytt förråd"
 
 #: ../src/maps.c:2268
 msgid "New..."
-msgstr "Ново ..."
+msgstr "Ny..."
 
 #: ../src/menu.c:1557
-#, fuzzy
 msgid "Next Waypoint"
-msgstr "Точки по пътя"
+msgstr "Nästa vägpunkt"
 
 #: ../src/maps.c:1996
 msgid "Next-able"
@@ -1001,24 +942,23 @@ msgstr ""
 
 #: ../src/menu.c:1018 ../src/poi.c:444 ../src/poi.c:3121
 msgid "No POIs found."
-msgstr ""
+msgstr "Inga PAI:er hittades."
 
 #: ../src/poi.c:1666
 msgid "No POIs were found."
-msgstr ""
+msgstr "Inga PAI:er hittades."
 
 #: ../src/menu.c:1620
 msgid "None"
-msgstr "Не"
+msgstr "Ingen"
 
 #: ../src/menu.c:1537
-#, fuzzy
 msgid "North"
-msgstr "URI формат"
+msgstr "Nord"
 
 #: ../src/menu.c:1423 ../src/menu.c:1443
 msgid "Open..."
-msgstr "Отваряне..."
+msgstr "Öppna..."
 
 #: ../src/display.c:1122
 msgid ""
@@ -1026,31 +966,34 @@ msgid ""
 "a sample set of repositories from  the internet by using the \"Download...\" "
 "button."
 msgstr ""
+"OpenStreetMap.org tillhandahåller publika kartor som är fria att använda.  "
+"Du kan även hämta ner en exempeluppsättning förråd från Internet genom att "
+"använda knappen \"Hämta...\"."
 
 #: ../src/path.c:1221 ../src/poi.c:2589 ../src/poi.c:2906
 msgid "Origin"
-msgstr "Начало"
+msgstr "Ursprung"
 
 #: ../src/poi.c:198
 msgid "Other"
-msgstr ""
+msgstr "Övrigt"
 
 #: ../src/maps.c:2772
 msgid "Overwrite"
-msgstr "Подмяна стари"
+msgstr "Skriv över"
 
 #: ../src/poi.c:2469
 msgid "Overwrite query with the following text?"
-msgstr ""
+msgstr "Skriv över fråga med följande text?"
 
 #: ../src/cmenu.c:662 ../src/menu.c:1459 ../src/menu.c:1598
 #: ../src/settings.c:941 ../src/settings.c:1467
 msgid "POI"
-msgstr ""
+msgstr "PAI"
 
 #: ../src/poi.c:920
 msgid "POI Categories"
-msgstr "POI Категории"
+msgstr "PAI-kategorier"
 
 #: ../src/poi.c:2163
 msgid "POI List"
@@ -1058,7 +1001,7 @@ msgstr ""
 
 #: ../src/settings.c:1471
 msgid "POI database"
-msgstr "POI база данни"
+msgstr "PAI-databas"
 
 #: ../src/poi.c:2077
 msgid "POIs Exported"
@@ -1072,58 +1015,55 @@ msgstr ""
 
 #: ../src/display.c:294
 msgid "PPS"
-msgstr ""
+msgstr "PPS"
 
 #: ../src/poi.c:2573
 msgid "Page"
-msgstr ""
+msgstr "Sida"
 
 #: ../src/menu.c:1524
 msgid "Pan"
-msgstr ""
+msgstr "Panorera"
 
 #: ../src/main.c:268
 msgid "Pan Down"
-msgstr ""
+msgstr "Panorera nedåt"
 
 #: ../src/main.c:266
 msgid "Pan East"
-msgstr ""
+msgstr "Panorera åt öster"
 
 #: ../src/main.c:269
-#, fuzzy
 msgid "Pan Left"
-msgstr "Горе/Ляво"
+msgstr "Panorera åt vänster"
 
 #: ../src/main.c:263
 msgid "Pan North"
-msgstr ""
+msgstr "Panorera åt norr"
 
 #: ../src/main.c:270
-#, fuzzy
 msgid "Pan Right"
-msgstr "Долу/Дясно"
+msgstr "Panorera åt höger"
 
 #: ../src/settings.c:1269
-#, fuzzy
 msgid "Pan Sensitivity"
-msgstr "Чувствителност"
+msgstr "Känslighet för panorering"
 
 #: ../src/main.c:265
 msgid "Pan South"
-msgstr ""
+msgstr "Panorera åt söder"
 
 #: ../src/main.c:267
 msgid "Pan Up"
-msgstr ""
+msgstr "Panorera uppåt"
 
 #: ../src/main.c:264
 msgid "Pan West"
-msgstr ""
+msgstr "Panorera åt väster"
 
 #: ../src/poi.c:183
 msgid "Places to eat or drink."
-msgstr ""
+msgstr "Mat och dryck."
 
 #: ../src/poi.c:185
 msgid "Places to shop or acquire services."
@@ -1134,82 +1074,72 @@ msgid "Places to stay temporarily or for the night."
 msgstr ""
 
 #: ../src/menu.c:376
-#, fuzzy
 msgid "Please provide a description for the mark."
-msgstr "Моля посочете POI име."
+msgstr ""
 
 #: ../src/settings.c:671
 msgid "Please select a bluetooth device from the list."
-msgstr "Моля, изберете bluetooth устройство от списъка."
+msgstr "Välj en blåtandsenhet från listan."
 
 #: ../src/settings.c:1597
-#, fuzzy
 msgid "Please specify a GPS file pathname."
-msgstr "Моля посочете POI име."
+msgstr "Ange sökvägen till en GPS-fil."
 
 #: ../src/settings.c:1590
-#, fuzzy
 msgid "Please specify a GPSD hostname."
-msgstr "Моля посочете POI име."
+msgstr "Ange värdnamnet för en GPSD"
 
 #: ../src/poi.c:1317 ../src/poi.c:1541 ../src/poi.c:1815
-#, fuzzy
 msgid "Please specify a category."
-msgstr "Моля посочете POI име."
+msgstr "Ange en kategori."
 
 #: ../src/poi.c:2411 ../src/poi.c:2761
-#, fuzzy
 msgid "Please specify a default category."
-msgstr "Моля посочете име за категорията."
+msgstr "Ange en standardkategori."
 
 #: ../src/poi.c:727
 msgid "Please specify a name for the category."
-msgstr "Моля посочете име за категорията."
+msgstr "Ange ett namn för kategorin."
 
 #: ../src/poi.c:1310 ../src/poi.c:1534
-#, fuzzy
 msgid "Please specify a name."
-msgstr "Моля посочете POI име."
+msgstr "Ange ett namn."
 
 #: ../src/poi.c:2768
-#, fuzzy
 msgid "Please specify a query."
-msgstr "Моля посочете POI име."
+msgstr "Ange en fråga."
 
 #: ../src/path.c:1319 ../src/poi.c:2701
-#, fuzzy
 msgid "Please specify a source URL."
-msgstr "Моля посочете POI име."
+msgstr ""
 
 #: ../src/path.c:1361
 msgid "Please specify a start location."
-msgstr "Моля задайте стартова точка."
+msgstr ""
 
 #: ../src/path.c:1368
 msgid "Please specify an end location."
-msgstr "Моля задайте крайна точка."
+msgstr ""
 
 #: ../src/poi.c:2755 ../src/poi.c:3049
-#, fuzzy
 msgid "Please specify an origin."
-msgstr "Моля задайте крайна точка."
+msgstr "Ange ett ursprung."
 
 #: ../src/settings.c:1305
 msgid "Points"
-msgstr ""
+msgstr "Punkter"
 
 #: ../src/settings.c:1236
-#, fuzzy
 msgid "Port"
-msgstr "URI формат"
+msgstr "Port"
 
 #: ../src/maps.c:1284
 msgid "Processing Maps"
-msgstr ""
+msgstr "Behandlar kartor"
 
 #: ../src/poi.c:2604 ../src/poi.c:2921
 msgid "Query"
-msgstr ""
+msgstr "Fråga"
 
 #: ../src/display.c:295
 msgid "Real Time Kinematic"
@@ -1217,161 +1147,155 @@ msgstr ""
 
 #: ../src/path.c:1010
 msgid "Really clear the track?"
-msgstr ""
+msgstr "Verkligen ta bort spåret?"
 
 #: ../src/path.c:889
 msgid "Recalculating directions..."
-msgstr ""
+msgstr "Räknar om..."
 
 #: ../src/poi.c:186
-#, fuzzy
 msgid "Recreation"
-msgstr "Позиция"
+msgstr "Nöje"
 
 #: ../src/maps.c:2262
 msgid "Rename..."
-msgstr "Преименуване..."
+msgstr "Byt namn..."
 
 #: ../src/maps.c:2107
 msgid "Replace all repositories with the default repository?"
-msgstr ""
+msgstr "Ersätt alla förråd med standardförrådet?"
 
 #: ../src/menu.c:1433 ../src/menu.c:1516
 msgid "Reset"
-msgstr "Рестарт"
+msgstr "Nollställ"
 
 #: ../src/main.c:305 ../src/menu.c:1649
 msgid "Reset Bluetooth"
-msgstr "Рестарт Bluetooth"
+msgstr "Nollställ Bluetooth"
 
 #: ../src/main.c:272
 msgid "Reset Viewing Angle"
-msgstr ""
+msgstr "Återställ visningsvinkel"
 
 #: ../src/settings.c:848
 msgid "Reset all colors to their original defaults?"
-msgstr ""
+msgstr "Återställ alla färger till sina standardvärden?"
 
 #: ../src/settings.c:734
 msgid "Reset all hardware keys to their original defaults?"
-msgstr ""
+msgstr "Återställ alla hårdvarutangenter till sina standardvärden?"
 
 #: ../src/maps.c:2240 ../src/settings.c:768 ../src/settings.c:884
-#, fuzzy
 msgid "Reset..."
-msgstr "Рестарт"
+msgstr "Återställ..."
 
 #: ../src/poi.c:180
 msgid "Residence"
-msgstr ""
+msgstr "Bostad"
 
 #: ../src/poi.c:182
 msgid "Restaurant"
-msgstr ""
+msgstr "Restaurang"
 
 #: ../src/main.c:225 ../src/menu.c:1534
-#, fuzzy
 msgid "Right"
-msgstr "Долу/Дясно"
+msgstr "Höger"
 
 #: ../src/menu.c:1507
-#, fuzzy
 msgid "Rotate"
-msgstr "Маршрут"
+msgstr "Rotera"
 
 #: ../src/settings.c:1292
-#, fuzzy
 msgid "Rotate Sensit."
-msgstr "Чувствителност"
+msgstr ""
 
 #: ../src/main.c:274
 msgid "Rotate View Clockwise"
-msgstr ""
+msgstr "Rotera vy medsols"
 
 #: ../src/main.c:276
 msgid "Rotate View Counter-Clockwise"
-msgstr ""
+msgstr "Rotera vy motsols"
 
 #: ../src/menu.c:1419 ../src/menu.c:1584 ../src/settings.c:926
 msgid "Route"
-msgstr "Маршрут"
+msgstr "Rutt"
 
 #: ../src/path.c:684
 msgid "Route Downloaded"
-msgstr "Маршрут изтеглен"
+msgstr "Rutt hämtad"
 
 #: ../src/main.c:498 ../src/menu.c:131
 msgid "Route Opened"
-msgstr "Маршрут отворен"
+msgstr "Rutt öppnad"
 
 #: ../src/menu.c:162
 msgid "Route Saved"
-msgstr "Маршрут записан"
+msgstr ""
 
 #: ../src/menu.c:1116
 msgid "Routes are now hidden"
-msgstr "Маршрутите скрити"
+msgstr "Rutter är nu dolda"
 
 #: ../src/menu.c:1110
 msgid "Routes are now shown"
-msgstr "Маршрутите показани"
+msgstr "Rutter visas nu"
 
 #: ../src/display.c:292
 msgid "SPS"
-msgstr ""
+msgstr "SPS"
 
 #: ../src/display.c:856
 msgid "Sat in use"
-msgstr "Ползва сат."
+msgstr "Sat används"
 
 #: ../src/display.c:847
 msgid "Sat in view"
-msgstr "Виждими сат."
+msgstr "Sat i sikte"
 
 #: ../src/display.c:788
 msgid "Satellites details"
-msgstr "Информация Сателити"
+msgstr ""
 
 #: ../src/display.c:714
 msgid "Satellites in view"
-msgstr "Видими сателити"
+msgstr "Satelliter i sikte"
 
 #: ../src/menu.c:1427 ../src/menu.c:1445
 msgid "Save..."
-msgstr "Записване..."
+msgstr "Spara..."
 
 #: ../src/menu.c:1574
 msgid "Scale"
-msgstr ""
+msgstr "Skala"
 
 #: ../src/settings.c:1192
 msgid "Scan..."
-msgstr "Скан..."
+msgstr "Sök av..."
 
 #: ../src/settings.c:647
 msgid "Scanning for Bluetooth Devices"
-msgstr ""
+msgstr "Letar efter blåtandsenheter"
 
 #: ../src/poi.c:192
 msgid "School"
-msgstr ""
+msgstr "Skola"
 
 #: ../src/gps.c:817
 msgid "Searching for GPS receiver"
-msgstr "Търси GPS приемник"
+msgstr "Söker efter GPS-mottagare"
 
 #: ../src/settings.c:611
 msgid "Select Bluetooth Device"
-msgstr "Избор Bluetooth устрийство"
+msgstr "Välj blåtandsenhet"
 
 #: ../src/main.c:289
-#, fuzzy
 msgid "Select Next Repository"
-msgstr "Следващо Хранилище"
+msgstr "Välj nästa förråd"
 
 #: ../src/poi.c:474
 msgid "Select POI"
-msgstr "Избор POI"
+msgstr "Välj PAI"
 
 #: ../src/poi.c:2103
 msgid ""
@@ -1379,38 +1303,37 @@ msgid ""
 "on the POIs that you checked\n"
 "in the POI list."
 msgstr ""
+"Välj en åtgärd att genomföra\n"
+"på de PAI:er som du markerat\n"
+"i PAI-listan."
 
 #: ../src/poi.c:539
 msgid "Select one POI from the list."
-msgstr "Избор на една POI от списъка."
+msgstr "Välj en PAI från listan."
 
 #: ../src/poi.c:178
-#, fuzzy
 msgid "Service Station"
-msgstr "Позиция"
+msgstr ""
 
 #: ../src/poi.c:1772 ../src/poi.c:2109
-#, fuzzy
 msgid "Set Category..."
-msgstr "Редакт. категории..."
+msgstr "Ange kategori..."
 
 #: ../src/cmenu.c:630
-#, fuzzy
 msgid "Set as GPS Location"
-msgstr "Използвай GPS позиция"
+msgstr "Ange som GPS-plats"
 
 #: ../src/settings.c:1143
-#, fuzzy
 msgid "Settings"
-msgstr "Настройки..."
+msgstr "Inställningar"
 
 #: ../src/menu.c:1656
 msgid "Settings..."
-msgstr "Настройки..."
+msgstr "Inställningar..."
 
 #: ../src/maps.c:2755
 msgid "Setup"
-msgstr "Настройка"
+msgstr "Konfiguration"
 
 #: ../src/poi.c:184
 msgid "Shopping/Services"
@@ -1418,79 +1341,71 @@ msgstr ""
 
 #: ../src/menu.c:1565
 msgid "Show"
-msgstr ""
+msgstr "Visa"
 
 #: ../src/cmenu.c:641
 msgid "Show Description"
-msgstr "Покажи Описание"
+msgstr "Visa beskrivning"
 
 #: ../src/main.c:299 ../src/menu.c:1453
-#, fuzzy
 msgid "Show Distance from Beginning"
-msgstr "Покажи разстояние до"
+msgstr "Visa avstånd från startpunkt"
 
 #: ../src/main.c:297
-#, fuzzy
 msgid "Show Distance from Last Break"
-msgstr "Покажи разстояние до"
+msgstr ""
 
 #: ../src/menu.c:1451
-#, fuzzy
 msgid "Show Distance from Last Mark"
-msgstr "Покажи разстояние до"
+msgstr ""
 
 #: ../src/cmenu.c:614 ../src/cmenu.c:648 ../src/cmenu.c:670
 msgid "Show Distance to"
-msgstr "Покажи разстояние до"
+msgstr "Visa avstånd till"
 
 #: ../src/main.c:293 ../src/menu.c:1431
-#, fuzzy
 msgid "Show Distance to End of Route"
-msgstr "Покажи разстояние до"
+msgstr "Visa avstånd till ruttslut"
 
 #: ../src/main.c:291 ../src/menu.c:1429
-#, fuzzy
 msgid "Show Distance to Next Waypoint"
-msgstr "Разстояние до точка по пътя"
+msgstr "Visa avstånd till nästa vägpunkt"
 
 #: ../src/menu.c:1642
 msgid "Show Information"
-msgstr "Покажи Информация"
+msgstr "Visa information"
 
 #: ../src/cmenu.c:611 ../src/cmenu.c:639
 msgid "Show Lat/Lon"
-msgstr "Покажи Шир/Дълж"
+msgstr "Visa Lat/Long"
 
 #: ../src/settings.c:1492
 msgid "Show POI below zoom"
-msgstr "Показвай POI под мащаб"
+msgstr ""
 
 #: ../src/display.c:2375
-#, fuzzy
 msgid "Show Position"
-msgstr "Покажи Описание"
+msgstr "Visa position"
 
 #: ../src/display.c:299
 msgid "Simulation"
-msgstr "Симулация"
+msgstr "Simulering"
 
 #: ../src/path.c:1181 ../src/poi.c:2541
 msgid "Source URL"
-msgstr ""
+msgstr "Käll-url"
 
 #: ../src/menu.c:1539
-#, fuzzy
 msgid "South"
-msgstr "относно"
+msgstr "Syd"
 
 #: ../src/display.c:811
 msgid "Speed"
-msgstr "Скорост"
+msgstr "Hastighet"
 
 #: ../src/settings.c:1442
-#, fuzzy
 msgid "Speed Limit"
-msgstr "Скорост"
+msgstr "Hastighetsgräns"
 
 #: ../src/poi.c:179
 msgid "Stations for purchasing fuel for vehicles."
@@ -1501,27 +1416,28 @@ msgid "Successfully compacted database."
 msgstr ""
 
 #: ../src/cmenu.c:605
-#, fuzzy
 msgid "Tap Point"
-msgstr "Точки по пътя"
+msgstr ""
 
 #: ../src/maps.c:934
 msgid ""
 "The current repository is in a legacy format and will be converted.  You "
 "should delete your old maps if you no longer plan to use them."
 msgstr ""
+"Det aktuellt förråd använder ett gammalt format och kommer att konverteras.  "
+"Du bör ta bort dina gamla kartor om du inte längre tänker använda dem."
 
 #: ../src/path.c:563
 msgid "The current route is empty."
-msgstr ""
+msgstr "Den aktuella rutten är tom."
 
 #: ../src/path.c:609 ../src/path.c:624
 msgid "The current track is empty."
-msgstr ""
+msgstr "Det aktuella spåret är tom."
 
 #: ../src/settings.c:814
 msgid "The following action is mapped to multiple keys"
-msgstr ""
+msgstr "Följande åtgärd är mappad till flera tangenter"
 
 #: ../src/input.c:384
 msgid "There are no other next-able repositories."
@@ -1530,81 +1446,75 @@ msgstr ""
 #: ../src/cmenu.c:278 ../src/cmenu.c:300 ../src/cmenu.c:319 ../src/cmenu.c:339
 #: ../src/cmenu.c:358 ../src/cmenu.c:377 ../src/cmenu.c:455 ../src/cmenu.c:474
 msgid "There are no waypoints."
-msgstr ""
+msgstr "Det finns inga vägpunkter."
 
 #: ../src/menu.c:980 ../src/path.c:544
 msgid "There is no next waypoint."
-msgstr ""
+msgstr "Det finns ingen nästa vägpunkt."
 
 #: ../src/main.c:278
-#, fuzzy
 msgid "Toggle Auto-Center"
-msgstr "Авто-Центр."
+msgstr "Växla autocentrering"
 
 #: ../src/main.c:280
-#, fuzzy
 msgid "Toggle Auto-Rotate"
-msgstr "Авто-Центр."
+msgstr "Växla autorotering"
 
 #: ../src/main.c:282
-#, fuzzy
 msgid "Toggle Fullscreen"
-msgstr "Пълноекранно"
+msgstr "Växla helskärm"
 
 #: ../src/main.c:300
 msgid "Toggle GPS"
-msgstr "Вкл/изкл GPS"
+msgstr "Växla GPS"
 
 #: ../src/main.c:301
 msgid "Toggle GPS Info"
-msgstr "Вкл/изкл GPS инфо"
+msgstr "Växla GPS-info"
 
 #: ../src/main.c:287
-#, fuzzy
 msgid "Toggle POIs"
-msgstr "Вкл/изкл GPS"
+msgstr "Växla PAI:er"
 
 #: ../src/main.c:286
-#, fuzzy
 msgid "Toggle Scale"
-msgstr "Вкл/изкл GPS"
+msgstr "Växla skala"
 
 #: ../src/main.c:303
 msgid "Toggle Speed Limit"
-msgstr ""
+msgstr "Växla hastighetsgräns"
 
 #: ../src/main.c:285
 msgid "Toggle Tracks"
-msgstr "Вкл/изкл Път"
+msgstr "Växla spår"
 
 #: ../src/main.c:317 ../src/maps.c:2886
 msgid "Top-Left"
-msgstr "Горе/Ляво"
+msgstr "Övre vänster"
 
 #: ../src/main.c:318
-#, fuzzy
 msgid "Top-Right"
-msgstr "Долу/Дясно"
+msgstr "Övre höger"
 
 #: ../src/menu.c:1439 ../src/menu.c:1589 ../src/settings.c:911
 msgid "Track"
-msgstr "Път"
+msgstr "Spår"
 
 #: ../src/menu.c:243
 msgid "Track Opened"
-msgstr "Път отворен"
+msgstr "Spår öppnat"
 
 #: ../src/menu.c:265
 msgid "Track Saved"
-msgstr "Път записан"
+msgstr "Spår sparat"
 
 #: ../src/menu.c:1053
 msgid "Tracks are now hidden"
-msgstr "Пътеки скрити"
+msgstr "Spår är nu dolda"
 
 #: ../src/menu.c:1047
 msgid "Tracks are now shown"
-msgstr "Пътеки показани"
+msgstr "Spår visas nu"
 
 #: ../src/poi.c:188
 msgid "Transportation"
@@ -1612,28 +1522,27 @@ msgstr ""
 
 #: ../src/maps.c:1907
 msgid "URL Format"
-msgstr "URI формат"
+msgstr ""
 
 #: ../src/maps.c:1114
 msgid "Unable to create map database for repository"
-msgstr ""
+msgstr "Kunde inte skapa kartdatabas för förråd"
 
 #: ../src/settings.c:1365
-#, fuzzy
 msgid "Unblank Screen"
-msgstr "Пълноекранно"
+msgstr ""
 
 #: ../src/settings.c:1394
 msgid "Units"
-msgstr "Единици"
+msgstr "Enheter"
 
 #: ../src/util.c:163
 msgid "Unknown error while locating address."
-msgstr ""
+msgstr "Okänt fel vid lokalisering av adress."
 
 #: ../src/main.c:224 ../src/menu.c:1528
 msgid "Up"
-msgstr ""
+msgstr "Upp"
 
 #: ../src/path.c:1198 ../src/poi.c:2554 ../src/poi.c:2872
 msgid "Use End of Route"
@@ -1641,40 +1550,39 @@ msgstr ""
 
 #: ../src/path.c:1192 ../src/poi.c:2548 ../src/poi.c:2866
 msgid "Use GPS Location"
-msgstr "Използвай GPS позиция"
+msgstr "Använd GPS-plats"
 
 #: ../src/menu.c:1594
 msgid "Velocity Vector"
-msgstr "Вектор скорост"
+msgstr ""
 
 #: ../src/menu.c:1491
 msgid "View"
-msgstr "Изглед"
+msgstr "Visa"
 
 #: ../src/maps.c:2867
 msgid "View Center"
-msgstr "Видим център"
+msgstr ""
 
 #: ../src/maps.c:1967
 msgid "View Zoom Steps"
-msgstr "Преглед Мащаб Стъпки"
+msgstr ""
 
 #: ../src/cmenu.c:667
 msgid "View/Edit..."
-msgstr ""
+msgstr "Visa/Redigera..."
 
 #: ../src/poi.c:561
 msgid "WARNING: All POIs in that category will also be deleted!"
-msgstr "ВНИМАНИЕ: Всияки POI в Категорията ще бъдат изтрити!"
+msgstr "VARNING: Alla PAI:er i den kategorin kommer även att tas bort!"
 
 #: ../src/cmenu.c:634
 msgid "Waypoint"
-msgstr "Точки по пътя"
+msgstr "Vägpunkt"
 
 #: ../src/menu.c:1541
-#, fuzzy
 msgid "West"
-msgstr "Рестарт"
+msgstr "Väst"
 
 #: ../src/main.c:232
 msgid "When Approaching a Waypoint"
@@ -1698,185 +1606,74 @@ msgid ""
 "Maps\" menu item in the \"Maps\" menu.  Or, press OK now to enable Auto-"
 "Download."
 msgstr ""
+"Du kommer nu att se en blank skärm.  Du kan hämta ner kartor via "
+"menyobjektet \"Hantera kartor\" under menyn \"Kartor\".  Du kan även trycka "
+"OK nu för att aktivera automatisk hämtning."
 
 #: ../src/maps.c:2810 ../src/menu.c:1497
 msgid "Zoom"
-msgstr "Мащаб"
+msgstr "Zoom"
 
 #: ../src/main.c:283 ../src/menu.c:1501
-#, fuzzy
 msgid "Zoom In"
-msgstr "Мащаб"
+msgstr "Zooma in"
 
 #: ../src/menu.c:1569
-#, fuzzy
 msgid "Zoom Level"
-msgstr "Мащаб"
+msgstr "Zoomnivå"
 
 #: ../src/maps.c:2816
 msgid "Zoom Levels to Download: (0 = most detail)"
-msgstr "Мащаб нива за изтегляне: (0 = най-детайлно)"
+msgstr "Zoomnivåer att hämta: (0 = flest detaljer)"
 
 #: ../src/main.c:284 ../src/menu.c:1503
-#, fuzzy
 msgid "Zoom Out"
-msgstr "Мащаб"
+msgstr "Zooma ut"
 
 #: ../src/input.c:117 ../src/input.c:310 ../src/menu.c:558 ../src/menu.c:576
 msgid "Zoom to Level"
-msgstr "Мащаб"
+msgstr "Zooma till nivå"
 
 #: ../src/maps.c:2569 ../src/maps.c:2576
 msgid "about"
-msgstr "относно"
+msgstr "ungefär"
 
 #: ../src/display.c:715
 msgid "in use"
-msgstr "в употреба"
+msgstr "används"
 
 #: ../src/main.c:220
 msgid "km"
-msgstr ""
+msgstr "km"
 
 #: ../src/maps.c:2476 ../src/maps.c:2577
 msgid "maps"
-msgstr "карти"
+msgstr "kartor"
 
 #: ../src/maps.c:2470 ../src/maps.c:2570
 msgid "maps "
-msgstr "карти"
+msgstr "kartor"
 
 #: ../src/display.c:1499
 msgid "maps failed to download."
-msgstr ""
+msgstr "kartor gick inte att hämta."
 
 #: ../src/main.c:221
 msgid "mi."
-msgstr ""
+msgstr "mi."
 
 #: ../src/main.c:222
 msgid "n.m."
-msgstr ""
+msgstr "n.m."
 
 #: ../src/display.c:869
 msgid "nofix"
-msgstr "не фикс"
+msgstr ""
 
 #: ../src/display.c:300 ../src/display.c:878
 msgid "none"
-msgstr "няма"
+msgstr "ingen"
 
 #: ../src/maps.c:2476 ../src/maps.c:2577
 msgid "up to about"
-msgstr "до около"
-
-#~ msgid "Add"
-#~ msgstr "Добави"
-
-#, fuzzy
-#~ msgid ""
-#~ "Cannot enable GPS until a GPS receiver is set up in the Settings dialog "
-#~ "box."
-#~ msgstr ""
-#~ "Не мога да разреша GPS докато не е посочен MAC адреса на приемника в "
-#~ "Настрийки."
-
-#~ msgid "Category List"
-#~ msgstr "Списък категории"
-
-#~ msgid "Category: "
-#~ msgstr "Категория: "
-
-#~ msgid "Copy Description to Clipboard"
-#~ msgstr "Копира Описание в Клипборд"
-
-#~ msgid "Copy Lat/Lon to Clipboard"
-#~ msgstr "Копира Шир/Дълж в Клипборд"
-
-#~ msgid ""
-#~ "Could not generate directions. Make sure your source and destination are "
-#~ "valid."
-#~ msgstr ""
-#~ "Не мога да генерирам инструкции. Моля проверета адресите на крайните "
-#~ "точки."
-
-#~ msgid "Defaults"
-#~ msgstr "Възстановяване"
-
-#~ msgid "Delete"
-#~ msgstr "Изтриване"
-
-#~ msgid "Desc."
-#~ msgstr "Опис."
-
-#~ msgid "Desc.: "
-#~ msgstr "Опис.: "
-
-#, fuzzy
-#~ msgid "Disconnecting from GPS receiver"
-#~ msgstr "Търси GPS приемник"
-
-#~ msgid "Distance to Location"
-#~ msgstr "Разстояние до Локация"
-
-#~ msgid "Downloading maps"
-#~ msgstr "Изтегляне карти"
-
-#, fuzzy
-#~ msgid "Failed to connect to Bluetooth GPS receiver."
-#~ msgstr "Неуспешно свързване с  GPX сървър за инструкции"
-
-#~ msgid "GPS Mark"
-#~ msgstr "GPS знак"
-
-#~ msgid "Keep Display On Only in Fullscreen Mode"
-#~ msgstr "Не спирай дисплей само в пълноекранен режим"
-
-#~ msgid "Label: "
-#~ msgstr "Етикет: "
-
-#, fuzzy
-#~ msgid "MAC Address"
-#~ msgstr "Добави"
-
-#~ msgid "Maemo Mapper Settings"
-#~ msgstr "Maemo Mapper Настройки"
-
-#, fuzzy
-#~ msgid ""
-#~ "No GPS Receiver provided.\n"
-#~ "GPS will be disabled."
-#~ msgstr ""
-#~ "Липсва MAC на приемник.\n"
-#~ "Забранявам GPS."
-
-#~ msgid "No route is loaded."
-#~ msgstr "Маршрът не е зареден."
-
-#~ msgid "No waypoints are visible."
-#~ msgstr "Няма видими точки по пътя."
-
-#, fuzzy
-#~ msgid "No waypoints found."
-#~ msgstr "Няма видими точки по пътя."
-
-#, fuzzy
-#~ msgid ""
-#~ "Note: You can enter a device path\n"
-#~ "(e.g. \"/dev/rfcomm0\")."
-#~ msgstr ""
-#~ "Note: For manual rfcomm, enter a device path\n"
-#~ "(e.g. \"/dev/rfcomm0\")."
-
-#  This word refers to Pitch as in of a person's voice.
-#~ msgid "Pitch"
-#~ msgstr "Тон"
-
-#~ msgid "Please specify a name for the POI."
-#~ msgstr "Моля посочете POI име."
-
-#~ msgid "Repositories"
-#~ msgstr "Хранилища"
-
-#~ msgid "toggled"
-#~ msgstr "превключено"
+msgstr "upp till ungefär"

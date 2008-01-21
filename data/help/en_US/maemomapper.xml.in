@@ -730,7 +730,10 @@
           lot of free space.  You can use the
           <display_text>Browse...</display_text> button to select the
           database file with a graphical file system browser, or you can enter
-          the filename manually.
+          the filename manually.  The <display_text>Compact...</display_text>
+          button can be used to compact the database if you have deleted
+          many maps from your database.  (Otherwise, deleted space is reused
+          to store new maps.)
         </listitem>
         <listitem>
           <display_text>Download Zoom Steps</display_text> - Controls which
@@ -1272,6 +1275,36 @@
       <note>
         A POI may only be associated with a single category at a time.
       </note>
+      <heading>POI Icons</heading>
+      <para>
+        Icons can be customized on a per-POI or per-category basis, and/or
+        you may provide a custom default icon for all POIs.  To do so, you
+        should place icon files in the same directory as the POI database
+        itself.  Most image file formats are supported, but the files
+        themselves <i>must</i> have the ".jpg" extension (even if the icons
+        are not in the JPEG format).
+      </para>
+      <para>
+        To customize the default POI icon (to be used instead of the simple
+        square), place an icon file called "poi.jpg" in the same directory
+        as the POI database.
+      </para>
+      <para>
+        To customize the icon for a POI category, place an icon file with
+        the same name as the POI category, all lower-case, plus the ".jpg"
+        extension.  For example, if your POI category is called "Gas
+        Stations", the file should have the name "gas stations.jpg".
+      </para>
+      <para>
+        To customize the icon for a specific POI, place an icon file with
+        a name equal to the POI's label, all lower-case, plus the ".jpg"
+        extension.  For example, if your POI's label is "Joe's House",
+        the file should have the name "joe's house.jpg".
+      </para>
+      <para>
+        POI-specific icons are given priority over category-specific icons,
+        which in turn are given priority over the default POI icon.
+      </para>
     </topic>
     <topic>
       <topictitle>Settings</topictitle>
