@@ -71,8 +71,8 @@
       </para>
       <note>
         Mikäli käytät Maemo Mapperia laitteen sisäisellä GPS-vastaanottimella,
-	sinun on syytä määrittää vastaanottimeksi "Tiedostopolku" ja antaa
-	poluksi <display_text>/dev/pgps</display_text>.
+	sinun kannattaa valita GPS-laitteeksi "Bluetooth" ja jättää kenttä
+	tyhjäksi.
       </note>
       <para>
         Kun olet muuttanut asetukset haluamiksesi voit jatkaa koskettamalla
@@ -755,8 +755,12 @@
           mihin kartat tallennetaan.  Kartat säilytetään tässä tietokanssa, eikä
           niitä poisteta automaattisesti. Tästä syystä on hyvä valita kohde,
           jossa on paljon vapaata tilaa. Käytettävä kohde voidaan valita
-          koskettamalla <display_text>Selaa</display_text> nappia, tai tietokannan
+          koskettamalla <display_text>Selaa...</display_text> nappia, tai tietokannan
           polku voidaan kirjoittaa valintaikkunaan käsin.
+	  <display_text>Tiivistä...</display_text> nappia painamalla tietokannan
+	  kokoa voidaan pienentää. Tästä on hyöty, jos olet poistanut suuria määriä
+	  karttoja karttavbarastosta.  (Muussa tapauksessa poistettujen karttojen
+	  vapauttama tila tietokannasta käytetään uusien karttojen tallentamiseen.)
         </listitem>
         <listitem>
           <display_text>Lataa zoom-tasot</display_text> - Valinnalla
@@ -1292,6 +1296,39 @@
       <note>
         POI-piste voi kuulua ainoastaan yhteen kategoriaan kerrallaan.
       </note>
+      <heading>POI-kuvakkeet</heading>
+      <para>
+        Kuvakkeet voidaan valita joko POI- tai ketegoriakohtaisesti joiden
+	lisäksi POI-pisteille voidaan määrittää oletuskuvake.  Asettaaksesi
+	haluamasi kuvakkeen aseta kuvatiedosto samaan tiedostopolkuun
+	POI-tietokannan kanssa.  Miltei kaikki kuvatiedostojen muodot ovat
+	tuettuja, mutta kuvatiedostjen päätteen tulee olla *.jpg (siitäkin
+	huolimatta vaikka itse kuva ei olisi jpg-muodossa).
+      </para>
+      <para>
+	Muuttaaksesi oletus POI-pisteiden kuvakkeen (jota käytetään oletuksena
+	olevan neliön sijaan), aseta poi.jpg niminen kuvaketiedosto samaan
+	tiedostopolkuun POI-tietokannan kanssa.
+      </para>
+      <para>
+        Asettaaksesi kuvakkeen POI-kategorialle aseta kategorian kanssa
+	samalla nimellä oleva jpg päätteellä oleva kuvaketiedosto
+	(kategorian nimi pienellä kirjoitettuna) samaan tiedostopolkuun.
+	Jos gategorian nimi on "Huoltoasema", kuvaketiedoston nimen tulee
+	olla "huoltoasema.jpg".
+      </para>
+      <para>
+        Asettaaksesi oman kuvakkeen tietylle POI-pisteelle aseta 
+	POI-pisteen nimikkeen kanssa saman niminen kuvaketiedosto samaan
+	hakemistopolkuun (kuvaus pienellä kirjoitettuna).  Jos POI-pisteen
+	nimi on "Markon talo", niin kuvaketiedoston nimi tulee olla
+	"marko talo.jpg".
+      </para>
+      <para>
+	POI-pisteen nimikkeen mukaisella kuvaketiedostolla on etusija
+	kategorian mukaiseen kuvaketiedostoon, jolla taas on etusija
+	oletus kuvakkeeseen nähden.
+      </para>
     </topic>
     <topic>
       <topictitle>Asetukset</topictitle>
@@ -1332,15 +1369,13 @@
 	  nappia, jolloin Maemo Mapper etsii lähellä olevat bluetooth laittet.
 	  Tai vaihtoehtoisesti kenttä voidaan jättää tyhjäksi, jolloin Maemo Mapper
 	  käyttää automaattisesti bluetooth GPS-vastaanottimeksi tunnistamaansa
-	  laitetta.
+	  laitetta.  Tätä valintaa voidaa myös käyttää laitteilla, joissa on
+	  sisäänrakennettu GPS-vastaanotin, jolloin kenttä täytyy jättää tyhjäksi.
         </listitem>
         <listitem>
           <display_text>Tiedostopolku</display_text> - Valitse tämä, mikäli
 	  GPS-laite on määritetty laitteen tiedostojärjestelmässä.  Määritä
-	  tekstikenttään polku ja tiedosto GPS-laitteeseen.  Tätä valintaa
-	  voidaan käyttää myös laitteen sisäisen GPS:n kanss, jolloin tulee
-	  käyttää oletuksena olevaa <display_text>/dev/pgps</display_text>,
-          asetusta.
+	  tekstikenttään polku ja tiedosto GPS-laitteeseen.
         </listitem>
         <listitem>
           <display_text>GPSD-isäntä</display_text> - Valitse tämä valinta, mikäli
@@ -1470,11 +1505,11 @@
         <listitem>
           <display_text>Aktivoi näyttö</display_text> - Määrittelee miten Maemo Mapper
           rajoittaa näytön taustavalon päällä oloa koko näytön ollessa
-          valittuna. <display_text>When Receiving Any GPS Data</display_text>, Maemo
+          valittuna. <display_text>Vastaanotettaessa sijaintitietoja</display_text>, Maemo
           Mapper pitää näytön akttivisena aina kun yhteys GPS-vastaanotimeen on 
-	  aktiivinen.  <display_text>Never</display_text> valittuna, Maemo Mapper ei
+	  aktiivinen.  <display_text>Ei koskaan</display_text> valittuna, Maemo Mapper ei
 	  pidä näyttöä akttivisena ja taustavalo sammuu laitteen asetusten mukaisesti.
-          <display_text>When Moving (Full Screen Only)</display_text> on oletusasetus
+          <display_text>Liikuttaessa (vain koko näyttö)</display_text> on oletusasetus
 	  joka pitää näytön aktiivisena ainoastaan silloin, kun koko näyttö on käytössä
 	  ja GPS-sijainti muuttuu.
         </listitem>
