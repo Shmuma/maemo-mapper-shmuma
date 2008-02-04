@@ -908,6 +908,7 @@ gps_init()
         gchar *path_env = getenv("PATH");
         gchar *new_path = g_strdup_printf("%s:%s", path_env, "/usr/sbin");
         setenv("PATH", new_path, 1);
+        g_free(new_path);
     }
 
     /* set _gpsoffset */

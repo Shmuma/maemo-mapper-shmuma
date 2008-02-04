@@ -653,8 +653,10 @@ route_download_and_setup(GtkWidget *parent, const gchar *source_url,
     }
 
     /* Attempt to download the route from the server. */
-    if(GNOME_VFS_OK != (vfs_result = gnome_vfs_read_entire_file(
-                buffer, &size, &bytes)))
+    vfs_result = gnome_vfs_read_entire_file(buffer, &size, &bytes);
+    g_free (buffer);
+
+    if(vfs_result != GNOME_VFS_OK)
     {
         g_free(bytes);
         popup_error(parent, gnome_vfs_result_to_string(vfs_result));

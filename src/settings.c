@@ -1893,9 +1893,12 @@ settings_init()
                 GCONF_KEY_GPS_RCVR_TYPE, NULL);
         gint i = 0;
         if(gri_type_str)
+        {
             for(i = GPS_RCVR_ENUM_COUNT - 1; i > 0; i--)
                 if(!strcmp(gri_type_str, GPS_RCVR_ENUM_TEXT[i]))
                     break;
+            g_free(gri_type_str);
+        }
         _gri.type = i;
     }
 

@@ -329,8 +329,7 @@ maemo_mapper_init(gint argc, gchar **argv)
     /* Set up track array (must be done before config). */
     memset(&_track, 0, sizeof(_track));
     memset(&_route, 0, sizeof(_route));
-    MACRO_PATH_INIT(_track);
-    MACRO_PATH_INIT(_route);
+    /* initialisation of paths is done in path_init() */
 
     _mapdb_mutex = g_mutex_new();
     _mut_priority_mutex = g_mutex_new();
