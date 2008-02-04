@@ -88,7 +88,7 @@ conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
 
     status = con_ic_connection_event_get_status(event);
 
-    if((_conic_is_connected = (status == CON_IC_CONNECTION_ERROR_NONE)))
+    if((_conic_is_connected = (status == CON_IC_STATUS_CONNECTED)))
     {
         /* We're connected. */
         _conic_conn_failed = FALSE;
@@ -116,7 +116,7 @@ conic_recommend_connected()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-#ifndef DEBUG
+#ifdef __arm__
     g_mutex_lock(_conic_connection_mutex);
     if(!_conic_is_connecting)
     {
@@ -135,7 +135,7 @@ conic_ensure_connected()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-#ifndef DEBUG
+#ifdef __arm__
     while(_window && !_conic_is_connected)
     {   
         g_mutex_lock(_conic_connection_mutex);
@@ -150,6 +150,8 @@ conic_ensure_connected()
         g_cond_wait(_conic_connection_cond, _conic_connection_mutex);
         g_mutex_unlock(_conic_connection_mutex);
     }
+#else
+    _conic_is_connected = TRUE;
 #endif
 
     vprintf("%s(): return %d\n", __PRETTY_FUNCTION__,
