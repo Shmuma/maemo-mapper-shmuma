@@ -58,8 +58,8 @@
 #include "poi.h"
 #include "util.h"
 
-typedef struct _OriginToggleInfo OriginToggleInfo;
-struct _OriginToggleInfo {
+typedef struct _RouteDownloadInfo RouteDownloadInfo;
+struct _RouteDownloadInfo {
     GtkWidget *rad_use_gps;
     GtkWidget *rad_use_route;
     GtkWidget *rad_use_text;
@@ -1121,8 +1121,7 @@ find_nearest_waypoint(gint unitx, gint unity)
 }
 
 static gboolean
-origin_type_selected(GtkWidget *toggle,
-        OriginToggleInfo *oti)
+origin_type_selected(GtkWidget *toggle, RouteDownloadInfo *oti)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -1131,6 +1130,63 @@ origin_type_selected(GtkWidget *toggle,
         gtk_widget_set_sensitive(oti->txt_from, toggle == oti->rad_use_text);
         gtk_widget_set_sensitive(oti->chk_auto, toggle == oti->rad_use_gps);
     }
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+route_download_swap(GtkWidget *button, RouteDownloadInfo *oti)
+{
+    gchar *old_origin;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Save the old origin. */
+    old_origin = g_strdup(gtk_entry_get_text(GTK_ENTRY(oti->txt_from)));
+
+    /* Set the origin text field equal to the current destination. */
+    gtk_entry_set_text(GTK_ENTRY(oti->txt_from),
+            gtk_entry_get_text(GTK_ENTRY(oti->txt_to)));
+
+    /* Set the contents of the destination text field. */
+    if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(oti->rad_use_gps)))
+    {
+        /* "Use GPS Location" is enabled - set Destination to GPS Location */
+        gchar buffer[80];
+        gchar strlat[32];
+        gchar strlon[32];
+        g_ascii_formatd(strlat, 32, "%.06f", _gps.lat);
+        g_ascii_formatd(strlon, 32, "%.06f", _gps.lon);
+        snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
+        gtk_entry_set_text(GTK_ENTRY(oti->txt_to), buffer);
+    }
+    else if(gtk_toggle_button_get_active(
+                GTK_TOGGLE_BUTTON(oti->rad_use_route)))
+    {
+        /* "Use End of Route" is enabled - set Destination to start of route */
+        gchar buffer[80];
+        gchar strlat[32];
+        gchar strlon[32];
+        Point *p;
+        gdouble lat, lon;
+
+        /* Use first non-zero route point. */
+        for(p = _route.head; !p->unity; p++) { }
+
+        unit2latlon(p->unitx, p->unity, lat, lon);
+        g_ascii_formatd(strlat, 32, "%.06f", lat);
+        g_ascii_formatd(strlon, 32, "%.06f", lon);
+        snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
+        gtk_entry_set_text(GTK_ENTRY(oti->txt_to), buffer);
+    }
+    else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(oti->rad_use_text)))
+    {
+        /* "Origin" is enabled - just use the text. */
+        gtk_entry_set_text(GTK_ENTRY(oti->txt_to), old_origin);
+    }
+
+    g_free(old_origin);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(oti->rad_use_text), TRUE);
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -1152,7 +1208,8 @@ route_download(gchar *to)
     static GtkWidget *table = NULL;
     static GtkWidget *label = NULL;
     static GtkWidget *txt_source_url = NULL;
-    static OriginToggleInfo oti;
+    static GtkWidget *btn_swap = NULL;
+    static RouteDownloadInfo oti;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     conic_recommend_connected();
@@ -1185,7 +1242,7 @@ route_download(gchar *to)
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
                 txt_source_url = gtk_entry_new(),
-                1, 4, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+                1, 5, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(txt_source_url), 25);
 
         /* Use GPS Location. */
@@ -1208,13 +1265,13 @@ route_download(gchar *to)
         gtk_table_attach(GTK_TABLE(table),
                 oti.chk_auto = gtk_check_button_new_with_label(
                     _("Auto-Update")),
-                3, 4, 1, 2, GTK_FILL, 0, 2, 4);
+                3, 5, 1, 2, GTK_FILL, 0, 2, 4);
 
         /* Avoid Highways. */
         gtk_table_attach(GTK_TABLE(table),
                 oti.chk_avoid_highways = gtk_check_button_new_with_label(
                     _("Avoid Highways")),
-                3, 4, 2, 3, GTK_FILL, 0, 2, 4);
+                3, 5, 2, 3, GTK_FILL, 0, 2, 4);
 
 
         /* Origin. */
@@ -1249,6 +1306,10 @@ route_download(gchar *to)
         g_object_set(G_OBJECT(oti.txt_to), HILDON_AUTOCAP, FALSE, NULL);
 #endif
 
+        /* Swap button. */
+        gtk_table_attach(GTK_TABLE(table),
+                btn_swap = gtk_button_new_with_label("Swap"),
+                4, 5, 3, 5, GTK_FILL, GTK_FILL, 2, 4);
 
         /* Set up auto-completion. */
         from_comp = gtk_entry_completion_new();
@@ -1268,6 +1329,8 @@ route_download(gchar *to)
                           G_CALLBACK(origin_type_selected), &oti);
         g_signal_connect(G_OBJECT(oti.rad_use_text), "toggled",
                           G_CALLBACK(origin_type_selected), &oti);
+        g_signal_connect(G_OBJECT(btn_swap), "clicked",
+                          G_CALLBACK(route_download_swap), &oti);
 
         gtk_widget_set_sensitive(oti.chk_auto, FALSE);
     }
