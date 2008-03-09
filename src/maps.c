@@ -898,6 +898,8 @@ set_repo_type(RepoData *repo)
             repo->type = REPOTYPE_QUAD_QRST;
         else if(strstr(url, "%0d"))
             repo->type = REPOTYPE_XYZ_INV;
+        else if(strstr(url, "%-d"))
+            repo->type = REPOTYPE_XYZ_SIGNED;
         else if(strstr(url, "%0s"))
             repo->type = REPOTYPE_QUAD_ZERO;
         else
@@ -1231,7 +1233,8 @@ static gchar*
 map_construct_url(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
     gchar *retval;
-    vprintf("%s()\n", __PRETTY_FUNCTION__);
+    vprintf("%s(%p, %d, %d, %d)\n", __PRETTY_FUNCTION__,
+            repo, zoom, tilex, tiley);
     switch(repo->type)
     {
         case REPOTYPE_XYZ:
@@ -1242,6 +1245,13 @@ map_construct_url(RepoData *repo, gint zoom, gint tilex, gint tiley)
         case REPOTYPE_XYZ_INV:
             retval = g_strdup_printf(repo->url,
                     MAX_ZOOM + 1 - zoom, tilex, tiley);
+            break;
+
+        case REPOTYPE_XYZ_SIGNED:
+            retval = g_strdup_printf(repo->url,
+                    tilex,
+                    (1 << (MAX_ZOOM - zoom)) - tiley - 1,
+                    zoom - (MAX_ZOOM - 17));
             break;
 
         case REPOTYPE_QUAD_QRST:

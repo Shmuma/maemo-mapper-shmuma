@@ -63,6 +63,7 @@ typedef enum
 {
     REPOTYPE_NONE, /* No URL set. */
     REPOTYPE_XYZ, /* x=%d, y=%d, and zoom=%d */
+    REPOTYPE_XYZ_SIGNED, /* x=%d, y=%d, and zoom=%d-2 */
     REPOTYPE_XYZ_INV, /* zoom=%0d, x=%d, y=%d */
     REPOTYPE_QUAD_QRST, /* t=%s   (%s = {qrst}*) */
     REPOTYPE_QUAD_ZERO, /* t=%0s  (%0s = {0123}*) */
