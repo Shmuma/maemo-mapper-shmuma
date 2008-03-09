@@ -854,7 +854,7 @@ gpx_poi_write(GtkTreeModel *model, GnomeVFSHandle *handle)
             WRITE_STRING("\" lon=\"");
             g_ascii_formatd(buffer, sizeof(buffer), "%.06f", poi.lon);
             WRITE_STRING(buffer);
-            WRITE_STRING("\"/>\n");
+            WRITE_STRING("\">\n");
 
             if(poi.label && *poi.label)
             {
