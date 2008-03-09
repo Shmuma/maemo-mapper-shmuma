@@ -2474,7 +2474,7 @@ display_open_file(GtkWidget *parent, gchar **bytes_out,
     gboolean success = FALSE;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    dialog= hildon_file_chooser_dialog_new(GTK_WINDOW(_window),chooser_action);
+    dialog = hildon_file_chooser_dialog_new(parent, chooser_action);
 
     if(dir && *dir)
         gtk_file_chooser_set_current_folder_uri(
