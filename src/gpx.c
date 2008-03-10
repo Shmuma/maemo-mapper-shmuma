@@ -99,6 +99,79 @@ gpx_error(SaxData *data, const gchar *msg, ...)
     data->state = ERROR;
 }
 
+static gboolean
+gpx_write_string(GnomeVFSHandle *handle, const gchar *str)
+{
+    GnomeVFSResult vfs_result;
+    GnomeVFSFileSize size;
+    if(GNOME_VFS_OK != (vfs_result = gnome_vfs_write(
+                    handle, str, strlen(str), &size)))
+    {
+        gchar buffer[BUFFER_SIZE];
+        snprintf(buffer, sizeof(buffer),
+                "%s:\n%s\n%s", _("Error while writing to file"),
+                _("File is incomplete."),
+                gnome_vfs_result_to_string(vfs_result));
+        popup_error(_window, buffer);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static gboolean
+gpx_write_escaped(GnomeVFSHandle *handle, const gchar *str)
+{
+    const gchar *ptr = str;
+    const gchar *nullchr = ptr + strlen(ptr);
+    while(ptr < nullchr)
+    {
+        gchar *newptr = strpbrk(ptr, "&<>");
+        if(newptr != NULL)
+        {
+            /* First, write out what we have so far. */
+            const gchar *to_write;
+            GnomeVFSResult vfs_result;
+            GnomeVFSFileSize size;
+            if(GNOME_VFS_OK != (vfs_result = gnome_vfs_write(
+                            handle, ptr, newptr - ptr, &size)))
+            {
+                gchar buffer[BUFFER_SIZE];
+                snprintf(buffer, sizeof(buffer),
+                        "%s:\n%s\n%s", _("Error while writing to file"),
+                        _("File is incomplete."),
+                        gnome_vfs_result_to_string(vfs_result));
+                popup_error(_window, buffer);
+                return FALSE;
+            }
+
+            /* Now, write the XML entity. */
+            switch(*newptr)
+            {
+                case '&':
+                    to_write = "&amp;";
+                    break;
+                case '<':
+                    to_write = "&lt;";
+                    break;
+                case '>':
+                    to_write = "&gt;";
+                    break;
+            }
+            gpx_write_string(handle, to_write);
+
+            /* Advance the pointer to continue searching for entities. */
+            ptr = newptr + 1;
+        }
+        else
+        {
+            /* No characters need escaping - write the whole thing. */
+            gpx_write_string(handle, ptr);
+            ptr = nullchr;
+        }
+    }
+    return TRUE;
+}
+
 /****************************************************************************
  * BELOW: OPEN PATH *********************************************************
  ****************************************************************************/
@@ -470,22 +543,6 @@ gpx_path_parse(Path *to_replace, gchar *buffer, gint size, gint policy_old)
  * BELOW: SAVE PATH *********************************************************
  ****************************************************************************/
 
-#define WRITE_STRING(string) { \
-    GnomeVFSResult vfs_result; \
-    GnomeVFSFileSize size; \
-    if(GNOME_VFS_OK != (vfs_result = gnome_vfs_write( \
-                    handle, (string), strlen((string)), &size))) \
-    { \
-        gchar buffer[BUFFER_SIZE]; \
-        snprintf(buffer, sizeof(buffer), \
-                "%s:\n%s\n%s", _("Error while writing to file"), \
-                _("File is incomplete."), \
-                gnome_vfs_result_to_string(vfs_result)); \
-        popup_error(_window, buffer); \
-        return FALSE; \
-    } \
-}
-
 gboolean
 gpx_path_write(Path *path, GnomeVFSHandle *handle)
 {
@@ -504,7 +561,7 @@ gpx_path_write(Path *path, GnomeVFSHandle *handle)
     }
 
     /* Write the header. */
-    WRITE_STRING(
+    gpx_write_string(handle,
             "<?xml version=\"1.0\"?>\n"
             "<gpx version=\"1.0\" creator=\"maemo-mapper\" "
             "xmlns=\"http://www.topografix.com/GPX/1/0\">\n"
@@ -522,33 +579,33 @@ gpx_path_write(Path *path, GnomeVFSHandle *handle)
             if(trkseg_break)
             {
                 /* First trkpt of the segment - write trkseg header. */
-                WRITE_STRING("    </trkseg>\n"
+                gpx_write_string(handle, "    </trkseg>\n"
                              "    <trkseg>\n");
                 trkseg_break = FALSE;
             }
             unit2latlon(curr->unitx, curr->unity, lat, lon);
-            WRITE_STRING("      <trkpt lat=\"");
+            gpx_write_string(handle, "      <trkpt lat=\"");
             g_ascii_formatd(buffer, sizeof(buffer), "%.06f", lat);
-            WRITE_STRING(buffer);
-            WRITE_STRING("\" lon=\"");
+            gpx_write_string(handle, buffer);
+            gpx_write_string(handle, "\" lon=\"");
             g_ascii_formatd(buffer, sizeof(buffer), "%.06f", lon);
-            WRITE_STRING(buffer);
-            WRITE_STRING("\"");
+            gpx_write_string(handle, buffer);
+            gpx_write_string(handle, "\"");
 
             /* write the elevation */
             if(curr->altitude != 0)
             {
                 if(first_sub)
                 {
-                    WRITE_STRING(">\n");
+                    gpx_write_string(handle, ">\n");
                     first_sub = FALSE;
                 }
-                WRITE_STRING("        <ele>");
+                gpx_write_string(handle, "        <ele>");
                 {
                     g_ascii_formatd(buffer, 80, "%.2f", curr->altitude);
-                    WRITE_STRING(buffer);
+                    gpx_write_string(handle, buffer);
                 }
-                WRITE_STRING("</ele>\n");
+                gpx_write_string(handle, "</ele>\n");
             }
 
             /* write the time */
@@ -556,35 +613,35 @@ gpx_path_write(Path *path, GnomeVFSHandle *handle)
             {
                 if(first_sub)
                 {
-                    WRITE_STRING(">\n");
+                    gpx_write_string(handle, ">\n");
                     first_sub = FALSE;
                 }
-                WRITE_STRING("        <time>");
+                gpx_write_string(handle, "        <time>");
                 strftime(buffer, 80, XML_DATE_FORMAT, localtime(&curr->time));
-                WRITE_STRING(buffer);
-                WRITE_STRING(XML_TZONE);
-                WRITE_STRING("</time>\n");
+                gpx_write_string(handle, buffer);
+                gpx_write_string(handle, XML_TZONE);
+                gpx_write_string(handle, "</time>\n");
             }
 
             if(wcurr && curr == wcurr->point)
             {
                 if(first_sub)
                 {
-                    WRITE_STRING(">\n");
+                    gpx_write_string(handle, ">\n");
                     first_sub = FALSE;
                 }
-                WRITE_STRING("        <desc>");
-                WRITE_STRING(wcurr->desc);
-                WRITE_STRING("</desc>\n");
+                gpx_write_string(handle, "        <desc>");
+                gpx_write_escaped(handle, wcurr->desc);
+                gpx_write_string(handle, "</desc>\n");
                 wcurr++;
             }
             if(first_sub)
             {
-                WRITE_STRING("/>\n");
+                gpx_write_string(handle, "/>\n");
             }
             else
             {
-                WRITE_STRING("      </trkpt>\n");
+                gpx_write_string(handle, "      </trkpt>\n");
             }
         }
         else
@@ -592,7 +649,7 @@ gpx_path_write(Path *path, GnomeVFSHandle *handle)
     }
 
     /* Write the footer. */
-    WRITE_STRING(
+    gpx_write_string(handle,
             "    </trkseg>\n"
             "  </trk>\n"
             "</gpx>\n");
@@ -797,22 +854,6 @@ gpx_poi_parse(gchar *buffer, gint size, GList **poi_list)
  * BELOW: SAVE POI **********************************************************
  ****************************************************************************/
 
-#define WRITE_STRING(string) { \
-    GnomeVFSResult vfs_result; \
-    GnomeVFSFileSize size; \
-    if(GNOME_VFS_OK != (vfs_result = gnome_vfs_write( \
-                    handle, (string), strlen((string)), &size))) \
-    { \
-        gchar buffer[BUFFER_SIZE]; \
-        snprintf(buffer, sizeof(buffer), \
-                "%s:\n%s\n%s", _("Error while writing to file"), \
-                _("File is incomplete."), \
-                gnome_vfs_result_to_string(vfs_result)); \
-        popup_error(_window, buffer); \
-        return FALSE; \
-    } \
-}
-
 gint
 gpx_poi_write(GtkTreeModel *model, GnomeVFSHandle *handle)
 {
@@ -821,7 +862,7 @@ gpx_poi_write(GtkTreeModel *model, GnomeVFSHandle *handle)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     /* Write the header. */
-    WRITE_STRING(
+    gpx_write_string(handle,
             "<?xml version=\"1.0\"?>\n"
             "<gpx version=\"1.0\" creator=\"maemo-mapper\" "
             "xmlns=\"http://www.topografix.com/GPX/1/0\">\n");
@@ -848,35 +889,34 @@ gpx_poi_write(GtkTreeModel *model, GnomeVFSHandle *handle)
         {
             gchar buffer[80];
 
-            WRITE_STRING("  <wpt lat=\"");
+            gpx_write_string(handle, "  <wpt lat=\"");
             g_ascii_formatd(buffer, sizeof(buffer), "%.06f", poi.lat);
-            WRITE_STRING(buffer);
-            WRITE_STRING("\" lon=\"");
+            gpx_write_string(handle, buffer);
+            gpx_write_string(handle, "\" lon=\"");
             g_ascii_formatd(buffer, sizeof(buffer), "%.06f", poi.lon);
-            WRITE_STRING(buffer);
-            WRITE_STRING("\">\n");
+            gpx_write_string(handle, buffer);
+            gpx_write_string(handle, "\">\n");
 
             if(poi.label && *poi.label)
             {
-                WRITE_STRING("    <name>");
-                WRITE_STRING(poi.label);
-                WRITE_STRING("</name>\n");
+                gpx_write_string(handle, "    <name>");
+                gpx_write_escaped(handle, poi.label);
+                gpx_write_string(handle, "</name>\n");
             }
 
             if(poi.desc && *poi.desc)
             {
-                WRITE_STRING("    <desc>");
-                WRITE_STRING(poi.desc);
-                WRITE_STRING("</desc>\n");
+                gpx_write_string(handle, "    <desc>");
+                gpx_write_escaped(handle, poi.desc);
+                gpx_write_string(handle, "</desc>\n");
             }
-            WRITE_STRING("  </wpt>\n");
+            gpx_write_string(handle, "  </wpt>\n");
             ++ num_written;
         }
     } while(gtk_tree_model_iter_next(model, &iter));
 
     /* Write the footer. */
-    WRITE_STRING(
-            "</gpx>\n");
+    gpx_write_string(handle, "</gpx>\n");
 
     vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, num_written);
     return num_written;
