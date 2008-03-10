@@ -1090,7 +1090,7 @@ repo_set_curr(RepoData *rd)
             }
 #else
             _curr_repo->db = gdbm_open(_curr_repo->db_filename,
-                    0, GDBM_WRCREAT, 0644, NULL);
+                    0, GDBM_WRCREAT | GDBM_FAST, 0644, NULL);
             if(!_curr_repo->db)
             {
                 gchar buffer[BUFFER_SIZE];
