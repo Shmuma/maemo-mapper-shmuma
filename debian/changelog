@@ -1,3 +1,20 @@
+maemo-mapper (2.4) unstable; urgency=low
+
+  * Fixed bug with POI export to GPX (closes #2216)
+  * Fixed some memory leaks (closes #2099)
+  * Fixed connectivity issues in Scratchbox (closes #2098)
+  * Added support for maps that behave like Yahoo Maps.
+  * Fixed issue with the "Change Folder" dialog when exporting POI to GPX 
+    (closes #2217)
+  * Added button to swap contents of origin and destination in "Download
+    Route" dialog.
+  * Added "Map Correction" feature, to address the rare problem of inaccurate
+    road data provided by some map repositories in some locations (like Brazil
+    and Québec).  Please read the help file before attempting to use this
+    feature.
+
+ -- John Costigan <gnuite@gmail.com>  Sun, 9 Mar 2008 21:30:00 -0500
+
 maemo-mapper (2.3.1) unstable; urgency=low
 
   * Fixed bug where Maemo Mapper persists in memory after closing.
