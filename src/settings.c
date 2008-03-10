@@ -107,6 +107,8 @@
 #define GCONF_KEY_CENTER_LAT GCONF_KEY_PREFIX"/center_latitude"
 #define GCONF_KEY_CENTER_LON GCONF_KEY_PREFIX"/center_longitude"
 #define GCONF_KEY_CENTER_ANGLE GCONF_KEY_PREFIX"/center_angle"
+#define GCONF_KEY_MAP_CORRECTION_UNITX GCONF_KEY_PREFIX"/map_correction_unitx"
+#define GCONF_KEY_MAP_CORRECTION_UNITY GCONF_KEY_PREFIX"/map_correction_unity"
 #define GCONF_KEY_ZOOM GCONF_KEY_PREFIX"/zoom"
 #define GCONF_KEY_ROUTEDIR GCONF_KEY_PREFIX"/route_directory"
 #define GCONF_KEY_TRACKFILE GCONF_KEY_PREFIX"/track_file"
@@ -343,6 +345,12 @@ settings_save()
         gconf_client_set_int(gconf_client,
                 GCONF_KEY_CENTER_ANGLE, _map_rotate_angle, NULL);
     }
+
+    /* Save map correction. */
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_MAP_CORRECTION_UNITX, _map_correction_unitx, NULL);
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_MAP_CORRECTION_UNITY, _map_correction_unity, NULL);
 
     /* Save last Zoom Level. */
     gconf_client_set_int(gconf_client,
@@ -2167,6 +2175,12 @@ settings_init()
         latlon2unit(center_lat, center_lon, _center.unitx, _center.unity);
         _next_center = _center;
     }
+
+    /* Get map correction.  Default is 0. */
+    _map_correction_unitx = gconf_client_get_int(gconf_client,
+            GCONF_KEY_MAP_CORRECTION_UNITX, NULL);
+    _map_correction_unity = gconf_client_get_int(gconf_client,
+            GCONF_KEY_MAP_CORRECTION_UNITY, NULL);
 
     /* Get last viewing angle.  Default is 0. */
     _map_rotate_angle = _next_map_rotate_angle = gconf_client_get_int(

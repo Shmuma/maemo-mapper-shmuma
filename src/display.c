@@ -1442,7 +1442,9 @@ map_download_refresh_idle(MapUpdateTask *mut)
                 gdk_pixbuf_rotate_matrix_mult_number(
                         _map_rotate_matrix, 1 << zoff);
             gdk_pixbuf_rotate(_map_pixbuf,
-                        destx, desty,
+                        /* Apply Map Correction. */
+                        destx - unit2pixel(_map_correction_unitx),
+                        desty - unit2pixel(_map_correction_unity),
                         _map_rotate_matrix,
                         mut->pixbuf,
                         TILE_SIZE_PIXELS / 2,
@@ -1649,17 +1651,19 @@ thread_render_map(MapRenderTask *mrt)
         + MAX(mrt->screen_width_pixels, mrt->screen_height_pixels) / 2,
         mrt->zoom);
     start_tilex = unit2ztile(
-            mrt->new_center.unitx - diag_halflength_units, mrt->zoom);
+            mrt->new_center.unitx - diag_halflength_units
+            + _map_correction_unitx, mrt->zoom);
     start_tilex = MAX(start_tilex - (cache_amount - 1), 0);
     start_tiley = unit2ztile(
-            mrt->new_center.unity - diag_halflength_units, mrt->zoom);
+            mrt->new_center.unity - diag_halflength_units
+            + _map_correction_unity, mrt->zoom);
     start_tiley = MAX(start_tiley - (cache_amount - 1), 0);
-    stop_tilex = unit2ztile(mrt->new_center.unitx + diag_halflength_units,
-            mrt->zoom);
+    stop_tilex = unit2ztile(mrt->new_center.unitx + diag_halflength_units
+            + _map_correction_unitx, mrt->zoom);
     stop_tilex = MIN(stop_tilex + (cache_amount - 1),
             unit2ztile(WORLD_SIZE_UNITS, mrt->zoom));
-    stop_tiley = unit2ztile(mrt->new_center.unity + diag_halflength_units,
-            mrt->zoom);
+    stop_tiley = unit2ztile(mrt->new_center.unity + diag_halflength_units
+            + _map_correction_unity, mrt->zoom);
     stop_tiley = MIN(stop_tiley + (cache_amount - 1),
             unit2ztile(WORLD_SIZE_UNITS, mrt->zoom));
 
@@ -1683,6 +1687,10 @@ thread_render_map(MapRenderTask *mrt)
                     tile2pixel(y + start_tiley) + (TILE_SIZE_PIXELS >> 1),
                     devx, devy,
                     mrt->new_center, mrt->zoom, matrix);
+
+            /* Apply Map Correction. */
+            devx -= unit2zpixel(_map_correction_unitx, mrt->zoom);
+            devy -= unit2zpixel(_map_correction_unity, mrt->zoom);
 
             /* Skip this tile under the following conditions:
              * devx < -tile_rothalf_pixels

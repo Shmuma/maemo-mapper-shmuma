@@ -574,7 +574,29 @@
           current location, and it can be used to calculate a route from
           that location. 
         </listitem>
+        <listitem>
+          <display_text>Map Correction</display_text> - Enables and disables
+          map correction.  When enabling map correction, the tap point is
+          used as the correction reference point.  See the note below for
+          more details.
+        </listitem>
       </list>
+      <note>
+        Map Correction is a little-used feature that corrects a rare problem
+        with map data.  In some locations around the world (like Brazil and
+        Québec), road data from a particular map repository may not be
+        accurate, although the error is consistent.  For example, as you
+        travel, you may find that your actual track (as indicated by your
+        GPS receiver) is a few hundred meters away from the road on which
+        Maemo Mapper is drawing your current position.  Map Correction fixes
+        this.  When your GPS receiver has an accurate fix, and if Maemo
+        Mapper shows your current location as somewhere other than where you
+        expect to be, simply tap-and-hold on the location on the map where
+        you think your current location <i>should</i> be drawn, then select
+        this context menu item.  The correction is saved as part of your
+        configuration (so it persists even if you restart Maemo Mapper or
+        your device).
+      </note>
       <heading>Waypoint</heading>
       <para>
         The <display_text>Waypoint</display_text> submenu performs actions

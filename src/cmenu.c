@@ -264,6 +264,35 @@ cmenu_cb_loc_set_gps(GtkMenuItem *item)
 }
 
 static gboolean
+cmenu_cb_loc_apply_correction(GtkMenuItem *item)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(gtk_check_menu_item_get_active(item))
+    {
+        /* Get difference between tap point and GPS location. */
+        gint unitx, unity;
+        screen2unit(_cmenu_position_x, _cmenu_position_y, unitx, unity);
+        _map_correction_unitx = unitx - _pos.unitx;
+        _map_correction_unity = unity - _pos.unity;
+        map_refresh_mark(TRUE);
+        MACRO_BANNER_SHOW_INFO(_window, _("Map correction applied."));
+    }
+    else
+    {
+        _map_correction_unitx = 0;
+        _map_correction_unity = 0;
+        map_refresh_mark(TRUE);
+        MACRO_BANNER_SHOW_INFO(_window, _("Map correction removed."));
+    }
+
+    printf("Map correction now set to: %d, %d\n");
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
 cmenu_cb_way_show_latlon(GtkMenuItem *item)
 {
     gint unitx, unity;
@@ -628,6 +657,12 @@ void cmenu_init()
     gtk_menu_append(submenu, gtk_separator_menu_item_new());
     gtk_menu_append(submenu, _cmenu_loc_set_gps_item
                 = gtk_menu_item_new_with_label(_("Set as GPS Location")));
+    gtk_menu_append(submenu, _cmenu_loc_apply_correction_item
+                = gtk_check_menu_item_new_with_label(
+                    _("Map Correction")));
+    gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(_cmenu_loc_apply_correction_item),
+            _map_correction_unitx != 0 || _map_correction_unity != 0);
 
     /* Setup the waypoint context menu. */
     gtk_menu_append(menu, menu_item
@@ -698,6 +733,8 @@ void cmenu_init()
                         G_CALLBACK(cmenu_cb_loc_add_poi), NULL);
     g_signal_connect(G_OBJECT(_cmenu_loc_set_gps_item), "activate",
                         G_CALLBACK(cmenu_cb_loc_set_gps), NULL);
+    g_signal_connect(G_OBJECT(_cmenu_loc_apply_correction_item), "toggled",
+                        G_CALLBACK(cmenu_cb_loc_apply_correction), NULL);
 
     g_signal_connect(G_OBJECT(_cmenu_way_show_latlon_item), "activate",
                       G_CALLBACK(cmenu_cb_way_show_latlon), NULL);

@@ -119,6 +119,8 @@ gint _next_map_rotate_angle = 0;
 GdkPixbuf *_redraw_wait_icon = NULL;
 GdkRectangle _redraw_wait_bounds = { 0, 0, 0, 0};
 
+gint _map_correction_unitx = 0;
+gint _map_correction_unity = 0;
 
 /** CACHED SCREEN INFORMATION THAT IS DEPENDENT ON THE CURRENT VIEW. */
 gint _view_width_pixels = 0;
@@ -319,6 +321,7 @@ GtkWidget *_cmenu_loc_add_route_item = NULL;
 GtkWidget *_cmenu_loc_add_way_item = NULL;
 GtkWidget *_cmenu_loc_add_poi_item = NULL;
 GtkWidget *_cmenu_loc_set_gps_item = NULL;
+GtkWidget *_cmenu_loc_apply_correction_item = NULL;
 
 /* Menu items for the "Waypoint" context menu. */
 GtkWidget *_cmenu_way_show_latlon_item = NULL;
