@@ -575,10 +575,10 @@
           that location. 
         </listitem>
         <listitem>
-          <display_text>Map Correction</display_text> - Enables and disables
-          map correction.  When enabling map correction, the tap point is
-          used as the correction reference point.  See the note below for
-          more details.
+          <display_text>Apply Map Correction</display_text> - Enables and
+	  disables the application of map correction.  When enabling map
+	  correction, the tap point is used as the correction reference point.
+	  See the note below for more details.
         </listitem>
       </list>
       <note>

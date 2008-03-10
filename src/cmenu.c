@@ -659,7 +659,7 @@ void cmenu_init()
                 = gtk_menu_item_new_with_label(_("Set as GPS Location")));
     gtk_menu_append(submenu, _cmenu_loc_apply_correction_item
                 = gtk_check_menu_item_new_with_label(
-                    _("Map Correction")));
+                    _("Apply Map Correction")));
     gtk_check_menu_item_set_active(
             GTK_CHECK_MENU_ITEM(_cmenu_loc_apply_correction_item),
             _map_correction_unitx != 0 || _map_correction_unity != 0);
