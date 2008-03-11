@@ -594,7 +594,27 @@
 	  kuvaavan sinisen ympyrän kyseiseen pisteeseen. Tätä pistettä
 	  voidaan sitten käyttää täten reittisuunnitelman alkupisteenä.
         </listitem>
+        <listitem>
+          <display_text>Käytä kartan korjausta</display_text> - Ottaa tai
+	  poistaa käytöstä kartan sijainnin korjauksen.  Käyttöön otettaessa
+	  kosketuskohtaa käytetään korjauksen referenssinä.  Alla olevassa 
+	  huomautuksessa on saatavissa lisätietoja.
+        </listitem>
       </list>
+      <note>
+        Kartan korjaus on vähän käytetty ominaisuus, joka korjaa harvinaisen
+	kartta ongelman.  Joissakin paikoissa (kuten Brasiliassa ja Québecissä),
+	reittitiedot eivät välttämättä ole tarkat, vaikkakin ongelma on
+	systemaattinen.	 Virheen voi suomata liikkuessa, jolloin reittijälki
+	saattaa olla muutaman sata metriä syrjässä verrattuna käytetyn
+	karttavaraston tiehen.  Kartan korjaus korjaa tämän ongelman.  Kun
+	GPS-vastaanottin on saanut lukituksen ja Maemo Mapper näyttää sijantisi
+	väärin, niin kosketa ja pidä kohta jonka <i>luulet</i> olevan oikea
+	painettuna hetken aikaa ja valitse valikosta tämä valinta.  
+	Korjaustieto tallennetaan osana Maemo Mapperin pysyviä asetuksia,
+	joten se säilyy myös silloin, kun Maemo Mapper tai laite käynnistetään
+	uudelleen.
+      </note>
       <heading>Kohdepiste</heading>
       <para>
         <display_text>Kohdepiste</display_text> valikossa olevilla
@@ -1585,7 +1605,7 @@
 	<display_text>gnuite</display_text>).
       </para>
       <para>
-        Copyright © 2006-2007 John Costigan.
+        Copyright © 2006-2008 John Costigan.
       </para>
       <para>
         POI ja GPS-Info koodin on alunperin luonut Cezary Jackiewicz.
