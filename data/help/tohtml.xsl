@@ -51,6 +51,21 @@
     available within Maemo Mapper via the "Help" main menu item.
   </p>
 
+  <p>
+    If you use Maemo Mapper and would like to show your appreciation for
+    it, or if you have a feature that you would like added to Maemo
+    Mapper, please consider donating money via PayPal.
+  </p>
+
+  <form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+    <p>
+      <input type="hidden" name="cmd" value="_s-xclick"/>
+      <input type="image" src="https://www.paypal.com/en_US/i/btn/x-click-but21.gif" name="submit" alt="Make payments with PayPal - it's fast, free and secure!"/>
+      <img alt="" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1"/>
+      <input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----"/>
+    </p>
+  </form>
+
   <!-- Table of Contents -->
   <h2 id="help_maemomapper_">Table of Contents</h2>
   <ul>
