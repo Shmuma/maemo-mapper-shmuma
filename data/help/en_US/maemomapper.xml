@@ -1,4 +1,26 @@
+<!-- 
+ - 
+ - Copyright (C) 2006, 2007 John Costigan. 
+ - 
+ - This file is part of Maemo Mapper. 
+ - 
+ - Maemo Mapper is free software: you can redistribute it and/or modify 
+ - it under the terms of the GNU General Public License as published by 
+ - the Free Software Foundation, either version 3 of the License, or 
+ - (at your option) any later version. 
+ - 
+ - Maemo Mapper is distributed in the hope that it will be useful, 
+ - but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
+ - GNU General Public License for more details. 
+ - 
+ - You should have received a copy of the GNU General Public License 
+ - along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>. 
+ - 
+--> 
+ 
 <?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../tohtml.xsl?root=maemo-mapper"?>
 <ossohelpsource>
   <folder>
     <title>Maemo Mapper</title>
@@ -162,8 +184,7 @@
           to scroll
         </listitem>
         <listitem>
-          <graphic filename="2686KEY_scroll_center"/> - Toggle
-          <ref refid="Auto-Center" refdoc="Auto-Center"/>
+          <graphic filename="2686KEY_scroll_center"/> - Toggle Auto-Center
         </listitem>
         <listitem>
           <graphic filename="2686KEY_esc"/> - Programmable; defaults
