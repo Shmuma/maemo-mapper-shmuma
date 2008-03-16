@@ -1,0 +1,1610 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ossohelpsource>
+  <folder>
+    <title>Maemo Mapper</title>
+    <topic>
+      <topictitle>Introduction</topictitle>
+      <context contextUID="help_maemomapper_intro"/>
+      <para>Welcome to Maemo Mapper.</para>
+      <para>
+        Maemo Mapper is a geographical mapping tool that can be used to:
+      </para>
+      <list>
+        <listitem>
+          Download map data to your device's main memory or to an external
+          memory card.
+        </listitem>
+        <listitem>
+          View that map data on the screen.
+        </listitem>
+        <listitem>
+          Navigate that map data by panning around the screen and zooming in
+          and out.
+        </listitem>
+        <listitem>
+          Display your position and other GPS information from a GPS
+          receiver.
+        </listitem>
+        <listitem>
+          Store and display Point-of-Interest (POI) data.
+        </listitem>
+        <listitem>
+          Download directions between arbitrary points on the map.
+        </listitem>
+        <listitem>
+          Save or open track data or route data.
+        </listitem>
+      </list>
+      <para>
+        Use the <ref refid="help_maemomapper_" refdoc="index"/> to peruse the
+        various sections of this help document, or go to <ref
+          refid="help_maemomapper_getstarted" refdoc="Getting Started"/> to
+        get up and running quickly.
+      </para>
+    </topic>
+    <topic>
+      <topictitle>Getting Started</topictitle>
+      <context contextUID="help_maemomapper_getstarted"/>
+      <para>
+        When you first start Maemo Mapper, you will be presented with the
+        <display_text>Settings</display_text> dialog box.  Most of the
+        settings have reasonable defaults, but if you have a GPS receiver,
+        you should fill in the <display_text>Bluetooth</display_text> field
+        with the MAC address of your GPS receiver.  If you don't know the
+        MAC, turn on your GPS receiver and push the
+        <display_text>Search</display_text> button.  Maemo Mapper will
+        attempt to automatically discover the MAC address of your receiver.
+        For more information about the <display_text>Settings</display_text>
+        dialog box, see <ref refid="help_maemomapper_settings"
+          refdoc="Settings"/>.
+      </para>
+      <para>
+        Alternatively, you can leave the
+        <display_text>Bluetooth</display_text> field blank, and Maemo Mapper
+        will attempt to automatically search for and use any bluetooth GPS
+        receivers that it can identify.  This is particularly useful if you
+        tend to use multiple different GPS receivers.  This feature is not
+        guaranteed to work on all Nokia devices or with all bluetooth GPS
+        receivers.
+      </para>
+      <note>
+        If you are using Maemo Mapper on a device with an internal GPS
+        receiver, then you should probably use the "Bluetooth" receiver type
+        and leave the field empty.
+      </note>
+      <para>
+        When you are finished setting up Maemo Mapper to your preferences,
+        pressing the <display_text>Ok</display_text> button will lead you to
+        another dialog box: the <display_text>Manage
+          Repositories</display_text> dialog.
+      </para>
+      <para>
+        To get started quickly, press the
+        <display_text>Download...</display_text> button.  Maemo Mapper will
+        download a set of pre-defined repository information for you to use.
+        If you use the pre-defined repositories, you can delete the
+        <display_text>Default</display_text> repository.  For more
+        information about repositories and the <display_text>Manage
+          Repositories</display_text> dialog, see
+        <ref refid="help_maemomapper_repoman"
+          refdoc="Managing Repositories"/>.
+      </para>
+      <para>
+        Certain repositories (most notably, the commercial ones) may have
+        license agreements attached with their use.  It may be illegal to
+        use a certain repository with Maemo Mapper or under certain
+        conditions.  This includes the repositories downloaded via the
+        <display_text>Download...</display_text> button.  If you are not
+        sure if you are legally allowed to use a particular repository, you
+        should delete it from your list of repositories.  The authors of
+        Maemo Mapper cannot be held responsible for your use of a particular
+        repository.
+      </para>
+      <para>
+        Once you have your Repositories set up the way you like, press the
+        Ok button, and you will be presented with a blank screen, because
+        you have not yet actually downloaded any map data to your device.
+        To allow Maemo Mapper to automatically download map data as it
+        becomes needed on the display, enable the
+        <display_text>Auto-Download</display_text> checkbox in the
+        <display_text>Maps</display_text> menu.
+      </para>
+      <para>
+        If you have a working internet connection, Maemo Mapper will attempt
+        to download maps and display them on the screen automatically as
+        the downloads complete.  You should see a map of the world.  Be
+        careful when you enable Auto-Download, because it can quickly fill
+        your available disk space.  See
+        <ref refid="help_maemomapper_mapman" refdoc="Managing Maps"/> for
+        details on how to manage disk space for a particular repository.
+      </para>
+      <heading>The Graphical User Interface</heading>
+      <para>
+        The main view of Maemo Mapper emphasizes simplicity.  By default,
+        the map is all that is displayed.  You current position (if you have
+        a GPS receiver) is indicated by a blue circle.  The blue line
+        extending from the blue circle indicates your current heading and
+        speed.  <i>Tracks</i> are red and represent where you have been.
+        <i>Routes</i> are green and represent where you want to go, i.e.
+        directions to a location.
+      </para>
+      <para>
+        The hardware buttons on your device provide quick access to common
+        functionality:
+      </para>
+      <list>
+        <listitem>
+          <graphic filename="2686KEY_full_screen"/> - Toggle
+          Full-Screen Mode
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_zoom_in"/> - Zoom In - hold down to
+          zoom multiple levels at a time
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_zoom_out"/> - Zoom Out - hold down to
+          zoom multiple levels at a time
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_scroll_up"/> - Pan Up - hold down to
+          scroll
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_scroll_down"/> - Pan Down - hold down
+          to scroll
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_scroll_left"/> - Pan Left - hold down
+          to scroll
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_scroll_right"/> - Pan Right - hold down
+          to scroll
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_scroll_center"/> - Toggle
+          <ref refid="Auto-Center" refdoc="Auto-Center"/>
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_esc"/> - Programmable; defaults
+          to: Hide/Show Tracks and Routes
+        </listitem>
+      </list>
+      <para>
+        You can also pan around the map by tapping on the screen.  Maemo
+        Mapper will center the display on where you tapped.  If you had
+        <display_text>Auto-Center</display_text> enabled, tapping a location
+        to center on it will automatically disable that functionality.
+      </para>
+      <para>
+        From this point, you can use the menus to manage routes, tracks, and
+        map data; to change the view; to change settings; or to see detailed
+        GPS information (if you have a GPS receiver).
+      </para>
+      <para>
+        There is also a context-sensitive menu that appears on the map when
+        you tap and hold a location on the map.  From that menu, you can
+        download directions, calculate distances, or add/modify
+        Point-of-Interest (POI) data.
+      </para>
+      <para>
+        For help with any of these features, use the
+        <ref refid="help_maemomapper_" refdoc="index"/>.
+      </para>
+    </topic>
+    <topic>
+      <topictitle>Main Menu</topictitle>
+      <context contextUID="help_maemomapper_mainmenu"/>
+      <para>
+        This help topic describes the functionality of each of the menu
+        items in Maemo Mapper.
+      </para>
+      <heading>Route</heading>
+      <para>
+        The <display_text>Route</display_text> menu is used to manipulate
+        the current <i>route</i>.  A route in Maemo Mapper is defined as a
+        set of points and waypoints describing <i>where you would like to
+          go</i>, e.g. driving directions from 123 Main Street to 456 Elm
+        Street.  It can include multiple segments.  The current route is
+        empty until you open or download a route.
+      </para>
+      <para>
+        The <display_text>Route</display_text> menu has the following menu
+        items:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Open...</display_text> - Open a route from a GPX
+          file on the file system.  The opened route is <i>appended</i> to
+          the current route, so you can string together different routes
+          together to create a trip with multiple destinations.
+        </listitem>
+        <listitem>
+          <display_text>Download...</display_text> - Download a route from
+          the internet.  See <ref refid="help_maemomapper_downroute"
+            refdoc="Download Route"/> for more information.
+        </listitem>
+        <listitem>
+          <display_text>Save...</display_text> - Save the current route to a
+          GPX file on the file system.
+        </listitem>
+        <listitem>
+          <display_text>Show Distance to Next Waypoint</display_text> - Show
+          the distance left to be traveled (along the current route) until
+          the next waypoint.
+        </listitem>
+        <listitem>
+          <display_text>Show Distance to End of Route</display_text> - Show
+          the distance left to be traveled (along the current route) until
+          the end of the current route.  The calculated distance includes
+          the distance between breaks in the route (i.e. between the end of
+          one route segment and the beginning of another route segment).
+        </listitem>
+        <listitem>
+          <display_text>Reset</display_text> - Reset Maemo Mapper's tracking
+          of your progress along the current route.  Use this if Maemo
+          Mapper loses track of where you are with respect to the current
+          route.
+        </listitem>
+        <listitem>
+          <display_text>Reset</display_text> - Clear the current route,
+          effectively replacing it with an empty route.
+        </listitem>
+      </list>
+      <heading>Track</heading>
+      <para>
+        The <display_text>Track</display_text> menu is used to manipulate
+        your current <i>track</i>.  A track in Maemo Mapper is defined as
+        a set of points along which you have been traveling, i.e.  <i>where
+          you have been</i>.  It can include multiple segments.  Tracks are
+        most useful if you have enabled a GPS receiver.  The current track
+        is empty until you get at least one valid position point from your
+        GPS receiver, and it is appendeded to whenever you stray far enough
+        from the last track point.
+      </para>
+      <para>
+        The <display_text>Track</display_text> menu has the following menu
+        items:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Open...</display_text> - Open a track from a GPX
+          file on the file system.  In contrast to route data, the opened
+          track is <i>prepended</i> to the current track, so if you are
+          trying to rebuild previous track data, you must open the tracks
+          backward in time (most recent tracks first).
+        </listitem>
+        <listitem>
+          <display_text>Save...</display_text> - Save the current track to a
+          GPX file on the file system.
+        </listitem>
+        <listitem>
+          <display_text>Insert Break</display_text> - Artificially insert a
+          break in your current track data.  This simulates the loss and
+          re-acquisition of a GPS fix, and it can be used to track, for
+          example, refueling stops.
+        </listitem>
+        <listitem>
+          <display_text>Insert Mark</display_text> - Artificially insert a
+          mark with a description in your current track data.  This can be
+          used to mark important landmarks.
+        </listitem>
+        <listitem>
+          <display_text>Show Distance from Last Break</display_text> - Show
+          the distance traveled (along the current track) since the last
+          break.
+        </listitem>
+        <listitem>
+          <display_text>Show Distance from Beginning</display_text> - Show
+          the distance traveled (along the current track) since the
+          beginning of the track.  The calculated distance includes the
+          distance between breaks in the track (i.e. between when a GPS fix
+          is lost and later re-acquired).
+        </listitem>
+        <listitem>
+          <display_text>Clear</display_text> - Clear the current track,
+          effectively replacing it with an empty track.
+        </listitem>
+      </list>
+      <heading>Maps</heading>
+      <para>
+        The <display_text>Maps</display_text> menu is used to control your
+        map repositories.  This menu will be populated with a list of all of
+        your map repositories, from which you can select to switch to a
+        particular repository.
+      </para>
+      <para>
+        The <display_text>Maps</display_text> menu has the following menu
+        items in addition to the list of available repositories:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Manage Maps...</display_text> - Download or delete
+          maps for the currently selected repository.  For more details, see
+          <ref refid="help_maemomapper_mapman" refdoc="Managing Maps"/>.
+        </listitem>
+        <listitem>
+          <display_text>Manage Repositories...</display_text> - Configure
+          each of your available repositories, or add new ones.  You can
+          also download a pre-defined set of repositories.  For more
+          details, see <ref refid="help_maemomapper_repoman"
+            refdoc="Managing Repositories"/>.
+        </listitem>
+        <listitem>
+          <display_text>Auto-Download</display_text> - Toggle Maemo Mapper's
+          ability to automatically download maps as they are needed in order
+          to fill the screen with map data.  This is useful for arbitrary
+          exploration of the world while connected to the internet, or if
+          you have a constant connection to the internet (i.e. via a
+          cellular data service).
+        </listitem>
+      </list>
+      <heading>View</heading>
+      <para>
+        The <display_text>View</display_text> menu allows you to customize
+        the view by showing or hiding certain features of the display.
+      </para>
+      <para>
+        The <display_text>View</display_text> menu has the following menu
+        items:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Zoom In</display_text> - Zoom in by one zoom level.
+          You can also use the <graphic
+            filename="2686KEY_zoom_in"/> button.
+        </listitem>
+        <listitem>
+          <display_text>Zoom Out</display_text> - Zoom out by one zoom
+          level.  You can also use the <graphic
+            filename="2686KEY_zoom_out"/> button.
+        </listitem>
+        <listitem>
+          <display_text>Full Screen</display_text> - Toggle full-screen
+          mode.  You can also use the <graphic
+            filename="2686KEY_full_screen"/> button to toggle
+          full-screen mode.
+        </listitem>
+        <listitem>
+          <display_text>Scale</display_text> - Toggle the display of the
+          scale.
+        </listitem>
+        <listitem>
+          <display_text>Route</display_text> - Toggle the display of routes.
+        </listitem>
+        <listitem>
+          <display_text>Track</display_text> - Toggle the display of tracks.
+        </listitem>
+        <listitem>
+          <display_text>Velocity Vector</display_text> - Toggle the display
+          of the velocity vector (the blue line extending from the blue
+          circle that represents your current location).
+        </listitem>
+        <listitem>
+          <display_text>POIs</display_text> - Toggle the display of POIs.
+        </listitem>
+        <listitem>
+          <display_text>POI Categories...</display_text> - Define POI
+          categories and which categories are displayed on the map.  For
+          more details, see <ref refid="help_maemomapper_poicat" refdoc="POI
+            Categories"/>.
+        </listitem>
+      </list>
+      <heading>Auto-Center</heading>
+      <para>
+        The <display_text>Auto-Center</display_text> menu is used to control
+        whether or not Maemo Mapper should re-center the display as your
+        current location changes.  The sensitivity of re-centering (how
+        close you get to the edge of the display before Maemo Mapper
+        re-centers the display) can be configured in the <ref
+          refid="help_maemomapper_settings" refdoc="Settings"/> Dialog.
+      </para>
+      <para>
+        There are three different modes of Auto-Center:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Lat/Lon</display_text> - Keep your location centered
+          on the display.
+        </listitem>
+        <listitem>
+          <display_text>Lead</display_text> - Depending on your speed, keep
+          a location in front of you centered on the screen.  The faster you
+          are going, the more lead distance is used.
+        </listitem>
+        <listitem>
+          <display_text>None</display_text> - Do no re-center the display
+          automatically.
+        </listitem>
+      </list>
+      <heading>Go to</heading>
+      <para>
+        The <display_text>Go to</display_text> menu is used to center the
+        view on a particular location.
+      </para>
+      <para>
+        The <display_text>Go to</display_text> menu has the following menu
+        items:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Lat/Lon...</display_text> - Specify an exact
+          Latitude and Longitude on which to center the display.
+        </listitem>
+        <listitem>
+          <display_text>GPS Position</display_text> - Center the display on
+          your current GPS position.  This is the manual counter-part of
+          the <display_text>Auto-Center</display_text> functionality
+          mentioned above.
+        </listitem>
+        <listitem>
+          <display_text>Next Waypoint</display_text> - Center the display on
+          the next waypoint in your route.  By default, the next waypoint is
+          colored a slightly darker green than normal waypoints.
+        </listitem>
+        <listitem>
+          <display_text>Nearest POI</display_text> - Center the display on
+          the enabled POI nearest to the current view center.
+        </listitem>
+      </list>
+      <heading>GPS</heading>
+      <para>
+        The <display_text>GPS</display_text> menu is used to access features
+        of the GPS receiver, including textual information not displayed on
+        the map.  It is also used to control your connection to the GPS
+        receiver.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Enable GPS</display_text> - Toggle communication
+          with a GPS receiver.  You must have a GPS receiver set up in order
+          to use this menu item.  When on, Maemo Mapper will constantly
+          search for the GPS receiver.
+        </listitem>
+        <listitem>
+          <display_text>Show Information</display_text> - Toggle display of
+          additional information provided by the GPS receiver.  This
+          information will appear in the main display as a panel on the
+          left.
+        </listitem>
+        <listitem>
+          <display_text>Details...</display_text> - Show even more
+          information provided by the GPS receiver, including a polar plot
+          of all GPS satellites in view.
+        </listitem>
+        <listitem>
+          <display_text>Reset Bluetooth</display_text> - Attempt to reset
+          the bluetooth radio, in case it locks up for some reason.  In
+          order for this to succeed, you <i>must</i> add the following line
+          to your /etc/sudoers file (if you don't know what that means,
+          don't try it): <b>user ALL = NOPASSWD: /usr/sbin/hciconfig hci0
+            reset</b>
+        </listitem>
+      </list>
+      <heading>Other</heading>
+      <para>
+        In addition to the above menus, there are a few other items in the
+        main menu:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Settings...</display_text> - Access and change
+          settings for using Maemo Mapper.  For more information, see <ref
+            refid="help_maemomapper_settings" refdoc="Settings"/>.
+        </listitem>
+        <listitem>
+          <display_text>Help...</display_text> - Access this help file.
+        </listitem>
+        <listitem>
+          <display_text>About...</display_text> - Display version and
+          copyright information.
+        </listitem>
+        <listitem>
+          <display_text>Close</display_text> - Close Maemo Mapper.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>Context Menu</topictitle>
+      <context contextUID="help_maemomapper_cmenu"/>
+      <para>
+        By tapping and holding on the screen, you can access the context
+        menu to execute actions on either that location, the nearest route
+        waypoint, or the nearest POI.
+      </para>
+      <para>
+        The context menu is separated into two hierarchical levels.  The
+        first level (<display_text>Location</display_text>,
+        <display_text>Waypoint</display_text>, or
+        <display_text>POI</display_text>) determines what kind of data on
+        which the operation applies.
+      </para>
+      <heading>Location</heading>
+      <para>
+        The <display_text>Location</display_text> submenu performs actions
+        on the exactly latitude and longitude on which the tap-and-hold
+        operation was performed.  With that location, you can do the
+        following actions:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Show Lat/Lon</display_text> - Display the latitude
+          and longitude of the selected location, in the style chosen in
+          <display_text>Settings</display_text>
+        </listitem>
+        <listitem>
+          <display_text>Copy Lat/Lon</display_text> - Copy the latitude and
+          longitude of the selected location to the clipboard, in
+          comma-separated decimal format.
+        </listitem>
+        <listitem>
+          <display_text>Show Distance to</display_text> - Display the
+          distance (in a straight line) to the selected location.
+        </listitem>
+        <listitem>
+          <display_text>Download Route to...</display_text> - Open the
+          <ref refid="help_maemomapper_downroute"
+            refdoc="Download Route"/> dialog with the selected location
+          pre-filled as the destination.
+        </listitem>
+        <listitem>
+          <display_text>Add Route Point</display_text> - Add a point to the
+          current route, based on the selected location.  The point is not a
+          waypoint.
+        </listitem>
+        <listitem>
+          <display_text>Add Waypoint...</display_text> - Add a waypoint
+          to the current route, based on the selected location.  You must
+          provide a description for the waypoint to be legitimate.  By
+          specifying an empty description, however, you can create a break
+          in the route.  The break will not be connected to the rest of the
+          route, so it can be used to start a new segment.
+        </listitem>
+        <listitem>
+          <display_text>Add POI...</display_text> - Add a POI to the POI
+          database, based on the selected location.  If the category in
+          which you place the POI is disabled, it will not be visible on the
+          map after creation, but it will still be in the database.
+        </listitem>
+        <listitem>
+          <display_text>Set as GPS Position</display_text> - Force Maemo
+          Mapper to consider the selected location to be the current GPS
+          location.  This will not affect the current track, but it will
+          change the location of the blue circle that represents your
+          current location, and it can be used to calculate a route from
+          that location. 
+        </listitem>
+        <listitem>
+          <display_text>Apply Map Correction</display_text> - Enables and
+	  disables the application of map correction.  When enabling map
+	  correction, the tap point is used as the correction reference point.
+	  See the note below for more details.
+        </listitem>
+      </list>
+      <note>
+        Map Correction is a little-used feature that corrects a rare problem
+        with map data.  In some locations around the world (like Brazil and
+        Québec), road data from a particular map repository may not be
+        accurate, although the error is consistent.  For example, as you
+        travel, you may find that your actual track (as indicated by your
+        GPS receiver) is a few hundred meters away from the road on which
+        Maemo Mapper is drawing your current position.  Map Correction fixes
+        this.  When your GPS receiver has an accurate fix, and if Maemo
+        Mapper shows your current location as somewhere other than where you
+        expect to be, simply tap-and-hold on the location on the map where
+        you think your current location <i>should</i> be drawn, then select
+        this context menu item.  The correction is saved as part of your
+        configuration (so it persists even if you restart Maemo Mapper or
+        your device).
+      </note>
+      <heading>Waypoint</heading>
+      <para>
+        The <display_text>Waypoint</display_text> submenu performs actions
+        on the waypoint nearest to the point on which the tap-and-hold
+        operation was performed.  If no waypoints are nearby, an error
+        message will be displayed.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Show Lat/Lon</display_text> - Show the latitude and
+          longitude of the selected waypoint, in the style chosen in
+          <display_text>Settings</display_text>.
+        </listitem>
+        <listitem>
+          <display_text>Show Description</display_text> - Show the
+          description attached to the select waypoint.  When downloading
+          routes via the <ref refid="help_maemomapper_downroute"
+            refdoc="Download Route"/> dialog, the description will contain
+          the directions needed to take at that waypoint (e.g. "Turn left at
+          Main Street.  Go 2.5 kilometers.").
+        </listitem>
+        <listitem>
+          <display_text>Copy Lat/Lon</display_text> - Copy the latitude and
+          longitude of the selected waypoint to the clipboard, in
+          comma-separated decimal format.
+        </listitem>
+        <listitem>
+          <display_text>Copy Description</display_text> - Copy the
+          description of the waypoint to the clipboard.
+        </listitem>
+        <listitem>
+          <display_text>Show Distance to</display_text> - Show the distance 
+          left to be traveled (along the current route) until the selected
+          waypoint.  The calculated distance includes the distance between
+          breaks in the route (i.e. between the end of one route segment and
+          the beginning of another route segment).
+        </listitem>
+        <listitem>
+          <display_text>Download Route to...</display_text> - Open the
+          <ref refid="help_maemomapper_downroute"
+            refdoc="Download Route"/> dialog with the selected waypoint's
+          location pre-filled as the destination.
+        </listitem>
+        <listitem>
+          <display_text>Delete...</display_text> - Delete the selected
+          waypoint from the current route.  This will delete all route
+          segments surrounding the route, including (and limited to) all the
+          points from that waypoint to the next and previous waypoints.
+        </listitem>
+        <listitem>
+          <display_text>Add POI...</display_text> - Add a POI to the POI
+          database, based on the selected waypoint's location.  If the
+          category in which you place the POI is disabled, it will not be
+          visible on the map after creation, but it will still be in the
+          database.
+        </listitem>
+      </list>
+      <heading>POI</heading>
+      <para>
+        The <display_text>POI</display_text> submenu performs actions
+        on the POI nearest to the point on which the tap-and-hold operation
+        was performed.  If no POIs are nearby, an error message will be
+        displayed.
+      </para>
+      <list>
+        <listitem>
+          <display_text>View/Edit</display_text> - View and/or edit the
+          selected POI.
+        </listitem>
+        <listitem>
+          <display_text>Show Distance to</display_text> - Display the
+          distance (in a straight line) to the selected POI.
+        </listitem>
+        <listitem>
+          <display_text>Download Route to...</display_text> - Open the
+          <ref refid="help_maemomapper_downroute"
+            refdoc="Download Route"/> dialog with the selected POI's
+          location pre-filled as the destination.
+        </listitem>
+        <listitem>
+          <display_text>Add Route Point</display_text> - Add a point to the
+          current route, based on the selected POI's location.  The point is
+          not a waypoint.
+        </listitem>
+        <listitem>
+          <display_text>Add Waypoint...</display_text> - Add a waypoint
+          to the current route, based on the selected location.  You must
+          provide a description for the waypoint to be legitimate.  By
+          specifying an empty description, however, you can create a break
+          in the route.  The break will not be connected to the rest of the
+          route, so it can be used to start a new segment.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>Managing Repositories</topictitle>
+      <context contextUID="help_maemomapper_repoman"/>
+      <para>
+        In Maemo Mapper, map data is divided into specific units called
+        <i>repositories</i>.  A repository is a source of map data, each of
+        which has its own way of visualizing the Earth.  For example,
+        repositories based on street maps typically draw roads as lines and
+        buildings as areas, whereas repositories based on satellite data
+        draw the Earth as it would appear from space.  There are also
+        "hybrid" repositories that overlay street map data on top of
+        satellite data, as well as topographical maps that show altitude
+        data.
+      </para>
+      <para>
+        Each repository is made up of maps at 16 different zoom levels.
+        Zoom Level 0 is the highest resolution (closest to the Earth, i.e.
+        "zoomed in"), and Zoom Level 15 is the lowest resolution (furthest
+        from the Earth, i.e. "zoomed out").  Not all repositories are
+        available at all zoom levels, and some repositories may even produce
+        an error (which you can usually ignore) if you try to download maps
+        at that zoom level.
+      </para>
+      <para>
+        Once you have set up at least one repository, you can start
+        downloading maps from that repository to your device's file system.
+        For details on how to do this, see 
+        <ref refid="help_maemomapper_mapman" refdoc="Managing Maps"/>.
+      </para>
+      <para>
+        You can set up any number of repositories in Maemo Mapper, but only
+        one can be active at any given time.  The <display_text>Manage
+          Repositories</display_text> dialog is accessed via the
+        <display_text>Manage Repositories...</display_text> menu item of the
+        <display_text>Maps</display_text> menu, and it allows you to add,
+        edit, and remove repositories.
+      </para>
+      <para>
+        The <display_text>Manage Repositories...</display_text> has a combo
+        box that controls which repository is being viewed and edited.  When
+        a repository is selected, the controls below it display the current
+        settings, which you can change:
+      </para>
+      <list>
+        <listitem>
+          <display_text>URL Format</display_text> - A specially formatted
+          string that looks like a URL, but it needs to have at least one
+          printf-style substitution strings (like %f or %s).  Normally, you
+          must either get these URL formats from the internet
+          (www.internettablettalk.com is a good source), or you can use the
+          <display_text>Download...</display_text> button in the
+          Repositories dialog box to download a sample.
+        </listitem>
+        <listitem>
+          <display_text>Cache DB</display_text> - A database file on the file
+          system (either on the device's internal memory, or an external
+          memory card) in which maps are stored.  Maps are kept here
+          indefinitely (until you delete them), so pick a location with a
+          lot of free space.  You can use the
+          <display_text>Browse...</display_text> button to select the
+          database file with a graphical file system browser, or you can enter
+          the filename manually.  The <display_text>Compact...</display_text>
+          button can be used to compact the database if you have deleted
+          many maps from your database.  (Otherwise, deleted space is reused
+          to store new maps.)
+        </listitem>
+        <listitem>
+          <display_text>Download Zoom Steps</display_text> - Controls which
+          zoom levels should be avoided when automatically downloading maps
+          (i.e. Auto-Download is enabled).  The lowest setting (one bar)
+          means to download every zoom level.  The highest setting (four
+          bars) causes Maemo Mapper to only download every fourth zoom level
+          (0, 4, 8, and 16).
+        </listitem>
+        <listitem>
+          <display_text>View Zoom Steps</display_text> - Similar to the
+          above-described <display_text>Download Zoom Steps</display_text>
+          option, except that it controls how Maemo Mapper behaves when
+          zooming.  For example, at two bars, pressing
+          <graphic filename="2686KEY_zoom_in"/> causes Maemo Mapper to zoom
+          in two levels instead of just one.  Setting this equal to
+          <display_text>Download Zoom Steps</display_text> ensures that you
+          see all maps at their native resolution.
+        </listitem>
+        <listitem>
+          <display_text>Double Pixels</display_text> - This forces Maemo
+          Mapper to avoid using the native resolution of any maps, instead
+          using pixel-doubling.  This is useful if your repository's maps
+          contain small, hard-to-read text, and you want to double the size
+          of the images to make them more readable.  This setting can also
+          affect the zoom levels that are downloaded when Auto-Download is
+          enabled.
+        </listitem>
+        <listitem>
+          <display_text>Next-able</display_text> - This oddly-named option
+          determines whether or not the "Select Next Repository" action
+          (which can be mapped to any of the hardware keys) will be able to
+          select this repository.  When unset, the "Select Next Repository"
+          action will simply skip over this repository.
+        </listitem>
+        <listitem>
+          <display_text>Downloadable Zooms</display_text> - This setting
+          governs the minimum and maximum zoom levels Maemo Mapper should
+          attempt to automatically download for this repository (when
+          Auto-Download is enabled).  Some repositories support more zoom
+          levels than others, and supported zoom levels may even vary from
+          location to location.
+        </listitem>
+      </list>
+      <para>
+        In addition to the per-repository controls, there are a few buttons
+        that provide additional functionality:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Rename...</display_text> - Renames the currently
+          selected repository.
+        </listitem>
+        <listitem>
+          <display_text>Delete...</display_text> - Deletes the currently
+          selected repository.
+        </listitem>
+        <listitem>
+          <display_text>New...</display_text> - Adds a new repository.
+        </listitem>
+        <listitem>
+          <display_text>Reset...</display_text> - Resets your repository
+          list to the factory default.  This will remove all of your
+          repositories and replace them with the single default repository
+          that comes with Maemo Mapper.
+        </listitem>
+        <listitem>
+          <display_text>Download...</display_text> - Downloads information
+          about several preset repositories, and adds them to your
+          repository list.  They will be appended to any existing
+          repositories you already have.  They are not read-only - you may
+          edit them as you wish.  This is a good way to get started.
+        </listitem>
+      </list>
+      <note>
+        Certain repositories (most notably, the commercial ones) may
+        have license agreements attached with their use.  It may be
+        illegal to use a certain repository with Maemo Mapper or under
+        certain conditions.  This includes the repositories downloaded
+        via the <display_text>Download...</display_text> button.  If you
+        are not sure if you are legally allowed to use a particular
+        repository, you should delete it from your list of repositories.
+        The authors of Maemo Mapper cannot be held responsible for your
+        use of a particular repository.
+      </note>
+    </topic>
+    <topic>
+      <topictitle>Managing Maps</topictitle>
+      <context contextUID="help_maemomapper_mapman"/>
+      <para>
+        In Maemo Mapper, <i>repositories</i> represent sources of map data,
+        and <i>maps</i> are just image files (e.g. PNG or JPEG) that are
+        drawn onto the screen.  Once you have a repository set up (see 
+        <ref refid="help_maemomapper_repoman"
+          refdoc="Managing Repositories"/>), you can download maps from a
+        repository into a Map Cache, which is just a database file on your
+        device's file system.
+      </para>
+      <para>
+        Maemo Mapper downloads maps from the current repository so that they
+        can be drawn onto the screen and later recalled from disk, instead
+        of downloading a map every time it is needed.  This is called
+        <i>caching</i>, and it allows you to use Maemo Mapper even when you
+        are not connected to the internet.
+      </para>
+      <para>
+        Because Maemo Mapper downloads maps to your device's file system,
+        you must be aware of how much disk space your maps are taking up,
+        especially if you enable Auto-Download.  If space is a concern, you
+        may also choose to go without a cache entirely.  You can do this by
+        leaving the Map Cache DB field blank in the <display_text>Manage
+        Repositories</display_text> dialog.  Note that this will cause Maemo
+        Mapper to download maps each time they are needed.  If you are using
+        a cellular data plan that charges per kilobyte, you probably want to
+        use a cache.  For more information about repositories and the
+        <display_text>Manage Repositories</display_text> dialog, see
+        <ref refid="help_maemomapper_repoman"
+          refdoc="Managing Repositories"/>.
+      </para>
+      <para>
+        Aside from the Auto-Download functionality, you can also download
+        maps manually using the <display_text>Manage Maps...</display_text>
+        menu item of the <display_text>Maps</display_text> menu.  The
+        <display_text>Manage Maps</display_text> dialog allows you to
+        download, overwrite, or delete maps, either by area or along your
+        current route.  It contains up to three tabs, all of which control
+        which and how many maps are downloaded.
+      </para>
+      <heading>Setup</heading>
+      <para>
+        The <display_text>Setup</display_text> tab controls what you what to
+        do.  You can download maps (optionally overwriting
+        already-downloaded maps) from the current repository to your
+        device's file system, or you can delete maps (pertaining to the
+        current repository) from your device's file system.  Both of these
+        operations can be done either over a rectangular area or along your
+        current route.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Download Maps</display_text> - If selected, Maemo
+          Mapper will download maps from the current repository to your
+          device's file system, for the area you specify.  By default, Maemo
+          Mapper only downloads the maps that you don't already have.
+        </listitem>
+        <listitem>
+          <display_text>Overwrite</display_text> - If selected, then Maemo
+          Mapper will download maps and overwrite any maps that you may have
+          already downloaded.
+        </listitem>
+        <listitem>
+          <display_text>Delete Maps</display_text> - If selected, Maemo
+          Mapper will delete maps from your file system, for the area you
+          specify.
+        </listitem>
+        <listitem>
+          <display_text>By Area</display_text> - If selected, Maemo Mapper
+          will download or delete maps for a particular rectangular area of
+          the world, based on the latitude and longitude of an upper-left
+          and lower-right corner.  See the <display_text>Area</display_text>
+          tab to specify the coordinates.
+        </listitem>
+        <listitem>
+          <display_text>Along Route</display_text> - If selected, Maemo
+          Mapper will download or delete maps along your current route.
+          This is useful if, for example, you are about to embark on a trip
+          and want to make sure that you have maps for all points along the
+          route.
+        </listitem>
+        <listitem>
+          <display_text>Radius (tiles)</display_text> - If
+          <display_text>Along Route</display_text> is selected, then you can
+          specify the radius around your route for which maps will be
+          downloaded or deleted.  For example, if you specify 4 (the
+          default), then Maemo Mapper will download all tiles that are
+          within 4 tiles of your route.
+        </listitem>
+      </list>
+      <heading>Zoom</heading>
+      <para>
+        The <display_text>Zoom</display_text> tab controls which zoom levels
+        at which maps are downloaded or deleted.  The current zoom level is
+        selected by default, but you can enable or disable any zoom levels
+        that you like.
+      </para>
+      <heading>Area</heading>
+      <para>
+        The <display_text>Area</display_text> tab, available if the
+        <display_text>By Area</display_text> option is selected in the
+        <display_text>Setup</display_text> tab, defines the rectangular area
+        of the world for which maps will be downloaded or deleted.  If
+        applicable, the fields are pre-filled with your current and previous
+        view center coordinates.  This allows you to graphically choose your
+        rectangle by first centering on one corner of the rectangle, then
+        centering on the opposite corner, by tapping the screen or by using
+        the <display_text>Lat/Lon</display_text> menu item of the
+        <display_text>Go to</display_text> menu.
+      </para>
+    </topic>
+    <topic>
+      <topictitle>Downloading Routes</topictitle>
+      <context contextUID="help_maemomapper_downroute"/>
+      <para>
+        Route data can be loaded from GPX files, like the ones provided by
+        the GPX Driving Directions web service
+        (http://www.gnuite.com/cgi-bin/gpx.cgi).  Or, route data can be
+        downloaded directly within Maemo Mapper using the
+        <display_text>Download Route</display_text> dialog.
+      </para>
+      <para>
+        Downloading routes requires an active connection to the internet,
+        but once a route is loaded into Maemo Mapper, the internet
+        connection is no longer needed (unless
+        <display_text>Auto-Update</display_text> is enabled).  The route
+        download functionality in Maemo Mapper actually uses the
+        aforementioned GPX Driving Directions web service.
+      </para>
+      <para>
+        To download a route, you must specify an
+        <display_text>Origin</display_text> and a
+        <display_text>Destination</display_text>.  The GPX Driving
+        Directions web service will return a route taking you from the
+        origin to the destination.
+      </para>
+      <para>
+        The <display_text>Download Route</display_text> dialog contains the
+        following controls:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Source URL</display_text> - The web service from
+          which driving directions are retrieved.  The default is fine, and
+          it is usually left unchanged.
+        </listitem>
+        <listitem>
+          <display_text>Auto-Update</display_text> - This option, only
+          available if <display_text>Use GPS Location</display_text> is
+          enabled, will cause Maemo Mapper to automatically re-download a
+          new route if you stray from the route.  Note that you must have a
+          continuous connection to the internet (i.e. cellular data service)
+          for Auto-Update to work.
+        </listitem>
+        <listitem>
+          <display_text>Use GPS Location</display_text> - If selected, then
+          the current GPS location will be used as the
+          <display_text>Origin</display_text>.
+        </listitem>
+        <listitem>
+          <display_text>Use End of Route</display_text> - If selected, then
+          the end of the route will be used as the
+          <display_text>Origin</display_text>.  This is useful for stringing
+          together multiple route downloads into a single route.
+        </listitem>
+        <listitem>
+          <display_text>Origin</display_text> - If selected, then you must
+          enter your own origin.  An origin can be specified in any format
+          understood by Google Maps.  Some examples: "25, -43" (lat/lon),
+          "68712" (zip code), "San Francisco, CA", "123 Main St, 45112",
+          "5th and Main, 12151".  In fact, if your route download fails with
+          a "Could not generate directions" error message, you can use
+          Google Maps to test your origin for accuracy.
+        </listitem>
+        <listitem>
+          <display_text>Destination</display_text> - The destination to
+          which the directions will lead.  Like the
+          <display_text>Origin</display_text>, a destination can be
+          specified in any format understood by Google Maps.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>Downloading POIs</topictitle>
+      <context contextUID="help_maemomapper_downpoi"/>
+      <para>
+        Points of Interest (POIs) can be loaded from GPX files, like the
+        ones provided by the GPX POI Search web service
+        (http://www.gnuite.com/cgi-bin/poi.cgi).  Or, POI data can be
+        downloaded directly within Maemo Mapper using the
+        <display_text>Download POIs</display_text> dialog.
+      </para>
+      <para>
+        Downloading POIs requires an active connection to the internet,
+        but once a POI is loaded into Maemo Mapper, the POI is accessible in
+        Maemo Mapper regardless of whether or not you are connected to the
+        internet.  The POI download functionality in Maemo Mapper actually
+        uses the aforementioned GPX POI Search web service.
+      </para>
+      <para>
+        To search for POIs, you enter an <display_text>Origin</display_text>
+        and a <display_text>Query</display_text>.  The GPX POI Search web
+        service will return up to 10 matching POIs in the vicinity of the
+        origin.  You can access more POIs from the same query by using the
+        <display_text>Page</display_text> modifier.
+      </para>
+      <para>
+        Once you have downloaded POIs, they are automatically added to your
+        POI database, and you are presented with the <display_text>POI
+          List</display_text> dialog to to review the POIs that were
+        downloaded and added to your database.  You must manually remove any
+        POIs that you don't want in your database.  For more information
+        about the <display_text>POI List</display_text> dialog and
+        deleting POIs, see <ref refid="help_maemomapper_poilist"
+          refdoc="POI List"/>.
+      </para>
+      <para>
+        The <display_text>Download POIs</display_text> dialog contains the
+        following controls:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Source URL</display_text> - The web service from
+          which POIs are retrieved.  The default is fine, and it is usually
+          left unchanged.
+        </listitem>
+        <listitem>
+          <display_text>Use GPS Location</display_text> - If selected, then
+          the current GPS location will be used as the
+          <display_text>Origin</display_text>.
+        </listitem>
+        <listitem>
+          <display_text>Use End of Route</display_text> - If selected, then
+          the end of the route will be used as the
+          <display_text>Origin</display_text>.  This is useful for searching
+          for points of interests (like hotels or restaurants) near your
+          current destination.
+        </listitem>
+        <listitem>
+          <display_text>Origin</display_text> - If selected, then you must
+          enter your own origin.  An origin can be specified in any format
+          understood by Google Maps.  Some examples: "25, -43" (lat/lon),
+          "68712" (zip code), "San Francisco, CA", "123 Main St, 45112",
+          "5th and Main, 12151".  In fact, if your route download fails with
+          a "Could not generate directions" error message, you can use
+          Google Maps to test your origin for accuracy.
+        </listitem>
+        <listitem>
+          <display_text>Category</display_text> - Specifies the default
+          category in which all resulting POIs will be placed.  You can
+          always change the category later.  If you have not yet entered a
+          <display_text>Query</display_text> when you select a category,
+          then the name of the category will be entered into the
+          <display_text>Query</display_text> field for you.  This allows you
+          to, for example, quickly search for restaurants and put them in
+          the Restaurant category.
+        </listitem>
+        <listitem>
+          <display_text>Page</display_text> - Specifies the page of results
+          that you want to retrieve.  Think of it as the page number in a
+          web search.  Page 1 contains the first 10 results.  Page 2
+          contains results 10-19.  And so on.
+        </listitem>
+        <listitem>
+          <display_text>Query</display_text> - A free-form text query that
+          describes the POIs for which you are searching.  This can be
+          anything from "food" to "hairstylist" to "museum."  Note that the
+          selected <display_text>Category</display_text> is not part of the
+          query unless you explicitly include it in the
+          <display_text>Query</display_text> field.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>Browsing POIs</topictitle>
+      <context contextUID="help_maemomapper_browsepoi"/>
+      <para>
+        Once you have imported or downloaded POIs into your POI database,
+        you can use the <display_text>Browse POIs</display_text> dialog to
+        search for certain POIs in your database and to view those POIs in a
+        tabular format.
+      </para>
+      <para>
+        To browse for POIs, you enter an <display_text>Origin</display_text>
+        and a optional <display_text>Query</display_text>.  Maemo Mapper
+        will search the database for all POIs matching your query, and it
+        will calculate the distance from each POI to your specified
+        <display_text>Origin</display_text>.  You may also filter your
+        results by <display_text>Category</display_text>.
+      </para>
+      <para>
+        Once your search is performed, you are taken to the
+        <display_text>POI List</display_text> dialog, where you can view,
+        edit, and delete any of the POIs that matched your query.  For more
+        information about the <display_text>POI List</display_text> dialog
+        and editing POIs, see <ref refid="help_maemomapper_poilist"
+          refdoc="POI List"/>.
+      </para>
+      <para>
+        The <display_text>Browse POIs</display_text> dialog contains the
+        following controls:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Use GPS Location</display_text> - If selected, then
+          the current GPS location will be used as the
+          <display_text>Origin</display_text>.
+        </listitem>
+        <listitem>
+          <display_text>Use End of Route</display_text> - If selected, then
+          the end of the route will be used as the
+          <display_text>Origin</display_text>.  This is useful for searching
+          for points of interests (like hotels or restaurants) near your
+          current destination.
+        </listitem>
+        <listitem>
+          <display_text>Origin</display_text> - If selected, then you must
+          enter your own origin.  An origin can be specified in any format
+          understood by Google Maps.  Some examples: "25, -43" (lat/lon),
+          "68712" (zip code), "San Francisco, CA", "123 Main St, 45112",
+          "5th and Main, 12151".  In fact, if your route download fails with
+          a "Could not generate directions" error message, you can use
+          Google Maps to test your origin for accuracy.
+        </listitem>
+        <listitem>
+          <display_text>Category</display_text> - Filters the results based
+          on the selected category.
+        </listitem>
+        <listitem>
+          <display_text>Query</display_text> - An optional substring which
+          must appear in either the label or description of a POI in order
+          for the POI to match.  Any spaces, commas, or other punctiation in
+          the query must also be in the label or description.  If left
+          blank, then all POIs are matched.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>POI List</topictitle>
+      <context contextUID="help_maemomapper_poilist"/>
+      <para>
+        The <display_text>POI List</display_text> dialog is a tabular
+        display of POIs.  With this dialog, you can go to a specific POI,
+        edit POIs, change the categories of a set of POIs, delete POIs, and
+        export POIs to the GPX file format.
+      </para>
+      <para>
+        The main view of the <display_text>POI List</display_text> dialog is
+        a table with five columns, all of which (except the checkbox) can be
+        sorted by tapping on the appropriate header:
+      </para>
+      <list>
+        <listitem>
+          <display_text>*</display_text> - This checkbox column contains a
+          checkbox for each POI in the table.  All of the POIs that are
+          checked will be affected by operations in the
+          <display_text>Checked POI Actions</display_text> dialog, described
+          later.  You can tap on the column header to enable or disable
+          all of the checkboxes at once.  Note that this checkbox has no
+          effect on whether or not the POI is visible in the map.
+        </listitem>
+        <listitem>
+          <display_text>Category</display_text> - The category in which the
+          POI belongs.  Categories can be edited, enabled, and disabled with
+          the <display_text>POI Categories</display_text> dialog.  For more
+          information about the <display_text>POI Categories</display_text>
+          dialog, see <ref refid="help_maemomapper_poicat"
+            refdoc="POI Categories"/>
+        </listitem>
+        <listitem>
+          <display_text>Dist.</display_text> - The distance from the Origin
+          to the given POI.
+        </listitem>
+        <listitem>
+          <display_text>Bear.</display_text> - The bearing (in degrees from
+          true north) from the Origin to the given POI.  A bearing of zero
+          or 360 means that the POI is due north of the Origin.  90 means
+          east; 180 means south; and 270 means west.
+        </listitem>
+        <listitem>
+          <display_text>Label</display_text> - The label of the POI.
+        </listitem>
+      </list>
+      <para>
+        Below the table are four buttons:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Go to</display_text> - Pans the map display to the
+          currently selected POI (i.e. the currently highlighted row).
+          Remember that you can tap and hold on the title bar of the dialog
+          in order to see the map behind it.
+        </listitem>
+        <listitem>
+          <display_text>Edit...</display_text> - Opens the
+          <display_text>Edit POI</display_text> dialog for the currently
+          selected POI (i.e. the currently highlighted row).  You can also
+          double-tap on a row in the table to open this dialog.
+        </listitem>
+        <listitem>
+          <display_text>Checked POI Actions...</display_text> - Opens the
+          <display_text>Checked POI Actions</display_text> dialog, which
+          allows you to perform actions on the currently checked POIs in the
+          table.  From that dialog, you can set the categories of the
+          checked POIs, delete the checked POIs, and/or export the checked
+          POIs to a GPX file.
+        </listitem>
+        <listitem>
+          <display_text>Close</display_text> - Closes the <display_text>POI
+            List</display_text> dialog.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>POI Categories</topictitle>
+      <context contextUID="help_maemomapper_poicat"/>
+      <para>
+        POI Categories are a means by which you can organize your POIs for
+        selective display.  The <display_text>POI Categories</display_text>
+        dialog is accessed from the <display_text>View</display_text> menu
+        and allows you to enable/disable, add, edit, or delete categories.
+      </para>
+      <para>
+        Each row in the table represents a category.  There are three
+        columns displayed for each category:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Enabled</display_text> - Controls whether or not
+          POIs in this category are drawn on the map.
+        </listitem>
+        <listitem>
+          <display_text>Label</display_text> - A short label to describe the
+          category.  This is the name that will be visible when viewing a
+          POI.
+        </listitem>
+        <listitem>
+          <display_text>Description</display_text> - A longer description of
+          the category.  This description is not visible anywhere except in
+          this dialog; it is only used to get an idea of how the category is
+          meant to be used.
+        </listitem>
+      </list>
+      <para>
+        Selecting a row in the table and pressing the
+        <display_text>Edit</display_text> button will allow you to edit the
+        above three attributes of a category, and to delete a category.  You
+        can also add a new category by using the
+        <display_text>Add</display_text> button.
+      </para>
+      <note>
+        A POI may only be associated with a single category at a time.
+      </note>
+      <heading>POI Icons</heading>
+      <para>
+        Icons can be customized on a per-POI or per-category basis, and/or
+        you may provide a custom default icon for all POIs.  To do so, you
+        should place icon files in the same directory as the POI database
+        itself.  Most image file formats are supported, but the files
+        themselves <i>must</i> have the ".jpg" extension (even if the icons
+        are not in the JPEG format).
+      </para>
+      <para>
+        To customize the default POI icon (to be used instead of the simple
+        square), place an icon file called "poi.jpg" in the same directory
+        as the POI database.
+      </para>
+      <para>
+        To customize the icon for a POI category, place an icon file with
+        the same name as the POI category, all lower-case, plus the ".jpg"
+        extension.  For example, if your POI category is called "Gas
+        Stations", the file should have the name "gas stations.jpg".
+      </para>
+      <para>
+        To customize the icon for a specific POI, place an icon file with
+        a name equal to the POI's label, all lower-case, plus the ".jpg"
+        extension.  For example, if your POI's label is "Joe's House",
+        the file should have the name "joe's house.jpg".
+      </para>
+      <para>
+        POI-specific icons are given priority over category-specific icons,
+        which in turn are given priority over the default POI icon.
+      </para>
+    </topic>
+    <topic>
+      <topictitle>Settings</topictitle>
+      <context contextUID="help_maemomapper_settings"/>
+      <para>
+        The <display_text>Settings</display_text> dialog (accessible from
+        the main menu) provides access to a plethora of configurable options
+        that control how Maemo Mapper appears and runs.  In addition to the
+        tabs, which are described below, there are also two buttons at the
+        bottom of the diagram labeled <display_text>Hardware
+          Keys...</display_text> and <display_text>Colors...</display_text>.
+      </para>
+      <para>
+        The <display_text>Hardware Keys...</display_text> button brings up
+        another dialog box, which allows you to customize the actions that
+        each hardware key causes.  For example, you can map the 
+        <graphic filename="2686KEY_esc"/> button to cycle through map
+        repositories, giving you quick access to switching among them.
+      </para>
+      <para>
+        The <display_text>Colors...</display_text> button allows you to
+        customize the colors that are used for drawing on-map objects.
+      </para>
+      <heading>GPS</heading>
+      <para>
+        The <display_text>GPS</display_text> tab tells Maemo Mapper the
+        source (if any) from which to retrieve GPS data.  It is only
+        applicable if you have access to a GPS source, such as a bluetooth
+        GPS receiver or a GPSD server.  Technically, Maemo Mapper uses GPSD
+        for all of its GPS receiver communication, but you can instruct
+        Maemo Mapper to use GPSD in one of three ways:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Bluetooth</display_text> - Select this option
+          if you are using a bluetooth GPS receiver, and enter the
+          MAC address in the field provided.  If you don't know the MAC
+          address, turn on your receiver and press the
+          <display_text>Scan...</display_text> button to select it from a
+          list of nearby bluetooth devices.  Or, leave the field blank and
+          Maemo Mapper will automatically try to use any bluetooth GPS
+          receivers that it can identify.  This
+          option is also appropriate if you are running Maemo Mapper on a
+          device with an internal GPS receiver, in which case you should
+          leave the field blank.
+        </listitem>
+        <listitem>
+          <display_text>File Path</display_text> - Select this option to use
+          a device file on your file system, such as an RFCOMM device, and
+          specify the pathname of the file in the appropriate field.
+        </listitem>
+        <listitem>
+          <display_text>GPSD Host</display_text> - Select this option if you
+          want to connect Maemo Mapper to any GPSD server (local or remote).
+          Enter the hostname and port of the server in the fields provided.
+          The default values (127.0.0.1 on port 2947) cause Maemo Mapper to
+          use the local GPSD server, if available.
+        </listitem>
+      </list>
+      <heading>Auto-Center</heading>
+      <para>
+        The <display_text>Auto-Center</display_text> tab allows you to
+        configure how Maemo Mapper automatically re-centers the display when
+        either <display_text>Lat/Lon</display_text> or
+        <display_text>Lead</display_text> is enabled from the
+        <display_text>Auto-Center</display_text> menu.  The Auto-Center
+        feature is most useful in conjunction with a GPS receiver.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Lead Amount</display_text> - When Auto-Center is set
+          to <display_text>Lead</display_text>, then Maemo Mapper will keep
+          the center of the screen focused on an area in front of you.  When
+          driving, this allows you to view more of the road ahead of you.
+          The distance in front of you on which the screen is centered is
+          based on two variables: your current speed and the value of the
+          <display_text>Lead Amount</display_text> option.
+        </listitem>
+        <listitem>
+          <display_text>Fixed</display_text> - Controls whether or not your
+          lead amount is affected by your speed.  If checked, then your
+          speed will not affect the lead amount.
+        </listitem>
+        <listitem>
+          <display_text>Pan Sensitivity</display_text> - Controls how often
+          Maemo Mapper re-centers the display, based on how close your
+          position (or the position of your <i>lead</i>) gets to the edge of
+          the screen.  When set to a low value, Maemo Mapper will only
+          re-center the screen when you are near the edge of the screen.
+          When set to the maximum, Maemo Mapper will keep your position as
+          close to the center as possible.
+        </listitem>
+        <listitem>
+          <display_text>Min. Speed</display_text> - Controls how fast you
+          must be moving in order for Auto-Center (and Auto-Rotate) to
+          activate.  For example, walkers may wish to set this threshold
+          low, while drivers with inaccurate GPS receivers may wish to set
+          this high (to avoid spurious auto-rotates when parked or waiting
+          at a red light).  The speed is specified in your chosen units.
+        </listitem>
+        <listitem>
+          <display_text>Rotate Sensit.</display_text> - Controls how often
+          Maemo Mapper rotates the display based on your heading, depending
+          on how far your current rotation is from your heading rotation.
+        </listitem>
+        <listitem>
+          <display_text>Points</display_text> - Controls which direction
+          on the screen your heading points to when auto-rotating.  The
+          default is for your current heading to point up.
+        </listitem>
+      </list>
+      <heading>Announce</heading>
+      <para>
+        The <display_text>Announce</display_text> tab controls how and when
+        Maemo Mapper displays or speaks waypoint information.  When you
+        approach a waypoint in your route (defined by the presence of a
+        description in the GPX file), Maemo Mapper will pop up a text box
+        with the contents of that description.  When downloading routes from
+        within Maemo Mapper, the text describes your next action, e.g. "Turn
+        left at Main Street.  Go 2.4 miles."
+      </para>
+      <para>
+        As you approach a waypoint, Maemo Mapper will continue to display
+        the description of that waypoint, so long as you are within the
+        range defined by the <display_text>Advance Notice</display_text>
+        option, or until you pass the waypoint.  Because the amount of
+        notice is dependent on your speed, it is possible to see the text,
+        then slow down to a point where the notice disappears.  This is
+        possible, for example, if you are stopped at a red light.  The text
+        will reappear when you have picked up enough speed to again break
+        the <display_text>Advance Notice</display_text> range.
+      </para>
+      <para>
+        If you have installed <i>flite</i>, which is available in the same
+        repository from which you downloaded Maemo Mapper, then Maemo Mapper
+        can optionally also speak the same directions that appear on screen.
+        Maemo Mapper will only speak the directions once, at the exact
+        moment you first reach the distance from the waypoint defined by the
+        <display_text>Advance Notice</display_text> option.  The same
+        directions are on-screen if you need to reference them.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Advance Notice</display_text> - Controls how much in
+          advance Maemo Mapper begins to provide the waypoint description.
+          The exact distance at which Maemo Mapper begins to announce a
+          waypoint also depends on your speed, so the value of this option
+          can be thought of more accurately in units of time.  At the
+          minimum value, Maemo Mapper gives you almost no notice.  At the
+          maximum value, Maemo Mapper gives you about two minutes of notice.
+          Experiment to find your happy medium.
+        </listitem>
+        <listitem>
+          <display_text>Enable Voice Synthesis</display_text> - If you have
+          installed <i>flite</i>, this option will cause Maemo Mapper to
+          speak the description of the next waypoint when you enter the
+          range defined by the <display_text>Advance Notice</display_text>
+          option.
+        </listitem>
+      </list>
+      <heading>Misc.</heading>
+      <para>
+        The <display_text>Misc.</display_text> and <display_text>Misc.
+          2</display_text> tabs contain miscellaneous options.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Line Width</display_text> - Controls the thickness
+          of all lines drawn on top of the map images.  This includes your
+          mark, all tracks and routes, and the default POI image.
+        </listitem>
+        <listitem>
+          <display_text>Unblank Screen</display_text> - Controls when Maemo
+          Mapper keeps the display on without user input.  When set to
+          <display_text>When Receiving Any GPS Data</display_text>, Maemo
+          Mapper will keep the screen on whenever a GPS receiver is
+          connected and producing data.  When set to
+          <display_text>Never</display_text>, Maemo Mapper will not attempt
+          to keep the screen on, and the screen will go blank after a period
+          of inactivity on the user's part.  The default is
+          <display_text>When Moving (Full Screen Only)</display_text>
+        </listitem>
+        <listitem>
+          <display_text>Info Font Size</display_text> - Controls the font
+          size for all information that is popped up to the user in the
+          upper-right corner, including waypoint descriptions.
+        </listitem>
+        <listitem>
+          <display_text>Units</display_text> - Controls the units in which
+          distances and speeds are displayed in the user interface.
+        </listitem>
+        <listitem>
+          <display_text>Degrees Format</display_text> - Controls how
+          latitude and longitudes are displayed in the user interface.
+        </listitem>
+        <listitem>
+          <display_text>Auto-Download Pre-cache</display_text> - Controls
+          how much of the world surrounding the view Maemo Mapper should
+          download when <display_text>Auto-Download</display_text> is
+          enabled.  When set to the minimum, Maemo Mapper will only download
+          the maps that are required to draw the screen.  As you pan around
+          the world, you will see black areas where Maemo Mapper has not yet
+          downloaded maps, until those maps are downloaded.  If you increase
+          the Pre-cache amount, the Maemo Mapper will download more of the
+          surrounding areas, making it less likely that you ever actually
+          see black areas.  A general rule of thumb is to limit the
+          Pre-cache based on the bandwidth of your internet connection, but
+          the default setting (two bars) is usually sufficient for most
+          people's needs.
+        </listitem>
+        <listitem>
+          <display_text>Speed Limit</display_text> - Enables notification
+          when you have exceeded the given speed limit (specified in the
+          units defined via the <display_text>Units</display_text> option).
+        </listitem>
+        <listitem>
+          <display_text>Location</display_text> - Controls the location on
+          the screen of the speed warning.
+        </listitem>
+      </list>
+      <heading>POI</heading>
+      <para>
+        The <display_text>POI</display_text> tab allows you to define your
+        POI database and how POIs are drawn on the screen.
+      </para>
+      <list>
+        <listitem>
+          <display_text>POI database</display_text> - The location on the
+          file system where the POI database is located.  The database must
+          be in sqlite3 format.  A default (empty) POI database is
+          automatically created for you when you first run Maemo Mapper.
+        </listitem>
+        <listitem>
+          <display_text>Show POI below zoom</display_text> - Defines the
+          maximum zoom (furthest away from the Earth) at which POIs will be
+          drawn.  When zoomed out beyond this level, no POIs will be drawn.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>About Maemo Mapper</topictitle>
+      <context contextUID="help_maemomapper_about"/>
+      <para>
+        Current Version: 2.4
+      </para>
+      <para>
+        Maemo Mapper was created and developed by John Costigan (aka
+        <display_text>gnuite</display_text>).
+      </para>
+      <para>
+        Copyright © 2006-2007 John Costigan.
+      </para>
+      <para>
+        POI and GPS-Info code originally written by Cezary Jackiewicz.
+      </para>
+      <para>
+        Default map data provided by http://www.openstreetmap.org/ - other
+        map repositories are subject to their own licenses and may or may not
+        be suitable for use with Maemo Mapper.  It may be illegal to use a
+        certain repository with Maemo Mapper or under certain conditions.  This
+        includes the repositories downloadable directly in Maemo Mapper.  If
+        you are not sure if you are legally allowed to use a particular
+        repository, you should delete it from your list of repositories.  The
+        authors of Maemo Mapper cannot be held responsible for your use of a
+        particular repository.
+      </para>
+      <para>
+        Maemo Mapper is free software: you can redistribute it and/or modify it
+        under the terms of the GNU General Public License as published by the
+        Free Software Foundation, either version 3 of the License, or (at your
+        option) any later version.
+      </para>
+      <para>
+        Maemo Mapper is distributed in the hope that it will be useful, but
+        WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+        General Public License for more details.
+      </para>
+    </topic>
+  </folder>
+</ossohelpsource>
