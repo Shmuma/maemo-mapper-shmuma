@@ -1,3 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../tohtml.xsl?root=maemo-mapper"?>
+
 <!-- 
  - 
  - Copyright (C) 2006, 2007 John Costigan. 
@@ -19,8 +22,6 @@
  - 
 --> 
  
-<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="../tohtml.xsl?root=maemo-mapper"?>
 <ossohelpsource>
   <folder>
     <title>Maemo Mapper</title>
