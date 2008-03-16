@@ -607,7 +607,9 @@ thread_read_nmea(GpsRcvrInfo *gri)
             gpsd_ctrl_sock = getenv("GPSD_CTRL_SOCK");
 
             if (!gpsd_prog)
-                gpsd_prog = "gpsd";
+                gpsd_prog = "/usr/sbin/gpsd";
+            if (!gpsd_ctrl_sock)
+                gpsd_ctrl_sock = "/tmp/.gpsd_ctrl_sock";
 
             memset(&gps_context, 0, sizeof(gps_context));
             errno = 0;

@@ -303,7 +303,7 @@ poi_db_connect()
         /* update category */
         sqlite3_prepare(_poi_db,
                         "update category set label = ?, desc = ?,"
-                        " enabled = ? where poi_id = ?",
+                        " enabled = ? where cat_id = ?",
                         -1, &_stmt_update_cat, NULL);
         /* delete from category */
         sqlite3_prepare(_poi_db,
@@ -915,83 +915,80 @@ category_list_dialog(GtkWidget *parent)
     if(!store)
         return TRUE;
 
-    if(dialog == NULL)
-    {
-        dialog = gtk_dialog_new_with_buttons(_("POI Categories"),
-                GTK_WINDOW(parent), GTK_DIALOG_MODAL,
-                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                NULL);
+    dialog = gtk_dialog_new_with_buttons(_("POI Categories"),
+            GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+            NULL);
 
-        /* Enable the help button. */
+    /* Enable the help button. */
 #ifndef LEGACY
-        hildon_help_dialog_help_enable(
+    hildon_help_dialog_help_enable(
 #else
-        ossohelp_dialog_help_enable(
+    ossohelp_dialog_help_enable(
 #endif
-                GTK_DIALOG(dialog), HELP_ID_POICAT, _osso);
+            GTK_DIALOG(dialog), HELP_ID_POICAT, _osso);
 
-        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
-                btn_edit = gtk_button_new_with_label(_("Edit...")));
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
+            btn_edit = gtk_button_new_with_label(_("Edit...")));
 
-        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
-                btn_add = gtk_button_new_with_label(_("Add...")));
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
+            btn_add = gtk_button_new_with_label(_("Add...")));
 
-        sw = gtk_scrolled_window_new(NULL, NULL);
-        gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (sw),
-                      GTK_POLICY_NEVER,
-                      GTK_POLICY_AUTOMATIC);
-        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                sw, TRUE, TRUE, 0);
+    sw = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (sw),
+                  GTK_POLICY_NEVER,
+                  GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+            sw, TRUE, TRUE, 0);
 
-        tree_view = gtk_tree_view_new();
-        /* Maemo-related? */
-        g_object_set(tree_view, "allow-checkbox-mode", FALSE, NULL);
-        gtk_container_add (GTK_CONTAINER (sw), tree_view);
+    tree_view = gtk_tree_view_new();
+    /* Maemo-related? */
+    g_object_set(tree_view, "allow-checkbox-mode", FALSE, NULL);
+    gtk_container_add (GTK_CONTAINER (sw), tree_view);
 
-        gtk_tree_selection_set_mode(
-                gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view)),
-                GTK_SELECTION_SINGLE);
-        gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tree_view), TRUE);
+    gtk_tree_selection_set_mode(
+            gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view)),
+            GTK_SELECTION_SINGLE);
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(tree_view), TRUE);
 
-        renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(
-                _("ID"), renderer, "text", CAT_ID, NULL);
-        gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
-        gtk_tree_view_column_set_max_width (column, 1);
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("ID"), renderer, "text", CAT_ID, NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+    gtk_tree_view_column_set_max_width (column, 1);
 
-        renderer = gtk_cell_renderer_toggle_new();
-        g_signal_connect (renderer, "toggled",
-                G_CALLBACK (category_toggled), store);
-        column = gtk_tree_view_column_new_with_attributes(
-                _("Enabled"), renderer, "active", CAT_ENABLED, NULL);
-        gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+    renderer = gtk_cell_renderer_toggle_new();
+    g_signal_connect (renderer, "toggled",
+            G_CALLBACK (category_toggled), store);
+    column = gtk_tree_view_column_new_with_attributes(
+            _("Enabled"), renderer, "active", CAT_ENABLED, NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
-        renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(
-                _("Label"), renderer, "text", CAT_LABEL, NULL);
-        gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("Label"), renderer, "text", CAT_LABEL, NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
-        renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(
-                _("Description"), renderer, "text", CAT_DESC, NULL);
-        gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("Description"), renderer, "text", CAT_DESC, NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
-        renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(
-                _("# POIs"), renderer, "text", CAT_POI_CNT, NULL);
-        gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(
+            _("# POIs"), renderer, "text", CAT_POI_CNT, NULL);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tree_view), column);
 
-        gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 400);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 400);
 
-        pcedit.dialog = dialog;
-        pcedit.tree_view = tree_view;
+    pcedit.dialog = dialog;
+    pcedit.tree_view = tree_view;
 
-        g_signal_connect(G_OBJECT(btn_edit), "clicked",
-                G_CALLBACK(category_edit), &pcedit);
+    g_signal_connect(G_OBJECT(btn_edit), "clicked",
+            G_CALLBACK(category_edit), &pcedit);
 
-        g_signal_connect(G_OBJECT(btn_add), "clicked",
-                G_CALLBACK(category_add), &pcedit);
-    }
+    g_signal_connect(G_OBJECT(btn_add), "clicked",
+            G_CALLBACK(category_add), &pcedit);
 
     gtk_tree_view_set_model(GTK_TREE_VIEW(tree_view), GTK_TREE_MODEL(store));
     g_object_unref(G_OBJECT(store));
@@ -1003,7 +1000,7 @@ category_list_dialog(GtkWidget *parent)
         break;
     }
 
-    gtk_widget_hide(dialog);
+    gtk_widget_destroy(dialog);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1479,10 +1476,15 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi)
     dpoi.deleted = FALSE;
 
     /* Lat/Lon */
-    snprintf(buffer, sizeof(buffer), "%.06f", poi->lat);
-    gtk_entry_set_text(GTK_ENTRY(txt_lat), buffer);
-    snprintf(buffer, sizeof(buffer), "%.06f", poi->lon);
-    gtk_entry_set_text(GTK_ENTRY(txt_lon), buffer);
+    {
+        gchar tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN];
+
+        lat_format(poi_info->lat, tmp1);
+        lon_format(poi_info->lon, tmp2);
+
+        gtk_entry_set_text(GTK_ENTRY(txt_lat), tmp2);
+        gtk_entry_set_text(GTK_ENTRY(txt_lon), tmp1);
+    }
 
     /* label */
     gtk_entry_set_text(GTK_ENTRY(txt_label), poi->label);
