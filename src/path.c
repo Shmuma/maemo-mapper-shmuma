@@ -788,7 +788,8 @@ track_add(time_t time, gboolean newly_fixed)
             map_render_paths();
             MACRO_QUEUE_DRAW_AREA();
         }
-        if(_enable_track)
+
+        if(_enable_tracking)
         {
             if(_show_paths & TRACKS_MASK)
             {
@@ -1048,10 +1049,6 @@ track_insert_break(gboolean temporary)
                     2 * _draw_width,
                     0, /* start at 0 degrees. */
                     360 * 64);
-    }
-    else if(!temporary)
-    {
-        MACRO_BANNER_SHOW_INFO(_window, _("Break already inserted."));
     }
 
     /* Update the track database. */

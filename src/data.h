@@ -144,7 +144,7 @@ extern CenterMode _center_mode;
 extern gboolean _center_rotate;
 extern gboolean _fullscreen;
 extern gboolean _enable_gps;
-extern gboolean _enable_track;
+extern gboolean _enable_tracking;
 extern gboolean _gps_info;
 extern gchar *_route_dl_url;
 extern gint _route_dl_radius;
@@ -213,7 +213,7 @@ extern GtkWidget *_menu_track_insert_mark_item;
 extern GtkWidget *_menu_track_distlast_item;
 extern GtkWidget *_menu_track_distfirst_item;
 extern GtkWidget *_menu_track_clear_item;
-extern GtkWidget *_menu_track_enable_item;
+extern GtkWidget *_menu_track_enable_tracking_item;
 
 /* Menu items for the "POI" submenu. */
 extern GtkWidget *_menu_poi_item;

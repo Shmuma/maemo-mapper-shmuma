@@ -422,15 +422,21 @@ menu_cb_track_clear(GtkMenuItem *item)
 }
 
 static gboolean
-menu_cb_track_enable(GtkMenuItem *item)
+menu_cb_track_enable_tracking(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(!(_enable_track = gtk_check_menu_item_get_active(
-                GTK_CHECK_MENU_ITEM(_menu_track_enable_item))))
+    if(!(_enable_tracking = gtk_check_menu_item_get_active(
+                GTK_CHECK_MENU_ITEM(_menu_track_enable_tracking_item))))
     {
         track_insert_break(FALSE); /* FALSE = not temporary */
+        MACRO_BANNER_SHOW_INFO(_window, _("Tracking Disabled"));
     }
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("Tracking Enabled"));
+    }
+
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1468,10 +1474,10 @@ menu_init()
             = gtk_menu_item_new_with_label(_("Show Distance from Beginning")));
     gtk_menu_append(submenu, _menu_track_clear_item
             = gtk_menu_item_new_with_label(_("Clear")));
-    gtk_menu_append(submenu, _menu_track_enable_item
-            = gtk_check_menu_item_new_with_label(_("Enable Track")));
+    gtk_menu_append(submenu, _menu_track_enable_tracking_item
+            = gtk_check_menu_item_new_with_label(_("Enable Tracking")));
     gtk_check_menu_item_set_active(
-            GTK_CHECK_MENU_ITEM(_menu_track_enable_item), _enable_track);
+            GTK_CHECK_MENU_ITEM(_menu_track_enable_tracking_item), _enable_tracking);
 
     /* The "POI" submenu. */
     gtk_menu_append(menu, menu_item = _menu_poi_item
@@ -1717,8 +1723,8 @@ menu_init()
                       G_CALLBACK(menu_cb_track_distfirst), NULL);
     g_signal_connect(G_OBJECT(_menu_track_clear_item), "activate",
                       G_CALLBACK(menu_cb_track_clear), NULL);
-    g_signal_connect(G_OBJECT(_menu_track_enable_item), "toggled",
-                      G_CALLBACK(menu_cb_track_enable), NULL);
+    g_signal_connect(G_OBJECT(_menu_track_enable_tracking_item), "toggled",
+                      G_CALLBACK(menu_cb_track_enable_tracking), NULL);
 
     /* Connect the "POI" signals. */
     g_signal_connect(G_OBJECT(_menu_poi_import_item), "activate",

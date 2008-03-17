@@ -165,7 +165,7 @@ CenterMode _center_mode = CENTER_LEAD;
 gboolean _center_rotate = TRUE;
 gboolean _fullscreen = FALSE;
 gboolean _enable_gps = TRUE;
-gboolean _enable_track = TRUE;
+gboolean _enable_tracking = TRUE;
 gboolean _gps_info = FALSE;
 gchar *_route_dl_url = NULL;
 gint _route_dl_radius = 4;
@@ -234,7 +234,7 @@ GtkWidget *_menu_track_insert_mark_item = NULL;
 GtkWidget *_menu_track_distlast_item = NULL;
 GtkWidget *_menu_track_distfirst_item = NULL;
 GtkWidget *_menu_track_clear_item = NULL;
-GtkWidget *_menu_track_enable_item = NULL;
+GtkWidget *_menu_track_enable_tracking_item = NULL;
 
 /* Menu items for the "POI" submenu. */
 GtkWidget *_menu_poi_item = NULL;

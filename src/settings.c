@@ -120,7 +120,7 @@
 #define GCONF_KEY_SHOWVELVEC GCONF_KEY_PREFIX"/show_velocity_vector" 
 #define GCONF_KEY_SHOWPOIS GCONF_KEY_PREFIX"/show_poi" 
 #define GCONF_KEY_ENABLE_GPS GCONF_KEY_PREFIX"/enable_gps" 
-#define GCONF_KEY_ENABLE_TRACK GCONF_KEY_PREFIX"/enable_track"
+#define GCONF_KEY_ENABLE_TRACKING GCONF_KEY_PREFIX"/enable_tracking"
 #define GCONF_KEY_ROUTE_LOCATIONS GCONF_KEY_PREFIX"/route_locations" 
 #define GCONF_KEY_REPOSITORIES GCONF_KEY_PREFIX"/repositories" 
 #define GCONF_KEY_CURRREPO GCONF_KEY_PREFIX"/curr_repo" 
@@ -444,9 +444,9 @@ settings_save()
     gconf_client_set_bool(gconf_client,
             GCONF_KEY_ENABLE_GPS, _enable_gps, NULL);
 
-    /* Save Enable Track flag. */
+    /* Save Enable Tracking flag. */
     gconf_client_set_bool(gconf_client,
-            GCONF_KEY_ENABLE_TRACK, _enable_track, NULL);
+            GCONF_KEY_ENABLE_TRACKING, _enable_tracking, NULL);
 
     /* Save Route Locations. */
     gconf_client_set_list(gconf_client,
@@ -2355,15 +2355,15 @@ settings_init()
     else
         _enable_gps = TRUE;
 
-    /* Get Enable Track flag.  Default is TRUE. */
-    value = gconf_client_get(gconf_client, GCONF_KEY_ENABLE_TRACK, NULL);
+    /* Get Enable Tracking flag.  Default is TRUE. */
+    value = gconf_client_get(gconf_client, GCONF_KEY_ENABLE_TRACKING, NULL);
     if(value)
     {
-        _enable_track = gconf_value_get_bool(value);
+        _enable_tracking = gconf_value_get_bool(value);
         gconf_value_free(value);
     }
     else
-        _enable_track = TRUE;
+        _enable_tracking = TRUE;
 
     /* Initialize _gps_state based on _enable_gps. */
     _gps_state = RCVR_OFF;

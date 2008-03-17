@@ -327,6 +327,14 @@
           <display_text>Clear</display_text> - Clear the current track,
           effectively replacing it with an empty track.
         </listitem>
+        <listitem>
+	  <display_text>Enable Tracking</display_text> - This checkbox
+	  controls whether or not Maemo Mapper keeps track of your location
+	  as you move.  If enabled, your track will be recorded to file,
+	  which can be exported to GPX via the "Save..." menu item.  Maemo
+	  Mapper cannot draw your track on-screen if this checkbox is
+	  disabled.
+        </listitem>
       </list>
       <heading>Maps</heading>
       <para>

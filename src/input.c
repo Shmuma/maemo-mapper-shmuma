@@ -321,6 +321,12 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                         _menu_view_fullscreen_item), !_fullscreen);
             break;
 
+        case CUSTOM_ACTION_TOGGLE_TRACKING:
+            gtk_check_menu_item_set_active(
+                    GTK_CHECK_MENU_ITEM(_menu_track_enable_tracking_item),
+                    !_enable_tracking);
+            break;
+
         case CUSTOM_ACTION_TOGGLE_TRACKS:
             switch(_show_paths)
             {
