@@ -2,6 +2,7 @@ maemo-mapper (2.4.1) unstable; urgency=low
 
   * Fixed bug in editing POI categories (closes #2281).
   * Forced default setting of gpsd_ctrl_sock (closes #1714).
+  * Added ability to disable the recording of your track (closes #2311).
   * Fixed display of lat/lon in "Add POI" dialog box.
   * Added German and Spanish translations.
   * Added support for online HTML versions of built-in help docs.
