@@ -416,7 +416,7 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
 
         case CUSTOM_ACTION_TOGGLE_GPS:
             gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_enable_gps_item),
+                    GTK_CHECK_MENU_ITEM(_menu_gps_enable_item),
                     !_enable_gps);
             break;
 

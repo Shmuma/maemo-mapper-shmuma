@@ -113,8 +113,8 @@ menu_cb_route_open(GtkMenuItem *item)
     gint size;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(display_open_file(_window, &buffer, NULL, &size, &_route_dir_uri, NULL,
-                    GTK_FILE_CHOOSER_ACTION_OPEN))
+    if(display_open_file(GTK_WINDOW(_window), &buffer, NULL, &size,
+                &_route_dir_uri, NULL, GTK_FILE_CHOOSER_ACTION_OPEN))
     {
         /* If auto is enabled, append the route, otherwise replace it. */
         if(gpx_path_parse(&_route, buffer, size,
@@ -154,8 +154,8 @@ menu_cb_route_save(GtkMenuItem *item)
     GnomeVFSHandle *handle;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(display_open_file(_window, NULL, &handle, NULL, &_route_dir_uri, NULL,
-                    GTK_FILE_CHOOSER_ACTION_SAVE))
+    if(display_open_file(GTK_WINDOW(_window), NULL, &handle, NULL,
+                &_route_dir_uri, NULL, GTK_FILE_CHOOSER_ACTION_SAVE))
     {
         if(gpx_path_write(&_route, handle))
         {
@@ -234,8 +234,8 @@ menu_cb_track_open(GtkMenuItem *item)
     gint size;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(display_open_file(_window, &buffer, NULL, &size, NULL, &_track_file_uri,
-                    GTK_FILE_CHOOSER_ACTION_OPEN))
+    if(display_open_file(GTK_WINDOW(_window), &buffer, NULL, &size,
+                NULL, &_track_file_uri, GTK_FILE_CHOOSER_ACTION_OPEN))
     {
         if(gpx_path_parse(&_track, buffer, size, -1))
         {
@@ -257,8 +257,8 @@ menu_cb_track_save(GtkMenuItem *item)
     GnomeVFSHandle *handle;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(display_open_file(_window, NULL, &handle, NULL, NULL, &_track_file_uri,
-                    GTK_FILE_CHOOSER_ACTION_SAVE))
+    if(display_open_file(GTK_WINDOW(_window), NULL, &handle, NULL,
+                NULL, &_track_file_uri, GTK_FILE_CHOOSER_ACTION_SAVE))
     {
         if(gpx_path_write(&_track, handle))
         {
@@ -416,6 +416,21 @@ menu_cb_track_clear(GtkMenuItem *item)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     track_clear();
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
+menu_cb_track_enable(GtkMenuItem *item)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(!(_enable_track = gtk_check_menu_item_get_active(
+                GTK_CHECK_MENU_ITEM(_menu_track_enable_item))))
+    {
+        track_insert_break(FALSE); /* FALSE = not temporary */
+    }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1230,12 +1245,12 @@ menu_cb_view_fullscreen(GtkMenuItem *item)
  ****************************************************************************/
 
 static gboolean
-menu_cb_enable_gps(GtkMenuItem *item)
+menu_cb_gps_enable(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if((_enable_gps = gtk_check_menu_item_get_active(
-                GTK_CHECK_MENU_ITEM(_menu_enable_gps_item))))
+                GTK_CHECK_MENU_ITEM(_menu_gps_enable_item))))
         rcvr_connect();
     else
         rcvr_disconnect();
@@ -1453,6 +1468,10 @@ menu_init()
             = gtk_menu_item_new_with_label(_("Show Distance from Beginning")));
     gtk_menu_append(submenu, _menu_track_clear_item
             = gtk_menu_item_new_with_label(_("Clear")));
+    gtk_menu_append(submenu, _menu_track_enable_item
+            = gtk_check_menu_item_new_with_label(_("Enable Track")));
+    gtk_check_menu_item_set_active(
+            GTK_CHECK_MENU_ITEM(_menu_track_enable_item), _enable_track);
 
     /* The "POI" submenu. */
     gtk_menu_append(menu, menu_item = _menu_poi_item
@@ -1634,10 +1653,10 @@ menu_init()
             = gtk_menu_item_new_with_label(_("GPS")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
             submenu = gtk_menu_new());
-    gtk_menu_append(submenu, _menu_enable_gps_item
+    gtk_menu_append(submenu, _menu_gps_enable_item
             = gtk_check_menu_item_new_with_label(_("Enable GPS")));
     gtk_check_menu_item_set_active(
-            GTK_CHECK_MENU_ITEM(_menu_enable_gps_item), _enable_gps);
+            GTK_CHECK_MENU_ITEM(_menu_gps_enable_item), _enable_gps);
     gtk_menu_append(submenu, _menu_gps_show_info_item
             = gtk_check_menu_item_new_with_label(_("Show Information")));
     gtk_check_menu_item_set_active(
@@ -1698,6 +1717,8 @@ menu_init()
                       G_CALLBACK(menu_cb_track_distfirst), NULL);
     g_signal_connect(G_OBJECT(_menu_track_clear_item), "activate",
                       G_CALLBACK(menu_cb_track_clear), NULL);
+    g_signal_connect(G_OBJECT(_menu_track_enable_item), "toggled",
+                      G_CALLBACK(menu_cb_track_enable), NULL);
 
     /* Connect the "POI" signals. */
     g_signal_connect(G_OBJECT(_menu_poi_import_item), "activate",
@@ -1786,8 +1807,8 @@ menu_init()
                       G_CALLBACK(menu_cb_view_fullscreen), NULL);
 
     /* Connect the "GPS" signals. */
-    g_signal_connect(G_OBJECT(_menu_enable_gps_item), "toggled",
-                      G_CALLBACK(menu_cb_enable_gps), NULL);
+    g_signal_connect(G_OBJECT(_menu_gps_enable_item), "toggled",
+                      G_CALLBACK(menu_cb_gps_enable), NULL);
     g_signal_connect(G_OBJECT(_menu_gps_show_info_item), "toggled",
                       G_CALLBACK(menu_cb_gps_show_info), NULL);
     g_signal_connect(G_OBJECT(_menu_gps_details_item), "activate",

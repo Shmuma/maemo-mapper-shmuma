@@ -268,7 +268,7 @@ cmenu_cb_loc_apply_correction(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(gtk_check_menu_item_get_active(item))
+    if(gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(item)))
     {
         /* Get difference between tap point and GPS location. */
         gint unitx, unity;

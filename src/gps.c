@@ -462,7 +462,7 @@ gps_handle_error_idle(gchar *error)
         {
             /* Disable GPS. */
             gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_enable_gps_item), FALSE);
+                    GTK_CHECK_MENU_ITEM(_menu_gps_enable_item), FALSE);
         }
 
         /* Ask user to re-connect. */

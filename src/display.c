@@ -2474,7 +2474,7 @@ latlon_dialog(gdouble lat, gdouble lon)
  * This function returns TRUE if a file was successfully opened.
  */
 gboolean
-display_open_file(GtkWidget *parent, gchar **bytes_out,
+display_open_file(GtkWindow *parent, gchar **bytes_out,
         GnomeVFSHandle **handle_out, gint *size_out,
         gchar **dir, gchar **file, GtkFileChooserAction chooser_action)
 {

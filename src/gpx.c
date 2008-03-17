@@ -156,6 +156,8 @@ gpx_write_escaped(GnomeVFSHandle *handle, const gchar *str)
                 case '>':
                     to_write = "&gt;";
                     break;
+                default:
+                    to_write = "";
             }
             gpx_write_string(handle, to_write);
 

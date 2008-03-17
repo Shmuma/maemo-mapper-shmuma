@@ -1123,7 +1123,6 @@ poi_create_cat_combo()
 gboolean
 poi_add_dialog(GtkWidget *parent, gint unitx, gint unity)
 {
-    gchar buffer[16];
     static PoiInfo poi;
     static GtkWidget *dialog;
     static GtkWidget *table;
@@ -2071,8 +2070,8 @@ poi_list_export_gpx(GtkWidget *widget, PoiListInfo *pli)
     GnomeVFSHandle *handle;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(display_open_file(pli->dialog2, NULL, &handle, NULL, NULL, NULL,
-                    GTK_FILE_CHOOSER_ACTION_SAVE))
+    if(display_open_file(GTK_WINDOW(pli->dialog2), NULL, &handle, NULL,
+                NULL, NULL, GTK_FILE_CHOOSER_ACTION_SAVE))
     {
         gint num_exported = gpx_poi_write(
                gtk_tree_view_get_model(GTK_TREE_VIEW(pli->tree_view)), handle);

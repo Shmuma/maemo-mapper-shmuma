@@ -753,49 +753,43 @@ track_add(time_t time, gboolean newly_fixed)
     printf("%s(%d, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             (guint)time, newly_fixed, _pos.unitx, _pos.unity);
 
-    if(!time)
-    {
-        /* This is a null point. */
-        MACRO_PATH_INCREMENT_TAIL(_track);
-        *_track.tail = _point_null;
-    }
-    else
-    {
-        gboolean moving = FALSE;
-        gboolean approaching_waypoint = FALSE;
-        gint xdiff, ydiff, dopcand;
+    gboolean moving = FALSE;
+    gboolean approaching_waypoint = FALSE;
+    gint xdiff, ydiff, dopcand;
 
-        announce_thres_unsquared = (20+_gps.speed) * _announce_notice_ratio*32;
+    announce_thres_unsquared = (20+_gps.speed) * _announce_notice_ratio*32;
 
-        if(!_track.tail->unity
-                || ((xdiff = _pos.unitx - _track.tail->unitx), /* comma op */
-                    (ydiff = _pos.unity - _track.tail->unity), /* comma op */
-                    /* Check if xdiff or ydiff are huge. */
-                    ((abs(xdiff) >> 12) || (abs(ydiff) >> 12)
-                    /* Okay, let's see if we've moved enough to justify adding
-                     * to the track.  It depends on our error.  I'd like to
-                     * make the threshold roughly linear with respect to the
-                     * P/HDOP (completely arbitrary, I know), but I also
-                     * want to keep the threshold at a minimum of 2
-                     * zoom-level-4 pixel, and I want dop's of less than 2 to
-                     * also have a 1-pixel threshold.  I also throw in some
-                     * PDOP into the mix, just for fun. */
-                    || ((dopcand = 8 * (_gps.pdop - 6 +(_gps.hdop*_gps.hdop))),
-                        ((xdiff * xdiff) + (ydiff * ydiff)
-                             >= (MAX(2, dopcand) << 8))))))
+    if(!_track.tail->unity
+            || ((xdiff = _pos.unitx - _track.tail->unitx), /* comma op */
+                (ydiff = _pos.unity - _track.tail->unity), /* comma op */
+                /* Check if xdiff or ydiff are huge. */
+                ((abs(xdiff) >> 12) || (abs(ydiff) >> 12)
+                /* Okay, let's see if we've moved enough to justify adding
+                 * to the track.  It depends on our error.  I'd like to
+                 * make the threshold roughly linear with respect to the
+                 * P/HDOP (completely arbitrary, I know), but I also
+                 * want to keep the threshold at a minimum of 2
+                 * zoom-level-4 pixel, and I want dop's of less than 2 to
+                 * also have a 1-pixel threshold.  I also throw in some
+                 * PDOP into the mix, just for fun. */
+                || ((dopcand = 8 * (_gps.pdop - 6 +(_gps.hdop*_gps.hdop))),
+                    ((xdiff * xdiff) + (ydiff * ydiff)
+                         >= (MAX(2, dopcand) << 8))))))
+    {
+        /* We moved enough to actually register a move. */
+        ret = TRUE;
+
+        /* Update the nearest-waypoint data. */
+        if(_route.head != _route.tail
+                && (newly_fixed ? (route_find_nearest_point(), TRUE)
+                                : route_update_nears(TRUE)))
         {
-            /* We moved enough to actually register a move. */
-            ret = TRUE;
-
-            /* Update the nearest-waypoint data. */
-            if(_route.head != _route.tail
-                    && (newly_fixed ? (route_find_nearest_point(), TRUE)
-                                    : route_update_nears(TRUE)))
-            {
-                /* Nearest waypoint has changed - re-render paths. */
-                map_render_paths();
-                MACRO_QUEUE_DRAW_AREA();
-            }
+            /* Nearest waypoint has changed - re-render paths. */
+            map_render_paths();
+            MACRO_QUEUE_DRAW_AREA();
+        }
+        if(_enable_track)
+        {
             if(_show_paths & TRACKS_MASK)
             {
                 /* Instead of calling map_render_paths(), we'll draw the new
@@ -817,176 +811,176 @@ track_add(time_t time, gboolean newly_fixed)
                             abs(ty1 - ty2) + (2 * _draw_width));
                 }
             }
+
             MACRO_PATH_INCREMENT_TAIL(_track);
-
             *_track.tail = _pos;
+        }
 
-            /* Calculate distance to route. (point to line) */
-            if(_near_point)
+        /* Calculate distance to route. (point to line) */
+        if(_near_point)
+        {
+            gint route_x1, route_x2, route_y1, route_y2;
+            gint64 route_dist_squared_1 = INT64_MAX;
+            gint64 route_dist_squared_2 = INT64_MAX;
+            gfloat slope;
+
+            route_x1 = _near_point->unitx;
+            route_y1 = _near_point->unity;
+
+            /* Try previous point first. */
+            if(_near_point != _route.head && _near_point[-1].unity)
             {
-                gint route_x1, route_x2, route_y1, route_y2;
-                gint64 route_dist_squared_1 = INT64_MAX;
-                gint64 route_dist_squared_2 = INT64_MAX;
-                gfloat slope;
+                route_x2 = _near_point[-1].unitx;
+                route_y2 = _near_point[-1].unity;
+                slope = (gfloat)(route_y2 - route_y1)
+                    / (gfloat)(route_x2 - route_x1);
 
-                route_x1 = _near_point->unitx;
-                route_y1 = _near_point->unity;
-
-                /* Try previous point first. */
-                if(_near_point != _route.head && _near_point[-1].unity)
+                if(route_x1 == route_x2)
                 {
-                    route_x2 = _near_point[-1].unitx;
-                    route_y2 = _near_point[-1].unity;
-                    slope = (gfloat)(route_y2 - route_y1)
-                        / (gfloat)(route_x2 - route_x1);
-
-                    if(route_x1 == route_x2)
-                    {
-                        /* Vertical line special case. */
-                        route_dist_squared_1 = (_pos.unitx - route_x1)
-                            * (_pos.unitx - route_x1);
-                    }
-                    else
-                    {
-                        route_dist_squared_1 = abs((slope * _pos.unitx)
-                            - _pos.unity + (route_y1 - (slope * route_x1)));
-                        route_dist_squared_1 =
-                            route_dist_squared_1 * route_dist_squared_1
-                            / ((slope * slope) + 1);
-                    }
+                    /* Vertical line special case. */
+                    route_dist_squared_1 = (_pos.unitx - route_x1)
+                        * (_pos.unitx - route_x1);
                 }
-                if(_near_point != _route.tail && _near_point[1].unity)
+                else
                 {
-                    route_x2 = _near_point[1].unitx;
-                    route_y2 = _near_point[1].unity;
-                    slope = (gfloat)(route_y2 - route_y1)
-                        / (gfloat)(route_x2 - route_x1);
-
-                    if(route_x1 == route_x2)
-                    {
-                        /* Vertical line special case. */
-                        route_dist_squared_2 = (_pos.unitx - route_x1)
-                            * (_pos.unitx - route_x1);
-                    }
-                    else
-                    {
-                        route_dist_squared_2 = abs((slope * _pos.unitx)
-                            - _pos.unity + (route_y1 - (slope * route_x1)));
-                        route_dist_squared_2 =
-                            route_dist_squared_2 * route_dist_squared_2
-                            / ((slope * slope) + 1);
-                    }
+                    route_dist_squared_1 = abs((slope * _pos.unitx)
+                        - _pos.unity + (route_y1 - (slope * route_x1)));
+                    route_dist_squared_1 =
+                        route_dist_squared_1 * route_dist_squared_1
+                        / ((slope * slope) + 1);
                 }
+            }
+            if(_near_point != _route.tail && _near_point[1].unity)
+            {
+                route_x2 = _near_point[1].unitx;
+                route_y2 = _near_point[1].unity;
+                slope = (gfloat)(route_y2 - route_y1)
+                    / (gfloat)(route_x2 - route_x1);
 
-                /* Check if our distance from the route is large. */
-                if(MIN(route_dist_squared_1, route_dist_squared_2)
-                        > (2000 * 2000))
+                if(route_x1 == route_x2)
                 {
-                    /* Prevent announcments from occurring. */
-                    announce_thres_unsquared = INT_MAX;
-
-                    if(_autoroute_data.enabled && !_autoroute_data.in_progress)
-                    {
-                        MACRO_BANNER_SHOW_INFO(_window,
-                                _("Recalculating directions..."));
-                        _autoroute_data.in_progress = TRUE;
-                        show_directions = FALSE;
-                        g_idle_add((GSourceFunc)auto_route_dl_idle, NULL);
-                    }
-                    else
-                    {
-                        /* Reset the route to try and find the nearest point.*/
-                        path_reset_route();
-                    }
+                    /* Vertical line special case. */
+                    route_dist_squared_2 = (_pos.unitx - route_x1)
+                        * (_pos.unitx - route_x1);
+                }
+                else
+                {
+                    route_dist_squared_2 = abs((slope * _pos.unitx)
+                        - _pos.unity + (route_y1 - (slope * route_x1)));
+                    route_dist_squared_2 =
+                        route_dist_squared_2 * route_dist_squared_2
+                        / ((slope * slope) + 1);
                 }
             }
 
-            /* Keep the display on. */
-            moving = TRUE;
-        }
-
-        if(_initial_distance_waypoint
-               && (_next_way != _initial_distance_waypoint
-               ||  _next_way_dist_squared > (_initial_distance_from_waypoint
-                                           * _initial_distance_from_waypoint)))
-        {
-            /* We've moved on to the next waypoint, or we're really far from
-             * the current waypoint. */
-            if(_waypoint_banner)
+            /* Check if our distance from the route is large. */
+            if(MIN(route_dist_squared_1, route_dist_squared_2)
+                    > (2000 * 2000))
             {
-                gtk_widget_destroy(_waypoint_banner);
-                _waypoint_banner = NULL;
-            }
-            _initial_distance_from_waypoint = -1.f;
-            _initial_distance_waypoint = NULL;
-        }
+                /* Prevent announcments from occurring. */
+                announce_thres_unsquared = INT_MAX;
 
-        /* Check if we should announce upcoming waypoints. */
-        if(_enable_announce
-                && (_initial_distance_waypoint || _next_way_dist_squared
-                    < (announce_thres_unsquared * announce_thres_unsquared)))
-        {
-            if(show_directions)
-            {
-                if(!_initial_distance_waypoint)
+                if(_autoroute_data.enabled && !_autoroute_data.in_progress)
                 {
-                    /* First time we're close enough to this waypoint. */
-                    if(_enable_voice
-                            /* And that we haven't already announced it. */
-                            && strcmp(_next_way->desc, _last_spoken_phrase))
-                    {
-                        g_free(_last_spoken_phrase);
-                        _last_spoken_phrase = g_strdup(_next_way->desc);
-                        if(!fork())
-                        {
-                            /* We are the fork child.  Synthesize the voice. */
-                            hildon_play_system_sound(
-                                "/usr/share/sounds/ui-information_note.wav");
-                            sleep(1);
-#               define _voice_synth_path "/usr/bin/flite"
-                            printf("%s %s\n", _voice_synth_path,
-                                    _last_spoken_phrase);
-                            execl(_voice_synth_path, _voice_synth_path,
-                                    "-t", _last_spoken_phrase, (char *)NULL);
-                            exit(0);
-                        }
-                    }
-                    _initial_distance_from_waypoint
-                        = sqrtf(_next_way_dist_squared);
-                    _initial_distance_waypoint = _next_way;
-                    if(_next_wpt && _next_wpt->unity != 0)
-                    {
-                        /* Create a banner for us the show progress. */
-                        _waypoint_banner = hildon_banner_show_progress(
-                                _window, NULL, _next_way->desc);
-                    }
-                    else
-                    {
-                        /* This is the last point in a segment, i.e.
-                         * "Arrive at ..." - just announce. */
-                        MACRO_BANNER_SHOW_INFO(_window, _next_way->desc);
-                    }
+                    MACRO_BANNER_SHOW_INFO(_window,
+                            _("Recalculating directions..."));
+                    _autoroute_data.in_progress = TRUE;
+                    show_directions = FALSE;
+                    g_idle_add((GSourceFunc)auto_route_dl_idle, NULL);
                 }
-                else if(_waypoint_banner);
+                else
                 {
-                    /* We're already close to this waypoint. */
-                    gdouble fraction = 1.f - (sqrtf(_next_way_dist_squared)
-                            / _initial_distance_from_waypoint);
-                    BOUND(fraction, 0.f, 1.f);
-                    hildon_banner_set_fraction(
-                            HILDON_BANNER(_waypoint_banner), fraction);
+                    /* Reset the route to try and find the nearest point.*/
+                    path_reset_route();
                 }
             }
-            approaching_waypoint = TRUE;
-        }
-        else if(_next_way_dist_squared > 2 * (_initial_distance_from_waypoint
-                                            * _initial_distance_from_waypoint))
-        {
-            /* We're too far away now - destroy the banner. */
         }
 
-        UNBLANK_SCREEN(moving, approaching_waypoint);
+        /* Keep the display on. */
+        moving = TRUE;
     }
+
+    if(_initial_distance_waypoint
+           && (_next_way != _initial_distance_waypoint
+           ||  _next_way_dist_squared > (_initial_distance_from_waypoint
+                                       * _initial_distance_from_waypoint)))
+    {
+        /* We've moved on to the next waypoint, or we're really far from
+         * the current waypoint. */
+        if(_waypoint_banner)
+        {
+            gtk_widget_destroy(_waypoint_banner);
+            _waypoint_banner = NULL;
+        }
+        _initial_distance_from_waypoint = -1.f;
+        _initial_distance_waypoint = NULL;
+    }
+
+    /* Check if we should announce upcoming waypoints. */
+    if(_enable_announce
+            && (_initial_distance_waypoint || _next_way_dist_squared
+                < (announce_thres_unsquared * announce_thres_unsquared)))
+    {
+        if(show_directions)
+        {
+            if(!_initial_distance_waypoint)
+            {
+                /* First time we're close enough to this waypoint. */
+                if(_enable_voice
+                        /* And that we haven't already announced it. */
+                        && strcmp(_next_way->desc, _last_spoken_phrase))
+                {
+                    g_free(_last_spoken_phrase);
+                    _last_spoken_phrase = g_strdup(_next_way->desc);
+                    if(!fork())
+                    {
+                        /* We are the fork child.  Synthesize the voice. */
+                        hildon_play_system_sound(
+                            "/usr/share/sounds/ui-information_note.wav");
+                        sleep(1);
+#               define _voice_synth_path "/usr/bin/flite"
+                        printf("%s %s\n", _voice_synth_path,
+                                _last_spoken_phrase);
+                        execl(_voice_synth_path, _voice_synth_path,
+                                "-t", _last_spoken_phrase, (char *)NULL);
+                        exit(0);
+                    }
+                }
+                _initial_distance_from_waypoint
+                    = sqrtf(_next_way_dist_squared);
+                _initial_distance_waypoint = _next_way;
+                if(_next_wpt && _next_wpt->unity != 0)
+                {
+                    /* Create a banner for us the show progress. */
+                    _waypoint_banner = hildon_banner_show_progress(
+                            _window, NULL, _next_way->desc);
+                }
+                else
+                {
+                    /* This is the last point in a segment, i.e.
+                     * "Arrive at ..." - just announce. */
+                    MACRO_BANNER_SHOW_INFO(_window, _next_way->desc);
+                }
+            }
+            else if(_waypoint_banner);
+            {
+                /* We're already close to this waypoint. */
+                gdouble fraction = 1.f - (sqrtf(_next_way_dist_squared)
+                        / _initial_distance_from_waypoint);
+                BOUND(fraction, 0.f, 1.f);
+                hildon_banner_set_fraction(
+                        HILDON_BANNER(_waypoint_banner), fraction);
+            }
+        }
+        approaching_waypoint = TRUE;
+    }
+    else if(_next_way_dist_squared > 2 * (_initial_distance_from_waypoint
+                                        * _initial_distance_from_waypoint))
+    {
+        /* We're too far away now - destroy the banner. */
+    }
+
+    UNBLANK_SCREEN(moving, approaching_waypoint);
 
     /* Maybe update the track database. */
     {
@@ -1059,6 +1053,9 @@ track_insert_break(gboolean temporary)
     {
         MACRO_BANNER_SHOW_INFO(_window, _("Break already inserted."));
     }
+
+    /* Update the track database. */
+    path_update_track_in_db();
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }

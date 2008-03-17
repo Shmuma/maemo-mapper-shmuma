@@ -68,7 +68,7 @@ gboolean map_cb_expose(GtkWidget *widget, GdkEventExpose *event);
 
 gboolean latlon_dialog(gdouble lat, gdouble lon);
 
-gboolean display_open_file(GtkWidget *parent, gchar **bytes_out,
+gboolean display_open_file(GtkWindow *parent, gchar **bytes_out,
         GnomeVFSHandle **handle_out, gint *size_out, gchar **dir, gchar **file,
         GtkFileChooserAction chooser_action);
 
