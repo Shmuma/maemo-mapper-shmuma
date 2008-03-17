@@ -1363,7 +1363,6 @@ poi_add_dialog(GtkWidget *parent, gint unitx, gint unity)
 gboolean
 poi_view_dialog(GtkWidget *parent, PoiInfo *poi)
 {
-    gchar buffer[16];
     GtkTreeIter iter;
     static GtkWidget *dialog;
     static GtkWidget *table;
@@ -1479,8 +1478,8 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi)
     {
         gchar tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN];
 
-        lat_format(poi_info->lat, tmp1);
-        lon_format(poi_info->lon, tmp2);
+        lat_format(poi->lat, tmp1);
+        lon_format(poi->lon, tmp2);
 
         gtk_entry_set_text(GTK_ENTRY(txt_lat), tmp2);
         gtk_entry_set_text(GTK_ENTRY(txt_lon), tmp1);
