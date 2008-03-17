@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-03-17 01:18-0400\n"
+"POT-Creation-Date: 2008-03-17 01:55-0400\n"
 "PO-Revision-Date: 2008-01-16 22:56+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -19,7 +19,7 @@ msgstr ""
 msgid "# POIs"
 msgstr "# PAI:er"
 
-#: ../src/menu.c:1680
+#: ../src/menu.c:1686
 msgid "About..."
 msgstr "Om..."
 
@@ -39,7 +39,7 @@ msgstr "Lägg till PAI..."
 msgid "Add Route Point"
 msgstr "Lägg till ruttpunkt"
 
-#: ../src/path.c:1501
+#: ../src/path.c:1498
 msgid "Add Waypoint"
 msgstr "Lägg till vägpunkt"
 
@@ -51,15 +51,15 @@ msgstr "Lägg till vägpunkt..."
 msgid "Add..."
 msgstr "Lägg till..."
 
-#: ../src/menu.c:920
+#: ../src/menu.c:926
 msgid "Address"
 msgstr "Adress"
 
-#: ../src/menu.c:945
+#: ../src/menu.c:951
 msgid "Address Located"
 msgstr "Adress hittad"
 
-#: ../src/menu.c:1572
+#: ../src/menu.c:1578
 msgid "Address..."
 msgstr "Adress..."
 
@@ -116,23 +116,23 @@ msgstr ""
 msgid "Area"
 msgstr "Område"
 
-#: ../src/menu.c:1623 ../src/settings.c:1259
+#: ../src/menu.c:1629 ../src/settings.c:1259
 msgid "Auto-Center"
 msgstr ""
 
-#: ../src/menu.c:1198
+#: ../src/menu.c:1204
 msgid "Auto-Center Mode: Lat/Lon"
 msgstr ""
 
-#: ../src/menu.c:1181
+#: ../src/menu.c:1187
 msgid "Auto-Center Mode: Lead"
 msgstr ""
 
-#: ../src/menu.c:1215
+#: ../src/menu.c:1221
 msgid "Auto-Center Off"
 msgstr ""
 
-#: ../src/menu.c:1501
+#: ../src/menu.c:1507
 msgid "Auto-Download"
 msgstr "Automatisk hämtning"
 
@@ -140,23 +140,23 @@ msgstr "Automatisk hämtning"
 msgid "Auto-Download Pre-cache"
 msgstr ""
 
-#: ../src/menu.c:1537
+#: ../src/menu.c:1543
 msgid "Auto-Rotate"
 msgstr "Automatisk rotering"
 
-#: ../src/menu.c:657
+#: ../src/menu.c:663
 msgid "Auto-Rotate Disabled"
 msgstr "Automatisk rotering inaktiverad"
 
-#: ../src/menu.c:652
+#: ../src/menu.c:658
 msgid "Auto-Rotate Enabled"
 msgstr "Automatisk rotering aktiverad"
 
-#: ../src/path.c:1264
+#: ../src/path.c:1261
 msgid "Auto-Update"
 msgstr "Automatisk uppdatering"
 
-#: ../src/path.c:1270
+#: ../src/path.c:1267
 msgid "Avoid Highways"
 msgstr "Undvik motorvägar"
 
@@ -164,21 +164,17 @@ msgstr "Undvik motorvägar"
 msgid "Bear."
 msgstr "Rikt."
 
-#: ../src/main.c:325 ../src/settings.c:1189
+#: ../src/main.c:328 ../src/settings.c:1189
 msgid "Bluetooth"
 msgstr "Bluetooth"
 
-#: ../src/main.c:323
+#: ../src/main.c:326
 msgid "Bottom-Left"
 msgstr "Nedre vänster"
 
-#: ../src/main.c:322 ../src/maps.c:2934
+#: ../src/main.c:325 ../src/maps.c:2934
 msgid "Bottom-Right"
 msgstr "Nedre höger"
-
-#: ../src/path.c:1054
-msgid "Break already inserted."
-msgstr ""
 
 #: ../src/cmenu.c:649
 msgid "Browse POI..."
@@ -188,7 +184,7 @@ msgstr "Bläddra i PAI..."
 msgid "Browse POIs"
 msgstr "Bläddra PAI:er"
 
-#: ../src/maps.c:1936 ../src/menu.c:1486 ../src/settings.c:1227
+#: ../src/maps.c:1936 ../src/menu.c:1492 ../src/settings.c:1227
 #: ../src/settings.c:1500
 msgid "Browse..."
 msgstr "Bläddra..."
@@ -215,7 +211,7 @@ msgid ""
 msgstr ""
 "Kan inte ta bort det sista förrådet - det måste finnas minst ett förråd."
 
-#: ../src/menu.c:1488
+#: ../src/menu.c:1494
 msgid "Categories..."
 msgstr "Kategorier..."
 
@@ -228,19 +224,19 @@ msgstr "Kategori"
 msgid "Checked POI Actions..."
 msgstr ""
 
-#: ../src/maps.c:2751 ../src/menu.c:1450 ../src/menu.c:1470
+#: ../src/maps.c:2751 ../src/menu.c:1456 ../src/menu.c:1476
 msgid "Clear"
 msgstr "Töm"
 
-#: ../src/main.c:298
+#: ../src/main.c:301
 msgid "Clear Track"
 msgstr "Töm spår"
 
-#: ../src/menu.c:1530
+#: ../src/menu.c:1536
 msgid "Clockwise"
 msgstr "Medsols"
 
-#: ../src/menu.c:1682
+#: ../src/menu.c:1688
 msgid "Close"
 msgstr "Stäng"
 
@@ -266,7 +262,7 @@ msgstr "Importera..."
 msgid "Compacting database..."
 msgstr "Importera..."
 
-#: ../src/menu.c:1598
+#: ../src/menu.c:1604
 msgid "Compass Rose"
 msgstr ""
 
@@ -302,11 +298,11 @@ msgstr "Kopiera beskrivning"
 msgid "Copy Lat/Lon"
 msgstr "Kopiera Lat/Long"
 
-#: ../src/menu.c:1532
+#: ../src/menu.c:1538
 msgid "Counter"
 msgstr "Motsols"
 
-#: ../src/path.c:1584
+#: ../src/path.c:1581
 msgid ""
 "Creating a \"waypoint\" with no description actually adds a break point.  Is "
 "that what you want?"
@@ -345,16 +341,16 @@ msgstr "Ta bort markerad PAI?"
 msgid "Delete..."
 msgstr "Ta bort..."
 
-#: ../src/menu.c:322 ../src/path.c:1526 ../src/poi.c:677 ../src/poi.c:974
+#: ../src/menu.c:322 ../src/path.c:1523 ../src/poi.c:677 ../src/poi.c:974
 #: ../src/poi.c:1197 ../src/poi.c:1447 ../src/settings.c:654
 msgid "Description"
 msgstr "Beskrivning"
 
-#: ../src/path.c:1292
+#: ../src/path.c:1289
 msgid "Destination"
 msgstr "Mål"
 
-#: ../src/menu.c:1665
+#: ../src/menu.c:1671
 msgid "Details..."
 msgstr "Detaljer..."
 
@@ -370,7 +366,7 @@ msgstr "Avstånd"
 msgid "Double Pixels"
 msgstr ""
 
-#: ../src/main.c:229 ../src/menu.c:1549
+#: ../src/main.c:229 ../src/menu.c:1555
 msgid "Down"
 msgstr "Ned"
 
@@ -386,7 +382,7 @@ msgstr "Hämta PAI..."
 msgid "Download POIs"
 msgstr "Hämta PAI:er"
 
-#: ../src/path.c:1218
+#: ../src/path.c:1215
 msgid "Download Route"
 msgstr "Hämta rutt"
 
@@ -398,7 +394,7 @@ msgstr "Hämta rutt till..."
 msgid "Download Zoom Steps"
 msgstr ""
 
-#: ../src/maps.c:2256 ../src/menu.c:1440 ../src/menu.c:1484
+#: ../src/maps.c:2256 ../src/menu.c:1446 ../src/menu.c:1490
 msgid "Download..."
 msgstr "Hämta..."
 
@@ -410,7 +406,7 @@ msgstr ""
 msgid "Downloaded maps will not be cached."
 msgstr "Hämtade kartor kommer inte att mellanlagras."
 
-#: ../src/menu.c:1562
+#: ../src/menu.c:1568
 msgid "East"
 msgstr "Öst"
 
@@ -434,13 +430,13 @@ msgstr "Redigera..."
 msgid "Elementary schools, college campuses, etc."
 msgstr ""
 
-#: ../src/menu.c:1657
+#: ../src/menu.c:1663
 msgid "Enable GPS"
 msgstr "Aktivera GPS"
 
-#: ../src/menu.c:1472
+#: ../src/menu.c:1478
 #, fuzzy
-msgid "Enable Track"
+msgid "Enable Tracking"
 msgstr "Töm spår"
 
 #: ../src/settings.c:1355
@@ -483,7 +479,7 @@ msgstr "Fel vid borttagning av kategori"
 msgid "Error opening GPS device."
 msgstr "Fel vid öppnande av GPS-enhet."
 
-#: ../src/main.c:503 ../src/menu.c:134 ../src/menu.c:246 ../src/path.c:692
+#: ../src/main.c:506 ../src/menu.c:134 ../src/menu.c:246 ../src/path.c:692
 #: ../src/poi.c:2441 ../src/poi.c:2819
 msgid "Error parsing GPX file."
 msgstr "Fel vid tolkning av GPX-fil."
@@ -540,7 +536,7 @@ msgstr "Misslyckades med att initiera GConf.  Avslutar."
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "Misslyckades med att initiera GConf.  Inställningarna sparades inte."
 
-#: ../src/display.c:2526 ../src/main.c:491
+#: ../src/display.c:2526 ../src/main.c:494
 msgid "Failed to open file for reading"
 msgstr "Misslyckades med att öppna fil för läsning"
 
@@ -561,7 +557,7 @@ msgstr "Misslyckades med att öppna kartdatabas för förråd"
 msgid "Failed to open or create database"
 msgstr "Misslyckades med att öppna eller skapa databas"
 
-#: ../src/path.c:1722
+#: ../src/path.c:1719
 msgid "Failed to open path database. Tracks and routes will not be saved."
 msgstr ""
 
@@ -571,7 +567,7 @@ msgstr ""
 "Misslyckades med att skriva till vägdatabas. Spår och rutter kommer inte att "
 "sparas."
 
-#: ../src/main.c:327
+#: ../src/main.c:330
 msgid "File"
 msgstr "Arkiv"
 
@@ -603,11 +599,11 @@ msgstr ""
 msgid "Format"
 msgstr ""
 
-#: ../src/menu.c:1647
+#: ../src/menu.c:1653
 msgid "Full Screen"
 msgstr "Helskärm"
 
-#: ../src/menu.c:1653 ../src/settings.c:909 ../src/settings.c:1184
+#: ../src/menu.c:1659 ../src/settings.c:909 ../src/settings.c:1184
 msgid "GPS"
 msgstr "GPS"
 
@@ -619,11 +615,11 @@ msgstr "GPS-detaljer"
 msgid "GPS Information"
 msgstr "GPS-information"
 
-#: ../src/maps.c:2861 ../src/menu.c:1574
+#: ../src/maps.c:2861 ../src/menu.c:1580
 msgid "GPS Location"
 msgstr "GPS-plats"
 
-#: ../src/main.c:326
+#: ../src/main.c:329
 msgid "GPSD"
 msgstr "GPSD"
 
@@ -658,15 +654,15 @@ msgid ""
 "operation is in progress."
 msgstr ""
 
-#: ../src/menu.c:1566 ../src/poi.c:2257
+#: ../src/menu.c:1572 ../src/poi.c:2257
 msgid "Go to"
 msgstr "Gå till"
 
-#: ../src/menu.c:910
+#: ../src/menu.c:916
 msgid "Go to Address"
 msgstr "Gå till adress"
 
-#: ../src/menu.c:804
+#: ../src/menu.c:810
 msgid "Go to Lat/Lon"
 msgstr "Gå till Lat/Long"
 
@@ -690,7 +686,7 @@ msgstr "Hårdvarutangenter..."
 msgid "Heading"
 msgstr "Riktning"
 
-#: ../src/menu.c:1678
+#: ../src/menu.c:1684
 msgid "Help..."
 msgstr "Hjälp..."
 
@@ -702,7 +698,7 @@ msgstr "Hus, lägenheter eller andra bostäder."
 msgid "ID"
 msgstr "ID"
 
-#: ../src/menu.c:1482
+#: ../src/menu.c:1488
 msgid "Import..."
 msgstr "Importera..."
 
@@ -714,7 +710,7 @@ msgstr ""
 msgid "Info Font Size"
 msgstr ""
 
-#: ../src/menu.c:1462
+#: ../src/menu.c:1468
 msgid "Insert Break"
 msgstr ""
 
@@ -722,11 +718,11 @@ msgstr ""
 msgid "Insert Mark"
 msgstr "Infoga märke"
 
-#: ../src/menu.c:1464
+#: ../src/menu.c:1470
 msgid "Insert Mark..."
 msgstr ""
 
-#: ../src/main.c:297
+#: ../src/main.c:300
 msgid "Insert Track Break"
 msgstr ""
 
@@ -738,11 +734,11 @@ msgstr ""
 msgid "Invalid Bottom-Right Longitude"
 msgstr ""
 
-#: ../src/menu.c:875 ../src/poi.c:1292 ../src/poi.c:1520
+#: ../src/menu.c:881 ../src/poi.c:1292 ../src/poi.c:1520
 msgid "Invalid Latitude"
 msgstr "Ogiltig latitud"
 
-#: ../src/menu.c:882 ../src/poi.c:1299 ../src/poi.c:1527
+#: ../src/menu.c:888 ../src/poi.c:1299 ../src/poi.c:1527
 msgid "Invalid Longitude"
 msgstr "Ogiltig longitud"
 
@@ -791,23 +787,23 @@ msgstr "Landmärke"
 msgid "Lat"
 msgstr "Lat"
 
-#: ../src/menu.c:312 ../src/path.c:1511
+#: ../src/menu.c:312 ../src/path.c:1508
 msgid "Lat, Lon:"
 msgstr "Lat, Long:"
 
-#: ../src/menu.c:1627
+#: ../src/menu.c:1633
 msgid "Lat/Lon"
 msgstr "Lat/Long"
 
-#: ../src/menu.c:1570
+#: ../src/menu.c:1576
 msgid "Lat/Lon..."
 msgstr "Lat/Long..."
 
-#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:2851 ../src/menu.c:814
+#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:2851 ../src/menu.c:820
 msgid "Latitude"
 msgstr "Latitud"
 
-#: ../src/menu.c:1633
+#: ../src/menu.c:1639
 msgid "Lead"
 msgstr ""
 
@@ -815,7 +811,7 @@ msgstr ""
 msgid "Lead Amount"
 msgstr ""
 
-#: ../src/main.c:230 ../src/menu.c:1551
+#: ../src/main.c:230 ../src/menu.c:1557
 msgid "Left"
 msgstr "Vänster"
 
@@ -839,7 +835,7 @@ msgstr "Logi"
 msgid "Lon"
 msgstr "Long"
 
-#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:2855 ../src/menu.c:833
+#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:2855 ../src/menu.c:839
 msgid "Longitude"
 msgstr "Longitud"
 
@@ -859,7 +855,7 @@ msgstr ""
 msgid "Manage Maps"
 msgstr "Hantera kartor"
 
-#: ../src/menu.c:1497
+#: ../src/menu.c:1503
 msgid "Manage Maps..."
 msgstr "Hantera kartor..."
 
@@ -867,7 +863,7 @@ msgstr "Hantera kartor..."
 msgid "Manage Repositories"
 msgstr "Hantera förråd"
 
-#: ../src/menu.c:1499
+#: ../src/menu.c:1505
 msgid "Manage Repositories..."
 msgstr "Hantera förråd..."
 
@@ -883,7 +879,7 @@ msgstr ""
 msgid "Map correction removed."
 msgstr ""
 
-#: ../src/menu.c:1492
+#: ../src/menu.c:1498
 msgid "Maps"
 msgstr "Kartor"
 
@@ -919,7 +915,7 @@ msgstr "Div. 2"
 msgid "Miscellaneous category for everything else."
 msgstr "Blandad kategori för allting annat."
 
-#: ../src/maps.c:3051 ../src/menu.c:547
+#: ../src/maps.c:3051 ../src/menu.c:553
 msgid ""
 "NOTE: You must set a Map URI in the current repository in order to download "
 "maps."
@@ -929,7 +925,7 @@ msgstr ""
 msgid "Name"
 msgstr "Namn"
 
-#: ../src/menu.c:1578
+#: ../src/menu.c:1584
 msgid "Nearest POI"
 msgstr "Närmsta PAI"
 
@@ -949,7 +945,7 @@ msgstr "Nytt förråd"
 msgid "New..."
 msgstr "Ny..."
 
-#: ../src/menu.c:1576
+#: ../src/menu.c:1582
 msgid "Next Waypoint"
 msgstr "Nästa vägpunkt"
 
@@ -957,7 +953,7 @@ msgstr "Nästa vägpunkt"
 msgid "Next-able"
 msgstr ""
 
-#: ../src/menu.c:1033 ../src/poi.c:444 ../src/poi.c:3126
+#: ../src/menu.c:1039 ../src/poi.c:444 ../src/poi.c:3126
 msgid "No POIs found."
 msgstr "Inga PAI:er hittades."
 
@@ -965,15 +961,15 @@ msgstr "Inga PAI:er hittades."
 msgid "No POIs were found."
 msgstr "Inga PAI:er hittades."
 
-#: ../src/menu.c:1639
+#: ../src/menu.c:1645
 msgid "None"
 msgstr "Ingen"
 
-#: ../src/menu.c:1556
+#: ../src/menu.c:1562
 msgid "North"
 msgstr "Nord"
 
-#: ../src/menu.c:1438 ../src/menu.c:1458
+#: ../src/menu.c:1444 ../src/menu.c:1464
 msgid "Open..."
 msgstr "Öppna..."
 
@@ -987,7 +983,7 @@ msgstr ""
 "Du kan även hämta ner en exempeluppsättning förråd från Internet genom att "
 "använda knappen \"Hämta...\"."
 
-#: ../src/path.c:1277 ../src/poi.c:2594 ../src/poi.c:2911
+#: ../src/path.c:1274 ../src/poi.c:2594 ../src/poi.c:2911
 msgid "Origin"
 msgstr "Ursprung"
 
@@ -1003,7 +999,7 @@ msgstr "Skriv över"
 msgid "Overwrite query with the following text?"
 msgstr "Skriv över fråga med följande text?"
 
-#: ../src/cmenu.c:697 ../src/menu.c:1478 ../src/menu.c:1617
+#: ../src/cmenu.c:697 ../src/menu.c:1484 ../src/menu.c:1623
 #: ../src/settings.c:954 ../src/settings.c:1480
 msgid "POI"
 msgstr "PAI"
@@ -1038,7 +1034,7 @@ msgstr "PPS"
 msgid "Page"
 msgstr "Sida"
 
-#: ../src/menu.c:1543
+#: ../src/menu.c:1549
 msgid "Pan"
 msgstr "Panorera"
 
@@ -1126,15 +1122,15 @@ msgstr "Ange ett namn."
 msgid "Please specify a query."
 msgstr "Ange en fråga."
 
-#: ../src/path.c:1381 ../src/poi.c:2706
+#: ../src/path.c:1378 ../src/poi.c:2706
 msgid "Please specify a source URL."
 msgstr ""
 
-#: ../src/path.c:1423
+#: ../src/path.c:1420
 msgid "Please specify a start location."
 msgstr ""
 
-#: ../src/path.c:1430
+#: ../src/path.c:1427
 msgid "Please specify an end location."
 msgstr ""
 
@@ -1162,11 +1158,11 @@ msgstr "Fråga"
 msgid "Real Time Kinematic"
 msgstr ""
 
-#: ../src/path.c:1006
+#: ../src/path.c:1007
 msgid "Really clear the track?"
 msgstr "Verkligen ta bort spåret?"
 
-#: ../src/path.c:886
+#: ../src/path.c:887
 msgid "Recalculating directions..."
 msgstr "Räknar om..."
 
@@ -1182,11 +1178,11 @@ msgstr "Byt namn..."
 msgid "Replace all repositories with the default repository?"
 msgstr "Ersätt alla förråd med standardförrådet?"
 
-#: ../src/menu.c:1448 ../src/menu.c:1535
+#: ../src/menu.c:1454 ../src/menu.c:1541
 msgid "Reset"
 msgstr "Nollställ"
 
-#: ../src/main.c:308 ../src/menu.c:1668
+#: ../src/main.c:311 ../src/menu.c:1674
 msgid "Reset Bluetooth"
 msgstr "Nollställ Bluetooth"
 
@@ -1214,11 +1210,11 @@ msgstr "Bostad"
 msgid "Restaurant"
 msgstr "Restaurang"
 
-#: ../src/main.c:228 ../src/menu.c:1553
+#: ../src/main.c:228 ../src/menu.c:1559
 msgid "Right"
 msgstr "Höger"
 
-#: ../src/menu.c:1526
+#: ../src/menu.c:1532
 msgid "Rotate"
 msgstr "Rotera"
 
@@ -1234,7 +1230,7 @@ msgstr "Rotera vy medsols"
 msgid "Rotate View Counter-Clockwise"
 msgstr "Rotera vy motsols"
 
-#: ../src/menu.c:1434 ../src/menu.c:1603 ../src/settings.c:939
+#: ../src/menu.c:1440 ../src/menu.c:1609 ../src/settings.c:939
 msgid "Route"
 msgstr "Rutt"
 
@@ -1242,7 +1238,7 @@ msgstr "Rutt"
 msgid "Route Downloaded"
 msgstr "Rutt hämtad"
 
-#: ../src/main.c:500 ../src/menu.c:131
+#: ../src/main.c:503 ../src/menu.c:131
 msgid "Route Opened"
 msgstr "Rutt öppnad"
 
@@ -1250,11 +1246,11 @@ msgstr "Rutt öppnad"
 msgid "Route Saved"
 msgstr ""
 
-#: ../src/menu.c:1131
+#: ../src/menu.c:1137
 msgid "Routes are now hidden"
 msgstr "Rutter är nu dolda"
 
-#: ../src/menu.c:1125
+#: ../src/menu.c:1131
 msgid "Routes are now shown"
 msgstr "Rutter visas nu"
 
@@ -1278,11 +1274,11 @@ msgstr ""
 msgid "Satellites in view"
 msgstr "Satelliter i sikte"
 
-#: ../src/menu.c:1442 ../src/menu.c:1460
+#: ../src/menu.c:1448 ../src/menu.c:1466
 msgid "Save..."
 msgstr "Spara..."
 
-#: ../src/menu.c:1593
+#: ../src/menu.c:1599
 msgid "Scale"
 msgstr "Skala"
 
@@ -1306,7 +1302,7 @@ msgstr "Söker efter GPS-mottagare"
 msgid "Select Bluetooth Device"
 msgstr "Välj blåtandsenhet"
 
-#: ../src/main.c:292
+#: ../src/main.c:295
 msgid "Select Next Repository"
 msgstr "Välj nästa förråd"
 
@@ -1344,7 +1340,7 @@ msgstr "Ange som GPS-plats"
 msgid "Settings"
 msgstr "Inställningar"
 
-#: ../src/menu.c:1675
+#: ../src/menu.c:1681
 msgid "Settings..."
 msgstr "Inställningar..."
 
@@ -1356,7 +1352,7 @@ msgstr "Konfiguration"
 msgid "Shopping/Services"
 msgstr ""
 
-#: ../src/menu.c:1584
+#: ../src/menu.c:1590
 msgid "Show"
 msgstr "Visa"
 
@@ -1364,15 +1360,15 @@ msgstr "Visa"
 msgid "Show Description"
 msgstr "Visa beskrivning"
 
-#: ../src/main.c:302 ../src/menu.c:1468
+#: ../src/main.c:305 ../src/menu.c:1474
 msgid "Show Distance from Beginning"
 msgstr "Visa avstånd från startpunkt"
 
-#: ../src/main.c:300
+#: ../src/main.c:303
 msgid "Show Distance from Last Break"
 msgstr ""
 
-#: ../src/menu.c:1466
+#: ../src/menu.c:1472
 msgid "Show Distance from Last Mark"
 msgstr ""
 
@@ -1380,15 +1376,15 @@ msgstr ""
 msgid "Show Distance to"
 msgstr "Visa avstånd till"
 
-#: ../src/main.c:296 ../src/menu.c:1446
+#: ../src/main.c:299 ../src/menu.c:1452
 msgid "Show Distance to End of Route"
 msgstr "Visa avstånd till ruttslut"
 
-#: ../src/main.c:294 ../src/menu.c:1444
+#: ../src/main.c:297 ../src/menu.c:1450
 msgid "Show Distance to Next Waypoint"
 msgstr "Visa avstånd till nästa vägpunkt"
 
-#: ../src/menu.c:1661
+#: ../src/menu.c:1667
 msgid "Show Information"
 msgstr "Visa information"
 
@@ -1408,11 +1404,11 @@ msgstr "Visa position"
 msgid "Simulation"
 msgstr "Simulering"
 
-#: ../src/path.c:1237 ../src/poi.c:2546
+#: ../src/path.c:1234 ../src/poi.c:2546
 msgid "Source URL"
 msgstr "Käll-url"
 
-#: ../src/menu.c:1558
+#: ../src/menu.c:1564
 msgid "South"
 msgstr "Syd"
 
@@ -1456,7 +1452,7 @@ msgstr "Det aktuella spåret är tom."
 msgid "The following action is mapped to multiple keys"
 msgstr "Följande åtgärd är mappad till flera tangenter"
 
-#: ../src/input.c:384
+#: ../src/input.c:390
 msgid "There are no other next-able repositories."
 msgstr ""
 
@@ -1465,7 +1461,7 @@ msgstr ""
 msgid "There are no waypoints."
 msgstr "Det finns inga vägpunkter."
 
-#: ../src/menu.c:995 ../src/path.c:544
+#: ../src/menu.c:1001 ../src/path.c:544
 msgid "There is no next waypoint."
 msgstr "Det finns ingen nästa vägpunkt."
 
@@ -1481,39 +1477,45 @@ msgstr "Växla autorotering"
 msgid "Toggle Fullscreen"
 msgstr "Växla helskärm"
 
-#: ../src/main.c:303
+#: ../src/main.c:306
 msgid "Toggle GPS"
 msgstr "Växla GPS"
 
-#: ../src/main.c:304
+#: ../src/main.c:307
 msgid "Toggle GPS Info"
 msgstr "Växla GPS-info"
 
-#: ../src/main.c:290
+#: ../src/main.c:293
 msgid "Toggle POIs"
 msgstr "Växla PAI:er"
 
-#: ../src/main.c:289
+#: ../src/main.c:292
 msgid "Toggle Scale"
 msgstr "Växla skala"
 
-#: ../src/main.c:306
+#: ../src/main.c:309
 msgid "Toggle Speed Limit"
 msgstr "Växla hastighetsgräns"
 
-#: ../src/main.c:288
-msgid "Toggle Tracks"
+#: ../src/main.c:289
+#, fuzzy
+msgid "Toggle Tracking"
 msgstr "Växla spår"
 
-#: ../src/main.c:320 ../src/maps.c:2896
+#: ../src/main.c:291
+#, fuzzy
+msgid "Toggle Tracks/Routes"
+msgstr "Växla spår"
+
+#: ../src/main.c:323 ../src/maps.c:2896
 msgid "Top-Left"
 msgstr "Övre vänster"
 
-#: ../src/main.c:321
+#: ../src/main.c:324
 msgid "Top-Right"
 msgstr "Övre höger"
 
-#: ../src/menu.c:1454 ../src/menu.c:1608 ../src/settings.c:924
+#: ../src/menu.c:1460 ../src/menu.c:1614 ../src/settings.c:924
 msgid "Track"
 msgstr "Spår"
 
@@ -1525,11 +1527,21 @@ msgstr "Spår öppnat"
 msgid "Track Saved"
 msgstr "Spår sparat"
 
-#: ../src/menu.c:1068
+#: ../src/menu.c:433
+#, fuzzy
+msgid "Tracking Disabled"
+msgstr "Spår sparat"
+
+#: ../src/menu.c:437
+#, fuzzy
+msgid "Tracking Enabled"
+msgstr "Spår sparat"
+
+#: ../src/menu.c:1074
 msgid "Tracks are now hidden"
 msgstr "Spår är nu dolda"
 
-#: ../src/menu.c:1062
+#: ../src/menu.c:1068
 msgid "Tracks are now shown"
 msgstr "Spår visas nu"
 
@@ -1557,23 +1569,23 @@ msgstr "Enheter"
 msgid "Unknown error while locating address."
 msgstr "Okänt fel vid lokalisering av adress."
 
-#: ../src/main.c:227 ../src/menu.c:1547
+#: ../src/main.c:227 ../src/menu.c:1553
 msgid "Up"
 msgstr "Upp"
 
-#: ../src/path.c:1254 ../src/poi.c:2559 ../src/poi.c:2877
+#: ../src/path.c:1251 ../src/poi.c:2559 ../src/poi.c:2877
 msgid "Use End of Route"
 msgstr ""
 
-#: ../src/path.c:1248 ../src/poi.c:2553 ../src/poi.c:2871
+#: ../src/path.c:1245 ../src/poi.c:2553 ../src/poi.c:2871
 msgid "Use GPS Location"
 msgstr "Använd GPS-plats"
 
-#: ../src/menu.c:1613
+#: ../src/menu.c:1619
 msgid "Velocity Vector"
 msgstr ""
 
-#: ../src/menu.c:1510
+#: ../src/menu.c:1516
 msgid "View"
 msgstr "Visa"
 
@@ -1597,7 +1609,7 @@ msgstr "VARNING: Alla PAI:er i den kategorin kommer även att tas bort!"
 msgid "Waypoint"
 msgstr "Vägpunkt"
 
-#: ../src/menu.c:1560
+#: ../src/menu.c:1566
 msgid "West"
 msgstr "Väst"
 
@@ -1627,15 +1639,15 @@ msgstr ""
 "menyobjektet \"Hantera kartor\" under menyn \"Kartor\".  Du kan även trycka "
 "OK nu för att aktivera automatisk hämtning."
 
-#: ../src/maps.c:2820 ../src/menu.c:1516
+#: ../src/maps.c:2820 ../src/menu.c:1522
 msgid "Zoom"
 msgstr "Zoom"
 
-#: ../src/main.c:286 ../src/menu.c:1520
+#: ../src/main.c:286 ../src/menu.c:1526
 msgid "Zoom In"
 msgstr "Zooma in"
 
-#: ../src/menu.c:1588
+#: ../src/menu.c:1594
 msgid "Zoom Level"
 msgstr "Zoomnivå"
 
@@ -1643,11 +1655,11 @@ msgstr "Zoomnivå"
 msgid "Zoom Levels to Download: (0 = most detail)"
 msgstr "Zoomnivåer att hämta: (0 = flest detaljer)"
 
-#: ../src/main.c:287 ../src/menu.c:1522
+#: ../src/main.c:287 ../src/menu.c:1528
 msgid "Zoom Out"
 msgstr "Zooma ut"
 
-#: ../src/input.c:117 ../src/input.c:310 ../src/menu.c:573 ../src/menu.c:591
+#: ../src/input.c:117 ../src/input.c:310 ../src/menu.c:579 ../src/menu.c:597
 msgid "Zoom to Level"
 msgstr "Zooma till nivå"
 
