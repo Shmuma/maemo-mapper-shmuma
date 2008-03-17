@@ -1228,10 +1228,15 @@ poi_add_dialog(GtkWidget *parent, gint unitx, gint unity)
     unit2latlon(unitx, unity, poi.lat, poi.lon);
 
     /* Lat/Lon */
-    snprintf(buffer, sizeof(buffer), "%.06f", poi.lat);
-    gtk_entry_set_text(GTK_ENTRY(txt_lat), buffer);
-    snprintf(buffer, sizeof(buffer), "%.06f", poi.lon);
-    gtk_entry_set_text(GTK_ENTRY(txt_lon), buffer);
+    {
+        gchar tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN];
+
+        lat_format(poi.lat, tmp1);
+        lon_format(poi.lon, tmp2);
+
+        gtk_entry_set_text(GTK_ENTRY(txt_lat), tmp1);
+        gtk_entry_set_text(GTK_ENTRY(txt_lon), tmp2);
+    }
 
     /* Label */
     if(SQLITE_ROW == sqlite3_step(_stmt_nextlabel_poi))
@@ -1481,8 +1486,8 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi)
         lat_format(poi->lat, tmp1);
         lon_format(poi->lon, tmp2);
 
-        gtk_entry_set_text(GTK_ENTRY(txt_lat), tmp2);
-        gtk_entry_set_text(GTK_ENTRY(txt_lon), tmp1);
+        gtk_entry_set_text(GTK_ENTRY(txt_lat), tmp1);
+        gtk_entry_set_text(GTK_ENTRY(txt_lon), tmp2);
     }
 
     /* label */
@@ -1565,7 +1570,7 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi)
            SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 3, poi->label,
                     -1, SQLITE_STATIC) ||
            SQLITE_OK != sqlite3_bind_text(_stmt_update_poi, 4, poi->desc,
-               -1, g_free) ||
+               -1, SQLITE_STATIC) ||
            SQLITE_OK != sqlite3_bind_int(
                _stmt_update_poi, 5, poi->cat_id) ||
            SQLITE_OK != sqlite3_bind_int(
