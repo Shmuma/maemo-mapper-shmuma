@@ -3,7 +3,7 @@
 
 <!-- 
  - 
- - Copyright (C) 2006, 2007 John Costigan. 
+ - Copyright (C) 2006 - 2008 John Costigan. 
  - 
  - This file is part of Maemo Mapper. 
  - 
@@ -1607,7 +1607,7 @@
         <display_text>gnuite</display_text>).
       </para>
       <para>
-        Copyright © 2006-2007 John Costigan.
+        Copyright © 2006-2008 John Costigan.
       </para>
       <para>
         POI and GPS-Info code originally written by Cezary Jackiewicz.
