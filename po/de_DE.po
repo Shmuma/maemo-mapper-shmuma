@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-03-17 01:55-0400\n"
-"PO-Revision-Date: 2008-03-23 18:13+0100\n"
+"PO-Revision-Date: 2008-04-09 23:17+0100\n"
 "Last-Translator: Claudius Henrichs <claudius.h@gmx.de>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
 "MIME-Version: 1.0\n"
@@ -318,7 +318,7 @@ msgstr "Gegen UZS"
 
 #: ../src/path.c:1581
 msgid "Creating a \"waypoint\" with no description actually adds a break point.  Is that what you want?"
-msgstr "Einen \"Wegpunkt\" ohne Beschreibung fügt eine Unterbrechung ein. Möchsten Sie das tun?"
+msgstr "Ein \"Wegpunkt\" ohne Beschreibung fügt eine Unterbrechung ein. Möchsten Sie das tun?"
 
 #: ../src/display.c:293
 msgid "DGPS"
@@ -386,7 +386,7 @@ msgstr "Entfernung"
 
 #: ../src/maps.c:1998
 msgid "Double Pixels"
-msgstr "Doppelte Pixel"
+msgstr "Pixel verdopp."
 
 #: ../src/main.c:229
 #: ../src/menu.c:1555
@@ -403,11 +403,11 @@ msgstr "POI herunterladen..."
 
 #: ../src/poi.c:2524
 msgid "Download POIs"
-msgstr "POIS herunterladen"
+msgstr "POIs herunterladen"
 
 #: ../src/path.c:1215
 msgid "Download Route"
-msgstr "Router herunterladen"
+msgstr "Route herunterladen"
 
 #: ../src/cmenu.c:645
 #: ../src/cmenu.c:685
@@ -472,7 +472,7 @@ msgstr "Tracking aktivieren"
 
 #: ../src/settings.c:1355
 msgid "Enable Voice Synthesis (requires flite)"
-msgstr "Sprachausgabe aktivieren (benötigt flite)"
+msgstr "Sprachausgabe aktivieren (benötigt flite-Paket)"
 
 #: ../src/settings.c:1335
 msgid "Enable Waypoint Announcements"
@@ -680,7 +680,7 @@ msgstr "Allgemeine Sehenswürdigkeiten."
 
 #: ../src/poi.c:195
 msgid "General places of business."
-msgstr "Allgemein Geschäftsstandorte."
+msgstr "Allgemeine Geschäftsstandorte."
 
 #: ../src/maps.c:1738
 msgid ""
@@ -688,9 +688,9 @@ msgid ""
 "This reorganization requires creating a new file and inserting all the maps in the old database file into the new file. The new file is then renamed to the same name as the old file and dbf is updated to contain all the correct information about the new file.  Note that this can require free space on disk of an amount up to the size of the map database.\n"
 "This process may take several minutes, especially if your map database is large.  As a rough estimate, you can expect to wait approximately 2-5 seconds per megabyte of map data (34-85 minutes per gigabyte).  There is no progress indicator, although you can watch the new file grow in any file manager.  Do not attempt to close Maemo Mapper while the compacting operation is in progress."
 msgstr ""
-"Entfernte Karten hinterlassen leere Bereiche in der Datenbank, der später beim Download neuer Karten wiederverwendet wird. Die Komprimierung der Datenbank reorganisiert diese, so dass die Freiräume entfernt werden. Nur auf diese Weise kann die Datenbankgröße verringert werden.\n"
-"Bei dieser Reorganisation wird eine neue Datei erstellt, in die alle Karten der alten Datenbank übertragen werden. Die neue Datei wird dann in die alte umbenannt und das DBF auf die Informationen der neuen Datei ktualisiert. Hierzu ist freier Speicherplatz bis zur Größe der Kartendatenbank nötig.\n"
-"Dieser Vorgang kann mehere Minuten dauern, speziell, wenn die Kartendatenbank sehr groß ist. Als grober Richtwert ist eine Wartezeit von 2-5 Sekunden pro Mebibyte Kartendaten anzusetzen (34-85 Minuten pro Gibibyte). Es gibt keinen Fortschrittsbalken, aber Sie können das Anwachsen der neuen Datei im Dateimanager beobachten. Schließen Sie Maemo Mapper nicht während des Komprimierungsvorgangs."
+"Karten, die entfernt wurden hinterlassen leere Bereiche in der Datenbank, die später beim Download neuer Karten wiederverwendet werden. Die Komprimierung der Datenbank reorganisiert diese, so dass die Freiräume entfernt werden. Nur auf diese Weise kann die Datenbankgröße verringert werden.\n"
+"Bei dieser Reorganisation wird eine neue Datei erstellt, in die alle Karten der alten Datenbank übertragen werden. Die neue Datei wird dann in die alte umbenannt und das DBF auf die Informationen der neuen Datei aktualisiert. Hierzu ist freier Speicherplatz bis zur Größe der Kartendatenbank nötig.\n"
+"Dieser Vorgang kann mehrere Minuten dauern, speziell, wenn die Kartendatenbank sehr groß ist. Als grober Richtwert ist eine Wartezeit von 2-5 Sekunden pro Mebibyte Kartendaten anzusetzen (34-85 Minuten pro Gibibyte). Es gibt keinen Fortschrittsbalken, aber Sie können das Anwachsen der neuen Datei im Dateimanager beobachten. Schließen Sie bitte Maemo Mapper nicht während des Komprimierungsvorgangs."
 
 #: ../src/menu.c:1572
 #: ../src/poi.c:2257
@@ -743,7 +743,7 @@ msgstr "Importieren..."
 
 #: ../src/poi.c:187
 msgid "Indoor or Outdoor places to have fun."
-msgstr "Ort zur Unterhaltung."
+msgstr "Orte zur Unterhaltung."
 
 #: ../src/settings.c:1390
 msgid "Info Font Size"
@@ -902,7 +902,7 @@ msgstr "MAC"
 
 #: ../src/maps.c:2147
 msgid "Maemo Mapper will now download and add a list of possibly-duplicate repositories from the internet.  Continue?"
-msgstr "Maemo Mapper lädt jetzt eine Liste möglicher doppelter Quellen aus dem Internet und fügt diese hinzu. Fortfahren?"
+msgstr "Maemo Mapper lädt jetzt eine Liste von (möglicherweise bereits vorhandenen) Kartenquellen aus dem Internet und fügt diese hinzu. Fortfahren?"
 
 #: ../src/maps.c:2736
 msgid "Manage Maps"
@@ -914,7 +914,7 @@ msgstr "Karten verwalten..."
 
 #: ../src/maps.c:2235
 msgid "Manage Repositories"
-msgstr "Quellen verwalten"
+msgstr "Kartenquellen verwalten"
 
 #: ../src/menu.c:1505
 msgid "Manage Repositories..."
@@ -954,7 +954,7 @@ msgstr "Min. Geschw."
 
 #: ../src/maps.c:2367
 msgid "Minimum Downloadable Zoom must be less than Maximum Downloadable Zoom."
-msgstr "Minimaler Downloadbarer Zoom muss weniger als der Maximale sein."
+msgstr "Minimaler downloadbarer Zoom muss geringer als der maximale sein."
 
 #: ../src/settings.c:1363
 msgid "Misc."
@@ -966,12 +966,12 @@ msgstr "Versch. 2"
 
 #: ../src/poi.c:199
 msgid "Miscellaneous category for everything else."
-msgstr "Vermischte Kategories für alles Übrige."
+msgstr "Vermischte Kategorien für alles Übrige."
 
 #: ../src/maps.c:3051
 #: ../src/menu.c:553
 msgid "NOTE: You must set a Map URI in the current repository in order to download maps."
-msgstr "HINWEIS: Sie müssen eine Map-URI für die aktuelle Quelle angeben um Karten herunterladen zu können."
+msgstr "HINWEIS: Sie müssen eine Map-URI für die aktuelle Quelle angeben, um Karten herunterladen zu können."
 
 #: ../src/maps.c:1810
 #: ../src/maps.c:2086
@@ -1004,7 +1004,7 @@ msgstr "Nächster Wegpunkt"
 
 #: ../src/maps.c:2006
 msgid "Next-able"
-msgstr "Durchsch."
+msgstr "Durchschaltb."
 
 #: ../src/menu.c:1039
 #: ../src/poi.c:444
@@ -1031,13 +1031,13 @@ msgstr "Öffnen..."
 
 #: ../src/display.c:1122
 msgid "OpenStreetMap.org provides public, free-to-use maps.  You can also download a sample set of repositories from  the internet by using the \"Download...\" button."
-msgstr "OpenStreetMap.org liefert frei verfügbare Karten. Sie können ein Beispielsatz von Quellen aus dem Internet herunterladen, indem Sie auf den Knopf \"Download...\" klicken."
+msgstr "OpenStreetMap.org liefert frei verfügbare Karten. Sie können ein Beispielsatz von Kartenquellen aus dem Internet herunterladen, indem Sie auf den Knopf \"Download...\" klicken."
 
 #: ../src/path.c:1274
 #: ../src/poi.c:2594
 #: ../src/poi.c:2911
 msgid "Origin"
-msgstr "Quelle"
+msgstr "Start"
 
 #: ../src/poi.c:198
 msgid "Other"
@@ -1077,7 +1077,7 @@ msgstr "POIs exportiert"
 
 #: ../src/poi.c:1665
 msgid "POIs were added to the POI database.  The following screen will allow you to modify or delete any of the new POIs."
-msgstr "POIs wurden zur POI-Datenbank hinzugefügt. Der folgende Bildschirm erlaubt die Bearbeitung oder das Entfernen der neuen POIs."
+msgstr "POIs wurden zur POI-Datenbank hinzugefügt. Der folgende Bildschirm erlaubt die Bearbeitung oder das Entfernen einzelner der neuen POIs."
 
 #: ../src/display.c:294
 msgid "PPS"
@@ -1195,7 +1195,7 @@ msgstr "Bitte einen Endort angeben."
 #: ../src/poi.c:2760
 #: ../src/poi.c:3054
 msgid "Please specify an origin."
-msgstr "Bitte Quelle angeben."
+msgstr "Bitte Startpunkt angeben."
 
 #: ../src/settings.c:1318
 msgid "Points"
@@ -1250,7 +1250,7 @@ msgstr "Bluetooth zurücksetzen"
 
 #: ../src/main.c:275
 msgid "Reset Viewing Angle"
-msgstr "Blickwinkel zurücksetzen"
+msgstr "Ansicht zurücksetzen"
 
 #: ../src/settings.c:861
 msgid "Reset all colors to their original defaults?"
@@ -1258,7 +1258,7 @@ msgstr "Alle Farben auf Standardwerte zurücksetzen?"
 
 #: ../src/settings.c:747
 msgid "Reset all hardware keys to their original defaults?"
-msgstr "Vollständige Tastaturbelegung auf die Standarwerte zurücksetzen?"
+msgstr "Gesamte Tastaturbelegung auf die Standardwerte zurücksetzen?"
 
 #: ../src/maps.c:2250
 #: ../src/settings.c:781
@@ -1285,7 +1285,7 @@ msgstr "Drehen"
 
 #: ../src/settings.c:1305
 msgid "Rotate Sensit."
-msgstr "Drehempfindl."
+msgstr "Drehempfindlichk."
 
 #: ../src/main.c:277
 msgid "Rotate View Clockwise"
@@ -1320,7 +1320,7 @@ msgstr "Routen verborgen"
 
 #: ../src/menu.c:1131
 msgid "Routes are now shown"
-msgstr "Routern werden angezeigt"
+msgstr "Routen werden angezeigt"
 
 #: ../src/display.c:292
 msgid "SPS"
@@ -1336,7 +1336,7 @@ msgstr "Sat in Sicht"
 
 #: ../src/display.c:788
 msgid "Satellites details"
-msgstr "Satelliten Detailinformation"
+msgstr "Satelliten Detailinformationen"
 
 #: ../src/display.c:714
 msgid "Satellites in view"
@@ -1461,7 +1461,7 @@ msgstr "Entfernung zum nächsten Wegpunkt anzeigen"
 
 #: ../src/menu.c:1667
 msgid "Show Information"
-msgstr "Information anzeigen"
+msgstr "Informationen anzeigen"
 
 #: ../src/cmenu.c:640
 #: ../src/cmenu.c:674
@@ -1483,7 +1483,7 @@ msgstr "Simulation"
 #: ../src/path.c:1234
 #: ../src/poi.c:2546
 msgid "Source URL"
-msgstr "Quell-URL"
+msgstr "Quelle (URL)"
 
 #: ../src/menu.c:1564
 msgid "South"
@@ -1499,7 +1499,7 @@ msgstr "Geschwindigkeitsbegrenzung"
 
 #: ../src/poi.c:179
 msgid "Stations for purchasing fuel for vehicles."
-msgstr "Einkauf von Benzin für Fahrzeuge."
+msgstr "Verkauf von Fahrzeugbenzin."
 
 #: ../src/maps.c:1700
 msgid "Successfully compacted database."
@@ -1716,7 +1716,7 @@ msgstr "Beim Empfang von GPS-Daten"
 
 #: ../src/display.c:1129
 msgid "You will now see a blank screen.  You can download maps using the \"Manage Maps\" menu item in the \"Maps\" menu.  Or, press OK now to enable Auto-Download."
-msgstr "Sie sehen jetzt einen leeren Bildschirm. Sie können Karten mit dem Menüpunkt \"Karten verwalten\" im Menü \"Karten\" herunterladen. Drücken Sie OK, um den Automatischen Download zu aktivieren."
+msgstr "Sie sehen jetzt einen leeren Bildschirm. Sie können Karten mit dem Menüpunkt \"Karten verwalten\" im Menü \"Karten\" herunterladen. Drücken Sie OK, um den automatischen Download zu aktivieren."
 
 #: ../src/maps.c:2820
 #: ../src/menu.c:1522
