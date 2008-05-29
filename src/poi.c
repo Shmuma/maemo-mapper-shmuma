@@ -2597,11 +2597,13 @@ poi_download_dialog(gint unitx, gint unity)
                 oti.txt_origin = gtk_entry_new(),
                 1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_origin), 25);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(oti.txt_origin), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(oti.txt_origin), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
 
         /* Query. */
@@ -2613,11 +2615,13 @@ poi_download_dialog(gint unitx, gint unity)
                 oti.txt_query = gtk_entry_new(),
                 1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_query), 25);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(oti.txt_query), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(oti.txt_query), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
 
         /* Set up auto-completion. */
@@ -2914,11 +2918,13 @@ poi_browse_dialog(gint unitx, gint unity)
                 oti.txt_origin = gtk_entry_new(),
                 1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_origin), 25);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(oti.txt_origin), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(oti.txt_origin), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
 
         /* Destination. */
@@ -2930,11 +2936,13 @@ poi_browse_dialog(gint unitx, gint unity)
                 oti.txt_query = gtk_entry_new(),
                 1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_query), 25);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(oti.txt_query), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(oti.txt_query), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
 
         /* Set up auto-completion. */

@@ -46,6 +46,8 @@ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WAR
 #    include "config.h"
 #endif
 
+#ifdef HAVE_LIBGPSBT
+
 #define _GNU_SOURCE
 
 #include <errno.h>
@@ -792,3 +794,5 @@ extern int gpsbt_stop(gpsbt_t *ctx)
 }
 
 #endif
+
+#endif /* HAVE_LIBGPSBT */

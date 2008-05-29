@@ -79,6 +79,9 @@ GdkPixmap *_map_pixmap = NULL;
 /** The backing pixmap of _map_widget. */
 GdkPixbuf *_map_pixbuf = NULL;
 
+/** The context menu for the map. */
+GtkMenu *_map_cmenu = NULL;
+
 gint _map_offset_devx;
 gint _map_offset_devy;
 

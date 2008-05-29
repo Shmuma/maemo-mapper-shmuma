@@ -49,7 +49,11 @@
 
 #include "display.h"
 #include "gps.h"
-#include "gpsbt.h"
+
+#ifdef HAVE_LIBGPSBT
+#    include "gpsbt.h"
+#endif
+
 #include "path.h"
 #include "util.h"
 
@@ -549,7 +553,9 @@ thread_read_nmea(GpsRcvrInfo *gri)
     GnomeVFSSocket *socket = NULL;
     GThread *my_thread = g_thread_self();
     gboolean error = FALSE;
+#ifdef HAVE_LIBGPSBT
     gpsbt_t gps_context;
+#endif
     gboolean is_context = FALSE;
 
     printf("%s(%d)\n", __PRETTY_FUNCTION__, gri->type);
@@ -560,6 +566,7 @@ thread_read_nmea(GpsRcvrInfo *gri)
 
     switch(gri->type)
     {
+#ifdef HAVE_LIBGPSBT
         case GPS_RCVR_BT:
         {
             gchar errstr[BUFFER_SIZE] = "";
@@ -585,6 +592,7 @@ thread_read_nmea(GpsRcvrInfo *gri)
             }
             break;
         }
+#endif
         case GPS_RCVR_GPSD:
         {
             /* Set gpsd_host and gpsd_port. */
@@ -592,6 +600,7 @@ thread_read_nmea(GpsRcvrInfo *gri)
             gpsd_port = gri->gpsd_port;
             break;
         }
+#ifdef HAVE_LIBGPSMGR
         case GPS_RCVR_FILE:
         {
             /* Use gpsmgr to create a GPSD that uses the file. */
@@ -632,6 +641,7 @@ thread_read_nmea(GpsRcvrInfo *gri)
             }
             break;
         }
+#endif
         default:
             error = TRUE;
     }
@@ -765,13 +775,17 @@ thread_read_nmea(GpsRcvrInfo *gri)
     {
         switch(gri->type)
         {
+#ifdef HAVE_LIBGPSBT
             case GPS_RCVR_BT:
                 gpsbt_stop(&gps_context);
                 break;
+#endif
 
+#ifdef HAVE_LIBGPSMGR
             case GPS_RCVR_FILE:
                 gpsmgr_stop(&gps_context.mgr);
                 break;
+#endif
 
             default:
                 ;

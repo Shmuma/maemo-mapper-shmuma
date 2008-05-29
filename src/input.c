@@ -567,8 +567,14 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
 
     _mouse_is_down = FALSE;
 
+    if(event->button == 3) /* right-click */
+    {   
+        gtk_menu_popup(_map_cmenu, NULL, NULL, NULL, NULL,
+                       event->button, event->time);
+    }
+    else
 #ifdef DEBUG
-    if(event->button != 1)
+    if(event->button == 2) /* middle-click */
     {   
         screen2unit((gint)(event->x + 0.5), (gint)(event->y + 0.5),
                 _pos.unitx, _pos.unity);

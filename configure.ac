@@ -45,15 +45,15 @@ PKG_CHECK_MODULES(SQLITE, sqlite3)
 AC_SUBST(SQLITE_LIBS)
 AC_SUBST(SQLITE_CFLAGS)
 
-PKG_CHECK_MODULES(CONIC, conic)
+PKG_CHECK_MODULES(CONIC, conic, AC_DEFINE(CONIC, 1, Use the conic library), AC_MSG_WARN(conic not found. Compiling without conic support.))
 AC_SUBST(CONIC_LIBS)
 AC_SUBST(CONIC_CFLAGS)
 
 AC_CHECK_HEADER(gdbm.h, , AC_MSG_ERROR(gdbm.h not found. Please install libgdbm-dev.))
 AC_CHECK_LIB(gdbm, gdbm_open, , AC_MSG_ERROR(libgdbm.so not found. Please install libgdbm.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
 
-AC_CHECK_HEADER(gpsmgr.h, , AC_MSG_ERROR(gpsmgr.h not found. Please install libgpsmgr-dev.))
-AC_CHECK_LIB(gpsmgr, gpsmgr_start, , AC_MSG_ERROR(libgpsmgr.so not found. Please install libgpsmgr.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
+AC_CHECK_HEADER(gpsmgr.h, , AC_MSG_WARN(gpsmgr.h not found. Compiling without gpsmgr support.))
+AC_CHECK_LIB(gpsmgr, gpsmgr_start, , AC_MSG_WARN(libgpsmgr.so not found. Compiling without gpsmgr support.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
 
 AC_ARG_ENABLE(legacy, 
         AS_HELP_STRING([--enable-legacy],[Enable building for Chinook]),
@@ -75,8 +75,8 @@ AS_IF([test "x$HAVE_LEGACY" = xyes],
                 PKG_CHECK_MODULES(HILDON, hildon-1 hildon-fm-2)
                 AC_CHECK_HEADER(gps.h, , AC_MSG_ERROR(gps.h not found. Please install libgps-dev.))
                 AC_CHECK_LIB(gps, gps_open, , AC_MSG_ERROR(libgps.so not found. Please install libgps.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
-                AC_CHECK_HEADER(gpsbt.h, , AC_MSG_ERROR(gpsbt.h not found. Please install libgpsbt-dev.))
-                AC_CHECK_LIB(gpsbt, gpsbt_start, , AC_MSG_ERROR(libgpsbt.so not found. Please install libgpsbt.), -lgps -lgpsmgr -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
+                AC_CHECK_HEADER(gpsbt.h, , AC_MSG_WARN(gpsbt.h not found. Compiling without gpsbt support.))
+                AC_CHECK_LIB(gpsbt, gpsbt_start, , AC_MSG_WARN(libgpsbt.so not found. Compiling without gpsbt support.), -lgps -lgpsmgr -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
         ])
 
 AC_SUBST(OSSO_LIBS)

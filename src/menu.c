@@ -55,53 +55,6 @@
 #include "settings.h"
 #include "util.h"
 
-static GtkWidget *_menu_route_open_item = NULL;
-static GtkWidget *_menu_route_download_item = NULL;
-static GtkWidget *_menu_route_save_item = NULL;
-static GtkWidget *_menu_route_distnext_item = NULL;
-static GtkWidget *_menu_route_distlast_item = NULL;
-static GtkWidget *_menu_route_reset_item = NULL;
-static GtkWidget *_menu_route_clear_item = NULL;
-static GtkWidget *_menu_track_open_item = NULL;
-static GtkWidget *_menu_track_save_item = NULL;
-static GtkWidget *_menu_track_insert_break_item = NULL;
-static GtkWidget *_menu_track_insert_mark_item = NULL;
-static GtkWidget *_menu_track_distlast_item = NULL;
-static GtkWidget *_menu_track_distfirst_item = NULL;
-static GtkWidget *_menu_track_clear_item = NULL;
-static GtkWidget *_menu_poi_import_item = NULL;
-static GtkWidget *_menu_poi_download_item = NULL;
-static GtkWidget *_menu_poi_browse_item = NULL;
-static GtkWidget *_menu_poi_categories_item = NULL;
-static GtkWidget *_menu_maps_submenu = NULL;
-static GtkWidget *_menu_maps_mapman_item = NULL;
-static GtkWidget *_menu_maps_repoman_item = NULL;
-static GtkWidget *_menu_view_zoom_in_item = NULL;
-static GtkWidget *_menu_view_zoom_out_item = NULL;
-static GtkWidget *_menu_view_rotate_clock_item = NULL;
-static GtkWidget *_menu_view_rotate_counter_item = NULL;
-static GtkWidget *_menu_view_rotate_reset_item = NULL;
-static GtkWidget *_menu_view_pan_up_item = NULL;
-static GtkWidget *_menu_view_pan_down_item = NULL;
-static GtkWidget *_menu_view_pan_left_item = NULL;
-static GtkWidget *_menu_view_pan_right_item = NULL;
-static GtkWidget *_menu_view_pan_north_item = NULL;
-static GtkWidget *_menu_view_pan_south_item = NULL;
-static GtkWidget *_menu_view_pan_west_item = NULL;
-static GtkWidget *_menu_view_pan_east_item = NULL;
-static GtkWidget *_menu_view_show_zoomlevel_item = NULL;
-static GtkWidget *_menu_view_show_comprose_item = NULL;
-static GtkWidget *_menu_view_show_velvec_item = NULL;
-static GtkWidget *_menu_view_goto_latlon_item = NULL;
-static GtkWidget *_menu_view_goto_address_item = NULL;
-static GtkWidget *_menu_view_goto_gps_item = NULL;
-static GtkWidget *_menu_view_goto_nextway_item = NULL;
-static GtkWidget *_menu_view_goto_nearpoi_item = NULL;
-static GtkWidget *_menu_settings_item = NULL;
-static GtkWidget *_menu_help_item = NULL;
-static GtkWidget *_menu_about_item = NULL;
-static GtkWidget *_menu_close_item = NULL;
-
 /****************************************************************************
  * BELOW: ROUTE MENU ********************************************************
  ****************************************************************************/
@@ -826,6 +779,7 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
                 1, 2, 0, 1, GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(txt_lat), 16);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(txt_lat), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
@@ -833,6 +787,7 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
         g_object_set(G_OBJECT(txt_lat), HILDON_AUTOCAP, FALSE, NULL);
         g_object_set(G_OBJECT(txt_lat), HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
+#endif
 #endif
 
         gtk_table_attach(GTK_TABLE(table),
@@ -845,6 +800,7 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
                 1, 2, 1, 2, GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(txt_lon), 16);
         gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(txt_lon), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
@@ -852,6 +808,7 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
         g_object_set(G_OBJECT(txt_lon), HILDON_AUTOCAP, FALSE, NULL);
         g_object_set(G_OBJECT(txt_lon), HILDON_INPUT_MODE_HINT,
                 HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
+#endif
 #endif
     }
 

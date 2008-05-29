@@ -2901,6 +2901,7 @@ mapman_dialog()
                 1, 2, 3, 4, GTK_FILL, 0, 4, 0);
         gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_topleft_lat), 12);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lat), 1.f);
+#ifdef MAEMO_CHANGES
         g_object_set(G_OBJECT(mapman_info.txt_topleft_lat),
 #ifndef LEGACY
                 "hildon-input-mode",
@@ -2912,11 +2913,13 @@ mapman_dialog()
                 HILDON_AUTOCAP,
                 FALSE, NULL);
 #endif
+#endif
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 mapman_info.txt_topleft_lon = gtk_entry_new(),
                 2, 3, 3, 4, GTK_FILL, 0, 4, 0);
         gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_topleft_lon), 12);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lon), 1.f);
+#ifdef MAEMO_CHANGES
         g_object_set(G_OBJECT(mapman_info.txt_topleft_lon),
 #ifndef LEGACY
                 "hildon-input-mode",
@@ -2927,6 +2930,7 @@ mapman_dialog()
         g_object_set(G_OBJECT(mapman_info.txt_topleft_lon),
                 HILDON_AUTOCAP,
                 FALSE, NULL);
+#endif
 #endif
 
         /* Bottom Right. */
@@ -2939,6 +2943,7 @@ mapman_dialog()
                 1, 2, 4, 5, GTK_FILL, 0, 4, 0);
         gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_botright_lat), 12);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lat), 1.f);
+#ifdef MAEMO_CHANGES
         g_object_set(G_OBJECT(mapman_info.txt_botright_lat),
 #ifndef LEGACY
                 "hildon-input-mode",
@@ -2950,11 +2955,13 @@ mapman_dialog()
                 HILDON_AUTOCAP,
                 FALSE, NULL);
 #endif
+#endif
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 mapman_info.txt_botright_lon = gtk_entry_new(),
                 2, 3, 4, 5, GTK_FILL, 0, 4, 0);
         gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_botright_lat), 12);
         gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lon), 1.f);
+#ifdef MAEMO_CHANGES
         g_object_set(G_OBJECT(mapman_info.txt_botright_lon),
 #ifndef LEGACY
                 "hildon-input-mode",
@@ -2965,6 +2972,7 @@ mapman_dialog()
         g_object_set(G_OBJECT(mapman_info.txt_botright_lon),
                 HILDON_AUTOCAP,
                 FALSE, NULL);
+#endif
 #endif
 
         /* Default action is to download by area. */

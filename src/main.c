@@ -34,9 +34,15 @@
 #include <locale.h>
 
 #include <gconf/gconf-client.h>
-#include <device_symbols.h>
-#include <conicconnection.h>
-#include <conicconnectionevent.h>
+
+#ifdef MAEMO_CHANGES /* probably not the best macro to check for here */
+#    include <device_symbols.h>
+#endif
+
+#ifdef CONIC
+#    include <conicconnection.h>
+#    include <conicconnectionevent.h>
+#endif
 
 #ifndef LEGACY
 #    include <hildon/hildon-program.h>
@@ -68,16 +74,19 @@ static void osso_cb_hw_state(osso_hw_state_t *state, gpointer data);
 
 static HildonProgram *_program = NULL;
 
+#ifdef CONIC
 static ConIcConnection *_conic_conn = NULL;
 static gboolean _conic_is_connecting = FALSE;
 static gboolean _conic_conn_failed = FALSE;
 static GMutex *_conic_connection_mutex = NULL;
 static GCond *_conic_connection_cond = NULL;
+#endif
 
 /* Dynamically-sized in-memory map cache. */
 static size_t _map_cache_size = (32*1024*1024);
 static gboolean _map_cache_enabled = TRUE;
 
+#ifdef CONIC
 static void
 conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
 {
@@ -110,13 +119,14 @@ conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
+#endif
 
 void
 conic_recommend_connected()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-#ifdef __arm__
+#ifdef CONIC
     g_mutex_lock(_conic_connection_mutex);
     if(!_conic_is_connecting)
     {
@@ -135,7 +145,7 @@ conic_ensure_connected()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-#ifdef __arm__
+#ifdef CONIC
     while(_window && !_conic_is_connected)
     {   
         g_mutex_lock(_conic_connection_mutex);
@@ -184,9 +194,11 @@ maemo_mapper_destroy()
     g_mutex_unlock(_mut_priority_mutex);
 
     /* Allow remaining downloads to finish. */
+#ifdef CONIC
     g_mutex_lock(_conic_connection_mutex);
     g_cond_broadcast(_conic_connection_cond);
     g_mutex_unlock(_conic_connection_mutex);
+#endif
     g_thread_pool_free(_mut_thread_pool, TRUE, TRUE);
 
     if(_curr_repo->db)
@@ -243,6 +255,7 @@ maemo_mapper_init(gint argc, gchar **argv)
     INFO_FONT_ENUM_TEXT[INFO_FONT_XLARGE] = "x-large";
     INFO_FONT_ENUM_TEXT[INFO_FONT_XXLARGE] = "xx-large";
 
+#ifdef MAEMO_CHANGES /* probably not the best macro to check for here */
     CUSTOM_KEY_ICON[CUSTOM_KEY_UP] = HWK_BUTTON_UP;
     CUSTOM_KEY_ICON[CUSTOM_KEY_LEFT] = HWK_BUTTON_LEFT;
     CUSTOM_KEY_ICON[CUSTOM_KEY_DOWN] = HWK_BUTTON_DOWN;
@@ -252,6 +265,17 @@ maemo_mapper_init(gint argc, gchar **argv)
     CUSTOM_KEY_ICON[CUSTOM_KEY_DECREASE] = HWK_BUTTON_DECREASE;
     CUSTOM_KEY_ICON[CUSTOM_KEY_FULLSCREEN] = HWK_BUTTON_VIEW;
     CUSTOM_KEY_ICON[CUSTOM_KEY_ESC] = HWK_BUTTON_CANCEL;
+#else
+    CUSTOM_KEY_ICON[CUSTOM_KEY_UP] = "Up";
+    CUSTOM_KEY_ICON[CUSTOM_KEY_LEFT] = "Left";
+    CUSTOM_KEY_ICON[CUSTOM_KEY_DOWN] = "Down";
+    CUSTOM_KEY_ICON[CUSTOM_KEY_RIGHT] = "Right";
+    CUSTOM_KEY_ICON[CUSTOM_KEY_SELECT] = "Enter";
+    CUSTOM_KEY_ICON[CUSTOM_KEY_INCREASE] = "F7";
+    CUSTOM_KEY_ICON[CUSTOM_KEY_DECREASE] = "F8";
+    CUSTOM_KEY_ICON[CUSTOM_KEY_FULLSCREEN] = "F6";
+    CUSTOM_KEY_ICON[CUSTOM_KEY_ESC] = "Esc";
+#endif
 
     CUSTOM_KEY_DEFAULT[CUSTOM_KEY_UP] = CUSTOM_ACTION_RESET_VIEW_ANGLE;
     CUSTOM_KEY_DEFAULT[CUSTOM_KEY_LEFT] =CUSTOM_ACTION_ROTATE_COUNTERCLOCKWISE;
@@ -338,8 +362,10 @@ maemo_mapper_init(gint argc, gchar **argv)
     _mut_priority_mutex = g_mutex_new();
     _mouse_mutex = g_mutex_new();
 
+#ifdef CONIC
     _conic_connection_mutex = g_mutex_new();
     _conic_connection_cond = g_cond_new();
+#endif
 
     settings_init();
     map_cache_init(_map_cache_size);
@@ -351,6 +377,8 @@ maemo_mapper_init(gint argc, gchar **argv)
     /* Initialize _window. */
     _window = GTK_WIDGET(hildon_window_new());
     hildon_program_add_window(_program, HILDON_WINDOW(_window));
+
+    gtk_window_set_default_size(GTK_WINDOW(_window), 800, 480);
 
     /* Lets go fullscreen if so requested in saved config */
     if (_fullscreen) {
@@ -512,10 +540,12 @@ maemo_mapper_init(gint argc, gchar **argv)
     /* If we have a route, calculate the next point. */
     route_find_nearest_point();
 
+#ifdef CONIC
     _conic_conn = con_ic_connection_new();
     g_object_set(_conic_conn, "automatic-connection-events", TRUE, NULL);
     g_signal_connect(G_OBJECT(_conic_conn), "connection-event",
             G_CALLBACK(conic_conn_event), NULL);
+#endif
 
     g_idle_add((GSourceFunc)window_present, NULL);
 

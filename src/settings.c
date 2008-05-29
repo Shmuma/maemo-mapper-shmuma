@@ -1195,15 +1195,22 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_gps_bt_mac = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(txt_gps_bt_mac), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(txt_gps_bt_mac), HILDON_AUTOCAP, FALSE, NULL);
 #endif
+#endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 btn_scan = gtk_button_new_with_label(_("Scan...")),
                 FALSE, FALSE, 0);
+#ifndef HAVE_LIBGPSBT
+	gtk_widget_set_sensitive(rad_gps_bt, FALSE);
+	gtk_widget_set_sensitive(txt_gps_bt_mac, FALSE);
+	gtk_widget_set_sensitive(btn_scan, FALSE);
+#endif
 
         /* File Path (RFComm). */
         gtk_table_attach(GTK_TABLE(table),
@@ -1217,15 +1224,22 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_gps_file_path = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(txt_gps_file_path), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(txt_gps_file_path), HILDON_AUTOCAP, FALSE, NULL);
 #endif
+#endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 btn_browse_gps = gtk_button_new_with_label(_("Browse...")),
                 FALSE, FALSE, 0);
+#ifndef HAVE_LIBGPSBT
+	gtk_widget_set_sensitive(rad_gps_file, FALSE);
+	gtk_widget_set_sensitive(txt_gps_file_path, FALSE);
+	gtk_widget_set_sensitive(btn_browse_gps, FALSE);
+#endif
 
         /* GPSD Hostname and Port. */
         gtk_table_attach(GTK_TABLE(table),
@@ -1239,11 +1253,13 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_gps_gpsd_host = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(txt_gps_gpsd_host), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(txt_gps_gpsd_host), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 label = gtk_label_new(_("Port")),
@@ -1490,11 +1506,13 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_poi_db = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(txt_poi_db), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(txt_poi_db), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 btn_browse_poi = gtk_button_new_with_label(_("Browse...")),

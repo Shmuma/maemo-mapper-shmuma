@@ -58,6 +58,9 @@ extern GdkPixmap *_map_pixmap;
 /** The backing pixmap of _map_widget. */
 extern GdkPixbuf *_map_pixbuf;
 
+/** The context menu for the map. */
+extern GtkMenu *_map_cmenu;
+
 extern gint _map_offset_devx;
 extern gint _map_offset_devy;
 
