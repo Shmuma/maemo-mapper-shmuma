@@ -126,7 +126,7 @@ conic_recommend_connected()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-#ifdef CONIC
+#if defined(__arm__) && defined(CONIC)
     g_mutex_lock(_conic_connection_mutex);
     if(!_conic_is_connecting)
     {
@@ -145,7 +145,7 @@ conic_ensure_connected()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-#ifdef CONIC
+#if defined(__arm__) && defined(CONIC)
     while(_window && !_conic_is_connected)
     {   
         g_mutex_lock(_conic_connection_mutex);
