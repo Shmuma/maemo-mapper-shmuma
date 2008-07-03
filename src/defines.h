@@ -69,6 +69,7 @@
 #define NUM_DOWNLOAD_THREADS (4)
 #define MAX_PIXBUF_DUP_SIZE (137)
 #define WORLD_SIZE_UNITS (2 << (MAX_ZOOM + TILE_SIZE_P2))
+#define WORLD_SIZE_UNITS_YANDEX (0x7FFFFFFF)
 
 #define HOURGLASS_SEPARATION (7)
 
@@ -208,19 +209,16 @@
 
 #define MERCATOR_SPAN (-6.28318377773622)
 #define MERCATOR_TOP (3.14159188886811)
-#define latlon2unit(lat, lon, unitx, unity) { \
-    gdouble tmp; \
-    unitx = (lon + 180.0) * (WORLD_SIZE_UNITS / 360.0) + 0.5; \
-    tmp = sin(deg2rad(lat)); \
-    unity = 0.5 + (WORLD_SIZE_UNITS / MERCATOR_SPAN) \
-        * (log((1.0 + tmp) / (1.0 - tmp)) * 0.5 - MERCATOR_TOP); \
-}
 
-#define unit2latlon(unitx, unity, lat, lon) { \
-    (lon) = ((unitx) * (360.0 / WORLD_SIZE_UNITS)) - 180.0; \
-    (lat) = (360.0 * (atan(exp(((unity) * (MERCATOR_SPAN / WORLD_SIZE_UNITS)) \
-                     + MERCATOR_TOP)))) * (1.0 / PI) - 90.0; \
-}
+#define YANDEX_Rn (6378137.0)
+#define YANDEX_E (0.0818191908426)
+#define YANDEX_A (20037508.342789)
+#define YANDEX_F (53.5865938)
+#define YANDEX_AB (0.00335655146887969400)
+#define YANDEX_BB (0.00000657187271079536)
+#define YANDEX_CB (0.00000001764564338702)
+#define YANDEX_DB (0.00000000005328478445)
+
 
 #define MACRO_PATH_INIT(path) { \
     (path).head = (path).tail = g_new(Point, ARRAY_CHUNK_SIZE); \

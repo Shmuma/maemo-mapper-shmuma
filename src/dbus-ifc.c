@@ -75,7 +75,7 @@ dbus_ifc_set_view_position_idle(SetViewPositionArgs *args)
             gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
                         _menu_view_ac_none_item), TRUE);
 
-        latlon2unit(args->new_lat, args->new_lon, center.unitx, center.unity);
+        latlon2unit(args->new_lat, args->new_lon, &center.unitx, &center.unity, _curr_repo->units);
 
         map_center_unit_full(center, args->new_zoom, args->new_viewing_angle);
     }
@@ -108,7 +108,7 @@ dbus_ifc_handle_set_view_center(GArray *args, osso_rpc_t *retval)
         /* Latitude and/or Longitude are not defined.  Calculate next. */
         Point new_center = map_calc_new_center(svca->new_zoom);
         unit2latlon(new_center.unitx, new_center.unity,
-                svca->new_lat, svca->new_lon);
+                    &(svca->new_lat), &(svca->new_lon), _curr_repo->units);
     }
 
     /* Argument 1: double: latitude. */
@@ -177,7 +177,7 @@ dbus_ifc_fire_view_position_changed(
     printf("%s(%d, %d, %d, %f)\n", __PRETTY_FUNCTION__, new_center.unitx,
             new_center.unity, new_zoom, new_viewing_angle);
 
-    unit2latlon(new_center.unitx, new_center.unity, new_lat, new_lon);
+    unit2latlon(new_center.unitx, new_center.unity, &new_lat, &new_lon, _curr_repo->units);
 
     if(NULL == (message = dbus_message_new_signal(MM_DBUS_PATH,
                     MM_DBUS_INTERFACE, MM_DBUS_SIGNAL_VIEW_POSITION_CHANGED))

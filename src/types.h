@@ -67,8 +67,19 @@ typedef enum
     REPOTYPE_XYZ_INV, /* zoom=%0d, x=%d, y=%d */
     REPOTYPE_QUAD_QRST, /* t=%s   (%s = {qrst}*) */
     REPOTYPE_QUAD_ZERO, /* t=%0s  (%0s = {0123}*) */
-    REPOTYPE_WMS        /* "service=wms" */
+    REPOTYPE_WMS,       /* "service=wms" */
+    REPOTYPE_YANDEX     /* "maps.yandex" */
 } RepoType;
+
+
+/* Possible World units schemes. There was only one for long type:
+   google. */
+typedef enum
+{
+    UNITSTYPE_GOOGLE,
+    UNITSTYPE_YANDEX,
+} UnitsType;
+
 
 /** Possible center modes.  The "WAS" modes imply no current center mode;
  * they only hint at what the last center mode was, so that it can be
@@ -361,6 +372,8 @@ struct _RepoData {
     gint min_zoom;
     gint max_zoom;
     RepoType type;
+    UnitsType units;
+    gint world_size;
 #ifdef MAPDB_SQLITE
     sqlite3 *db;
     sqlite3_stmt *stmt_map_select;

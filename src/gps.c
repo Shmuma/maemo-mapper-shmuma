@@ -201,7 +201,7 @@ gps_parse_rmc(gchar *sentence)
         _pos.time = time(NULL);
 
     /* Translate data into integers. */
-    latlon2unit(_gps.lat, _gps.lon, _pos.unitx, _pos.unity);
+    latlon2unit(_gps.lat, _gps.lon, &_pos.unitx, &_pos.unity, _curr_repo->units);
 
     /* Add new data to track. */
     if(_gps_state == RCVR_FIXED)

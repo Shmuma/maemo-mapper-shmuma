@@ -488,7 +488,7 @@ route_show_distance_to(Point *point)
         return FALSE;
     }
 
-    unit2latlon(_pos.unitx, _pos.unity, lat1, lon1);
+    unit2latlon(_pos.unitx, _pos.unity, &lat1, &lon1, _curr_repo->units);
     if(point > _near_point)
     {
         Point *curr;
@@ -497,7 +497,7 @@ route_show_distance_to(Point *point)
         {
             if(curr->unity)
             {
-                unit2latlon(curr->unitx, curr->unity, lat2, lon2);
+                unit2latlon(curr->unitx, curr->unity, &lat2, &lon2, _curr_repo->units);
                 sum += calculate_distance(lat1, lon1, lat2, lon2);
                 lat1 = lat2;
                 lon1 = lon2;
@@ -512,7 +512,7 @@ route_show_distance_to(Point *point)
         {
             if(curr->unity)
             {
-                unit2latlon(curr->unitx, curr->unity, lat2, lon2);
+                unit2latlon(curr->unitx, curr->unity, &lat2, &lon2, _curr_repo->units);
                 sum += calculate_distance(lat1, lon1, lat2, lon2);
                 lat1 = lat2;
                 lon1 = lon2;
@@ -522,7 +522,7 @@ route_show_distance_to(Point *point)
     else
     {
         /* Waypoint _is_ the nearest point. */
-        unit2latlon(_near_point->unitx, _near_point->unity, lat2, lon2);
+        unit2latlon(_near_point->unitx, _near_point->unity, &lat2, &lon2, _curr_repo->units);
         sum += calculate_distance(lat1, lon1, lat2, lon2);
     }
 
@@ -572,14 +572,14 @@ track_show_distance_from(Point *point)
     gdouble lat1, lon1, lat2, lon2;
     gdouble sum = 0.0;
     Point *curr;
-    unit2latlon(_pos.unitx, _pos.unity, lat1, lon1);
+    unit2latlon(_pos.unitx, _pos.unity, &lat1, &lon1, _curr_repo->units);
 
     /* Skip _track.tail because that should be _pos. */
     for(curr = _track.tail; curr > point; --curr)
     {
         if(curr->unity)
         {
-            unit2latlon(curr->unitx, curr->unity, lat2, lon2);
+            unit2latlon(curr->unitx, curr->unity, &lat2, &lon2, _curr_repo->units);
             sum += calculate_distance(lat1, lon1, lat2, lon2);
             lat1 = lat2;
             lon1 = lon2;
@@ -1166,7 +1166,7 @@ route_download_swap(GtkWidget *button, RouteDownloadInfo *oti)
         /* Use first non-zero route point. */
         for(p = _route.head; !p->unity; p++) { }
 
-        unit2latlon(p->unitx, p->unity, lat, lon);
+        unit2latlon(p->unitx, p->unity, &lat, &lon, _curr_repo->units);
         g_ascii_formatd(strlat, 32, "%.06f", lat);
         g_ascii_formatd(strlon, 32, "%.06f", lon);
         snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
@@ -1404,7 +1404,7 @@ route_download(gchar *to)
             /* Use last non-zero route point. */
             for(p = _route.tail; !p->unity; p--) { }
 
-            unit2latlon(p->unitx, p->unity, lat, lon);
+            unit2latlon(p->unitx, p->unity, &lat, &lon, _curr_repo->units);
             g_ascii_formatd(strlat, 32, "%.06f", lat);
             g_ascii_formatd(strlon, 32, "%.06f", lon);
             snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
@@ -1509,7 +1509,7 @@ route_add_way_dialog(gint unitx, gint unity)
                 0, 1, 0, 1, GTK_FILL, 0, 2, 4);
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
 
-        unit2latlon(unitx, unity, lat, lon);
+        unit2latlon(unitx, unity, &lat, &lon, _curr_repo->units);
         lat_format(lat, tmp1);
         lon_format(lon, tmp2);
         p_latlon = g_strdup_printf("%s, %s", tmp1, tmp2);

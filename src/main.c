@@ -461,7 +461,7 @@ maemo_mapper_init(gint argc, gchar **argv)
 
     memset(&_autoroute_data, 0, sizeof(_autoroute_data));
 
-    latlon2unit(_gps.lat, _gps.lon, _pos.unitx, _pos.unity);
+    latlon2unit(_gps.lat, _gps.lon, &_pos.unitx, &_pos.unity, _curr_repo->units);
 
     /* Initialize our line styles. */
     update_gcs();

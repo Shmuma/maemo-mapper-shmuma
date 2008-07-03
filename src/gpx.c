@@ -240,8 +240,8 @@ gpx_path_start_element(PathSaxData *data,
                 {
                     MACRO_PATH_INCREMENT_TAIL(data->path);
                     latlon2unit(lat, lon,
-                            data->path.tail->unitx,
-                            data->path.tail->unity);
+                            &data->path.tail->unitx,
+                            &data->path.tail->unity, _curr_repo->units);
                     data->path.tail->time = 0;
                     data->path.tail->altitude = 0;
                     data->sax_data.state = INSIDE_PATH_POINT;
@@ -585,7 +585,7 @@ gpx_path_write(Path *path, GnomeVFSHandle *handle)
                              "    <trkseg>\n");
                 trkseg_break = FALSE;
             }
-            unit2latlon(curr->unitx, curr->unity, lat, lon);
+            unit2latlon(curr->unitx, curr->unity, &lat, &lon, _curr_repo->units);
             gpx_write_string(handle, "      <trkpt lat=\"");
             g_ascii_formatd(buffer, sizeof(buffer), "%.06f", lat);
             gpx_write_string(handle, buffer);

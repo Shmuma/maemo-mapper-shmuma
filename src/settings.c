@@ -332,7 +332,7 @@ settings_save()
     /* Save last center point. */
     {
         gdouble center_lat, center_lon;
-        unit2latlon(_center.unitx, _center.unity, center_lat, center_lon);
+        unit2latlon(_center.unitx, _center.unity, &center_lat, &center_lon, _curr_repo->units);
 
         /* Save last center latitude. */
         gconf_client_set_float(gconf_client,
@@ -2150,54 +2150,6 @@ settings_init()
     /* Get last saved timestamp.  Default is 0. */
     _pos.time= gconf_client_get_float(gconf_client, GCONF_KEY_LAST_TIME, NULL);
 
-    /* Get last center point. */
-    {
-        gdouble center_lat, center_lon;
-
-        /* Get last saved latitude.  Default is last saved latitude. */
-        value = gconf_client_get(gconf_client, GCONF_KEY_CENTER_LAT, NULL);
-        if(value)
-        {
-            center_lat = gconf_value_get_float(value);
-            gconf_value_free(value);
-        }
-        else
-        {
-            _is_first_time = TRUE;
-            center_lat = _gps.lat;
-        }
-
-        /* Get last saved longitude.  Default is last saved longitude. */
-        value = gconf_client_get(gconf_client, GCONF_KEY_CENTER_LON, NULL);
-        if(value)
-        {
-            center_lon = gconf_value_get_float(value);
-            gconf_value_free(value);
-        }
-        else
-            center_lon = _gps.lon;
-
-        latlon2unit(center_lat, center_lon, _center.unitx, _center.unity);
-        _next_center = _center;
-    }
-
-    /* Get map correction.  Default is 0. */
-    _map_correction_unitx = gconf_client_get_int(gconf_client,
-            GCONF_KEY_MAP_CORRECTION_UNITX, NULL);
-    _map_correction_unity = gconf_client_get_int(gconf_client,
-            GCONF_KEY_MAP_CORRECTION_UNITY, NULL);
-
-    /* Get last viewing angle.  Default is 0. */
-    _map_rotate_angle = _next_map_rotate_angle = gconf_client_get_int(
-            gconf_client, GCONF_KEY_CENTER_ANGLE, NULL);
-    gdk_pixbuf_rotate_matrix_fill_for_rotation(
-            _map_rotate_matrix,
-            deg2rad(ROTATE_DIR_ENUM_DEGREES[_rotate_dir] - _map_rotate_angle));
-    gdk_pixbuf_rotate_matrix_fill_for_rotation(
-            _map_reverse_matrix,
-            deg2rad(_map_rotate_angle - ROTATE_DIR_ENUM_DEGREES[_rotate_dir]));
-
-
     /* Load the repositories. */
     {
         GSList *list, *curr;
@@ -2238,6 +2190,54 @@ settings_init()
         _repo_list = g_list_append(_repo_list, repo);
         repo_set_curr(repo);
     }
+
+    /* Get last center point. */
+    {
+        gdouble center_lat, center_lon;
+
+        /* Get last saved latitude.  Default is last saved latitude. */
+        value = gconf_client_get(gconf_client, GCONF_KEY_CENTER_LAT, NULL);
+        if(value)
+        {
+            center_lat = gconf_value_get_float(value);
+            gconf_value_free(value);
+        }
+        else
+        {
+            _is_first_time = TRUE;
+            center_lat = _gps.lat;
+        }
+
+        /* Get last saved longitude.  Default is last saved longitude. */
+        value = gconf_client_get(gconf_client, GCONF_KEY_CENTER_LON, NULL);
+        if(value)
+        {
+            center_lon = gconf_value_get_float(value);
+            gconf_value_free(value);
+        }
+        else
+            center_lon = _gps.lon;
+
+        latlon2unit(center_lat, center_lon, &_center.unitx, &_center.unity, _curr_repo->units);
+        _next_center = _center;
+    }
+
+    /* Get map correction.  Default is 0. */
+    _map_correction_unitx = gconf_client_get_int(gconf_client,
+            GCONF_KEY_MAP_CORRECTION_UNITX, NULL);
+    _map_correction_unity = gconf_client_get_int(gconf_client,
+            GCONF_KEY_MAP_CORRECTION_UNITY, NULL);
+
+    /* Get last viewing angle.  Default is 0. */
+    _map_rotate_angle = _next_map_rotate_angle = gconf_client_get_int(
+            gconf_client, GCONF_KEY_CENTER_ANGLE, NULL);
+    gdk_pixbuf_rotate_matrix_fill_for_rotation(
+            _map_rotate_matrix,
+            deg2rad(ROTATE_DIR_ENUM_DEGREES[_rotate_dir] - _map_rotate_angle));
+    gdk_pixbuf_rotate_matrix_fill_for_rotation(
+            _map_reverse_matrix,
+            deg2rad(_map_rotate_angle - ROTATE_DIR_ENUM_DEGREES[_rotate_dir]));
+
 
     /* Get last Zoom Level.  Default is 16. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ZOOM, NULL);

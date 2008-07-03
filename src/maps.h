@@ -47,4 +47,8 @@ gboolean repoman_dialog(void);
 
 gboolean mapman_dialog(void);
 
+/* units conversion of different kind */
+void latlon2unit (gdouble lat, gdouble lon, gint* unitx, gint* unity, UnitsType type);
+void unit2latlon (gint unitx, gint unity, gdouble* lat, gdouble* lon, UnitsType type);
+
 #endif /* ifndef MAEMO_MAPPER_MAPS_H */

@@ -343,7 +343,7 @@ get_nearest_poi(gint unitx, gint unity, PoiInfo *poi)
     printf("%s(%d, %d)\n", __PRETTY_FUNCTION__, unitx, unity);
     gboolean result;
     gdouble lat, lon;
-    unit2latlon(unitx, unity, lat, lon);
+    unit2latlon(unitx, unity, &lat, &lon, _curr_repo->units);
 
     if(SQLITE_OK == sqlite3_bind_double(_stmt_select_nearest_poi, 1, lat)
     && SQLITE_OK == sqlite3_bind_double(_stmt_select_nearest_poi, 2, lon)
@@ -384,11 +384,11 @@ select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick)
 
     x = unitx - pixel2unit(3 * _draw_width);
     y = unity + pixel2unit(3 * _draw_width);
-    unit2latlon(x, y, lat1, lon1);
+    unit2latlon(x, y, &lat1, &lon1, _curr_repo->units);
 
     x = unitx + pixel2unit(3 * _draw_width);
     y = unity - pixel2unit(3 * _draw_width);
-    unit2latlon(x, y, lat2, lon2);
+    unit2latlon(x, y, &lat2, &lon2, _curr_repo->units);
 
     if(SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 1, lat1) ||
           SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 2, lat2) ||
@@ -1224,7 +1224,7 @@ poi_add_dialog(GtkWidget *parent, gint unitx, gint unity)
     poi.cat_id = -1;
     poi.clabel = NULL;
     poi.desc = g_strdup("");
-    unit2latlon(unitx, unity, poi.lat, poi.lon);
+    unit2latlon(unitx, unity, &poi.lat, &poi.lon, _curr_repo->units);
 
     /* Lat/Lon */
     {
@@ -1994,7 +1994,7 @@ poi_list_goto(GtkWidget *widget, PoiListInfo *pli)
                 POI_LON, &lon,
                 -1);
 
-        latlon2unit(lat, lon, unit.unitx, unit.unity);
+        latlon2unit(lat, lon, &unit.unitx, &unit.unity, _curr_repo->units);
 
         if(_center_mode > 0)
             gtk_check_menu_item_set_active(
@@ -2294,7 +2294,7 @@ poi_list_dialog(GtkWidget *parent, gint unitx, gint unity, GList *poi_list)
     gtk_list_store_clear(store);
     pli.select_all = FALSE;
 
-    unit2latlon(unitx, unity, src_lat, src_lon);
+    unit2latlon(unitx, unity, &src_lat, &src_lon, _curr_repo->units);
 
     for(curr = poi_list; curr; curr = curr->next)
     {
@@ -2649,7 +2649,7 @@ poi_download_dialog(gint unitx, gint unity)
         gchar strlon[32];
         gdouble lat, lon;
 
-        unit2latlon(unitx, unity, lat, lon);
+        unit2latlon(unitx, unity, &lat, &lon, _curr_repo->units);
 
         g_ascii_formatd(strlat, 32, "%.06f", lat);
         g_ascii_formatd(strlon, 32, "%.06f", lon);
@@ -2716,7 +2716,7 @@ poi_download_dialog(gint unitx, gint unity)
         {
             gchar strlat[32];
             gchar strlon[32];
-            latlon2unit(_gps.lat, _gps.lon, unitx, unity);
+            latlon2unit(_gps.lat, _gps.lon, &unitx, &unity, _curr_repo->units);
             g_ascii_formatd(strlat, 32, "%.06f", _gps.lat);
             g_ascii_formatd(strlon, 32, "%.06f", _gps.lon);
             snprintf(origin_buffer, sizeof(origin_buffer),
@@ -2736,7 +2736,7 @@ poi_download_dialog(gint unitx, gint unity)
 
             unitx = p->unitx;
             unity = p->unity;
-            unit2latlon(p->unitx, p->unity, lat, lon);
+            unit2latlon(p->unitx, p->unity, &lat, &lon, _curr_repo->units);
             g_ascii_formatd(strlat, 32, "%.06f", lat);
             g_ascii_formatd(strlon, 32, "%.06f", lon);
             snprintf(origin_buffer, sizeof(origin_buffer),
@@ -2960,7 +2960,7 @@ poi_browse_dialog(gint unitx, gint unity)
         gchar strlon[32];
         gdouble lat, lon;
 
-        unit2latlon(unitx, unity, lat, lon);
+        unit2latlon(unitx, unity, &lat, &lon, _curr_repo->units);
 
         g_ascii_formatd(strlat, 32, "%.06f", lat);
         g_ascii_formatd(strlon, 32, "%.06f", lon);
@@ -3015,7 +3015,7 @@ poi_browse_dialog(gint unitx, gint unity)
         {
             gchar strlat[32];
             gchar strlon[32];
-            latlon2unit(_gps.lat, _gps.lon, unitx, unity);
+            latlon2unit(_gps.lat, _gps.lon, &unitx, &unity, _curr_repo->units);
             g_ascii_formatd(strlat, 32, "%.06f", _gps.lat);
             g_ascii_formatd(strlon, 32, "%.06f", _gps.lon);
             snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
@@ -3034,7 +3034,7 @@ poi_browse_dialog(gint unitx, gint unity)
 
             unitx = p->unitx;
             unity = p->unity;
-            unit2latlon(p->unitx, p->unity, lat, lon);
+            unit2latlon(p->unitx, p->unity, &lat, &lon, _curr_repo->units);
             g_ascii_formatd(strlat, 32, "%.06f", lat);
             g_ascii_formatd(strlon, 32, "%.06f", lon);
             snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
@@ -3074,7 +3074,7 @@ poi_browse_dialog(gint unitx, gint unity)
         query = g_strdup_printf("%%%s%%",
                 gtk_entry_get_text(GTK_ENTRY(oti.txt_query)));
 
-        unit2latlon(unitx, unity, lat, lon);
+        unit2latlon(unitx, unity, &lat, &lon, _curr_repo->units);
 
         if(is_cat)
         {
@@ -3156,10 +3156,10 @@ map_render_poi()
         buf2unit(0, _view_height_pixels, unitx, unity);
         unitx = _center.unitx - diag_offset;
         unity = _center.unity + diag_offset;
-        unit2latlon(unitx, unity, lat1, lon1);
+        unit2latlon(unitx, unity, &lat1, &lon1, _curr_repo->units);
         unitx = _center.unitx + diag_offset;
         unity = _center.unity - diag_offset;
-        unit2latlon(unitx, unity, lat2, lon2);
+        unit2latlon(unitx, unity, &lat2, &lon2, _curr_repo->units);
 
         if(SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 1, lat1) ||
            SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 2, lat2) ||
@@ -3179,7 +3179,7 @@ map_render_poi()
             gchar *cat_label = g_utf8_strdown(sqlite3_column_text(
                     _stmt_select_poi, 6), -1);
 
-            latlon2unit(lat1, lon1, unitx, unity);
+            latlon2unit(lat1, lon1, &unitx, &unity, _curr_repo->units);
             unit2buf(unitx, unity, poix, poiy);
 
             /* Try to get icon for specific POI first. */

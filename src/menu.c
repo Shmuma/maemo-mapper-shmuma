@@ -340,7 +340,7 @@ menu_cb_track_insert_mark(GtkMenuItem *item)
         gtk_widget_set_size_request(GTK_WIDGET(txt_scroll), 400, 60);
     }
 
-    unit2latlon(_pos.unitx, _pos.unity, lat, lon);
+    unit2latlon(_pos.unitx, _pos.unity, &lat, &lon, _curr_repo->units);
     lat_format(lat, tmp1);
     lon_format(lon, tmp2);
     p_latlon = g_strdup_printf("%s, %s", tmp1, tmp2);
@@ -859,7 +859,7 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
     {
         gchar buffer[32];
         gdouble lat, lon;
-        unit2latlon(_center.unitx, _center.unity, lat, lon);
+        unit2latlon(_center.unitx, _center.unity, &lat, &lon, _curr_repo->units);
         lat_format(lat, buffer);
         gtk_entry_set_text(GTK_ENTRY(txt_lat), buffer);
         lon_format(lon, buffer);
@@ -889,7 +889,7 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
             continue;
         }
 
-        latlon2unit(lat, lon, sel_unit.unitx, sel_unit.unity);
+        latlon2unit(lat, lon, &sel_unit.unitx, &sel_unit.unity, _curr_repo->units);
         if(_center_mode > 0)
             gtk_check_menu_item_set_active(
                     GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item), TRUE);
@@ -1020,7 +1020,7 @@ menu_cb_view_goto_nearpoi(GtkMenuItem *item)
         {
             /* Auto-Center is enabled - use the GPS position. */
             Point unit;
-            latlon2unit(poi.lat, poi.lon, unit.unitx, unit.unity);
+            latlon2unit(poi.lat, poi.lon, &unit.unitx, &unit.unity, _curr_repo->units);
             banner = g_strdup_printf("%s (%s)", poi.label, poi.clabel);
             MACRO_BANNER_SHOW_INFO(_window, banner);
             g_free(banner);

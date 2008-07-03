@@ -891,8 +891,18 @@ set_repo_type(RepoData *repo)
     {
         gchar *url = g_utf8_strdown(repo->url, -1);
 
+        /* Default values. They are suitable for all kinds of repos
+        beside Yandex. */
+        repo->units = UNITSTYPE_GOOGLE;
+        repo->world_size = WORLD_SIZE_UNITS;
+
         /* Determine type of repository. */
-        if(strstr(url, "service=wms"))
+        if(strstr(url, "maps.yandex")) {
+            repo->type = REPOTYPE_YANDEX;
+            repo->units = UNITSTYPE_YANDEX;
+            repo->world_size = WORLD_SIZE_UNITS_YANDEX;
+        }
+        else if(strstr(url, "service=wms"))
             repo->type = REPOTYPE_WMS;
         else if(strstr(url, "%s"))
             repo->type = REPOTYPE_QUAD_QRST;
@@ -971,6 +981,15 @@ repo_set_curr(RepoData *rd)
     {
         if(_curr_repo)
         {
+            /* if new repo coordinate system differs from current one,
+               recalculate map center */
+            if (_curr_repo->units != rd->units) {
+                gdouble lat, lon;
+                unit2latlon (_center.unitx, _center.unity, &lat, &lon, _curr_repo->units);
+                latlon2unit (lat, lon, &_center.unitx, &_center.unity, rd->units);
+                _next_center = _center;
+            }
+
             if(_curr_repo->db)
             {
                 g_mutex_lock(_mapdb_mutex);
@@ -1155,13 +1174,13 @@ map_convert_wms_to_wms(gint tilex, gint tiley, gint zoomlevel, gchar* uri)
             - pixel2zunit(dwidth/2,zoomlevel),
             tile2zunit(tiley+1,zoomlevel)
             + pixel2zunit((dheight+1)/2,zoomlevel),
-            lat1, lon1);
+            &lat1, &lon1, _curr_repo->units);
 
     unit2latlon(tile2zunit(tilex+1,zoomlevel)
             + pixel2zunit((dwidth+1)/2,zoomlevel),
             tile2zunit(tiley,zoomlevel)
             - pixel2zunit(dheight/2,zoomlevel),
-            lat2, lon2);
+            &lat2, &lon2, _curr_repo->units);
 
     setlocale(LC_NUMERIC, "C");
 
@@ -1275,6 +1294,10 @@ map_construct_url(RepoData *repo, gint zoom, gint tilex, gint tiley)
 
         case REPOTYPE_WMS:
             retval = map_convert_wms_to_wms(tilex, tiley, zoom, repo->url);
+            break;
+
+        case REPOTYPE_YANDEX:
+            retval = g_strdup_printf(repo->url, tilex, tiley, MAX_ZOOM + 3 - zoom);
             break;
 
         default:
@@ -2441,8 +2464,8 @@ mapman_by_area(gdouble start_lat, gdouble start_lon,
     printf("%s(%f, %f, %f, %f)\n", __PRETTY_FUNCTION__, start_lat, start_lon,
             end_lat, end_lon);
 
-    latlon2unit(start_lat, start_lon, start_unitx, start_unity);
-    latlon2unit(end_lat, end_lon, end_unitx, end_unity);
+    latlon2unit(start_lat, start_lon, &start_unitx, &start_unity, _curr_repo->units);
+    latlon2unit(end_lat, end_lon, &end_unitx, &end_unity, _curr_repo->units);
 
     /* Swap if they specified flipped lats or lons. */
     if(start_unitx > end_unitx)
@@ -2513,8 +2536,8 @@ mapman_by_area(gdouble start_lat, gdouble start_lon,
                 for(tilex = start_tilex; tilex <= end_tilex; tilex++)
                 {
                     /* Make sure this tile is even possible. */
-                    if((unsigned)tilex < unit2ztile(WORLD_SIZE_UNITS, z)
-                      && (unsigned)tiley < unit2ztile(WORLD_SIZE_UNITS, z))
+                    if((unsigned)tilex < unit2ztile(_curr_repo->world_size, z)
+                      && (unsigned)tiley < unit2ztile(_curr_repo->world_size, z))
                     {
                         mapdb_initiate_update(_curr_repo, z, tilex, tiley,
                                 update_type, download_batch_id,
@@ -2635,9 +2658,9 @@ mapman_by_route(MapmanInfo *mapman_info, MapUpdateType update_type,
                             {
                                 /* Make sure this tile is even possible. */
                                 if((unsigned)tilex
-                                        < unit2ztile(WORLD_SIZE_UNITS, z)
+                                        < unit2ztile(_curr_repo->world_size, z)
                                   && (unsigned)tiley
-                                        < unit2ztile(WORLD_SIZE_UNITS, z))
+                                        < unit2ztile(_curr_repo->world_size, z))
                                 {
                                     mapdb_initiate_update(_curr_repo, z, x, y,
                                         update_type, download_batch_id,
@@ -2992,7 +3015,7 @@ mapman_dialog()
     lon_format(_gps.lon, buffer);
     gtk_label_set_text(GTK_LABEL(lbl_gps_lon), buffer);
 
-    unit2latlon(_center.unitx, _center.unity, lat, lon);
+    unit2latlon(_center.unitx, _center.unity, &lat, &lon, _curr_repo->units);
     lat_format(lat, buffer);
     gtk_label_set_text(GTK_LABEL(lbl_center_lat), buffer);
     lon_format(lon, buffer);
@@ -3003,7 +3026,7 @@ mapman_dialog()
             _center.unitx - pixel2unit(MAX(_view_width_pixels,
                     _view_height_pixels) / 2),
             _center.unity - pixel2unit(MAX(_view_width_pixels,
-                    _view_height_pixels) / 2), lat, lon);
+                                           _view_height_pixels) / 2), &lat, &lon, _curr_repo->units);
     BOUND(lat, -90.f, 90.f);
     BOUND(lon, -180.f, 180.f);
     lat_format(lat, buffer);
@@ -3015,7 +3038,7 @@ mapman_dialog()
             _center.unitx + pixel2unit(MAX(_view_width_pixels,
                     _view_height_pixels) / 2),
             _center.unity + pixel2unit(MAX(_view_width_pixels,
-                    _view_height_pixels) / 2), lat, lon);
+                    _view_height_pixels) / 2), &lat, &lon, _curr_repo->units);
     BOUND(lat, -90.f, 90.f);
     BOUND(lon, -180.f, 180.f);
     lat_format(lat, buffer);
@@ -3119,3 +3142,52 @@ mapman_dialog()
     return TRUE;
 }
 
+
+void latlon2unit (gdouble lat, gdouble lon, gint* unitx, gint* unity, UnitsType type)
+{
+    gdouble tmp, pow_tmp;
+
+    *unitx = 0;
+    *unity = 0;
+
+    switch (type) {
+    case UNITSTYPE_GOOGLE:
+        *unitx = (lon + 180.0) * (WORLD_SIZE_UNITS / 360.0) + 0.5;
+        tmp = sin(deg2rad(lat));
+        *unity = 0.5 + (WORLD_SIZE_UNITS / MERCATOR_SPAN) * (log((1.0 + tmp) / (1.0 - tmp)) * 0.5 - MERCATOR_TOP);
+        break;
+
+    case UNITSTYPE_YANDEX:
+        tmp = tan (M_PI_4 + deg2rad (lat) / 2.0);
+        pow_tmp = pow (tan (M_PI_4 + asin (YANDEX_E * sin (deg2rad (lat))) / 2.0), YANDEX_E);
+        *unitx = (YANDEX_Rn * deg2rad (lon) + YANDEX_A) * YANDEX_F;
+        *unity = (YANDEX_A - (YANDEX_Rn * log (tmp / pow_tmp))) * YANDEX_F;
+        break;
+    }
+}
+
+
+void unit2latlon (gint unitx, gint unity, gdouble* lat, gdouble* lon, UnitsType type)
+{
+    gdouble xphi, x, y;
+
+    *lon = 0.0;
+    *lat = 0.0;
+
+    switch (type) {
+    case UNITSTYPE_GOOGLE:
+        *lon = ((unitx) * (360.0 / WORLD_SIZE_UNITS)) - 180.0;
+        *lat = (360.0 * (atan(exp(((unity) * (MERCATOR_SPAN / WORLD_SIZE_UNITS)) + MERCATOR_TOP)))) * (1.0 / PI) - 90.0;
+        break;
+
+    case UNITSTYPE_YANDEX:
+        x = (unitx / YANDEX_F) - YANDEX_A;
+        y = YANDEX_A - (unity / YANDEX_F);
+        xphi = M_PI_2 - 2.0 * atan (1.0 / exp (y / YANDEX_Rn));
+        *lat = xphi + YANDEX_AB * sin (2.0 * xphi) + YANDEX_BB * sin (4.0 * xphi) + YANDEX_CB * sin (6.0 * xphi) + YANDEX_DB * sin (8.0 * xphi);
+        *lon = x / YANDEX_Rn;
+        *lat = rad2deg (abs (*lat) > M_PI_2 ? M_PI_2 : *lat);
+        *lon = rad2deg (abs (*lon) > M_PI_2 ? M_PI_2 : *lon);
+        break;
+    }
+}

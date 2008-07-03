@@ -59,7 +59,7 @@ cmenu_show_latlon(gint unitx, gint unity)
   gchar buffer[80], tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN];
   printf("%s()\n", __PRETTY_FUNCTION__);
 
-  unit2latlon(unitx, unity, lat, lon);
+  unit2latlon(unitx, unity, &lat, &lon, _curr_repo->units);
   lat_format(lat, tmp1);
   lon_format(lon, tmp2);
 
@@ -81,7 +81,7 @@ cmenu_clip_latlon(gint unitx, gint unity)
     gdouble lat, lon;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    unit2latlon(unitx, unity, lat, lon);
+    unit2latlon(unitx, unity, &lat, &lon, _curr_repo->units);
 
     snprintf(buffer, sizeof(buffer), "%.06f,%.06f", lat, lon);
 
@@ -100,7 +100,7 @@ cmenu_route_to(gint unitx, gint unity)
     gdouble lat, lon;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    unit2latlon(unitx, unity, lat, lon);
+    unit2latlon(unitx, unity, &lat, &lon, _curr_repo->units);
 
     g_ascii_formatd(strlat, 32, "%.06f", lat);
     g_ascii_formatd(strlon, 32, "%.06f", lon);
@@ -118,7 +118,7 @@ cmenu_distance_to(gint unitx, gint unity)
     gdouble lat, lon;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    unit2latlon(unitx, unity, lat, lon);
+    unit2latlon(unitx, unity, &lat, &lon, _curr_repo->units);
 
     snprintf(buffer, sizeof(buffer), "%s: %.02f %s", _("Distance"),
             calculate_distance(_gps.lat, _gps.lon, lat, lon)
@@ -149,7 +149,7 @@ cmenu_cb_loc_show_latlon(GtkMenuItem *item)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     screen2unit(_cmenu_position_x, _cmenu_position_y, unitx, unity);
-    unit2latlon(unitx, unity, lat, lon);
+    unit2latlon(unitx, unity, &lat, &lon, _curr_repo->units);
 
     latlon_dialog(lat, lon);
 
@@ -254,7 +254,7 @@ cmenu_cb_loc_set_gps(GtkMenuItem *item)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     screen2unit(_cmenu_position_x, _cmenu_position_y, _pos.unitx, _pos.unity);
-    unit2latlon(_pos.unitx, _pos.unity, _gps.lat, _gps.lon);
+    unit2latlon(_pos.unitx, _pos.unity, &_gps.lat, &_gps.lon, _curr_repo->units);
 
     /* Move mark to new location. */
     map_refresh_mark(_center_mode > 0);
@@ -518,7 +518,7 @@ cmenu_cb_poi_route_to(GtkMenuItem *item)
     if(select_poi(unitx, unity, &poi, FALSE)) /* FALSE = not quick */
     {
         gint unitx, unity;
-        latlon2unit(poi.lat, poi.lon, unitx, unity);
+        latlon2unit(poi.lat, poi.lon, &unitx, &unity, _curr_repo->units);
         cmenu_route_to(unitx, unity);
     }
 
@@ -537,7 +537,7 @@ cmenu_cb_poi_distance_to(GtkMenuItem *item)
     if(select_poi(unitx, unity, &poi, FALSE)) /* FALSE = not quick */
     {
         gint unitx, unity;
-        latlon2unit(poi.lat, poi.lon, unitx, unity);
+        latlon2unit(poi.lat, poi.lon, &unitx, &unity, _curr_repo->units);
         cmenu_distance_to(unitx, unity);
     }
 
@@ -556,7 +556,7 @@ cmenu_cb_poi_add_route(GtkMenuItem *item)
     if(select_poi(unitx, unity, &poi, FALSE)) /* FALSE = not quick */
     {
         gint unitx, unity;
-        latlon2unit(poi.lat, poi.lon, unitx, unity);
+        latlon2unit(poi.lat, poi.lon, &unitx, &unity, _curr_repo->units);
         cmenu_add_route(unitx, unity);
     }
 
@@ -575,7 +575,7 @@ cmenu_cb_poi_add_way(GtkMenuItem *item)
     if(select_poi(unitx, unity, &poi, FALSE)) /* FALSE = not quick */
     {
         gint unitx, unity;
-        latlon2unit(poi.lat, poi.lon, unitx, unity);
+        latlon2unit(poi.lat, poi.lon, &unitx, &unity, _curr_repo->units);
         route_add_way_dialog(unitx, unity);
     }
 

@@ -572,9 +572,9 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
     {   
         screen2unit((gint)(event->x + 0.5), (gint)(event->y + 0.5),
                 _pos.unitx, _pos.unity);
-        unit2latlon(_pos.unitx, _pos.unity, _gps.lat, _gps.lon);
+        unit2latlon(_pos.unitx, _pos.unity, &_gps.lat, &_gps.lon, _curr_repo->units);
         /* Test unit-to-lat/lon conversion. */
-        latlon2unit(_gps.lat, _gps.lon, _pos.unitx, _pos.unity);
+        latlon2unit(_gps.lat, _gps.lon, &_pos.unitx, &_pos.unity, _curr_repo->units);
         _gps.speed = ((gint)(_gps.speed + 5) % 60);
         _gps.heading = ((gint)(_gps.heading + 5) % 360);
         if(track_add(time(NULL), FALSE))

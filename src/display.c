@@ -1266,8 +1266,8 @@ map_center_unit_full(Point new_center,
     if(!_mouse_is_down)
     {
         /* Assure that _center.unitx/y are bounded. */
-        BOUND(new_center.unitx, 0, WORLD_SIZE_UNITS);
-        BOUND(new_center.unity, 0, WORLD_SIZE_UNITS);
+        BOUND(new_center.unitx, 0, _curr_repo->world_size);
+        BOUND(new_center.unity, 0, _curr_repo->world_size);
 
         mrt = g_slice_new(MapRenderTask);
         mrt->repo = _curr_repo;
@@ -1661,14 +1661,18 @@ thread_render_map(MapRenderTask *mrt)
     stop_tilex = unit2ztile(mrt->new_center.unitx + diag_halflength_units
             + _map_correction_unitx, mrt->zoom);
     stop_tilex = MIN(stop_tilex + (cache_amount - 1),
-            unit2ztile(WORLD_SIZE_UNITS, mrt->zoom));
+            unit2ztile(mrt->repo->world_size, mrt->zoom));
     stop_tiley = unit2ztile(mrt->new_center.unity + diag_halflength_units
             + _map_correction_unity, mrt->zoom);
     stop_tiley = MIN(stop_tiley + (cache_amount - 1),
-            unit2ztile(WORLD_SIZE_UNITS, mrt->zoom));
+            unit2ztile(mrt->repo->world_size, mrt->zoom));
 
     num_tilex = (stop_tilex - start_tilex + 1);
     num_tiley = (stop_tiley - start_tiley + 1);
+    if (num_tilex < 0)
+        num_tilex = 0;
+    if (num_tiley < 0)
+        num_tiley = 0;
     tile_dev = g_new0(gfloat, num_tilex * num_tiley * 2);
 
     ++auto_download_batch_id;
@@ -1771,9 +1775,9 @@ thread_render_map(MapRenderTask *mrt)
                                 % mrt->repo->dl_zoom_steps))
                     /* Make sure this tile is even possible. */
                     && ((unsigned)(tilex >> zoff)
-                            < unit2ztile(WORLD_SIZE_UNITS, mrt->zoom + zoff)
+                            < unit2ztile(mrt->repo->world_size, mrt->zoom + zoff)
                       && (unsigned)(tiley >> zoff)
-                            < unit2ztile(WORLD_SIZE_UNITS, mrt->zoom + zoff)))
+                            < unit2ztile(mrt->repo->world_size, mrt->zoom + zoff)))
                 {
                     started_download = TRUE;
 
@@ -2226,9 +2230,9 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
                 gint width;
 
                 unit2latlon(_center.unitx - pixel2unit(SCALE_WIDTH / 2 - 4),
-                        _center.unity, lat1, lon1);
+                        _center.unity, &lat1, &lon1, _curr_repo->units);
                 unit2latlon(_center.unitx + pixel2unit(SCALE_WIDTH / 2 - 4),
-                        _center.unity, lat2, lon2);
+                        _center.unity, &lat2, &lon2, _curr_repo->units);
                 distance = calculate_distance(lat1, lon1, lat2, lon2)
                     * UNITS_CONVERT[_units];
 
