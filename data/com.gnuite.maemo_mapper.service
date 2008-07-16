@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.gnuite.maemo_mapper
+Exec=/usr/bin/maemo-mapper

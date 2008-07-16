@@ -1,0 +1,1640 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../tohtml.xsl?root=maemo-mapper"?>
+<ossohelpsource>
+  <folder>
+    <title>Maemo Mapper</title>
+    <topic>
+      <topictitle>Esittely</topictitle>
+      <context contextUID="help_maemomapper_intro"/>
+      <para>Tervetuloa Maemo Mapperiin.</para>
+      <para>
+        Maemo Mapper on maantieteellinen karttatyökalu, jota voidaan käyttää
+        seuraavasti:
+      </para>
+      <list>
+        <listitem>
+          Karttojen lataamiseen laitteen sisäiseen muistiin tai erilliselle
+          muistikortille.
+        </listitem>
+        <listitem>
+          Ladattujen karttojen näyttämiseen näytöllä.
+        </listitem>
+        <listitem>
+          Ladattujen karttojen vapaaseen selailuun näytöllä useilla eri
+          zoom-tasoilla.
+        </listitem>
+        <listitem>
+          Sijainnin ja muiden GPS:n tietojen näyttämiseen GPS-
+          vastaanottimelta.
+        </listitem>
+        <listitem>
+          Point-of-Interest (POI) kohteiden näyttämiseen.
+        </listitem>
+        <listitem>
+          Reittisuunnitelmien lataamiseen vapaavalintaisten pisteiden 
+	  välille.
+        </listitem>
+        <listitem>
+          Reittisuunnitelmien ja reittijälkien tallentamiseen ja avaamiseen.
+        </listitem>
+      </list>
+      <para>
+        Käytä <ref refid="help_maemomapper_" refdoc="sisältö"/> sivua
+        siirtyäksesi ohjeen eri osa-alueisiin tai siirry <ref 
+          refid="help_maemomapper_getstarted" refdoc="aloitusohje"/> 
+        sivulle päästäksesi nopeasti alkuun.
+      </para>
+    </topic>
+    <topic>
+      <topictitle>Aloitusohje</topictitle>
+      <context contextUID="help_maemomapper_getstarted"/>
+      <para>
+        Kun Maemo Mapper käynnistetään ensimmäistä kertaa, sinulle näytetään
+        <display_text>Asetukset</display_text> valintaikkuna.  Suurimmalle
+        osalle asetuksista on toimivat oletusasetukset, mutta jos sinulla on
+        bluetooth GPS-vastaanotin, niin sen MAC-osoite kannattaa syöttää
+        <display_text>MAC</display_text> kenttään.  Mikäli et tiedä
+        GPS-vastaanottimesi MAC-osoitetta, niin laita se päälle ja kosketa
+        <display_text>Etsi</display_text> nappia.  Maemo Mapper yrittää
+        tällöin etsiä automaattisesti GPS-vastaanottimesi MAC-osoitteen.
+        <display_text>Asetukset</display_text> valintaikkunan tarkemmat tiedot
+        löytyvät <ref refid="help_maemomapper_settings" 
+          refdoc="Asetukset"/> ohjeesta.
+      </para>
+      <para>
+        Vaihtoehtoisesti voit jättää 
+        <display_text>Bluetooth</display_text> kentän tyhjäksi, jolloin Maemo
+	Mapper yrittää automaattisesti etsiä ja käyttää mitä tahansa bluetooth
+	GPS:ksi tunnistamaansa laitetta.  Tämä on käytännöllistä silloin, kun
+	käytössä on useita GPS-vastaanottimia.  Tämän ominaisuuden toimivuus
+	ei ole taattua kaikissa Nokian laitteissa tai kaikkien bluetooth GPS-
+	vastaanottimien kanssa.
+      </para>
+      <note>
+        Mikäli käytät Maemo Mapperia laitteen sisäisellä GPS-vastaanottimella,
+	sinun kannattaa valita GPS-laitteeksi "Bluetooth" ja jättää kenttä
+	tyhjäksi.
+      </note>
+      <para>
+        Kun olet muuttanut asetukset haluamiksesi voit jatkaa koskettamalla
+        <display_text>Ok</display_text> nappia.  Tämä avaa
+        <display_text>Karttavarastojen hallinta</display_text> 
+        valintaikkunan.
+      </para>
+      <para>
+        Nopein tapa ottaa karttavarastot käyttöön on koskettaa
+        <display_text>Lataa...</display_text> nappia, jolloin Maemo
+        Mapper hakee käyttöösi listan esimääriteltyjä karttavarastoja.
+        Jos otat esimääritellyt karttavarastot käyttöön, voit halutessasi
+        poistaa <display_text>Default</display_text> karttavaraston. 
+        Tarkemmat tiedot <display_text>Karttavarastojen
+        hallinta</display_text> valintaikkunan valintoihin löytyvät
+        <ref refid="help_maemomapper_repoman"
+          refdoc="Karttavarastojen hallinta"/> ohjeesta.
+      </para>
+      <para>
+        Tietyt karttavarastot (yleensä kaupalliset) saattavat sisältää
+        niiden käyttöön liittyvän lisenssisopimuksen.  Joissakin tilanteissa
+        tällaisten karttavarastojen käyttäminen saattaa olla lisenssiehtojen
+        vastaista.  Myös <display_text>Lataa...</display_text> napilla
+        haetut karttavarastot saattavat sisältää tällaisen lisenssisopimuksen.
+        Mikäli et ole varma onko jonkin karttavaraston käyttö karttojen
+        tarjoajan lisenssiehtojen mukaista, niin sinun tulisi poistaa se
+        käytössä olevien karttavarastojen listalta.  Karttavarastojen käyttö on
+        jokaisen omalla vastuulla.
+      </para>
+      <para>
+        Kun olet ottanut haluamasi karttavarastot käyttöön, kosketa Ok
+        nappia.  Tämän jälkeen eteesi ilmestyy tyhjä ruutu.  Tämä johtuu
+        siitä, että et ole vielä ladannut karttoja laitteen muistiin.
+        Ottaaksesi automaattisen karttojen lataamisen käyttöön, valitse
+        päävalikosta <display_text>Kartat</display_text> > 
+        <display_text>Automaattinen nouto</display_text>.
+      </para>
+      <para>
+        Mikäli sinulla on toimiva internet yhteys laitteessasi, Maemo Mapper
+        yrittää nyt ladata karttoja.  Onnistuneen latauksen jälkeen ladatut
+        kartat näytetään ruudulla automaattisesti ja ensimmäisenä sinun tulisi 
+        nähdä maailmankartta.  Ole varovainen karttojen automaattisen noutamisen
+        kanssa, koska se saattaa täyttää nopeasti käytettävissä olevan
+        tallennustilan.  Tarkemmat tiedot levytilan hallintaan löytyy
+        <ref refid="help_maemomapper_mapman" refdoc="Karttojen hallinta"/>
+        ohjeesta.
+      </para>
+      <heading>Graafinen käyttöliittymä</heading>
+      <para>
+        Maemo Mapperin päänäkymä korostaa yksinkertaista suunnittelua.
+        Oletusasetuksilla kartta on ainoa näkyvissä oleva asia.  Sijainti
+        näytetään sinisellä ympyrällä silloin, kun GPS-vastaanotin on käytössä.
+        Sinisestä ympyrästä loittoneva viiva kuvaa sen hetken etenemissuuntaa
+        ja nopeutta.  <i>Reittijälki</i> näytetään punaisella värillä ja se
+        kertoo missä olet liikkunut.  <i>Reittisuunnitelma</i> näytetään
+        vihreällä värillä ja sillä ilmaistaan mihin haluat mennä, esim.
+        reittiopasteet johonkin tiettyyn kohteeseen.
+      </para>
+      <para>
+        Laitteen valintanäppäimiä voidaan käyttää eri toimintojen nopeaan 
+        valitsemiseen:
+      </para>
+      <list>
+        <listitem>
+          <graphic filename="2686KEY_full_screen"/> - Koko näyttö 
+          päälle/pois
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_zoom_in"/> - Tarkenna - pidä pohjassa
+          siirtyäksesi useita zoom-tasoja kerrallaan
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_zoom_out"/> - Loitonna - pidä pohjassa
+          siirtyäksesi useita zoom-tasoja kerrallaan
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_scroll_up"/> - Siirry pohjoiseen - pidä
+          pohjassa vierittääksesi
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_scroll_down"/> - Siirry etelään - pidä 
+          pohjassa vierittääksesi
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_scroll_left"/> - Siirry länteen - pidä
+          pohjassa vierittääksesi
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_scroll_right"/> - Siirry itään - pidä
+          pohjassa vierittääksesi
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_scroll_center"/> - Valitse
+          <ref refid="Auto-Center" refdoc="Automaattinen keskitys"/>
+        </listitem>
+        <listitem>
+          <graphic filename="2686KEY_esc"/> - Ohjelmoitavissa; oletuksena
+          reittijäljet päällä/pois
+        </listitem>
+      </list>
+      <para>
+        Voit myös liikkua ympäri karttaa koskettamalla näyttöä, jolloin
+        Maemo Mapper keskittää näytön kosketuskohtaan.  Mikäli
+        <display_text>Automaattinen keskitys</display_text> toiminne oli
+        päällä, niin se poistetaan automaattisesti käytöstä.
+      </para>
+      <para>
+        Tästä eteenpäin voit käyttää valikkoja reittisuunnitelmien,
+	reittijälkien ja karttojen hallintaan; näkymän vaihtoon; asetusten
+	muuttamiseen; tai yksityiskohtaisten GPS-tietojen näyttämiseen
+	silloin, kun GPS-vastaanotin on käytössä.
+      </para>
+      <para>
+        Ohjelmassa on lisäksi asiayhteyteen liittyvä valikko, joka ilmestyy
+        kartalle sen jälkeen, kun jotain kohtaa kartalla kosketetaan
+        pidempään.  Tästä valikosta voidaan ladata reittisuunnitelmia, laskea
+        etäisyyksiä tai lisätä ja poistaa Point-of-Interest (POI) kohteita.
+      </para>
+      <para>
+        Yllämainittujen ominaisuuksien käyttöohjeet löytyvät
+        <ref refid="help_maemomapper_" refdoc="sisältö"/> sivulta.
+      </para>
+    </topic>
+    <topic>
+      <topictitle>Päävalikko</topictitle>
+      <context contextUID="help_maemomapper_mainmenu"/>
+      <para>
+        Tässä ohjeen aiheessa kuvataan Maemo Mapperin päävalikon valintojen
+        toiminta.
+      </para>
+      <heading>Reittisuunnitelma</heading>
+      <para>
+        <display_text>Reittisuunnitelma</display_text> valikkoa käytetään
+        <i>reittisuunnitelman</i> hallintaan.  Reittisuunnitelma määritellään
+        Maemo Mapperissa reittipisteillä ja kohdepisteillä, kuvaten sitä
+        <i>mihin haluat mennä</i>. Esimerkiksi ajo-ohjeet 123 Main Streetiltä
+        456 Elm Streetille.  Käytössä oleva reittisuunnitelma voi koostua
+        useista	eri osista.  Reittisuunnitelmaa ei ole käytössä ennen 
+        olemassa olevan suunnitelman avaamista tai Internetistä lataamista.
+      </para>
+      <para>
+        <display_text>Reittisuunnitelma</display_text> valikossa on
+        seuraavat kohdat:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Avaa...</display_text> - Avaa reittisuunnitelman
+	  laitteen muistissa olevasta GPX-tiedostosta.  Avattu
+	  reittisuunnitelma <i>lisätään</i> käytössä olevaan reittiin, joten
+	  voit liittää eri reitisuunnitelmia yhteen mikäli haluat luoda
+	  reittisuunnitelman useisiin eri kohteisiin.
+        </listitem>
+        <listitem>
+          <display_text>Lataa...</display_text> - Lataa reittisuunnitelman
+	  Internetistä.  Katso <ref refid="help_maemomapper_downroute"
+            refdoc="Reittisuunnitelman lataaminen"/> ohjeesta lisätietoja.
+        </listitem>
+        <listitem>
+          <display_text>Tallenna...</display_text> - Tallentaa käytössäolevan
+          reittisuunnitelman GPX-tiedostona laitteen muistiin.
+        </listitem>
+        <listitem>
+          <display_text>Näytä etäisyys seur. kohdepisteeseen</display_text>
+          - Näyttää jäljellä olevan matkan seuraavaan kohdepisteeseen reittiä
+          pitkin kuljettaessa.
+        </listitem>
+        <listitem>
+          <display_text>Näytä etäisyys reitin loppupisteeseen</display_text>
+	  - Näyttää jäljellä olevan matkan käytössä olevan reittisuunnitelman
+          päätepisteeseen.  Laskettu etäisyys sisältää myös etäisyyden reitissä
+          olevien katkosten välillä (esim. kahden erillisen reittisegmentin
+          välillä).
+        </listitem>
+        <listitem>
+          <display_text>Nollaa</display_text> - Nollaa Maemo Mapperin
+          reitinseurannan.  Valitse tämä, mikäli Maemo Mapper hukkaa sijaintisi
+	  reittisuunnitelman ollessa käytössä.
+        </listitem>
+        <listitem>
+          <display_text>Tyhjennä</display_text> - Tyhjennä käytössä oleva
+	  reittisuunnitelma, korvaamalla se tyhjällä reitillä.
+        </listitem>
+      </list>
+      <heading>Reittijälki</heading>
+      <para>
+        <display_text>Reittijälki</display_text> valikkoa käytetään näytöllä
+        olevan <i>reittijäljen</i> hallintaan.  Reittijälki muodostuu Maemo 
+	Mapperissa kuljetun reitin varrelta otetuista näytteistä, sen mukaan
+	<i>missä olet liikkunut</i>.  Reittijälki voi muodostua useista eri
+        segmenteistä ja se on kaikkein hyödyllisin, mikäli käytössä on
+        GPS-vastaanotin.  Näytössä oleva reittijälki on tyhjä, kunnes GPS antaa
+        vähintään yhden oikean paikkatiedon.  Reittijäljen piste lisätään näytölle
+        vasta sen jälkeen, kun olet siirtynyt riittävän etäälle edellisestä
+        reittijäljen pisteestä.
+      </para>
+      <para>
+        <display_text>Reittijälki</display_text> valikossa on seuraavat
+	kohdat:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Avaa...</display_text> - Avaa reittijäljen laitteen
+	  muistissa olevasta GPX-tiedostosta.  Erona reittisuunnitelmaan
+	  avattu reittijälki <i>liitetään</i> kiinni käytössä olevaan
+          reittijälkeen.  Mikäli yrität muodostaa uudelleen aiempaa
+          reittijälkeä, sinun täytyy avata reittijäljet ajallisesti oikeassa
+          järjestyksessä (uusin reittijälki ensin).
+        </listitem>
+        <listitem>
+          <display_text>Tallenna...</display_text> - Tallentaa nykyisen
+	  reittijäljen GPX-tiedostoksi laitteen muistiin.
+        </listitem>
+        <listitem>
+          <display_text>Lisää katkaisupiste</display_text> - Lisätään 
+	  keinotekoinen katkaisupiste nykyiseen reittijälkeen.  
+          Katkaisupisteellä simuloidaan GPS-signaalin kadottamista ja 
+	  uudelleen lukittumista.  Käyttökohde voi olla esimerkiksi 
+	  tankaamaan pysähtymisen merkitseminen.
+        </listitem>
+        <listitem>
+          <display_text>Lisää merkki</display_text> - Lisätään kuvauksen
+          sisältävä merkki nykyiseen reittijälkeen.  Tällä tavalla voidaan merkitä
+          esimerkiksi tärkeitä maamerkkejä.
+        </listitem>
+        <listitem>
+          <display_text>Näytä etäisyys katkaisupisteestä</display_text>
+	  - Näyttää reittiä pitkin kuljetun etäisyyden edellisestä
+          katkaisupisteestä nykyiseen sijaintiin.
+        </listitem>
+        <listitem>
+          <display_text>Näytä etäisyys lähtöpisteestä</display_text> -
+	  Näyttää lähtöpisteestä reittiä pitkin kuljetun matkan nykyiseen 
+	  sijaintiin.  Laskettu matka sisältää katkaisupisteiden välisen
+	  etäisyyden (esim. GPS-signaalin kadottamisen ja uudelleen
+	  lukittumisen luomat välit).
+        </listitem>
+        <listitem>
+          <display_text>Tyhjennä</display_text> - Tyhjentää käytössä olevan 
+	  reittijäljen.
+        </listitem>
+      </list>
+      <heading>Kartat</heading>
+      <para>
+        <display_text>Kartat</display_text> valikkoa käytetään karttojen
+        hallintaan.  Tähän valikkoon lisätään kaikki määritetyt karttavarastot ja
+        listalta voidaan valita käytössä oleva karttavarasto.
+      </para>
+      <para>
+        <display_text>Kartat</display_text> valikko sisältää karttavarastojen
+        lisäksi seuraavat kohdat:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Karttojen hallinta</display_text> - Lataa tai
+	  poistaa karttoja käytössä olevasta karttavarastosta.  Tarkemmat
+	  ohjeet löytyvät <ref refid="help_maemomapper_mapman"
+	    refdoc="Karttojen hallinta"/> ohjeesta.
+        </listitem>
+        <listitem>
+          <display_text>Karttavarastojen hallinta...</display_text> -
+	  Käytössolevien karttavarastojen hallinta ja uusien lisääminen.  
+	  Voit myös ladata listan esimääriteltyjä karttavarastoja. Tarkemmat
+	  ohjeet löytyy <ref refid="help_maemomapper_repoman"
+	    refdoc="Karttavarastojen hallinta"/> ohjeesta.
+        </listitem>
+        <listitem>
+          <display_text>Automaattinen nouto</display_text> - Ottaa käyttöön
+	  tai poistaa käytöstä Maemo Mapperin automaattisen karttojen lataamisen.
+          Kun tämä kohta on valittuna kartat ladataan automaattisesti, kun sopivaa
+          karttaa ei löydy laitteen muistista. Tämä on hyödyllinen ominaisuus
+          aktiivisen internet yhteyden (WLAN tai kännykän datayhteys) kanssa esim.
+          silloin, kun tutkitaan maailman eri kolkkia.
+        </listitem>
+      </list>
+      <heading>Näytä</heading>
+      <para>
+        <display_text>Näytä</display_text> valikko mahdollistaa niiden
+        tietojen valitsemisen, mitlä näytetään ja mitä ei näytetä näytöllä.
+      </para>
+      <para>
+        <display_text>Näytä</display_text> valikossa on valittavissa seuraavat
+        kohdat:
+      </para>
+      <list>
+        <listitem>
+	  <display_text>Tarkenna</display_text> - Zoomaa karttaa yhden
+	  zoom-tason tarkemmaksi.  Valintaan voidaan käyttää myös 
+	  <graphic filename="2686KEY_zoom_in"/> näppäintä.
+        </listitem>
+        <listitem>
+	  <display_text>Loitonna</display_text> - Zoomaa karttaa yhden
+	  zoom-tason epätarkemmaksi.  Valintaan voidaan käyttää myös
+	  <graphic filename="2686KEY_zoom_out"/> näppäintä.
+        </listitem>
+        <listitem>
+          <display_text>Koko näyttö</display_text> - Kytkee koko näyttö tilan
+	  päälle tai pois. Koko näytön valintaan voidaan käyttää myös
+           <graphic filename="2686KEY_full_screen"/> näppäintä.
+        </listitem>
+        <listitem>
+          <display_text>Asteikko</display_text> - Kytkee asteikon näytön päälle tai pois.
+        </listitem>
+        <listitem>
+          <display_text>Reittisuunnitelma</display_text> - Kytkee 
+	  reitisuunitelman näytön päälle tai pois.
+        </listitem>
+        <listitem>
+          <display_text>Reittijälki</display_text> - Kytkee reittijäljen
+	  näytön päälle tai pois.
+        </listitem>
+        <listitem>
+          <display_text>Nopeusvektori</display_text> - Kytkee nopeusvektorin
+	  päälle tai pois.  Nopeusvektori on sininen viiva, joka loittonee
+	  sijaintia osoittavasta ympyrästä.
+        </listitem>
+        <listitem>
+          <display_text>POI-pisteet</display_text> - POI-kohteiden näyttö päälle tai
+          pois.
+        </listitem>
+        <listitem>
+          <display_text>POI-kategoriat...</display_text> - Määritellään
+          POI-kohteiden kategoriat ja mitkä niistä näytetään kartalla.  Tarkemmat
+          ohjeet löytyvät <ref refid="help_maemomapper_poicat"
+	    refdoc="POI-Kategoriat"/> ohjeesta.
+        </listitem>
+      </list>
+      <heading>Autom. keskitys</heading>
+      <para>
+        <display_text>Autom. keskitys</display_text> valikkoa käytetään
+	kartan automaattiseen vierittämiseen liittyviin asetuksiin.  Kattaa
+	voidaan vierittää automaattisesti sijainnin muuttuessa.  Sijainnin
+	muutokseen liittyvää keskityksen herkkyyttä voidaan säätää
+	<ref refid="help_maemomapper_settings" refdoc="Asetukset"/> 
+	valikosta. Herkkyydellä voidaan vaikuttaa siihen, kuinka lähelle
+	reunaa sijainti saa mennä ennen automaattista keskitystä.
+      </para>
+      <para>
+        Automaattiselle keskitykselle on valittavissa kolme erilaista
+	tapaa: 
+      </para>
+      <list>
+        <listitem>
+          <display_text>Lat/Lon</display_text> - Pitää sijainnin aina
+	  keskellä ruutua.
+        </listitem>
+        <listitem>
+          <display_text>Etumatka</display_text> - Nopeudesta riippuva
+	  asetus, joka keskittää kartan automaattisesti sen hetkisestä
+	  sijainnista eteenpäin.  Suuremmalla nopeudella liikuttaessa karttaa
+	  keskitetään kauemmaksi eteen.
+        </listitem>
+        <listitem>
+          <display_text>Ei keskitystä</display_text> - Karttaa ei keskitetä 
+	  automaattisesti.
+        </listitem>
+      </list>
+      <heading>Siirry</heading>
+      <para>
+        <display_text>Siirry</display_text> valikkoa käytetään kartan
+	keskittämiseen haluttuun sijaintiin.
+      </para>
+      <para>
+        <display_text>Siirry</display_text> valikossa on seuraavat kohdat:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Lat/Lon...</display_text> - Voidaan määritellä
+	  tarkka latitudi ja longitudi, mihin kartta keskitetään.
+        </listitem>
+        <listitem>
+          <display_text>Osoitteeseen</display_text> - Siirrytään
+	  avautuvassa valintaikkuassa määritettyyn osoitteeseen.
+        </listitem>
+        <listitem>
+          <display_text>GPS-sijaintiin</display_text> - Keskittää kartan
+	  senhetkiseen GPS-sijaintiin. Tämä valinta on manuaalinen vastine
+	  yllämainitulle <display_text>Autom. keskitys</display_text>
+	  toiminteelle.
+        </listitem>
+        <listitem>
+          <display_text>Seuraava kohdepiste</display_text> - Keskittää
+	  kartan seuraavaan kohdepisteeseen käytössä olevalla reitillä.  
+	  Oletuksena seuraava reitin kohdepiste on hieman tummempi,
+	  kuin muut kohdepisteet. 
+        </listitem>
+        <listitem>
+          <display_text>Lähimpään POI-pisteeseen</display_text> - Keskittää kartan
+	  lähimpään POI-pisteeseen.
+        </listitem>
+      </list>
+      <heading>GPS</heading>
+      <para>
+        <display_text>GPS</display_text>-valikkoa käytetään
+        GPS-vastaanottimeen liittyvien asioiden hallintaan, sisältäen niiden
+	tietojen näytön mitä ei näytetä kartalla.  Valikosta valitaan myös
+	onko GPS-vastaanotin käytössä vai ei.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Käytä GPS:ää</display_text> - Kytkee yhteyden
+          GPS-vastaanottimeen päälle tai pois päältä.  GPS-vastaanotin pitää
+	  olla määriteltynä valinnan onnistumiseksi.  Kun valinta on päällä,
+	  Maemo Mapper etsii jatkuvasti asetuksissa määriteltyä GPS-vastaanotinta.
+        </listitem>
+        <listitem>
+          <display_text>Näytä tietoja</display_text> - Näyttää 
+          GPS-vastaanottimen antamia lisätietoja näytöllä.  Tiedot näytetään
+          pääikkunan vasemmassa alalaidassa olevassa paneelissa.
+        </listitem>
+        <listitem>
+          <display_text>Yksityiskohdat...</display_text> - Näyttää
+	  yksityiskohtaiset tiedot GPS-vastaanottimelta, sisältäen mm.
+	  näkyvissä olevien satelliittien sijainnin maahan nähden.
+        </listitem>
+        <listitem>
+          <display_text>Nollaa bluetooth</display_text> - Yrittää nollata
+	  laitteen bluetooth radion mikäli se on mennyt jumiin.  Jotta
+	  radion nollaus olisi mahdollista, seuraava rivi <i>täytyy</i>
+	  lisätä /etc/sudoers tiedostoon (jos et tiedä mitä se tarkoittaa,
+	  niin älä edes kokeile muokkausta):  
+	  <b>user ALL = NOPASSWD: /usr/sbin/hciconfig hci0 reset</b>
+        </listitem>
+      </list>
+      <heading>Muut</heading>
+      <para>
+        Edellä mainittujen valikkojen lisäksi päävalikossa on muutamia muita
+	kohteita:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Asetukset...</display_text> - Maemo Mapperin
+	  asetusten tarkistaminen ja muuttaminen.  Tarkemmat ohjeet
+	  asetusten muuttamiseen löytyy
+	  <ref refid="help_maemomapper_settings" refdoc="Asetukset"/> 
+	  ohjeesta.
+        </listitem>
+        <listitem>
+          <display_text>Ohje...</display_text> - Avaa tämän ohjetiedoston.
+        </listitem>
+        <listitem>
+          <display_text>Tietoja...</display_text> - Näyttää ohjelman 
+	  versiotiedot ja tekijänoikeudet.
+        </listitem>
+        <listitem>
+          <display_text>Sulje</display_text> - Lopettaa Maemo Mapperin
+	  käytön.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>Asiayhteysvalikko</topictitle>
+      <context contextUID="help_maemomapper_cmenu"/>
+      <para>
+        Koskettamalla ja pitämällä kosketusnäytön kohtaa pohjassa, avautuu
+	asiayhteyskohtainen valikko joko sijaintiin, lähimpään reitin
+	kohdepisteeseen tai lähimpään POI-pisteeseen liittyen.
+      </para>
+      <para>
+        Asiayhteysvalikko on jaettu kahteen hierarkkiseen tasoon.
+	Ensimmäisellä tasolla (<display_text>Sijainti</display_text>,
+        <display_text>Kohdepiste</display_text> tai
+        <display_text>POI-pisteet</display_text>) määritellään millaiseen tietoon
+	mikäkin toiminto vaikuttaa.
+      </para>
+      <heading>Sijainti</heading>
+      <para>
+        <display_text>Sijainti</display_text> valikossa olevat toiminnot
+	tapahtuvat juuri siihen pisteeseen kartalla, mistä valikko on avattu.
+	Tähän sijaintiin liittyen on mahdollista tehdä seuraavia toimenpiteitä:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Näytä Lat/Lon</display_text> - Näyttää kyseisen
+	  pisteen latitudin ja longitudin siinä muodossa, jossa ne on
+	  <display_text>Asetukset</display_text> valintaikkunassa määritetty
+	  näytettäväksi.
+        </listitem>
+        <listitem>
+          <display_text>Kopioi Lat/Lon</display_text> - Kopioi kyseisen
+	  pisteen latitudin ja longitudin leikepöydälle, pilkuilla erotetussa
+	  desimaali muodossa.
+        </listitem>
+        <listitem>
+          <display_text>Näytä etäisyys kohteeseen</display_text> - Näyttää
+	  suoraa viivaa pitkin olevan matkan GPS:n sijainnista valittuun
+          kohteeseen.
+        </listitem>
+        <listitem>
+          <display_text>Lataa reittisuunnitelma kohteeseen...</display_text>
+	  - Avaa <ref refid="help_maemomapper_downroute"
+            refdoc="Reittisuunnitelman lataaminen"/> valintaikkunan, 
+          jossa kosketuskohdan sijainti on määritetty valmiiksi
+          reittisuunnitelman kohdepisteeksi.
+        </listitem>
+        <listitem>
+          <display_text>Lisää reittipiste</display_text> - Lisää
+	  kosketuskohdan sijainnin käytössä olevaan reittisuunnitelmaan.
+	  Tämä merkki ei ole reitin kohdepiste.
+        </listitem>
+        <listitem>
+          <display_text>Lisää kohdepiste...</display_text> - Lisää
+	  kohdepisteen käytössä olevaan reittisuunnitelmaan. Kohdepisteelle
+	  pitää antaa kuvaus, jotta se voidaan lisätä reittisuunnitelmaan.
+	  Mikäli kuvausta ei anneta, tehdään reittisuunnitelmaan
+	  katkaisukohta.  Tätä katkaisukohtaa ei kytketä vanhaan
+          reittisuunnitelmaan, joten sitä voidaan käyttää uuden segmentin
+	  aloituspisteenä.
+        </listitem>
+        <listitem>
+          <display_text>Lisää POI-piste...</display_text> - Lisää valitun kohdan
+	  sijainnin POI-pisteenä POI-tietokantaan.  Jos kategoria mihin
+          lisäsit POI-pisteen ei ole käytössä, pistettä ei näytetä kartalla,
+          vaan se lisätään pelkästään POI-tietokantaan.
+        </listitem>
+        <listitem>
+          <display_text>Aseta GPS-sijainniksi</display_text> - Pakottaa Maemo
+          Mapperin valitsemaan kyseisen kohdan GPS-sijainniksi.  Tämä ei
+	  vaikuta nykyiseen reittijälkeen, mutta se muuttaa sijaintia
+	  kuvaavan sinisen ympyrän kyseiseen pisteeseen. Tätä pistettä
+	  voidaan sitten käyttää täten reittisuunnitelman alkupisteenä.
+        </listitem>
+        <listitem>
+          <display_text>Käytä kartan korjausta</display_text> - Ottaa tai
+	  poistaa käytöstä kartan sijainnin korjauksen.  Käyttöön otettaessa
+	  kosketuskohtaa käytetään korjauksen referenssinä.  Alla olevassa 
+	  huomautuksessa on saatavissa lisätietoja.
+        </listitem>
+      </list>
+      <note>
+        Kartan korjaus on vähän käytetty ominaisuus, joka korjaa harvinaisen
+	kartta ongelman.  Joissakin paikoissa (kuten Brasiliassa ja Québecissä),
+	reittitiedot eivät välttämättä ole tarkat, vaikkakin ongelma on
+	systemaattinen.	 Virheen voi suomata liikkuessa, jolloin reittijälki
+	saattaa olla muutaman sata metriä syrjässä verrattuna käytetyn
+	karttavaraston tiehen.  Kartan korjaus korjaa tämän ongelman.  Kun
+	GPS-vastaanottin on saanut lukituksen ja Maemo Mapper näyttää sijantisi
+	väärin, niin kosketa ja pidä kohta jonka <i>luulet</i> olevan oikea
+	painettuna hetken aikaa ja valitse valikosta tämä valinta.  
+	Korjaustieto tallennetaan osana Maemo Mapperin pysyviä asetuksia,
+	joten se säilyy myös silloin, kun Maemo Mapper tai laite käynnistetään
+	uudelleen.
+      </note>
+      <heading>Kohdepiste</heading>
+      <para>
+        <display_text>Kohdepiste</display_text> valikossa olevilla
+	valinnoilla voidaan vaikuttaa kosketuskohtaa lähinnä olevaan
+	reittisuunnitelman kohdepisteeseen.  Mikäli kohdepisteitä ei ole
+	kosketuskohdan lähellä, näytetään virheilmoitus.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Näytä Lat/Lon</display_text> - Näyttää lähimmän
+	  kohdepisteen latitudin ja longitudin siinä muodossa, jossa ne on
+	  <display_text>Asetukset</display_text> valintaikkunassa määritetty
+	  näytettäväksi.
+        </listitem>
+        <listitem>
+          <display_text>Näytä kuvaus</display_text> - Näyttää lähimmän
+	  kohdepisteen kuvauksen.  Kun reittisuunnitelma ladataan
+	  <ref refid="help_maemomapper_downroute" 
+            refdoc="Reittisuunnitelman lataaminen"/>
+	  valintaikkunasta, kohdepisteiden kuvaus sisältää kuvauksen miten ko.
+	  kohdepiste saavutetaan. Esimerkiksi "Turn left at Main Street.  Go 2.5
+	  kilometers.").
+        </listitem>
+        <listitem>
+          <display_text>Kopioi Lat/Lon</display_text> - Kopioi lähimmän
+	  kohdepisteen latitudin ja longitudin leikepöydälle pilkuilla
+	  erotetussa desimaali muodossa.
+        </listitem>
+        <listitem>
+          <display_text>Kopioi kuvaus</display_text> - Kopioi lähimmän 
+	  kohdepisteen kuvauksen leikepöydälle.
+        </listitem>
+        <listitem>
+          <display_text>Näytä etäisyys kohteeseen</display_text> - Näyttää
+	  jäljellä olevan matkan (käytössä olevaa reittisuunnitelmaa pitkin
+	  kuljettaessa) kyseiseen kohdepisteeseen.  Laskettu matka sisältää
+	  katkosten välisen etäisyyden (esim. kahden eri reittisuunnitelman
+	  loppu- ja alkupisteen välit). 
+        </listitem>
+        <listitem>
+          <display_text>Lataa reitti kohteeseen...</display_text> - Avaa
+          <ref refid="help_maemomapper_downroute"
+            refdoc="Reittisuunnitelman lataaminen"/> valintaikkunan, jossa
+          kosketuskohdan lähimmän kohdepisteen sijainti on määritetty valmiiksi
+          reittisuunnitelman kohdepisteeksi.
+        </listitem>
+        <listitem>
+          <display_text>Poista...</display_text> - Poistaa kosketuskohtaa
+	  lähinnä olevan kohdepisteen reittisuunnitelmasta. Tämä poistaa
+	  kaikki reittisegmentit kohdepisteen ympäriltä, sisältäen (ja
+	  rajoittuen) kaikki pisteet tästä kohdepisteestä seuraavaan ja
+	  edelliseen kohdepisteeseen.
+        </listitem>
+        <listitem>
+          <display_text>Lisää POI-piste...</display_text> - Lisää valitun kohdan
+	  sijainnin kohdepisteen POI-pisteenä POI-tietokantaan. Jos kategoria
+	  mihin lisäsit POI-pisteen ei ole käytössä, pistettä ei näytetä
+	  kartalla, vaan se lisätään pelkästään POI-tietokantaan.
+        </listitem>
+      </list>
+      <heading>POI-pisteet</heading>
+      <para>
+        <display_text>POI-pisteet</display_text>-valikossa voidaan vaikuttaa
+	kosketuskohtaa lähinnä olevan POI-pisteen tietoihin. Mikäli kosketuskohdan
+	lähellä ei ole POI-pisteitä näytetään virheilmoitus.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Näytä/Muokkaa...</display_text> - Näytä ja/tai
+	  muokkaa valittua POI-pistettä.
+        </listitem>
+        <listitem>
+          <display_text>Näytä etäisyys kohteeseen</display_text> - Näyttää
+	  suoraa linjaa pitkin etäisyyden GPS-sijainnista kyseiseen POI 
+	  -pisteeseen.
+        </listitem>
+        <listitem>
+          <display_text>Lataa reitti kohteeseen...</display_text> - Avaa
+          <ref refid="help_maemomapper_downroute"
+            refdoc="Reittisuunnitelman lataaminen"/> valintaikkunan, jossa
+          kosketuskohdan lähimmän POI-pisteen sijainti on määritetty valmiiksi
+          reittisuunnitelman kohdepisteeksi.
+        </listitem>
+        <listitem>
+          <display_text>Lisää reittipiste</display_text> - Lisää nykyiseen
+	  reittisuunnitelmaan merkin, jossa sijaintina käytetään
+	  kosketuskohtaa lähinnä olevaa POI-pistettä. Tämä merkki ei ole
+	  reittisuunnitelman kohdepiste.
+        </listitem>
+        <listitem>
+          <display_text>Lisää kohdepiste...</display_text> - Lisää
+	  kosketuskohtaa lähinnä olevan POI-pisteen sijainnin kohdepisteeksi
+	  käytössä olevaan reittisuunnitelmaan. Kohdepisteelle pitää antaa
+	  kuvaus, jotta se voidaan lisätä reittisuunnitelmaan. Mikäli
+	  kuvausta ei anneta, tehdään reittisuunnitelmaan katkaisukohta.
+	  Tätä katkaisukohtaa ei kytketä vanhaan reittisuunnitelmaan, joten
+	  sitä voidaan käyttää uuden segmentin aloituspisteenä.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>Karttavarastojen hallinta</topictitle>
+      <context contextUID="help_maemomapper_repoman"/>
+      <para>
+        Maemo Mapperissa kartat on jaettu erityisiin osastoihin, joita
+	kutsutaan <i>karttavarastoiksi</i>.  Karttavarastot toimivat karttojen
+	lähteenä ja jokaisella karttavarastolla on omanlaisensa tapa kuvata
+	maapalloa.  Esimerkiksi karttavarasto, joka sisältää tiekartat, esittää
+	tiet viivoina ja rakennukset alueina, kun taas satelliittikuviin
+	perustuvat karttavarastot esittävät maan sillä tavalla, miltä maa
+	näyttää avaruudesta katsottuna.  Lisäksi on niin sanottuja "hybridi"
+	karttavarastoja, jotka näyttävät tiekartat satelliitista otettujen
+	kuvien päällä.  Myös topografisia karttavarastoja on olemassa, jolloin
+	kartassa näytetään myös korkeustieto.
+      </para>
+      <para>
+        Jokainen karttavarasto luodaan kuudellatoista eri zoom-tasolla
+	olevasta kartta-aineistosta.  Zoom-taso 0 on tarkin (lähinnä maata)
+	ja zoom-taso 20 on epätarkin (kauimpana maasta).  Kaikki
+	karttavarastot eivät sisällä kaikkia zoom-tasoja, jolloin
+	karttavarastot ilmoittavat puuttuvasta kartta-aineistosta
+	virheilmoituksella.
+      </para>
+      <para>
+        Kun Maemo Mapperiin on asetettu vähintään yksi karttavarasto,
+	karttojen lataus tästä karttavarastosta laitteen muistiin tai
+	muistikortille voidaan aloittaa. Yksityiskohtaiset ohjeet
+	karttavarastojen lisäämiseksi löytyy <ref refid="help_maemomapper_mapman"
+	  refdoc="Karttojen hallinta"/> ohjeesta.
+      </para>
+      <para>
+        Maemo Mapperiin voidaan lisätä useita karttavarastoja, mutta vain
+        yksi niistä voi olla käytössä kerrallaan.  
+	<display_text>Karttavarastojen hallinta</display_text> valintaikkunaan
+	päästään, valitsemalla päävalikosta <display_text>Kartat</display_text>
+        > <display_text>Karttavarastojen hallinta...</display_text>, 
+	jolloin karttavarastoja voidaan lisätä, muokata tai poistaa.
+      </para>
+      <para>
+        <display_text>Karttavarastojen hallinta...</display_text> sisältää 
+        pudotuslistan, josta valitaan näytettävä ja muokattava karttavarasto.
+        Kun karttavarasto on valittuna, näytössä näkyy käytössä olevat asetukset
+        ja ne voidaan muuttaa halutuiksi:
+      </para>
+      <list>
+        <listitem>
+          <display_text>URL:n muotoilu</display_text> - Tietyllä tavalla
+          muotoiltu tekstijono, joka näyttää URL:ta, mutta sen tulee sisältää
+          vähintään yksi printf-tyylinen korvaava merkkijono (kuten %f tai %s).
+          Yleensä oikeat URL:t tulee etsiä Internetistä    
+          (www.internettablettalk.com on hyvä lähde).  Koskettamalla
+          <display_text>Lataa...</display_text> nappia karttavarastojen
+          hallinta näkymässä, voidaan ladata esimerkki URL:t automaattisesti.
+        </listitem>
+        <listitem>
+          <display_text>Tallennustietokanta</display_text> - Tietokanta laitteen
+          tiedostojärjestelmässä (joko sisäisessä muistissa tai muistikortilla)
+          mihin kartat tallennetaan.  Kartat säilytetään tässä tietokanssa, eikä
+          niitä poisteta automaattisesti. Tästä syystä on hyvä valita kohde,
+          jossa on paljon vapaata tilaa. Käytettävä kohde voidaan valita
+          koskettamalla <display_text>Selaa...</display_text> nappia, tai tietokannan
+          polku voidaan kirjoittaa valintaikkunaan käsin.
+	  <display_text>Tiivistä...</display_text> nappia painamalla tietokannan
+	  kokoa voidaan pienentää. Tästä on hyöty, jos olet poistanut suuria määriä
+	  karttoja karttavbarastosta.  (Muussa tapauksessa poistettujen karttojen
+	  vapauttama tila tietokannasta käytetään uusien karttojen tallentamiseen.)
+        </listitem>
+        <listitem>
+          <display_text>Lataa zoom-tasot</display_text> - Valinnalla
+          määritellään mitkä zoom-tasot ohitetaan käytettäessä automaattista
+          karttojen latausta (Automaattinen nouto valittuna kartat valikossa).
+          Pienin valinta (yksi palkki) valittuna haetaan kaikki zoom-tasot ja
+          suurin valinta (neljä palkkia) valittuna ladataan joka neljäs
+	  zoom-taso (0, 4, 8, 12, 16).
+        </listitem>
+        <listitem>
+          <display_text>Näytä zoom-tasot</display_text> - Samantapainen
+          ylläkuvatun <display_text>Lataa zoom-tasot</display_text> kanssa,
+          mutta tämä valinta määrittelee kuinka Maemo Mapper käyttäytyy
+          zoomatessa karttaa. Esimerkiksi kaksi palkkia valittuna
+          <graphic filename="2686KEY_zoom_in"/> näppäimen painaminen zoomaa
+          karttaa kaksi tasoa yhden sijaan.  Asettamalla tämä samaan arvoon
+          <display_text>Lataa zoom-tasot</display_text> kanssa, näytetään kaikki
+          kartat alkuperäisellä resoluutiolla.
+        </listitem>
+	<listitem>
+	  <display_text>Tuplapikselit</display_text> - Tämä pakottaa Maemo
+	  Mapperin välttämään alkuperäistä resoluutiota, jolloin kaikki kartat
+          näytetään kaksinkertaiseksi suurennettuna.  Tämä valinta on
+          käytännöllinen silloin, kun karttavaraston kartat sisältävät paljon
+          pientä ja vaikealukuista tekstiä.  Tämä asetus voi vaikuttaa myös
+          ladattaviin zoom-tasoihin silloin, kun automaattinen karttojen
+          noutaminen on valittuna.
+	</listitem>
+	<listitem>
+	  <display_text>Pikavalittava</display_text> - Tämä valinta määrittelee
+          miten "Valitse seuraava karttavarasto" toiminta kohtelee kyseistä
+          karttavarastoa. (toiminto voidaan valita mihin tahansa laitteen
+          näppäimeen).  Mikäli valintaruutu jätetään tyhjäksi, "Valitse seuraava
+          karttavarasto" toiminto yksinkertaisesti ohittaa kyseisen
+          karttavaraston.
+	</listitem>
+        <listitem>
+          <display_text>Haettavat zoom-tasot</display_text> - Tämä asetus määrittää
+	  karttavaraston minimi ja maksimi zoom-tasot, joilta Maemo Mapper yrittää
+	  automaattisesti noutaa kartat (kun automaattinen nouto on aktivoitu).
+	  Osa karttavarastoista tukee useampia zoom-tasoja kuin toiset ja tuetut
+	  zoom-tasot vaihtelevat myös alueittain saman karttavarston sisällä.
+        </listitem>
+      </list>
+      <para>
+        Karttavarastokohtaisten valintojen lisäksi sivulla on muutama näppäin,
+        jotka toteuttavat seuraavat toiminnallisuudet:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Nimeä uud...</display_text> - Muuttaa valitun
+          karttavaraston nimen.
+        </listitem>
+        <listitem>
+          <display_text>Poista...</display_text> - Poistaa valitun
+          karttavaraston.
+        </listitem>
+        <listitem>
+          <display_text>Uusi...</display_text> - Lisää uuden karttavaraston.
+        </listitem>
+        <listitem>
+          <display_text>Nollaa...</display_text> - Asettaa karttavarastolistan
+          oletusasetukset.  Tämä valinta poistaa kaikki karttavarastot ja korvaa
+          ne Maemo Mapperin oletusasetuksella.
+        </listitem>
+        <listitem>
+          <display_text>Lataa...</display_text> - Lataa listan esimääriteltyjä
+          karttavarastoja ja lisää ne käytössä olevien karttavarastojen listaan.  
+          Ladatut karttavarastot lisätään olemassa olevien joukkoon.  Nämä
+          karttavarastot ovat samalla tavalla muokattavissa ja poistettavissa, 
+          kuin itse määritellyt.  Tämä on hyvä tapa päästä alkuun.
+        </listitem>
+      </list>
+      <note>
+        Osa karttavarastoista (erityisesti kaupalliset) saattavat sisältää
+        käyttöön liittyviä lisenssiehtoja.  Joissakin tilanteissa sellaisten
+        karttavarastojen käyttö saattaa olla lisenssiehtojen vastaista.  Myös
+        <display_text>Lataa...</display_text> napilla haetut karttavarastot
+        saattavat sisältää edellä mainitun kaltaisia rajoitteita.  Mikäli et ole
+        varma onko jonkin karttavaraston käyttö lisenssiehtojen mukaista, niin
+        sinun tulisi poistaa se käytössä olevien listalta. Karttavarastojen
+        käyttö on jokaisen omalla vastuulla.
+      </note>
+    </topic>
+    <topic>
+      <topictitle>Karttojen hallinta</topictitle>
+      <context contextUID="help_maemomapper_mapman"/>
+      <para>
+        Maemo Mapperissa, <i>karttavarastoilla</i> määritellään karttadatan
+        lähteet. Itse <i>kartat</i> ovat tavallisia kuvatiedostoja (esim. PNG
+        tai JPEG), mitkä esitetään näytöllä.  Kun karttavarasto on määritetty
+        käyttöön (katso <ref refid="help_maemomapper_repoman"
+          refdoc="Karttavarastojen hallinta"/>), karttoja voidaan ladata
+        laitteen sisäiseen muistiin tai muistikortille.
+      </para>
+      <para>
+        Maemo Mapper lataa kartat käytössä olevasta karttavarastosta 
+        laitteen pysyvään muistiin siten, että kartat voidaa esittää
+        näytöllä myöhemmin, ilman karttojen uudelleen lataamista.
+      </para>
+      <para>
+        Koska Maemo Mapper lataa kartat laitteen pysyvään muistiin, kannattaa
+        olla tarkkana karttojen lataamisessa, sillä kartat saattavat täyttää
+        käytetyn muistin hyvinkin nopeasti.  Tämä vaara on olemassa erityisesti
+        silloin, kun karttojen automaattinen noutaminen on käytössä.  Mikäli 
+	tila on ongelma, karttoja ei ole pakko tallentaa laitteen muistiin. 
+	Tällöin <display_text>Karttavarastojen hallinta</display_text>
+	valintaikkunassa tulee jättää tyhjäksi tallennustietokanta kohta.
+	Tällöin tulee ottaa huomioon, että Maemo Mapper lataa tarvittavat
+	kartat aina Internetistä.  Mikäli käytössäsi on tiedonsiirtomäärään
+	perustuva matkapuhelimen datayhteys, tallennustietokannan käyttö on
+	suositeltavaa.  Lisää tietoja karttavarastoista ja 
+	<display_text>Karttavarastojen hallinta</display_text> valintaikkunasta
+	löytyy <ref refid="help_maemomapper_repoman"
+          refdoc="Karttavarastojen hallinta"/> ohjeesta.
+      </para>
+      <para>
+        Kartat voidaan ladata myös manuaalisesti, valitsemlla
+        <display_text>Kartat</display_text> valikosta
+        <display_text>Karttojen hallinta...</display_text>.
+        <display_text>Karttojen hallinta</display_text> valintaikkuna
+        mahdollistaa karttojen lataamisen, ylikirjoituksen tai poiston, joko
+        tietyltä alueelta tai reittisuunnitelman varrelta.  Valintaikkuna
+        sisältää kolme välilehteä, joilla määritellään miltä alueelta ja
+        kuinka monta karttaa ladataan.
+      </para>
+      <heading>Valinnat</heading>
+      <para>
+        <display_text>Valinnat</display_text> välilehdellä valitaan mitä
+        tehdään.  Karttoja voidaan ladata (myös ylikirjoittamalla jo ladatut
+        kartat) käytössä olevasta karttavarastosta laitteen muistiin.  Karttoja
+        voidaan myös poistaa laitteen muistista (valittuna olevasta
+        karttavarastosta).  Molemmat näistä toiminnoista voidaan tehdä joko
+        suorakulmion muotoiselle alueelle tai reitin
+        mukaan.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Lataa kartat</display_text> - Jos valittuna, Maemo
+          Mapper lataa kartat käytössä olevasta karttavarastosta laitteen 
+          muistiin, käyttäjän määrittelemältä alueelta. Oletuksena, Maemo
+          Mapper lataa vain ne kartat, mitä laitteen muistiin ei ole ladattu.
+        </listitem>
+        <listitem>
+          <display_text>Ylikirjoita</display_text> - Jos valittuna, Maemo
+          Mapper lataa kartat käyttäjän määrittelemältä alueelta ja
+          ylikirjoittaa laitteen muistista löytyvät kyseisen alueen kartat.
+        </listitem>
+        <listitem>
+          <display_text>Poista kartat</display_text> - Jos valittuna, Maemo
+          Mapper poistaa valitun alueen kartat laitteen muistista.
+        </listitem>
+        <listitem>
+          <display_text>Alueelta</display_text> - Jos valittuna, Maemo Mapper
+          lataa tai poistaa kartat avoinna olevan näkymän vasemman yläkulman ja
+          oikean alakulman koordinaattien mukaiselta alueelta.  Kooordinaatit 
+          voidaan määrittää myös käsin <display_text>Alue</display_text>
+          välilehdellä.
+        </listitem>
+        <listitem>
+          <display_text>Reitin varrelta</display_text> - Jos valittuna, Maemo
+          Mapper lataa tai poistaa kartat avoinna olevan reittisuunnitelman
+          varrelta.  Tämä ominaisuus on hyödyllinen esimerkiksi silloin, kun
+          käyttäjä haluaa varmistaa, että kaikki reittisuunnitelman varrella
+          olevat kartat löytyvät laitteen muistista.
+        </listitem>
+        <listitem>
+          <display_text>Säde</display_text> - Jos
+          <display_text>Reitin varrelta</display_text> on valittuna, käyttäjä
+          voi määritellä säteen minkä mukaan kartat ladataan tai poistetaan. 
+          Esimerkiksi, jos valittuna on 4 (oletus asetus), niin Maemo Mapper
+          lataa kaikki kartan palat, jotka ovat 4 päässä reittisuunnitelmasta.
+        </listitem>
+      </list>
+      <heading>Zoom-tasot</heading>
+      <para>
+        <display_text>Zoom-tasot</display_text> välilehdellä määritellän minkä
+        zoom-tason kartat ladataan tai poistetaan.  Käytössä oleva zoom-taso on 
+        valittuna oletuksena, mutta voit valita ne zoom-tasot mitkä haluat.
+      </para>
+      <heading>Alue</heading>
+      <para>
+        <display_text>Alue</display_text> välilehti on valittavissa, mikäli
+        <display_text>Valinnat</display_text> välilehdellä on
+        <display_text>Alueelta</display_text> kohta valittuna.  Alue määrittelee
+        suorakaiteen muotoisen alueen, minkä mukaan kartat ladataan tai
+        poistetaan.  Jos mahdollista, kentät on esitäytetty nykyisen ja
+        edellisen ruudun keskipisteiden koordinaateilla.  Tämä mahdollistaa
+        halutun alueen valinnan keskittämällä kartta ensin suorakulman yhteen
+        kulmaan ja sitten toiseen.  Keskitys tapahtuu koskettamalla haluttuja
+        kohtia näytöllä tai koskettamalla <display_text>Siirry</display_text>
+        valikosta <display_text>Lat/Lon</display_text> valinta ja antamalla
+        avautuvaan valintaikkunaan halutun pisteen koordinaatit.
+      </para>
+    </topic>
+    <topic>
+      <topictitle>Reittisuunnitelman lataaminen</topictitle>
+      <context contextUID="help_maemomapper_downroute"/>
+      <para>
+        Reittitiedot voidaan ladata GPX-tiedostoista ja niitä on mahdollista
+        luoda käyttämällä Internetissä olevaa GPX-reittisuunnitelma palvelua
+        (http://www.gnuite.com/cgi-bin/gpx.cgi).  Vaihtoehtoisesti
+        reittisuunnitelma voidaan ladata suoraan Maemo Mapperista käyttämällä
+        <display_text>Lataa reittisuunnitelma</display_text> valintaikkunaa.
+      </para>
+      <para>
+        Reittisuunnitelman lataaminen vaatii aktiivisen Internet yhteyden. Kun
+        reittisuunnitelma on ladattu Internet yhteyttä ei enää tarvita (ellei
+        karttojen <display_text>Automaattinen nouto</display_text> ole valittuna).
+        Reittisuunnitelman lataus ominaisuus käyttää edellä mainittua 
+        GPX-reittisuunnitelmapalvelua.
+      </para>
+      <para>
+	Reittisuunnitelman lataamiseksi sinun täytyy määrittää
+        <display_text>Lähtöpiste</display_text> ja
+	<display_text>Kohdepiste</display_text>.  GPX-reitinsuunnittelu palvelu
+	palauttaa sinulle lähtöpisteeseen ja kohdepisteeseen perustuvan
+	reittisuunnitelman.
+      </para>
+      <para>
+	<display_text>Lataa reittisuunitelma</display_text> valintaikkuna
+	sisältää seuraavat valinnat:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Lähde URL</display_text> - Internet palvelu, mistä 
+          reittisuunnitelma ladataan.  Oletusasetuksella pärjää hyvin, eikä
+          sen muuttamiseen ole yleensä tarvetta.
+        </listitem>
+        <listitem>
+          <display_text>Autom. päivitys</display_text> - Tämä on valittavissa
+          vain silloin, kun <display_text>Käytä GPS-sijaintia</display_text>
+          -valinta on valittuna. Valinta mahdollistaa uuden reittisuunnitelman
+          lataamisen, jos reittisuunnitelmasta on ajauduttu sivuun. Käytettäessä
+          automaattista päivitystä tulee Internet yhteyden olla käytössä (esim.
+          matkapuhelimen datayheys), tai uuden reittisuunnitelman noutaminen ei
+          onnistu.
+        </listitem>
+        <listitem>
+          <display_text>Käytä GPS sijaintia</display_text> - Jos valittuna,
+          käytetään sen hetkistä GPS-sijaintia reitin
+          <display_text>lähtöpisteenä</display_text>.
+        </listitem>
+        <listitem>
+          <display_text>Käytä reitin loppupistettä</display_text> - Jos
+          valittuna, käytetään edellisen reittisuunnitelman loppupistettä uuden
+          <display_text>lähtöpisteenä</display_text>.  Tämä ominaisuus on
+          hyödyllinen, kun halutaan luoda useasta reitistä muodostuva
+          kokonaisuus.
+        </listitem>
+        <listitem>
+          <display_text>Lähtöpiste</display_text> - Jos valittuna, käyttäjän 
+          pitää syöttää oma lähtöpiste.  Lähtöpiste voidaan määritellä
+          missä tahansa Google Mapsin ymmärtämistä muodoista.  Joitakin
+          esimerkkejä: "25, -43" (lat/lon), "68712" (postinumero), "San
+          Francisco, CA", "123 Main St, 45112","5th and Main, 12151",
+          "Kauppakatu 22, Jyväskylä"  Mikäli reittisuunnitelman lataaminen
+          epäonnistuu ja Maemo Mapper antaa virheilmoituksen "Ei voitu luoda
+          reittisuunnitelmaa", kannattaa kokeilla käytettyä lähdepistettä
+          Google Maps palvelussa.
+        </listitem>
+        <listitem>
+          <display_text>Kohdepiste</display_text> - Kohde, mihin
+          reittisuunnitelma ohjaa.  Kuten
+          <display_text>Lähtöpiste</display_text>, kohdepiste annetaan Google
+          Mapsin ymmärtämässä muodossa.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>Lataa POI-pisteet</topictitle>
+      <context contextUID="help_maemomapper_downpoi"/>
+      <para>
+	Points of Intrest (POI) kohteita voidaan ladata GPX-tiedostoista.
+	POI-pisteitä sisältäviä tiedostoja voidaan ladata käyttämällä esim.
+	(http://www.gnuite.com/cgi-bin/poi.cgi) web-palvelua, tai POI-pisteitä
+	voidaan ladata suoraan käyttämällä <display_text>Lataa POI-pisteet</display_text>
+	valintaikkunaa.
+      </para>
+      <para>
+        POI-pisteiden lataaminen tarvitsee aktiivisen Internet yhteyden. Lataamisen
+	jälkeen POI-pisteet ovat käytettävissä myös ilman Internet yhteyttä. Maemo
+	Mapper käyttää yllämainittua web-palvelua POI-pisteiden lataamiseen.
+      </para>
+      <para>
+        POI-pisteiden löytämiseksi sinun tulee syöttää
+	<display_text>Lähtöpiste</display_text> ja
+        <display_text>Tekstihaku</display_text> kenttiin halutut tiedot.  
+	Tämän jälkeen web-palvelu palauttaa 10 lähtöpistettä lähellä olevaa
+	POI-pistettä.  Voit hakea useampia POI-pisteitä käyttämällä
+        <display_text>Sivu</display_text> valintaa.
+      </para>
+      <para>
+        Kun olet ladannut POI-pisteet, ne lisätään automaattisesti POI-tietokantaan
+	ja sinulle näytetään <display_text>POI-lista</display_text> valintaikkuna,
+	joka sisältää juuri ladatut POI-pisteet.  Mikäli haluat poistaa joitakin
+	ladatuista POI-pisteistä, sinun täytyy tehdä se manuaalisesti.  Lisätietoja
+	<display_text>POI-lista</display_text> valintaikkunasta ja POI-pisteiden
+	poistosta löytyy <ref refid="help_maemomapper_poilist"
+          refdoc="POI-lista"/> ohjeesta.
+      </para>
+      <para>
+        <display_text>Lataa POI-pisteet</display_text> valintaikkuna sisältää seuraavat
+	valinnat:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Lähde URL</display_text> -  Internet palvelu, mistä 
+          POI-pisteet ladataan.  Oletusasetuksella pärjää hyvin, eikä
+          sen muuttamiseen ole yleensä tarvetta.
+        </listitem>
+        <listitem>
+          <display_text>Käytä GPS-sijaintia</display_text> - Jos valittuna,
+	  nykyistä GPS-sijaintia käytetään <display_text>Lähtöpisteenä</display_text>.
+        </listitem>
+        <listitem>
+          <display_text>Käytä reitin loppupistettä</display_text> - Jos valittuna,
+	  reittisuunnitelman loppupistettä käytetään 
+          <display_text>Lähtöpisteenä</display_text>.  Tämä valinta on hyödyllinen
+	  etsittäessä POI-pisteitä (kuten hotelleja tai ravintoloita) kohdepisteesi
+	  läheisyydestä.
+        </listitem>
+        <listitem>
+          <display_text>Lähtöpiste</display_text> - Jos valittuna, sinun tulee
+	  syöttää vapaavalintainen lähtöpiste.  Lähtöpiste voidaan määritellä
+          missä tahansa Google Mapsin ymmärtämistä muodoista.  Joitakin
+          esimerkkejä: "25, -43" (lat/lon), "68712" (postinumero), "San
+          Francisco, CA", "123 Main St, 45112","5th and Main, 12151",
+          "Kauppakatu 22, Jyväskylä"  Mikäli reittisuunnitelman lataaminen
+          epäonnistuu ja Maemo Mapper antaa virheilmoituksen "Ei voitu luoda
+          reittisuunnitelmaa", kannattaa kokeilla käytettyä lähdepistettä
+          Google Maps palvelussa.
+        </listitem>
+        <listitem>
+          <display_text>Kategoria</display_text> - Määrittää kategorian
+	  mihin ladattavat POI-pisteet sijoitetaan.  POI-pisteiden kategorioita
+	  voidaan muokata myöhemmin.  Mikäli et ole määrittänyt mitään
+          <display_text>Tekstihaku</display_text> kentään,  kategorian nimi
+	  lisätään siihen automaattisesti.  Tämä mahdollistaa esim. ravintoloiden
+	  nopean hakemisen ja lisäämisen oikeaan kategoriaan.
+        </listitem>
+        <listitem>
+          <display_text>Sivu</display_text> - Määrittää hakutulosten sivujen
+	  määrän.  Sivu 1 sisältää ensimmäiset 10 hakutulosta, sivu 2 sisältää
+	  hakutulokset 10-19 ja niin edelleen.
+        </listitem>
+        <listitem>
+          <display_text>Tekstihaku</display_text> - Vapaamuotoinen tekstihaku,
+	  joka kuvaa etsimääsi POI-pistettä.  Kenttään voidaan kirjoittaa esim.
+	  "parturi", jolloin haku etsii lähtöpisteen lähimmät parturit.  Ota
+	  huomioon,  että <display_text>Kategoria</display_text> ei ole osa hakua
+	  ellet määrittele sitä erikseen <display_text>Tekstihaku</display_text>
+	  kenttään.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>Selaa POI-pisteitä</topictitle>
+      <context contextUID="help_maemomapper_browsepoi"/>
+      <para>
+        Kun olet tuonut tai ladannut POI-pisteitä POI-tietokantaan, voit käyttää
+	<display_text>Selaa POI-pisteitä</display_text> valintaikkunaa haluttujen
+	POI-pisteiden etsimiseen ja näyttämiseen taulukkomuodossa.
+      </para>
+      <para>
+        Selataksesi POI-pisteitä, sinun tulee syöttää
+	<display_text>Lähtöpiste</display_text> ja valinnainen
+	vapaa teksti <display_text>Tekstihaku</display_text> kenttään.
+	Maemo Mapper etsii tämän jälkeen tietokannasta kaikki hakuasi vastaavat
+	POI-pisteet ja laskee etäisyyden niistä jokaiseen.  Hakua on mahdollista
+	rajata valitsemalla ainoastaan haluttu
+	<display_text>Kategoria</display_text>.
+      </para>
+      <para>
+        Kun haku on suoritettu, sinulle näytetään
+        <display_text>POI-lista</display_text> valintaikkuna, missä voit katsoa,
+	muokata ja poistaa minkätahansa hakuasi vastaavan POI-pisteen.  Lisätietoja
+	<display_text>POI-lista</display_text> valintaikkunan käytöstä löytyy
+	<ref refid="help_maemomapper_poilist"
+          refdoc="POI-lista"/> ohjeesta.
+      </para>
+      <para>
+        <display_text>Selaa POI-pisteitä</display_text> valintaikkuna sisältää
+	seuraavat valinnat:
+      </para>
+      <list>
+	<listitem>
+          <display_text>Käytä GPS-sijaintia</display_text> - Jos valittuna,
+	  nykyistä GPS-sijaintia käytetään <display_text>Lähtöpisteenä</display_text>.
+        </listitem>
+        <listitem>
+          <display_text>Käytä reitin loppupistettä</display_text> - Jos valittuna,
+	  reittisuunnitelman loppupistettä käytetään 
+          <display_text>Lähtöpisteenä</display_text>.  Tämä valinta on hyödyllinen
+	  etsittäessä POI-pisteitä (kuten hotelleja tai ravintoloita) kohdepisteesi
+	  läheisyydestä.
+        </listitem>
+        <listitem>
+          <display_text>Lähtöpiste</display_text> - Jos valittuna, sinun tulee
+	  syöttää vapaavalintainen lähtöpiste.  Lähtöpiste voidaan määritellä
+          missä tahansa Google Mapsin ymmärtämistä muodoista.  Joitakin
+          esimerkkejä: "25, -43" (lat/lon), "68712" (postinumero), "San
+          Francisco, CA", "123 Main St, 45112","5th and Main, 12151",
+          "Kauppakatu 22, Jyväskylä"  Mikäli reittisuunnitelman lataaminen
+          epäonnistuu ja Maemo Mapper antaa virheilmoituksen "Ei voitu luoda
+          reittisuunnitelmaa", kannattaa kokeilla käytettyä lähdepistettä
+          Google Maps palvelussa.
+        </listitem>
+        <listitem>
+          <display_text>Kategoria</display_text> - Rajaa haun valittuun
+	  kategoriaan.
+        </listitem>
+        <listitem>
+          <display_text>Tekstihaku</display_text> - Valinnainen merkkijono
+	  jonka täytyy esiintyä joko POI-pisteen nimikkeessä tai kuvauksessa.
+	  Jokaisen kenttään syötetyn pilkun, pisteen tai muun välimerkin tulee
+	  löytyä myös POI-pisteen nimikkeestä tai kuvauksesta.  Mikäli kenttä
+	  jätetään tyhjäksi haku ulotetaan kaikkiin POI-pisteisiin.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>POI-lista</topictitle>
+      <context contextUID="help_maemomapper_poilist"/>
+      <para>
+        <display_text>POI-lista</display_text> valintaikkuna on taulukkomuotoinen
+	näyttö POI-pisteistä.  Tässä valintaikkunassa voit valita minkä tahansa
+	POI-pisteen ja muokata, muuttaa pisteiden kategoriaa, poistaa tai viedä 
+	pisteet GPX-tiedostoon.
+      </para>
+      <para>
+        <display_text>POI-lista</display_text> valintaikkunan päänäkymä sisältää
+	viiden sarakkeen taulukon,  jonka tiedot voidaan lajitella koskettamalla
+	haluttua sarakkeen otsikkoa (poislukien valintaruutu sarake):
+      </para>
+      <list>
+        <listitem>
+          <display_text>*</display_text> - Tämä valintaruutu sarake sisältää
+	  valintaruudun jokaiselle taulukossa olevalle POI-pisteelle.
+	  <display_text>Toiminnot valituille POI:lle</display_text> 
+	  valintaikkunan valinnat vaikuttaa kaikkiin valittuihin POI-pisteisiin.
+	  Nämä valinnat kuvataan myöhemmin.  Ota huomioon, että POI-pisteen
+	  valintaruudulla ei ole vaikutusta siihen onko piste näkyvissä kartalla
+	  vai ei.
+        </listitem>
+        <listitem>
+          <display_text>Kategoria</display_text> - Kategoria mihin POI-piste kuuluu.
+	  Kategorioita voidaan muokata, ottaa käyttöön ja poistaa käytöstä
+          <display_text>POI-kategoriat</display_text> valintaikkunassa.  Lisätietoja
+          <display_text>POI-kategorioista</display_text> löytyy
+          <ref refid="help_maemomapper_poicat"
+            refdoc="POI Categories"/> ohjeesta.
+        </listitem>
+        <listitem>
+          <display_text>Etäis.</display_text> - Etäisyys lähtöpisteestä kyseiseen
+	  POI-pisteeseen.
+        </listitem>
+        <listitem>
+          <display_text>Suunt.</display_text> - Lähtöpisteen suuntima (asteina verrattuna
+	  todelliseen pohjoiseen) kyseiseen POI-pisteeseen.  Suuntiman ollessa nolla
+	  tai 360 POI-piste on suoraan pohjoiseen, 90 tarkoittaa itää, 180 etelää ja 270
+	  länttä.
+        </listitem>
+        <listitem>
+          <display_text>Nimike</display_text> - POI-pisteen nimike.
+        </listitem>
+      </list>
+      <para>
+        Taulukon alla on neljä nappia:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Siirry</display_text> - Keskittää kartan valittuun POI-pisteeseen
+	  (taulukon rivi joka on valittuna).  Muista, että näet kartan koskettamalla 
+	  valintaikkunan otsikkopalkkia.
+        </listitem>
+        <listitem>
+          <display_text>Muokkaa...</display_text> - Avaa
+          <display_text>Muokkaa POI-pistettä</display_text> valintaikkunan valitulle 
+	  POI-pisteelle (taulukon rivi joka on valittuna).  Taulukon rivin kaksoiskosketus
+	  avaa saman valintaikkunan.
+        </listitem>
+        <listitem>
+          <display_text>Toiminnot valituille POI:lle...</display_text> - Avaa
+          <display_text>Toiminnot valituille POI:lle</display_text> valintaikkunan, 
+	  mikä mahdollistaa toimintojen suorittamisen kaikille valituille POI-pisteille.
+	  Tässä valintaikkunassa voit asettaa kategorian, poistaa tai viedä valitut 
+	  POI-pisteet GPX-tiedostoon.
+        </listitem>
+        <listitem>
+          <display_text>Sulje</display_text> - Sulkee <display_text>POI-lista
+            </display_text> valintaikkunan.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>POI-kategoriat</topictitle>
+      <context contextUID="help_maemomapper_poicat"/>
+      <para>
+        Tämä valintaruutu mahdollistaa haluttujen POI-kategorioiden
+        organisoinnin, näyttämisen, lisäyksen, poiston ja muokkaamisen.
+        Valintaikkuna avataan valitsemalla
+        <display_text>Näytä</display_text> >
+        <display_text>POI-kategoriat...</display_text>
+        Maemo Mapperin päävalikosta.
+      </para>
+      <para>
+        Jokainen rivi taulukossa kuvaa yhtä kategoriaa ja jokaiselle
+        kategorialle on kolme saraketta:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Käytössä</display_text> - Määrittelee näytetäänkö
+          kyseisen kategorian POI-pisteet kartalla.
+        </listitem>
+        <listitem>
+          <display_text>Nimike</display_text> - Lyhyt nimi, jolla kuvataan
+          kategoriaa.  Tämä nimi näkyy, kun POI-pistettä tarkastellaan.
+        </listitem>
+        <listitem>
+          <display_text>Kuvaus</display_text> - Pidempi kuvaus kategoriasta.
+          Tämä kuvaus on näkyvissä ainoastaan tässä valintaikkunassa ja sen
+          tarkoitus on antaa kuva siitä, mihin kategoriaa on tarkoitus käyttää.
+        </listitem>
+      </list>
+      <para>
+        Valitsemalla haluttu rivi taulukosta ja koskettamalla
+        <display_text>Muokkaa</display_text> nappia, voidaan kaikkia kyseisen
+        kategorian tietoja muokata ja kategoria voidaan myös poistaa.  Uusia
+        kategorioita voidaan lisätä koskettamalla
+        <display_text>Lisää</display_text> nappia.
+      </para>
+      <note>
+        POI-piste voi kuulua ainoastaan yhteen kategoriaan kerrallaan.
+      </note>
+      <heading>POI-kuvakkeet</heading>
+      <para>
+        Kuvakkeet voidaan valita joko POI- tai ketegoriakohtaisesti joiden
+	lisäksi POI-pisteille voidaan määrittää oletuskuvake.  Asettaaksesi
+	haluamasi kuvakkeen aseta kuvatiedosto samaan tiedostopolkuun
+	POI-tietokannan kanssa.  Miltei kaikki kuvatiedostojen muodot ovat
+	tuettuja, mutta kuvatiedostjen päätteen tulee olla *.jpg (siitäkin
+	huolimatta vaikka itse kuva ei olisi jpg-muodossa).
+      </para>
+      <para>
+	Muuttaaksesi oletus POI-pisteiden kuvakkeen (jota käytetään oletuksena
+	olevan neliön sijaan), aseta poi.jpg niminen kuvaketiedosto samaan
+	tiedostopolkuun POI-tietokannan kanssa.
+      </para>
+      <para>
+        Asettaaksesi kuvakkeen POI-kategorialle aseta kategorian kanssa
+	samalla nimellä oleva jpg päätteellä oleva kuvaketiedosto
+	(kategorian nimi pienellä kirjoitettuna) samaan tiedostopolkuun.
+	Jos gategorian nimi on "Huoltoasema", kuvaketiedoston nimen tulee
+	olla "huoltoasema.jpg".
+      </para>
+      <para>
+        Asettaaksesi oman kuvakkeen tietylle POI-pisteelle aseta 
+	POI-pisteen nimikkeen kanssa saman niminen kuvaketiedosto samaan
+	hakemistopolkuun (kuvaus pienellä kirjoitettuna).  Jos POI-pisteen
+	nimi on "Markon talo", niin kuvaketiedoston nimi tulee olla
+	"marko talo.jpg".
+      </para>
+      <para>
+	POI-pisteen nimikkeen mukaisella kuvaketiedostolla on etusija
+	kategorian mukaiseen kuvaketiedostoon, jolla taas on etusija
+	oletus kuvakkeeseen nähden.
+      </para>
+    </topic>
+    <topic>
+      <topictitle>Asetukset</topictitle>
+      <context contextUID="help_maemomapper_settings"/>
+      <para>
+        <display_text>Asetukset</display_text>-valikko (avattavissa
+        päävalikosta) tarjoaa runsaasti eri asetusvaihtoehtoja, joilla
+        määritellään miltä Maemo Mapper näyttää ja miten se toimii.  Seuraavaksi
+        kuvattavien välilehtien lisäksi, asetukset valintaikkunassa on kaksi
+        nappia, joiden nimi on <display_text>Näppäimet...</display_text> ja 
+        <display_text>Värit...</display_text>.
+      </para>
+      <para>
+	<display_text>Näppäimet...</display_text> nappi avaa uuden valintaikkunan,
+	jossa voidaan asettaa mitä mikin laitenäppäin tekee sitä painettaessa. 
+        Esimerkiksi <graphic filename="2686KEY_esc"/> näppäin voidaan määritellä
+        valitsemaan uusi karttavarasto.
+      </para>
+      <para>
+        <display_text>Värit...</display_text> nappi mahdollistaa kartalla
+        näkyvien objektien värien muuttamisen halutuiksi.
+      </para>
+      <heading>GPS</heading>
+      <para>
+        <display_text>GPS</display_text>-välilehti kertoo Maemo Mapperille
+        laitteen, miltä GPS-paikkatieto on saatavissa. Tämä valinta on käytettävissä
+	Maemo Mapperin kanssa vain, jos sinulla on saatavilla GPS-vastaanotin tai
+	GPSD-palvelin.  Teknisesti Maemo Mapper käyttää GPSD-palvelinta kaikkeen
+	GPS-vastaanottimen kommunikaatioon, mutta GPSD-palvelinta voidaan
+	käyttää myös seuraavilla kolmella tavalla:
+      </para>
+      <list>
+        <listitem>
+          <display_text>Bluetooth</display_text> - Valitse tämä valinta, jos
+	  käytät bluetoot GPS-vastaanotinta. Bluetooth MAC-osoite tulee syöttää
+	  MAC-kenttään.  Mikäli et tiedä vastaanottimesi MAC-osoitetta, kytke
+	  vastaanotin päälle ja kosketa <display_text>Etsi...</display_text>
+	  nappia, jolloin Maemo Mapper etsii lähellä olevat bluetooth laittet.
+	  Tai vaihtoehtoisesti kenttä voidaan jättää tyhjäksi, jolloin Maemo Mapper
+	  käyttää automaattisesti bluetooth GPS-vastaanottimeksi tunnistamaansa
+	  laitetta.  Tätä valintaa voidaa myös käyttää laitteilla, joissa on
+	  sisäänrakennettu GPS-vastaanotin, jolloin kenttä täytyy jättää tyhjäksi.
+        </listitem>
+        <listitem>
+          <display_text>Tiedostopolku</display_text> - Valitse tämä, mikäli
+	  GPS-laite on määritetty laitteen tiedostojärjestelmässä.  Määritä
+	  tekstikenttään polku ja tiedosto GPS-laitteeseen.
+        </listitem>
+        <listitem>
+          <display_text>GPSD-isäntä</display_text> - Valitse tämä valinta, mikäli
+	  haluat yhdistää Maemo Mapperin haluamaasi GPSD-palvelimeen (paikalliseen-
+	  tai etäpalvelimeen).  Aseta kenttään palvelimen nimi ja portti.  
+	  Oletusastukseski määritetty (127.0.0.1 portissa 2947) asettaa Maemo
+	  Mapperin käyttämään paikallista GPSD-palvelinta, mikäli se on
+	  käytettävissä.
+        </listitem>
+      </list>
+      <heading>Automaattinen keskitys</heading>
+      <para>
+        <display_text>Autom. keskitys</display_text> välilehti antaa sinulle
+        mahdollisuuden muuttaa kartan automaattisen keskityksen asetuksia.
+        Maemo Mapper keskittää kartan automaattisesti, kun 
+        <display_text>Lat/Lon</display_text> tai
+        <display_text>Etumatka</display_text> on valittuna päävalikon
+        <display_text>Autom. keskitys</display_text> valikosta.  Automaattinen
+        keskitys valinnasta on hyötyä ainoastaan käytettäessä GPS-vastaanotinta.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Etumatkan määrä</display_text> - Kun
+          <display_text>Etumatka</display_text> on valittuna, Maemo Mapper
+          pitää näytön keskittettynä sijaintisi eteen.  Liikkuessasi
+          tämä valinta näyttää karttaa etupainotteisesti, jolloin sinun on 
+          mahdollista nähdä tulevat tiet ajoissa.  Keskityspisteen etäisyyden
+          laskemiseen käytetään kahta muuttujaa: keskityshetken nopeus ja 
+          <display_text>Etumatkan määrä</display_text> valinnan arvo.
+        </listitem>
+        <listitem>
+          <display_text>Kiinteä</display_text> - Määrittelee vaikuttaako
+	  nopeutesi etumatkan määräään.  Jos valittuna, nopeus ei vaikuta
+	  näytettävään etumatkaan.
+        </listitem>
+        <listitem>
+          <display_text>Vieritysherkkyys</display_text> - Määrittää kuinka usein
+          Maemo Mapper keskittää kartan, perustuen siihen kuinka lähelle
+          sijaintisi (tai edessä olevan pisteen, kun <i>etumatka</i> on 
+          valittuna) menee näytön reunaa.  Kun asetus on pienimmillään, Maemo
+          Mapper keskittää kartan vasta sijainnin ollessa näytön laidalla.  
+          Asetuksen ollessa maksimissaan, Maemo Mapper pyrkii pitämään sijainnin
+          mahdollisimman lähellä näytön keskustaa.
+        </listitem>
+        <listitem>
+          <display_text>Min. Nopeus</display_text> - Määrittää kuinka nopeasti
+	  sinun tulee liikkua, jotta automaattinen keskitys (ja automaattinen
+	  kartan kääntäminen) aktivoituu.  Esimerkiksi jalankulkija saattaa
+	  haluta keskityksen ja kääntymisen aktivoituvan nopeasti asettamalla
+	  arvon matalaksi ja epätarkalla GPS-vastaanottimella varustettu 
+	  autoilija saattaa haluta keskityksen ja kääntymisen tapahtuvan
+	  harvemmin asttamalla asetuksen suuremmaksi, jotta pysäköitäessa tai
+	  liikennevaloihin pysähdyttäessä kartta ei pyöri epämääräisesti.
+	  Nopeus annetaan valitsemissasi yksiköissä.
+        </listitem>
+        <listitem>
+          <display_text>Kääntämisherkkyys</display_text> - Määrittää kuinka
+	  usein Maemo Mapper kääntää karttaa perustuen kartan suuntaan ja 
+	  poikkeaamaan verrattuna sen hetkiseen suuntimaasi.
+        </listitem>
+        <listitem>
+          <display_text>Suunta</display_text> - Määrittää mihin suuntaan
+	  näytöllä suuntima osoittaa, kun automaattinen kääntäminen on käytössä
+	  Oletuksena suuntima osoittaa ylös.
+        </listitem>
+      </list>
+      <heading>Ilmoitus</heading>
+      <para>
+        <display_text>Ilmoitus</display_text> välilehti ohjaa, miten
+        ja milloin Maemo Mapper näyttää tai puhuu kohdepisteen tiedot.  
+        Lähestyessäsi reittisuunnitelman kohdepistettä (määritettynä 
+        GPX-tiedoston kuvauksessa), Maemo Mapper näyttää tekstivalikon
+        kyseisellä sisällöllä.  Kun reittisuunnitelma on ladattu Maemo
+        Mapperilla, teksti näyttää seuraavan ajo-ohjeen, esim. "Turn left at
+        Kauppakatu.  Go 0.1 kilometers."
+      </para>
+      <para>
+        Mennessäsi lähemmäksi kohdepistettä, Maemo Mapper näyttää pisteen
+        kuvausta niin kauan, kunnes saavut 
+        <display_text>Ennakkovaroitus</display_text> valinnan rajojen
+        sisäpuolelle, tai ohitat kohdepisteen.  Koska ilmoitushetki riippuu
+        nopeudestasi, ilmoitusteksti saattaa poistua pysähtyessäsi esimerkiksi
+        liikennevaloihin.  Ilmoitusteksti ilmaantuu uudestaan, kun vauhti on
+        lisääntynyt sen verran, että saavut uudelleen
+        <display_text>Ennakkovaroitus</display_text> valinnan rajojen sisälle. 
+      </para>
+      <para>
+        Mikäli olet asentanut <i>fliten</i> (saatavissa Maemo Mapperin kanssa
+        samasta sovellusluettelosta), niin Maemo Mapper voi halutessasi puhua
+        samat ohjeet, mitä se näyttää näytöllä.  Ohjeet puhutaan ainoastaan
+        yhden kerran, ja se tapahtuu silloin kun saavut ensimmäistä kertaa
+        <display_text>Ennakkovaroitus</display_text> valinnan rajojen
+        sisäpuolelle.  Sama tieto on luettavissa näytöltä, mikäli haluat
+        varmistaa ohjeen tiedot.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Ennakkovaroitus</display_text> - Määrittää kuinka
+          paljon ennen kohdepistettä Maemo Mapper antaa ensimmäisen ilmoituksen
+          kohdepisteen kuvauksesta.  Tarkka etäisyys missä ilmoitus annetaan
+          riippuu myös nopeudestasi, joten tämän asetuksen arvon oppii tietämään
+          parhaiten ajan myötä.  Arvon ollessa pienimmillään, Maemo Mapper
+          antaa ilmoituksen juuri ennen kohdepisteeseen saapumista.  Asetuksen
+          ollessa maksimissaan, Maemo Mapper antaa ilmoituksen noin kaksi minuuttia
+          ennen kohdepisteeseen saapumista.  Itselle parhaiten sopivan arvon
+          löytää ainoastaan kokeilemalla.
+        </listitem>
+        <listitem>
+          <display_text>Käytä puhesyntetisaattoria</display_text> - Jos
+          <i>flite</i> on asennettuna, valitsemalla tämän valintaruudun
+          Maemo Mapper puhuu kohdepisteen kuvauksen saapuessasi 
+          <display_text>Ennakkovaroitus</display_text> valinan rajojen sisälle.
+        </listitem>
+      </list>
+      <heading>Sekal.</heading>
+      <para>
+        <display_text>Sekal.</display_text> ja
+        <display_text>Sekal. 2</display_text> välilehdet sisältävät sekalaisia
+        valintoja.
+      </para>
+      <list>
+        <listitem>
+          <display_text>Viivanleveys</display_text> - Määrittää kaikkien
+          kartalle piirrettävien viivojen leveyden.  Asetus muuttaa merkkien,
+          reittisuunnitelmien ja -jälkien, sekä POI-pisteiden kuvien koon.
+        </listitem>
+        <listitem>
+          <display_text>Aktivoi näyttö</display_text> - Määrittelee miten Maemo Mapper
+          rajoittaa näytön taustavalon päällä oloa koko näytön ollessa
+          valittuna. <display_text>Vastaanotettaessa sijaintitietoja</display_text>, Maemo
+          Mapper pitää näytön akttivisena aina kun yhteys GPS-vastaanotimeen on 
+	  aktiivinen.  <display_text>Ei koskaan</display_text> valittuna, Maemo Mapper ei
+	  pidä näyttöä akttivisena ja taustavalo sammuu laitteen asetusten mukaisesti.
+          <display_text>Liikuttaessa (vain koko näyttö)</display_text> on oletusasetus
+	  joka pitää näytön aktiivisena ainoastaan silloin, kun koko näyttö on käytössä
+	  ja GPS-sijainti muuttuu.
+        </listitem>
+        <listitem>
+          <display_text>Tietojen kirjasinkoko</display_text> - Määrittää
+          minkä kokoisella kirjasimella tiedot näytetään käyttäjälle
+          näytön oikeassa yläkulmassa.  Asetus vaikuttaa myös reittisuunnitelman
+          opasteiden näyttämiseen.
+        </listitem>
+        <listitem>
+          <display_text>Yksiköt</display_text> - Määrittää mitä yksiköitä
+          käytetään matkan ja nopeuden ilmaisemiseen näytöllä.
+        </listitem>
+        <listitem>
+          <display_text>Asteiden muoto</display_text> - Määrittää kuinka
+          latitudi ja longitudi näytetään näytöllä.
+        </listitem>
+	<listitem>
+          <display_text>Karttojen hakualue</display_text> - Määrittelee
+	  kuinka paljon näytöllä olevan kartan ulkopuolisia karttoja ladataan,
+	  kun karttojen <display_text>Automaattinen nouto</display_text> on
+	  valittuna.  Kun tämä valinta on asetettu minimiin (yksi palkki)
+	  Maemo Mapper lataa ainoastaan kartat mitkä vaaditaan näytön
+	  täyttämiseen.  Tässä tapauksessa karttaa vieritettäessä näyttö pysyy
+	  mustana kunne Maemo Mapper on ladannut valitun sijainnin kartat.  
+	  Mikäli valinta asetetaan suuremmaksi, sijainnin ympäröivää aluetta
+	  ladataan enemmän eikä sinun tarvitse karttaa vieritettäessä katsella
+	  niin paljon mustaa ruutua.  Peukalo sääntönä voidaan pitää sitä, että 
+	  mitä nopeampi internet yhtes, niin sitä suurempaa asetusta voidaan käyttää.
+	  Oletusasetuksen (kaksi palkkia) tulisi olla riittävä suurimalle osalle
+	  käyttäjistä.
+        </listitem>
+        <listitem>
+          <display_text>Nopeusrajoitus</display_text> - Antaa ilmoituksen, 
+          kun ylität valintaruudussa annetun nopeusrajoituksen arvon. 
+          Käytetty nopeuden yksikkö valitaan
+          <display_text>Yksiköt</display_text> valintalistasta.
+        </listitem>
+        <listitem>
+          <display_text>Sijainti</display_text> - Määrittää missä osassa
+          näyttöä nopeusrajoituksen varoitus on nähtävissä.
+        </listitem>
+      </list>
+      <heading>POI-pisteet</heading>
+      <para>
+        <display_text>POI-pisteet</display_text>-välilehti antaa mahdollisuuden
+        määritellä POI-tietokannan sijainnin ja sen, kuinka POI-pisteet
+        näytetään näytöllä.
+      </para>
+      <list>
+        <listitem>
+          <display_text>POI-tietokanta</display_text> - Tietokannan sijainti
+          laitteen tiedostojärjestelmässä.  Tietokannan täytyy olla sqlite3
+          muotoinen.  Kun Maemo Mapper on käynnistetty ensimmäisen kerran,
+          luodaan automaattisesti tyhjä POI-tietokanta.
+        </listitem>
+        <listitem>
+          <display_text>Näytä POI-pisteet alle zoom-tason</display_text> - Määrittää
+          maksimi zoom-tason (kauimpana maan pinnalta), millä POI-pisteet näytetään
+          näytöllä.  Kun zoom-taso on tämän arvon yläpuolella, POI-pisteitä ei
+          näytetä.
+        </listitem>
+      </list>
+    </topic>
+    <topic>
+      <topictitle>Tietoja ohjelmasta Maemo Mapper</topictitle>
+      <context contextUID="help_maemomapper_about"/>
+      <para>
+        Asennettu versio: 2.4.1
+      </para>
+      <para>
+        Maemo Mapperin on suunnitellut ja luonut John Costigan (aka
+	<display_text>gnuite</display_text>).
+      </para>
+      <para>
+        Copyright © 2006-2008 John Costigan.
+      </para>
+      <para>
+        POI ja GPS-Info koodin on alunperin luonut Cezary Jackiewicz.
+      </para>
+      <para>
+	Karttojen oletuslähde on http://www.openstreetmap.org/ - ja muut
+        karttavarastot ovat kyseisten karttojen tarjoajien lisenssiehtojen
+        alaisia, eivätkä ne välttämättä sovellu Maemo Mapperin kanssa käytettäviksi.
+        Joissakin tilanteissa tällaisten karttavarastojen käyttö saattaa olla
+        karttojen tarjoajan lisenssiehtojen vastaista.  Maemo Mapperilla
+        erikseen ladatut karttavarastot saattavat sisältää myös tällaisia
+        rajoitteita.  Mikäli et ole varma onko jonkin karttavaraston käyttö
+        karttojen tarjoajan lisenssiehtojen mukaista, niin sinun tulisi poistaa
+        se käytössä olevien karttavarastojen listalta.  Karttavarastojen käyttö
+        on jokaisen omalla vastuulla.
+      </para>
+      <para>
+        Tämä on vapaa ohjelma: tätä ohjelmaa saa levittää edelleen ja muuttaa
+        Free Software Foundationin julkaiseman GNU General Public Licensen
+        (GPL-lisenssi) version 2 tai (valinnan mukaan) myöhemmän version ehtojen
+        mukaisesti.
+      </para>
+      <para>
+        Tätä ohjelmaa levitetään siinä toivossa, että se olisi hyödyllinen mutta
+        ilman mitään takuuta; edes hiljaista takuuta kaupallisesti
+        hyväksyttävästä laadusta tai soveltuvuudesta tiettyyn tarkoitukseen.
+        Katso GPL- lisenssistä lisää yksityiskohtia.
+      </para>
+    </topic>
+  </folder>
+</ossohelpsource>

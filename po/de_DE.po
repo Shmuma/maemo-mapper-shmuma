@@ -1,0 +1,1736 @@
+# This is an en_US "translation" file for Maemo Mapper.  To translate this to
+# another language, first copy this file to a filename with the appropriate
+# language/country code, then modify the "msgstr" strings with the correct
+# translation.
+#
+# Copyright (C) 2006 John Costigan
+# This file is distributed under the same license as the maemo-mapper package.
+# John Costigan <gnuite@gmail.com>, 2006.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: maemo-mapper 1.2.4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-03-17 01:55-0400\n"
+"PO-Revision-Date: 2008-02-21 16:27+0100\n"
+"Last-Translator: Claudius Henrichs <claudius.h@gmx.de>\n"
+"Language-Team: John Costigan <gnuite@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../src/poi.c:979
+msgid "# POIs"
+msgstr "# POIs"
+
+#: ../src/menu.c:1686
+msgid "About..."
+msgstr "Info..."
+
+#: ../src/poi.c:658
+msgid "Add Category"
+msgstr "Kategorie hinzufügen"
+
+#: ../src/poi.c:1146
+msgid "Add POI"
+msgstr "POI hinzufügen"
+
+#: ../src/cmenu.c:656 ../src/cmenu.c:690
+msgid "Add POI..."
+msgstr "POI hinzufügen..."
+
+#: ../src/cmenu.c:652 ../src/cmenu.c:710
+msgid "Add Route Point"
+msgstr "Routenpunkt hinzufügen"
+
+#: ../src/path.c:1498
+msgid "Add Waypoint"
+msgstr "Wegpunkt hinzufügen"
+
+#: ../src/cmenu.c:654 ../src/cmenu.c:712
+msgid "Add Waypoint..."
+msgstr "Wegpunkt hinzufügen..."
+
+#: ../src/poi.c:935
+msgid "Add..."
+msgstr "Hinzufügen..."
+
+#: ../src/menu.c:926
+msgid "Address"
+msgstr "Adresse"
+
+#: ../src/menu.c:951
+msgid "Address Located"
+msgstr "Adresse gefunden"
+
+#: ../src/menu.c:1578
+msgid "Address..."
+msgstr "Adresse..."
+
+#: ../src/settings.c:1342
+msgid "Advance Notice"
+msgstr "Vorankündigung"
+
+#: ../src/maps.c:2807
+msgid "Along Route - Radius (tiles):"
+msgstr "Entlang der Route - Radius (Kacheln):"
+
+#: ../src/display.c:820
+msgid "Altitude"
+msgstr "Höhe"
+
+#: ../src/settings.c:666
+msgid "An error occurred while attempting to scan for bluetooth devices."
+msgstr "Bei der Suche nach Bluetooth-Geräten ist ein Fehler aufgetreten."
+
+#: ../src/maps.c:2166
+msgid ""
+"An error occurred while retrieving the repositories.  The web service may be "
+"temporarily down."
+msgstr ""
+"Beim Empfang der Quellen ist ein Fehler aufgetreten. Möglicherweise ist der "
+"Webdienst vorübergehend nicht erreichbar."
+
+#: ../src/maps.c:1697
+msgid "An error occurred while trying to compact the database."
+msgstr "Bei der Komprimierung der Datenbank ist ein Fehler aufgetreten."
+
+#: ../src/gps.c:891
+msgid ""
+"An error occurred while trying to reset the bluetooth radio.\n"
+"\n"
+"Did you make sure to modify\n"
+"the /etc/sudoers file?"
+msgstr ""
+"Beim Zurücksetzen des Bluetooth-Senders ist ein Fehler aufgetreten.\n"
+"\n"
+"Haben Sie die Datei /etc/sudoers\n"
+"korrekt bearbeitet?"
+
+#: ../src/settings.c:1330
+msgid "Announce"
+msgstr "Ansage"
+
+#: ../src/cmenu.c:662
+msgid "Apply Map Correction"
+msgstr ""
+
+#: ../src/maps.c:2847
+msgid "Area"
+msgstr "Kartenausschnitt"
+
+#: ../src/menu.c:1629 ../src/settings.c:1259
+msgid "Auto-Center"
+msgstr "Auto-Zentrierung"
+
+#: ../src/menu.c:1204
+msgid "Auto-Center Mode: Lat/Lon"
+msgstr "Auto-Zentrierung: Br/Län"
+
+#: ../src/menu.c:1187
+msgid "Auto-Center Mode: Lead"
+msgstr "Auto-Zentrierung: Spur"
+
+#: ../src/menu.c:1221
+msgid "Auto-Center Off"
+msgstr "Auto-Zentrierung deaktiviert"
+
+#: ../src/menu.c:1507
+msgid "Auto-Download"
+msgstr "Auto-Download"
+
+#: ../src/settings.c:1437
+msgid "Auto-Download Pre-cache"
+msgstr "Auto-Download Pre-cache"
+
+#: ../src/menu.c:1543
+msgid "Auto-Rotate"
+msgstr "Auto-Drehen"
+
+#: ../src/menu.c:663
+msgid "Auto-Rotate Disabled"
+msgstr "Auto-Drehen deaktiviert"
+
+#: ../src/menu.c:658
+msgid "Auto-Rotate Enabled"
+msgstr "Auto-Drehen aktiviert"
+
+#: ../src/path.c:1261
+msgid "Auto-Update"
+msgstr "Auto-Aktualisierung"
+
+#: ../src/path.c:1267
+msgid "Avoid Highways"
+msgstr "Autobahnen meiden"
+
+#: ../src/poi.c:2228
+msgid "Bear."
+msgstr "Richt."
+
+#: ../src/main.c:328 ../src/settings.c:1189
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+#: ../src/main.c:326
+msgid "Bottom-Left"
+msgstr "Unten links"
+
+#: ../src/main.c:325 ../src/maps.c:2934
+msgid "Bottom-Right"
+msgstr "Unten rechts"
+
+#: ../src/cmenu.c:649
+msgid "Browse POI..."
+msgstr "POI durchsuchen..."
+
+#: ../src/poi.c:2851
+msgid "Browse POIs"
+msgstr "POIs durchsuchen"
+
+#: ../src/maps.c:1936 ../src/menu.c:1492 ../src/settings.c:1227
+#: ../src/settings.c:1500
+msgid "Browse..."
+msgstr "Durchsuchen..."
+
+#: ../src/poi.c:189
+msgid "Bus stops, airports, train stations, etc."
+msgstr "Bushaltestellen, Flughäfen, Bahnhöfe, etc."
+
+#: ../src/poi.c:194
+msgid "Business"
+msgstr "Geschäft"
+
+#: ../src/maps.c:2798
+msgid "By Area (see tab)"
+msgstr "Nach Ausschnitt (Siehe Reiter)"
+
+#: ../src/maps.c:1926
+msgid "Cache DB"
+msgstr "Cache-DB"
+
+#: ../src/maps.c:1866
+msgid ""
+"Cannot delete the last repository - there must be at lease one repository."
+msgstr ""
+"Letzte Quelle kann nicht entfernt werden - mindestens eine Quelle muss "
+"vorhanden sein."
+
+#: ../src/menu.c:1494
+msgid "Categories..."
+msgstr "Kategorien..."
+
+#: ../src/poi.c:511 ../src/poi.c:1181 ../src/poi.c:1431 ../src/poi.c:1787
+#: ../src/poi.c:2210 ../src/poi.c:2389 ../src/poi.c:2569 ../src/poi.c:2886
+msgid "Category"
+msgstr "Kategorie"
+
+#: ../src/poi.c:2103 ../src/poi.c:2264
+msgid "Checked POI Actions..."
+msgstr "Gewählte POI-Aktionen..."
+
+#: ../src/maps.c:2751 ../src/menu.c:1456 ../src/menu.c:1476
+msgid "Clear"
+msgstr "Leeren"
+
+#: ../src/main.c:301
+msgid "Clear Track"
+msgstr "Track leeren"
+
+#: ../src/menu.c:1536
+msgid "Clockwise"
+msgstr "Im Uhrzeigersinn"
+
+#: ../src/menu.c:1688
+msgid "Close"
+msgstr "Schließen"
+
+#: ../src/settings.c:891
+msgid "Colors"
+msgstr "Farben"
+
+#: ../src/settings.c:1173
+msgid "Colors..."
+msgstr "Farben..."
+
+#: ../src/maps.c:1718
+msgid "Compact Database"
+msgstr "Datenbank komprimieren"
+
+#: ../src/maps.c:1939
+msgid "Compact..."
+msgstr "Komprimieren..."
+
+#: ../src/maps.c:1777
+msgid "Compacting database..."
+msgstr "Komprimiere Datenbank..."
+
+#: ../src/menu.c:1604
+msgid "Compass Rose"
+msgstr "Kompassrose"
+
+#: ../src/maps.c:2479 ../src/maps.c:2579
+msgid "Confirm DELETION of"
+msgstr "Bestätige ENTFERNEN von"
+
+#: ../src/maps.c:1873
+msgid "Confirm delete of repository"
+msgstr "Bestätige Entfernen der Quelle"
+
+#: ../src/cmenu.c:427
+msgid "Confirm delete of waypoint"
+msgstr "Bestätige Entfernen des Wegpunkts"
+
+#: ../src/maps.c:2485 ../src/maps.c:2585
+msgid "Confirm download of"
+msgstr "Bestätige Download von"
+
+#: ../src/settings.c:830
+msgid "Continue?"
+msgstr "Fortfahren?"
+
+#: ../src/display.c:2420
+msgid "Copy"
+msgstr "Kopieren"
+
+#: ../src/cmenu.c:680
+msgid "Copy Description"
+msgstr "Beschreibung kopieren"
+
+#: ../src/cmenu.c:678
+msgid "Copy Lat/Lon"
+msgstr "Br/Län kopieren"
+
+#: ../src/menu.c:1538
+msgid "Counter"
+msgstr "Gegen UZS"
+
+#: ../src/path.c:1581
+msgid ""
+"Creating a \"waypoint\" with no description actually adds a break point.  Is "
+"that what you want?"
+msgstr ""
+"Einen \"Wegpunkt\" ohne Beschreibung fügt eine Unterbrechung ein. Möchsten "
+"Sie das tun?"
+
+#: ../src/display.c:293
+msgid "DGPS"
+msgstr "DGPS"
+
+#: ../src/poi.c:2379
+msgid "Default Category"
+msgstr "Standardkategorie"
+
+#: ../src/settings.c:1424
+msgid "Degrees Format"
+msgstr "Gradformat"
+
+#: ../src/maps.c:2788
+msgid "Delete Maps"
+msgstr "Karten entfernen"
+
+#: ../src/poi.c:1017
+msgid "Delete POI?"
+msgstr "POI entfernen?"
+
+#: ../src/poi.c:559
+msgid "Delete category?"
+msgstr "Kategorie entfernen?"
+
+#: ../src/poi.c:2017
+msgid "Delete selected POI?"
+msgstr "Ausgewählten POI entfernen?"
+
+#: ../src/cmenu.c:687 ../src/maps.c:2275 ../src/poi.c:638 ../src/poi.c:1397
+#: ../src/poi.c:2118
+msgid "Delete..."
+msgstr "Entfernen..."
+
+#: ../src/menu.c:322 ../src/path.c:1523 ../src/poi.c:677 ../src/poi.c:974
+#: ../src/poi.c:1197 ../src/poi.c:1447 ../src/settings.c:654
+msgid "Description"
+msgstr "Beschreibung"
+
+#: ../src/path.c:1289
+msgid "Destination"
+msgstr "Ziel"
+
+#: ../src/menu.c:1671
+msgid "Details..."
+msgstr "Details..."
+
+#: ../src/poi.c:2218
+msgid "Dist."
+msgstr "Entf."
+
+#: ../src/cmenu.c:123 ../src/path.c:529 ../src/path.c:589
+msgid "Distance"
+msgstr "Entfernung"
+
+#: ../src/maps.c:1998
+msgid "Double Pixels"
+msgstr "Doppelte Pixel"
+
+#: ../src/main.c:229 ../src/menu.c:1555
+msgid "Down"
+msgstr "Runter"
+
+#: ../src/maps.c:2775
+msgid "Download Maps"
+msgstr "Karten herunterladen"
+
+#: ../src/cmenu.c:647
+msgid "Download POI..."
+msgstr "POI herunterladen..."
+
+#: ../src/poi.c:2524
+msgid "Download POIs"
+msgstr "POIS herunterladen"
+
+#: ../src/path.c:1215
+msgid "Download Route"
+msgstr "Router herunterladen"
+
+#: ../src/cmenu.c:645 ../src/cmenu.c:685 ../src/cmenu.c:707
+msgid "Download Route to..."
+msgstr "Route herunterladen nach..."
+
+#: ../src/maps.c:1961
+msgid "Download Zoom Steps"
+msgstr "Zoomstufen herunterladen"
+
+#: ../src/maps.c:2256 ../src/menu.c:1446 ../src/menu.c:1490
+msgid "Download..."
+msgstr "Herunterladen..."
+
+#: ../src/maps.c:2013
+msgid "Downloadable Zooms:"
+msgstr "Herunterladbare Zooms:"
+
+#: ../src/maps.c:1086 ../src/maps.c:1099
+msgid "Downloaded maps will not be cached."
+msgstr "Heruntergeladene Karten werden nicht gecached."
+
+#: ../src/menu.c:1568
+msgid "East"
+msgstr "Ost"
+
+#: ../src/poi.c:1193 ../src/poi.c:1443 ../src/poi.c:1796 ../src/poi.c:2398
+msgid "Edit Categories..."
+msgstr "Kategorien bearbeiten..."
+
+#: ../src/poi.c:632
+msgid "Edit Category"
+msgstr "Kategorie bearbeiten"
+
+#: ../src/poi.c:1391
+msgid "Edit POI"
+msgstr "POI bearbeiten"
+
+#: ../src/poi.c:932 ../src/poi.c:2260
+msgid "Edit..."
+msgstr "Bearbeiten..."
+
+#: ../src/poi.c:193
+msgid "Elementary schools, college campuses, etc."
+msgstr "Grundschulen, Schulgelände, etc."
+
+#: ../src/menu.c:1663
+msgid "Enable GPS"
+msgstr "GPS aktivieren"
+
+#: ../src/menu.c:1478
+#, fuzzy
+msgid "Enable Tracking"
+msgstr "Track leeren"
+
+#: ../src/settings.c:1355
+msgid "Enable Voice Synthesis (requires flite)"
+msgstr "Sprachausgabe aktivieren (benötigt flite)"
+
+#: ../src/settings.c:1335
+msgid "Enable Waypoint Announcements"
+msgstr "Wegpunkte ansagen"
+
+#: ../src/poi.c:701 ../src/poi.c:964
+msgid "Enabled"
+msgstr "Aktiviert"
+
+#: ../src/poi.c:1346
+msgid "Error adding POI"
+msgstr "Fehler beim Hinzufügen des POI"
+
+#: ../src/poi.c:764
+msgid "Error adding category"
+msgstr "Fehler beim Hinzufügen der Kategorie"
+
+#: ../src/gps.c:576
+msgid "Error connecting to GPS receiver."
+msgstr "Fehler bei der Verbindung zum GPS-Empfänger."
+
+#: ../src/gps.c:675
+msgid "Error connecting to GPSD server."
+msgstr "Fehler bei der Verbindung zum GPSD-Server."
+
+#: ../src/poi.c:574 ../src/poi.c:1028 ../src/poi.c:2046
+msgid "Error deleting POI"
+msgstr "Fehler beim Entfernen des POI"
+
+#: ../src/poi.c:583
+msgid "Error deleting category"
+msgstr "Fehler beim Löschen der Kategorie"
+
+#: ../src/gps.c:623
+msgid "Error opening GPS device."
+msgstr "Fehler beim Öffnen  des GPS-Gerätes."
+
+#: ../src/main.c:506 ../src/menu.c:134 ../src/menu.c:246 ../src/path.c:692
+#: ../src/poi.c:2441 ../src/poi.c:2819
+msgid "Error parsing GPX file."
+msgstr "Fehler beim Einlesen der GPX-Datei."
+
+#: ../src/gps.c:700
+msgid "Error reading GPS data."
+msgstr "Fehler beim Lesen der GPS-Daten."
+
+#: ../src/poi.c:808
+msgid "Error updating Category"
+msgstr "Fehler bei der Aktualisierung der Kategorie"
+
+#: ../src/poi.c:1579 ../src/poi.c:1872
+msgid "Error updating POI"
+msgstr "Fehler bei der Aktualisierung des POI"
+
+#: ../src/poi.c:749
+msgid "Error updating category"
+msgstr "Fehler bei der Aktualisierung der Kategorie"
+
+#: ../src/gpx.c:112 ../src/gpx.c:140
+msgid "Error while writing to file"
+msgstr "Fehler beim Schreiben der Datei"
+
+#: ../src/poi.c:140
+msgid "Error with POI database"
+msgstr "Fehler in der POI-Datenbank"
+
+#: ../src/menu.c:165 ../src/menu.c:268 ../src/poi.c:2086
+msgid "Error writing GPX file."
+msgstr "Fehler beim Schreiben der GPX-Datei."
+
+#: ../src/gps.c:830
+msgid "Establishing GPS fix"
+msgstr "Warte auf GPS-Fix"
+
+#: ../src/display.c:297
+msgid "Estimated"
+msgstr "Geschätzt"
+
+#: ../src/poi.c:2123
+msgid "Export to GPX..."
+msgstr "Als GPX exportieren..."
+
+#: ../src/util.c:147
+msgid "Failed to connect to GPX Directions server"
+msgstr "Fehler bei Verbindung zum GPX-Wegbeschreibungs-Server"
+
+#: ../src/settings.c:1899
+msgid "Failed to initialize GConf.  Quitting."
+msgstr "Fehler bei Initialisierung von GConf. Programmende."
+
+#: ../src/settings.c:179
+msgid "Failed to initialize GConf.  Settings were not saved."
+msgstr ""
+"Fehler bei Initialisierung von GConf. Einstellungen wurden nicht gespeichert."
+
+#: ../src/display.c:2526 ../src/main.c:494
+msgid "Failed to open file for reading"
+msgstr "Datei konnte nicht zum Lesen geöffnet werden"
+
+#: ../src/display.c:2527
+msgid "Failed to open file for writing"
+msgstr "Datei konnte nicht zum Schreiben geöffnet werden"
+
+#: ../src/maps.c:1693
+msgid "Failed to open map database for compacting."
+msgstr "Kartendatenbank konnte nicht für Komprimierung geöffnet werden."
+
+#: ../src/maps.c:1084 ../src/maps.c:1098
+msgid "Failed to open map database for repository"
+msgstr "Kartendatenbank für Quelle konnte nicht geöffnet werden."
+
+#: ../src/poi.c:207
+msgid "Failed to open or create database"
+msgstr "Datenbank konnte nicht geöffnet oder erstellt werden."
+
+#: ../src/path.c:1719
+msgid "Failed to open path database. Tracks and routes will not be saved."
+msgstr ""
+"Pfaddatenbank konnte nicht geöffnet werden. Tracks und Routen werden nicht "
+"gespeichert."
+
+#: ../src/path.c:206 ../src/path.c:232 ../src/path.c:251
+msgid "Failed to write to path database. Tracks and routes may not be saved."
+msgstr ""
+"Pfaddatenbank konnte nicht geschrieben werden. Tracks und Routen werden "
+"möglicherweise nicht gespeichert."
+
+#: ../src/main.c:330
+msgid "File"
+msgstr "Datei"
+
+#: ../src/settings.c:1211
+msgid "File Path"
+msgstr "Dateipfad"
+
+#: ../src/gpx.c:113 ../src/gpx.c:141
+msgid "File is incomplete."
+msgstr "Datei unvollständig."
+
+#: ../src/display.c:865
+msgid "Fix"
+msgstr "Fix"
+
+#: ../src/display.c:874
+msgid "Fix Quality"
+msgstr "Fix-Qualität"
+
+#: ../src/settings.c:1278
+msgid "Fixed"
+msgstr "Fest"
+
+#: ../src/display.c:296
+msgid "Float RTK"
+msgstr "Float RTK"
+
+#: ../src/display.c:2411
+msgid "Format"
+msgstr "Format"
+
+#: ../src/menu.c:1653
+msgid "Full Screen"
+msgstr "Vollbild"
+
+#: ../src/menu.c:1659 ../src/settings.c:909 ../src/settings.c:1184
+msgid "GPS"
+msgstr "GPS"
+
+#: ../src/display.c:768
+msgid "GPS Details"
+msgstr "GPS-Details"
+
+#: ../src/display.c:781
+msgid "GPS Information"
+msgstr "GPS-Informationen"
+
+#: ../src/maps.c:2861 ../src/menu.c:1580
+msgid "GPS Location"
+msgstr "GPS-Standort"
+
+#: ../src/main.c:329
+msgid "GPSD"
+msgstr "GPSD"
+
+#: ../src/settings.c:1233
+msgid "GPSD Host"
+msgstr "GPSD-Host"
+
+#: ../src/poi.c:197
+msgid "General landmarks."
+msgstr "Allgemeine Sehenswürdigkeiten."
+
+#: ../src/poi.c:195
+msgid "General places of business."
+msgstr "Allgemein Geschäftsstandorte."
+
+#: ../src/maps.c:1738
+msgid ""
+"Generally, deleted maps create an empty space in the database that is later "
+"reused when downloading new maps.  Compacting the database reorganizes it "
+"such that all that blank space is eliminated.  This is the only way that the "
+"size of the database can decrease.\n"
+"This reorganization requires creating a new file and inserting all the maps "
+"in the old database file into the new file. The new file is then renamed to "
+"the same name as the old file and dbf is updated to contain all the correct "
+"information about the new file.  Note that this can require free space on "
+"disk of an amount up to the size of the map database.\n"
+"This process may take several minutes, especially if your map database is "
+"large.  As a rough estimate, you can expect to wait approximately 2-5 "
+"seconds per megabyte of map data (34-85 minutes per gigabyte).  There is no "
+"progress indicator, although you can watch the new file grow in any file "
+"manager.  Do not attempt to close Maemo Mapper while the compacting "
+"operation is in progress."
+msgstr ""
+"Entfernte Karten hinterlassen leere Bereiche in der Datenbank, der später "
+"beim Download neuer Karten wiederverwendet wird. Die Komprimierung der "
+"Datenbank reorganisiert diese, so dass die Freiräume entfernt werden. Nur "
+"auf diese Weise kann die Datenbankgröße verringert werden.\n"
+"Bei dieser Reorganisation wird eine neue Datei erstellt, in die alle Karten "
+"der alten Datenbank übertragen werden. Die neue Datei wird dann in die alte "
+"umbenannt und das DBF auf die Informationen der neuen Datei ktualisiert. "
+"Hierzu ist freier Speicherplatz bis zur Größe der Kartendatenbank nötig.\n"
+"Dieser Vorgang kann mehere Minuten dauern, speziell, wenn die "
+"Kartendatenbank sehr groß ist. Als grober Richtwert ist eine Wartezeit von 2-"
+"5 Sekunden pro Mebibyte Kartendaten anzusetzen (34-85 Minuten pro Gibibyte). "
+"Es gibt keinen Fortschrittsbalken, aber Sie können das Anwachsen der neuen "
+"Datei im Dateimanager beobachten. Schließen Sie Maemo Mapper nicht während "
+"des Komprimierungsvorgangs."
+
+#: ../src/menu.c:1572 ../src/poi.c:2257
+msgid "Go to"
+msgstr "Gehe zu"
+
+#: ../src/menu.c:916
+msgid "Go to Address"
+msgstr "Gehe zu Adresse"
+
+#: ../src/menu.c:810
+msgid "Go to Lat/Lon"
+msgstr "Gehe zu Br/Län"
+
+#: ../src/cmenu.c:715
+msgid "Go to Nearest"
+msgstr "Gehe zu Nächstem"
+
+#: ../src/cmenu.c:693
+msgid "Go to Next"
+msgstr "Gehe zu Nächstem"
+
+#: ../src/settings.c:775
+msgid "Hardware Keys"
+msgstr "Tastenbelegung"
+
+#: ../src/settings.c:1170
+msgid "Hardware Keys..."
+msgstr "Tastenbelegung..."
+
+#: ../src/display.c:829
+msgid "Heading"
+msgstr "Richtung"
+
+#: ../src/menu.c:1684
+msgid "Help..."
+msgstr "Hilfe..."
+
+#: ../src/poi.c:181
+msgid "Houses, apartments, or other residences of import."
+msgstr "Häuser, Appartements und ähnliche Wohnungen"
+
+#: ../src/poi.c:956
+msgid "ID"
+msgstr "ID"
+
+#: ../src/menu.c:1488
+msgid "Import..."
+msgstr "Importieren..."
+
+#: ../src/poi.c:187
+msgid "Indoor or Outdoor places to have fun."
+msgstr "Ort zur Unterhaltung."
+
+#: ../src/settings.c:1390
+msgid "Info Font Size"
+msgstr "Info Schriftgröße"
+
+#: ../src/menu.c:1468
+msgid "Insert Break"
+msgstr "Unterbrechung einfügen"
+
+#: ../src/menu.c:302
+msgid "Insert Mark"
+msgstr "Markierung einfügen"
+
+#: ../src/menu.c:1470
+msgid "Insert Mark..."
+msgstr "Markierung einfügen..."
+
+#: ../src/main.c:300
+msgid "Insert Track Break"
+msgstr "Track-Unterbrechung einfügen"
+
+#: ../src/maps.c:3099
+msgid "Invalid Bottom-Right Latitude"
+msgstr "Ungültiger Breitengrad unten rechts"
+
+#: ../src/maps.c:3106
+msgid "Invalid Bottom-Right Longitude"
+msgstr "Ungültiger Längengrad unten rechts"
+
+#: ../src/menu.c:881 ../src/poi.c:1292 ../src/poi.c:1520
+msgid "Invalid Latitude"
+msgstr "Ungültiger Breitengrad"
+
+#: ../src/menu.c:888 ../src/poi.c:1299 ../src/poi.c:1527
+msgid "Invalid Longitude"
+msgstr "Ungültiger Längengrad"
+
+#: ../src/gps.c:71 ../src/gps.c:82
+msgid "Invalid NMEA input from receiver!"
+msgstr "Ungültige NMEA-Eingabe vom Empfänger!"
+
+#: ../src/maps.c:3085
+msgid "Invalid Top-Left Latitude"
+msgstr "Ungültiger Breitengrad oben links"
+
+#: ../src/maps.c:3092
+msgid "Invalid Top-Left Longitude"
+msgstr "Ungültiger Längengrad oben links"
+
+#: ../src/util.c:158
+msgid "Invalid address."
+msgstr "Ungültige Adresse."
+
+#: ../src/poi.c:2801
+msgid "Invalid origin or query."
+msgstr "Ungültige Quelle oder Anfrage."
+
+#: ../src/path.c:671
+msgid "Invalid source or destination."
+msgstr "Ungültige Quelle oder Ziel."
+
+#: ../src/display.c:1105
+msgid ""
+"It looks like this is your first time running Maemo Mapper.  Press OK to "
+"view the the help pages. Otherwise, press Cancel to continue."
+msgstr ""
+"Offenbar führen Sie Maemo Mapper zum ersten Mal aus. Klicken Sie OK, um die "
+"Hilfe anzusehen. Mit Abbrechen fahren Sie fort."
+
+#: ../src/poi.c:506 ../src/poi.c:669 ../src/poi.c:969 ../src/poi.c:1173
+#: ../src/poi.c:1423 ../src/poi.c:2237
+msgid "Label"
+msgstr "Bezeichnung"
+
+#: ../src/poi.c:196
+msgid "Landmark"
+msgstr "Sehenswürdigkeit"
+
+#: ../src/display.c:2393 ../src/poi.c:1157 ../src/poi.c:1407
+msgid "Lat"
+msgstr "Br"
+
+#: ../src/menu.c:312 ../src/path.c:1508
+msgid "Lat, Lon:"
+msgstr "Br, Län:"
+
+#: ../src/menu.c:1633
+msgid "Lat/Lon"
+msgstr "Br/Län"
+
+#: ../src/menu.c:1576
+msgid "Lat/Lon..."
+msgstr "Br/Län..."
+
+#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:2851 ../src/menu.c:820
+msgid "Latitude"
+msgstr "Breitengrad"
+
+#: ../src/menu.c:1639
+msgid "Lead"
+msgstr "Spur"
+
+#: ../src/settings.c:1263
+msgid "Lead Amount"
+msgstr "Spurfaktor"
+
+#: ../src/main.c:230 ../src/menu.c:1557
+msgid "Left"
+msgstr "Links"
+
+#: ../src/settings.c:1367
+msgid "Line Width"
+msgstr "Linienbreite"
+
+#: ../src/display.c:838
+msgid "Local time"
+msgstr "Ortszeit"
+
+#: ../src/poi.c:501 ../src/settings.c:1465
+msgid "Location"
+msgstr "Position"
+
+#: ../src/poi.c:190
+msgid "Lodging"
+msgstr "Unterkunft"
+
+#: ../src/display.c:2402 ../src/poi.c:1165 ../src/poi.c:1415
+msgid "Lon"
+msgstr "Län"
+
+#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:2855 ../src/menu.c:839
+msgid "Longitude"
+msgstr "Längengrad"
+
+#: ../src/settings.c:649
+msgid "MAC"
+msgstr "MAC"
+
+#: ../src/maps.c:2147
+msgid ""
+"Maemo Mapper will now download and add a list of possibly-duplicate "
+"repositories from the internet.  Continue?"
+msgstr ""
+"Maemo Mapper lädt jetzt eine Liste möglicher doppelter Quellen aus dem "
+"Internet und fügt diese hinzu. Fortfahren?"
+
+#: ../src/maps.c:2736
+msgid "Manage Maps"
+msgstr "Karten verwalten"
+
+#: ../src/menu.c:1503
+msgid "Manage Maps..."
+msgstr "Karten verwalten..."
+
+#: ../src/maps.c:2235
+msgid "Manage Repositories"
+msgstr "Quellen verwalten"
+
+#: ../src/menu.c:1505
+msgid "Manage Repositories..."
+msgstr "Quellen verwalten..."
+
+#: ../src/display.c:298
+msgid "Manual"
+msgstr "Manuell"
+
+#: ../src/cmenu.c:279
+msgid "Map correction applied."
+msgstr ""
+
+#: ../src/cmenu.c:286
+msgid "Map correction removed."
+msgstr ""
+
+#: ../src/menu.c:1498
+msgid "Maps"
+msgstr "Karten"
+
+#: ../src/display.c:883
+msgid "Max speed"
+msgstr "Max. Geschw."
+
+#: ../src/maps.c:2033
+msgid "Max."
+msgstr "Max."
+
+#: ../src/maps.c:2022
+msgid "Min."
+msgstr "Min."
+
+#: ../src/settings.c:1297
+msgid "Min. Speed"
+msgstr "Min. Geschw."
+
+#: ../src/maps.c:2367
+msgid "Minimum Downloadable Zoom must be less than Maximum Downloadable Zoom."
+msgstr "Minimaler Downloadbarer Zoom muss weniger als der Maximale sein."
+
+#: ../src/settings.c:1363
+msgid "Misc."
+msgstr "Versch."
+
+#: ../src/settings.c:1420
+msgid "Misc. 2"
+msgstr "Versch. 2"
+
+#: ../src/poi.c:199
+msgid "Miscellaneous category for everything else."
+msgstr "Vermischte Kategories für alles Übrige."
+
+#: ../src/maps.c:3051 ../src/menu.c:553
+msgid ""
+"NOTE: You must set a Map URI in the current repository in order to download "
+"maps."
+msgstr ""
+"HINWEIS: Sie müssen eine Map-URI für die aktuelle Quelle angeben um Karten "
+"herunterladen zu können."
+
+#: ../src/maps.c:1810 ../src/maps.c:2086
+msgid "Name"
+msgstr "Name"
+
+#: ../src/menu.c:1584
+msgid "Nearest POI"
+msgstr "Nächster POI"
+
+#: ../src/main.c:236
+msgid "Never"
+msgstr "Nie"
+
+#: ../src/maps.c:1800
+msgid "New Name"
+msgstr "Neuer Name"
+
+#: ../src/maps.c:2076
+msgid "New Repository"
+msgstr "Neue Quelle"
+
+#: ../src/maps.c:2278
+msgid "New..."
+msgstr "Neu..."
+
+#: ../src/menu.c:1582
+msgid "Next Waypoint"
+msgstr "Nächster Wegpunkt"
+
+#: ../src/maps.c:2006
+msgid "Next-able"
+msgstr "Durchsch."
+
+#: ../src/menu.c:1039 ../src/poi.c:444 ../src/poi.c:3126
+msgid "No POIs found."
+msgstr "Keine POIs gefunden."
+
+#: ../src/poi.c:1671
+msgid "No POIs were found."
+msgstr "Keine POIs wurden gefunden."
+
+#: ../src/menu.c:1645
+msgid "None"
+msgstr "Kein"
+
+#: ../src/menu.c:1562
+msgid "North"
+msgstr "Nord"
+
+#: ../src/menu.c:1444 ../src/menu.c:1464
+msgid "Open..."
+msgstr "Öffnen..."
+
+#: ../src/display.c:1122
+msgid ""
+"OpenStreetMap.org provides public, free-to-use maps.  You can also download "
+"a sample set of repositories from  the internet by using the \"Download...\" "
+"button."
+msgstr ""
+"OpenStreetMap.org liefert frei verfügbare Karten. Sie können ein "
+"Beispielsatz von Quellen aus dem Internet herunterladen, indem Sie auf den "
+"Knopf \"Download...\" klicken."
+
+#: ../src/path.c:1274 ../src/poi.c:2594 ../src/poi.c:2911
+msgid "Origin"
+msgstr "Quelle"
+
+#: ../src/poi.c:198
+msgid "Other"
+msgstr "Anderes"
+
+#: ../src/maps.c:2782
+msgid "Overwrite"
+msgstr "Überschreiben"
+
+#: ../src/poi.c:2474
+msgid "Overwrite query with the following text?"
+msgstr "Anfrage mit diesem Text überschreiben?"
+
+#: ../src/cmenu.c:697 ../src/menu.c:1484 ../src/menu.c:1623
+#: ../src/settings.c:954 ../src/settings.c:1480
+msgid "POI"
+msgstr "POI"
+
+#: ../src/poi.c:918
+msgid "POI Categories"
+msgstr "POI-Kategorien"
+
+#: ../src/poi.c:2168
+msgid "POI List"
+msgstr "POI-Liste"
+
+#: ../src/settings.c:1484
+msgid "POI database"
+msgstr "POI-Datenbank"
+
+#: ../src/poi.c:2082
+msgid "POIs Exported"
+msgstr "POIs exportiert"
+
+#: ../src/poi.c:1665
+msgid ""
+"POIs were added to the POI database.  The following screen will allow you to "
+"modify or delete any of the new POIs."
+msgstr ""
+"POIs wurden zur POI-Datenbank hinzugefügt. Der folgende Bildschirm erlaubt "
+"die Bearbeitung oder das Entfernen der neuen POIs."
+
+#: ../src/display.c:294
+msgid "PPS"
+msgstr "PPS"
+
+#: ../src/poi.c:2578
+msgid "Page"
+msgstr "Seite"
+
+#: ../src/menu.c:1549
+msgid "Pan"
+msgstr "Verschieben"
+
+#: ../src/main.c:271
+msgid "Pan Down"
+msgstr "Nach unten verschieben"
+
+#: ../src/main.c:269
+msgid "Pan East"
+msgstr "Nach Osten verschieben"
+
+#: ../src/main.c:272
+msgid "Pan Left"
+msgstr "Nach links verschieben"
+
+#: ../src/main.c:266
+msgid "Pan North"
+msgstr "Nach Norden verschieben"
+
+#: ../src/main.c:273
+msgid "Pan Right"
+msgstr "Nach rechts verschieben"
+
+#: ../src/settings.c:1282
+msgid "Pan Sensitivity"
+msgstr "Bewegungsempf."
+
+#: ../src/main.c:268
+msgid "Pan South"
+msgstr "Nach Süden verschieben"
+
+#: ../src/main.c:270
+msgid "Pan Up"
+msgstr "Nach oben verschieben"
+
+#: ../src/main.c:267
+msgid "Pan West"
+msgstr "Nach Westen verschieben"
+
+#: ../src/poi.c:183
+msgid "Places to eat or drink."
+msgstr "Essen und/oder Trinken."
+
+#: ../src/poi.c:185
+msgid "Places to shop or acquire services."
+msgstr "Einkauf und Nutzung von Dienstleistungen."
+
+#: ../src/poi.c:191
+msgid "Places to stay temporarily or for the night."
+msgstr "Übernachtungsmöglichkeiten."
+
+#: ../src/menu.c:376
+msgid "Please provide a description for the mark."
+msgstr "Bitte eine Beschreibung für die Markierung angeben."
+
+#: ../src/settings.c:684
+msgid "Please select a bluetooth device from the list."
+msgstr "Bitte ein Bluetooth-Gerät aus der Liste wählen."
+
+#: ../src/settings.c:1610
+msgid "Please specify a GPS file pathname."
+msgstr "Bitte den Pfad zur GPS-Datei angeben."
+
+#: ../src/settings.c:1603
+msgid "Please specify a GPSD hostname."
+msgstr "Bitte einen GPSD-Hostnamen angeben."
+
+#: ../src/poi.c:1318 ../src/poi.c:1546 ../src/poi.c:1820
+msgid "Please specify a category."
+msgstr "Bitte eine Kategorie wählen."
+
+#: ../src/poi.c:2416 ../src/poi.c:2766
+msgid "Please specify a default category."
+msgstr "Bitte eine Standardkategorie angeben."
+
+#: ../src/poi.c:727
+msgid "Please specify a name for the category."
+msgstr "Bitte einen Namen für die Kategorie angeben."
+
+#: ../src/poi.c:1311 ../src/poi.c:1539
+msgid "Please specify a name."
+msgstr "Bitte einen Namen angeben."
+
+#: ../src/poi.c:2773
+msgid "Please specify a query."
+msgstr "Bitte eine Anfrage angeben."
+
+#: ../src/path.c:1378 ../src/poi.c:2706
+msgid "Please specify a source URL."
+msgstr "Bitte Quell-URL angeben."
+
+#: ../src/path.c:1420
+msgid "Please specify a start location."
+msgstr "Bitte einen Startort angeben."
+
+#: ../src/path.c:1427
+msgid "Please specify an end location."
+msgstr "Bitte einen Endort angeben."
+
+#: ../src/poi.c:2760 ../src/poi.c:3054
+msgid "Please specify an origin."
+msgstr "Bitte Quelle angeben."
+
+#: ../src/settings.c:1318
+msgid "Points"
+msgstr "Punkte"
+
+#: ../src/settings.c:1249
+msgid "Port"
+msgstr "Port"
+
+#: ../src/maps.c:1294
+msgid "Processing Maps"
+msgstr "Verarbeite Karten"
+
+#: ../src/poi.c:2609 ../src/poi.c:2926
+msgid "Query"
+msgstr "Anfrage"
+
+#: ../src/display.c:295
+msgid "Real Time Kinematic"
+msgstr "Echtzeitkinematik"
+
+#: ../src/path.c:1007
+msgid "Really clear the track?"
+msgstr "Track wirklich entfernen?"
+
+#: ../src/path.c:887
+msgid "Recalculating directions..."
+msgstr "Wegbeschreibung wird berechnet..."
+
+#: ../src/poi.c:186
+msgid "Recreation"
+msgstr "Erholung"
+
+#: ../src/maps.c:2272
+msgid "Rename..."
+msgstr "Umbenennen..."
+
+#: ../src/maps.c:2117
+msgid "Replace all repositories with the default repository?"
+msgstr "Alle Quellen durch die Standardquelle ersetzen?"
+
+#: ../src/menu.c:1454 ../src/menu.c:1541
+msgid "Reset"
+msgstr "Zurücksetzen"
+
+#: ../src/main.c:311 ../src/menu.c:1674
+msgid "Reset Bluetooth"
+msgstr "Bluetooth zurücksetzen"
+
+#: ../src/main.c:275
+msgid "Reset Viewing Angle"
+msgstr "Blickwinkel zurücksetzen"
+
+#: ../src/settings.c:861
+msgid "Reset all colors to their original defaults?"
+msgstr "Alle Farben auf Standardwerte zurücksetzen?"
+
+#: ../src/settings.c:747
+msgid "Reset all hardware keys to their original defaults?"
+msgstr "Vollständige Tastaturbelegung auf die Standarwerte zurücksetzen?"
+
+#: ../src/maps.c:2250 ../src/settings.c:781 ../src/settings.c:897
+msgid "Reset..."
+msgstr "Standard..."
+
+#: ../src/poi.c:180
+msgid "Residence"
+msgstr "Wohnung"
+
+#: ../src/poi.c:182
+msgid "Restaurant"
+msgstr "Restaurant"
+
+#: ../src/main.c:228 ../src/menu.c:1559
+msgid "Right"
+msgstr "Rechts"
+
+#: ../src/menu.c:1532
+msgid "Rotate"
+msgstr "Drehen"
+
+#: ../src/settings.c:1305
+msgid "Rotate Sensit."
+msgstr "Drehempfindl."
+
+#: ../src/main.c:277
+msgid "Rotate View Clockwise"
+msgstr "Im Uhrzeigersinn drehen"
+
+#: ../src/main.c:279
+msgid "Rotate View Counter-Clockwise"
+msgstr "Gegen den Uhrzeigersinn drehen"
+
+#: ../src/menu.c:1440 ../src/menu.c:1609 ../src/settings.c:939
+msgid "Route"
+msgstr "Route"
+
+#: ../src/path.c:686
+msgid "Route Downloaded"
+msgstr "Route heruntergeladen"
+
+#: ../src/main.c:503 ../src/menu.c:131
+msgid "Route Opened"
+msgstr "Route geöffnet"
+
+#: ../src/menu.c:162
+msgid "Route Saved"
+msgstr "Route gespeichert"
+
+#: ../src/menu.c:1137
+msgid "Routes are now hidden"
+msgstr "Routen verborgen"
+
+#: ../src/menu.c:1131
+msgid "Routes are now shown"
+msgstr "Routern werden angezeigt"
+
+#: ../src/display.c:292
+msgid "SPS"
+msgstr "SPS"
+
+#: ../src/display.c:856
+msgid "Sat in use"
+msgstr "Sat in Verwendung"
+
+#: ../src/display.c:847
+msgid "Sat in view"
+msgstr "Sat in Sicht"
+
+#: ../src/display.c:788
+msgid "Satellites details"
+msgstr "Satelliten Detailinformation"
+
+#: ../src/display.c:714
+msgid "Satellites in view"
+msgstr "Satelliten in Sicht"
+
+#: ../src/menu.c:1448 ../src/menu.c:1466
+msgid "Save..."
+msgstr "Speichern..."
+
+#: ../src/menu.c:1599
+msgid "Scale"
+msgstr "Maßstab"
+
+#: ../src/settings.c:1205
+msgid "Scan..."
+msgstr "Scannen..."
+
+#: ../src/settings.c:660
+msgid "Scanning for Bluetooth Devices"
+msgstr "Suche Bluetooth-Geräte"
+
+#: ../src/poi.c:192
+msgid "School"
+msgstr "Schule"
+
+#: ../src/gps.c:819
+msgid "Searching for GPS receiver"
+msgstr "Suche GPS-Empfänger"
+
+#: ../src/settings.c:624
+msgid "Select Bluetooth Device"
+msgstr "Bluetooth-Gerät auswählen"
+
+#: ../src/main.c:295
+msgid "Select Next Repository"
+msgstr "Nächste Quelle wählen"
+
+#: ../src/poi.c:474
+msgid "Select POI"
+msgstr "POI wählen"
+
+#: ../src/poi.c:2108
+msgid ""
+"Select an operation to perform\n"
+"on the POIs that you checked\n"
+"in the POI list."
+msgstr ""
+"Wählen Sie die Operation, die auf\n"
+"den gewählten POIs ausgeführt\n"
+"werden soll."
+
+#: ../src/poi.c:539
+msgid "Select one POI from the list."
+msgstr "Einen POI aus der Liste wählen."
+
+#: ../src/poi.c:178
+msgid "Service Station"
+msgstr "Tankstelle"
+
+#: ../src/poi.c:1777 ../src/poi.c:2114
+msgid "Set Category..."
+msgstr "Kategorie wählen..."
+
+#: ../src/cmenu.c:659
+msgid "Set as GPS Location"
+msgstr "Als GPS-Standort übernehmen"
+
+#: ../src/settings.c:1156
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: ../src/menu.c:1681
+msgid "Settings..."
+msgstr "Einstellungen..."
+
+#: ../src/maps.c:2765
+msgid "Setup"
+msgstr "Einrichtung"
+
+#: ../src/poi.c:184
+msgid "Shopping/Services"
+msgstr "Einkauf/Dienstleistung"
+
+#: ../src/menu.c:1590
+msgid "Show"
+msgstr "Anzeige"
+
+#: ../src/cmenu.c:676
+msgid "Show Description"
+msgstr "Beschreibung anzeigen"
+
+#: ../src/main.c:305 ../src/menu.c:1474
+msgid "Show Distance from Beginning"
+msgstr "Entfernung vom Anfang anzeigen"
+
+#: ../src/main.c:303
+msgid "Show Distance from Last Break"
+msgstr "Entfernung von letzter Unterbrechung anzeigen"
+
+#: ../src/menu.c:1472
+msgid "Show Distance from Last Mark"
+msgstr "Entfernung von letzter Markierung anzeigen"
+
+#: ../src/cmenu.c:643 ../src/cmenu.c:683 ../src/cmenu.c:705
+msgid "Show Distance to"
+msgstr "Zeige Entfernung zu"
+
+#: ../src/main.c:299 ../src/menu.c:1452
+msgid "Show Distance to End of Route"
+msgstr "Entfernung zum Ende der Route anzeigen"
+
+#: ../src/main.c:297 ../src/menu.c:1450
+msgid "Show Distance to Next Waypoint"
+msgstr "Entfernung zum nächsten Wegpunkt anzeigen"
+
+#: ../src/menu.c:1667
+msgid "Show Information"
+msgstr "Information anzeigen"
+
+#: ../src/cmenu.c:640 ../src/cmenu.c:674
+msgid "Show Lat/Lon"
+msgstr "Br/Län anzeigen"
+
+#: ../src/settings.c:1505
+msgid "Show POI below zoom"
+msgstr "POI unterhalb Zoomstufe"
+
+#: ../src/display.c:2383
+msgid "Show Position"
+msgstr "Position anzeigen"
+
+#: ../src/display.c:299
+msgid "Simulation"
+msgstr "Simulation"
+
+#: ../src/path.c:1234 ../src/poi.c:2546
+msgid "Source URL"
+msgstr "Quell-URL"
+
+#: ../src/menu.c:1564
+msgid "South"
+msgstr "Süd"
+
+#: ../src/display.c:811
+msgid "Speed"
+msgstr "Geschwindigkeit"
+
+#: ../src/settings.c:1455
+msgid "Speed Limit"
+msgstr "Geschwindigkeitsbegrenzung"
+
+#: ../src/poi.c:179
+msgid "Stations for purchasing fuel for vehicles."
+msgstr "Einkauf von Benzin für Fahrzeuge."
+
+#: ../src/maps.c:1700
+msgid "Successfully compacted database."
+msgstr "Datenbank erfolgreich komprimiert."
+
+#: ../src/cmenu.c:634
+msgid "Tap Point"
+msgstr "Punkt antippen"
+
+#: ../src/maps.c:936
+msgid ""
+"The current repository is in a legacy format and will be converted.  You "
+"should delete your old maps if you no longer plan to use them."
+msgstr ""
+"Die aktuelle Quelle liegt in veraltetem Format vor und wird konvertiert. Sie "
+"sollten alte Karten entfernen, wenn Sie diese nicht mehr länger nutzen "
+"möchten."
+
+#: ../src/path.c:563
+msgid "The current route is empty."
+msgstr "Die aktuelle Route ist leer."
+
+#: ../src/path.c:609 ../src/path.c:624
+msgid "The current track is empty."
+msgstr "Der aktuelle Track ist leer."
+
+#: ../src/settings.c:827
+msgid "The following action is mapped to multiple keys"
+msgstr "Die folgende Aktion wurde auf mehrere Tasten gelegt"
+
+#: ../src/input.c:390
+msgid "There are no other next-able repositories."
+msgstr "Es gibt keine weiteren durchschaltbaren Quellen."
+
+#: ../src/cmenu.c:307 ../src/cmenu.c:329 ../src/cmenu.c:348 ../src/cmenu.c:368
+#: ../src/cmenu.c:387 ../src/cmenu.c:406 ../src/cmenu.c:484 ../src/cmenu.c:503
+msgid "There are no waypoints."
+msgstr "Es gibt keine Wegpunkte."
+
+#: ../src/menu.c:1001 ../src/path.c:544
+msgid "There is no next waypoint."
+msgstr "Kein weitere Wegpunkt."
+
+#: ../src/main.c:281
+msgid "Toggle Auto-Center"
+msgstr "Auto-Zentrierung umschalten"
+
+#: ../src/main.c:283
+msgid "Toggle Auto-Rotate"
+msgstr "Auto-Rotation umschalten"
+
+#: ../src/main.c:285
+msgid "Toggle Fullscreen"
+msgstr "Vollbild umschalten"
+
+#: ../src/main.c:306
+msgid "Toggle GPS"
+msgstr "GPS umschalten"
+
+#: ../src/main.c:307
+msgid "Toggle GPS Info"
+msgstr "GPS-Info umschalten"
+
+#: ../src/main.c:293
+msgid "Toggle POIs"
+msgstr "POIs umschalten"
+
+#: ../src/main.c:292
+msgid "Toggle Scale"
+msgstr "Maßstab umschalten"
+
+#: ../src/main.c:309
+msgid "Toggle Speed Limit"
+msgstr "Geschwindigkeitsbegrenzung umschalten"
+
+#: ../src/main.c:289
+#, fuzzy
+msgid "Toggle Tracking"
+msgstr "Wege umschalten"
+
+#: ../src/main.c:291
+#, fuzzy
+msgid "Toggle Tracks/Routes"
+msgstr "Wege umschalten"
+
+#: ../src/main.c:323 ../src/maps.c:2896
+msgid "Top-Left"
+msgstr "Oben links"
+
+#: ../src/main.c:324
+msgid "Top-Right"
+msgstr "Oben rechts"
+
+#: ../src/menu.c:1460 ../src/menu.c:1614 ../src/settings.c:924
+msgid "Track"
+msgstr "Track"
+
+#: ../src/menu.c:243
+msgid "Track Opened"
+msgstr "Track geöffnet"
+
+#: ../src/menu.c:265
+msgid "Track Saved"
+msgstr "Track gespeichert"
+
+#: ../src/menu.c:433
+#, fuzzy
+msgid "Tracking Disabled"
+msgstr "Track gespeichert"
+
+#: ../src/menu.c:437
+#, fuzzy
+msgid "Tracking Enabled"
+msgstr "Track gespeichert"
+
+#: ../src/menu.c:1074
+msgid "Tracks are now hidden"
+msgstr "Tracks werden nicht angezeigt"
+
+#: ../src/menu.c:1068
+msgid "Tracks are now shown"
+msgstr "Tracks werden angezeigt"
+
+#: ../src/poi.c:188
+msgid "Transportation"
+msgstr "Transport"
+
+#: ../src/maps.c:1917
+msgid "URL Format"
+msgstr "URL-Format"
+
+#: ../src/maps.c:1116
+msgid "Unable to create map database for repository"
+msgstr "Kartendatenbank für die Quelle konnte nicht erstellt werden."
+
+#: ../src/settings.c:1378
+msgid "Unblank Screen"
+msgstr "Bildschirm einblenden"
+
+#: ../src/settings.c:1407
+msgid "Units"
+msgstr "Einheiten"
+
+#: ../src/util.c:163
+msgid "Unknown error while locating address."
+msgstr "Unbekannter Fehler bei Ermittlung der Adresse."
+
+#: ../src/main.c:227 ../src/menu.c:1553
+msgid "Up"
+msgstr "Hoch"
+
+#: ../src/path.c:1251 ../src/poi.c:2559 ../src/poi.c:2877
+msgid "Use End of Route"
+msgstr "Ende der Route verwenden"
+
+#: ../src/path.c:1245 ../src/poi.c:2553 ../src/poi.c:2871
+msgid "Use GPS Location"
+msgstr "GPS-Standort verwenden"
+
+#: ../src/menu.c:1619
+msgid "Velocity Vector"
+msgstr "Geschwindigkeitsvektor"
+
+#: ../src/menu.c:1516
+msgid "View"
+msgstr "Anzeige"
+
+#: ../src/maps.c:2877
+msgid "View Center"
+msgstr "Zentrum"
+
+#: ../src/maps.c:1977
+msgid "View Zoom Steps"
+msgstr "Zoomschritte anzeigen"
+
+#: ../src/cmenu.c:702
+msgid "View/Edit..."
+msgstr "Anzeigen/Bearbeiten..."
+
+#: ../src/poi.c:561
+msgid "WARNING: All POIs in that category will also be deleted!"
+msgstr "ACHTUNG: Alle POIs dieser Kategorien werden auch gelöscht!"
+
+#: ../src/cmenu.c:669
+msgid "Waypoint"
+msgstr "Wegpunkt"
+
+#: ../src/menu.c:1566
+msgid "West"
+msgstr "West"
+
+#: ../src/main.c:235
+msgid "When Approaching a Waypoint"
+msgstr "Bei Annäherung an einen Wegpunkt"
+
+#: ../src/main.c:233
+msgid "When Moving"
+msgstr "Bei Bewegung"
+
+#: ../src/main.c:234
+msgid "When Moving (Full Screen Only)"
+msgstr "Bei Bewegung (Nur im Vollbild)"
+
+#: ../src/main.c:232
+msgid "When Receiving Any GPS Data"
+msgstr "Beim Empfang von GPS-Daten"
+
+#: ../src/display.c:1129
+msgid ""
+"You will now see a blank screen.  You can download maps using the \"Manage "
+"Maps\" menu item in the \"Maps\" menu.  Or, press OK now to enable Auto-"
+"Download."
+msgstr ""
+"Sie sehen jetzt einen leeren Bildschirm. Sie können Karten mit dem Menüpunkt "
+"\"Karten verwalten\" im Menü \"Karten\" herunterladen. Drücken Sie OK, um "
+"den Automatischen Download zu aktivieren."
+
+#: ../src/maps.c:2820 ../src/menu.c:1522
+msgid "Zoom"
+msgstr "Zoom"
+
+#: ../src/main.c:286 ../src/menu.c:1526
+msgid "Zoom In"
+msgstr "Hereinzoomen"
+
+#: ../src/menu.c:1594
+msgid "Zoom Level"
+msgstr "Zoomstufe"
+
+#: ../src/maps.c:2826
+msgid "Zoom Levels to Download: (0 = most detail)"
+msgstr "Herunterzul. Zoomstufen: (0 = meiste Details)"
+
+#: ../src/main.c:287 ../src/menu.c:1528
+msgid "Zoom Out"
+msgstr "Herauszoomen"
+
+#: ../src/input.c:117 ../src/input.c:310 ../src/menu.c:579 ../src/menu.c:597
+msgid "Zoom to Level"
+msgstr "Zoom auf Stufe"
+
+#: ../src/maps.c:2579 ../src/maps.c:2586
+msgid "about"
+msgstr "über"
+
+#: ../src/display.c:715
+msgid "in use"
+msgstr "in Verwendung"
+
+#: ../src/main.c:223
+msgid "km"
+msgstr "km"
+
+#: ../src/maps.c:2486 ../src/maps.c:2587
+msgid "maps"
+msgstr "Karten"
+
+#: ../src/maps.c:2480 ../src/maps.c:2580
+msgid "maps "
+msgstr "Karten"
+
+#: ../src/display.c:1501
+msgid "maps failed to download."
+msgstr "Karten konnten nicht heruntergeladen werden."
+
+#: ../src/main.c:224
+msgid "mi."
+msgstr "mi."
+
+#: ../src/main.c:225
+msgid "n.m."
+msgstr "n.m."
+
+#: ../src/display.c:869
+msgid "nofix"
+msgstr "Kein Fix"
+
+#: ../src/display.c:300 ../src/display.c:878
+msgid "none"
+msgstr "Kein"
+
+#: ../src/maps.c:2486 ../src/maps.c:2587
+msgid "up to about"
+msgstr "bis zu etwa"
+
+#~ msgid "Break already inserted."
+#~ msgstr "Unterbrechung bereits eingefügt."

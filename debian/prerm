@@ -1,0 +1,14 @@
+#!/bin/sh -e
+
+# remove configuration
+
+if [ "$1" = "purge" ]; then
+    gconftool-2 --recursive-unset "/apps/maemo-mapper"
+fi
+
+# Delete the .desktop file in case the app-installer didn't.
+rm -f /usr/share/applications/hildon/maemo-mapper.desktop
+
+#DEBHELPER#
+
+exit 0

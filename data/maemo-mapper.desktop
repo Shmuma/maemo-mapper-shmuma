@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Name=Maemo Mapper
+Exec=/usr/bin/maemo-mapper
+Icon=maemo-mapper
+StartupWMClass=maemo-mapper
+X-Window-Icon=maemo-mapper
+X-HildonDesk-ShowInToolbar=true
+X-Osso-Service=com.gnuite.maemo_mapper
+X-Osso-Type=application/x-executable
+Terminal=false
