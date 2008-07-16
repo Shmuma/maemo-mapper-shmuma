@@ -361,6 +361,7 @@ struct _RepoData {
     gint min_zoom;
     gint max_zoom;
     RepoType type;
+    RepoData *layers;
 #ifdef MAPDB_SQLITE
     sqlite3 *db;
     sqlite3_stmt *stmt_map_select;

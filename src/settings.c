@@ -2233,6 +2233,7 @@ settings_init()
         repo->nextable = TRUE;
         repo->min_zoom = REPO_DEFAULT_MIN_ZOOM;
         repo->max_zoom = REPO_DEFAULT_MAX_ZOOM;
+        repo->layers = NULL;
         set_repo_type(repo);
 
         _repo_list = g_list_append(_repo_list, repo);

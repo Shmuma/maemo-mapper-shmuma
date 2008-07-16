@@ -2398,6 +2398,7 @@ repoman_dialog()
                     HILDON_NUMBER_EDITOR(rei->num_min_zoom));
             rd->max_zoom = hildon_number_editor_get_value(
                     HILDON_NUMBER_EDITOR(rei->num_max_zoom));
+            rd->layers = NULL;
             set_repo_type(rd);
 
             _repo_list = g_list_append(_repo_list, rd);
