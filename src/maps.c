@@ -1406,7 +1406,7 @@ thread_proc_mut()
     while(conic_ensure_connected())
     {
         gint retries;
-        gboolean refresh_sent = FALSE;
+        gboolean refresh_sent = FALSE, layer_tile;
         MapUpdateTask *mut = NULL;
 
         /* Get the next MUT from the mut tree. */
@@ -1426,7 +1426,24 @@ thread_proc_mut()
         printf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
                 mut->repo->name, mut->zoom, mut->tilex, mut->tiley);
 
+        layer_tile = FALSE;
         if(mut->repo != _curr_repo)
+        {
+            RepoData* repo_p = _curr_repo;
+
+            /* is it the sublayer of current repo? */
+            while (repo_p)
+            {
+                if (repo_p->layers == mut->repo)
+                {
+                    layer_tile = TRUE;
+                    break;
+                }
+                repo_p = repo_p->layers;
+            }
+        }
+
+        if (mut->repo != _curr_repo && !layer_tile)
         {
             /* Do nothing, except report that there is no error. */
             mut->vfs_result = GNOME_VFS_OK;
@@ -1525,8 +1542,8 @@ thread_proc_mut()
             tiley = mut->tiley;
 
             /* Pass the mut to the GTK thread for redrawing, but only if a
-             * redraw isn't already in the pipeline. */
-            if(mut->refresh_latch)
+             * redraw isn't already in the pipeline and mut is not a layer. */
+            if(mut->refresh_latch && !layer_tile)
             {
                 /* Wait until the latch is open. */
                 g_mutex_lock(mut->refresh_latch->mutex);
