@@ -1328,6 +1328,7 @@ mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
     mut->tilex = tilex;
     mut->tiley = tiley;
     mut->update_type = update_type;
+    mut->layer_level = repo->layer_level;
 
     /* Lock the mutex if this is an auto-update. */
     if(update_type == MAP_UPDATE_AUTO)
@@ -1383,6 +1384,10 @@ mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
                 < g_thread_pool_get_max_threads(_mut_thread_pool))
             g_thread_pool_push(_mut_thread_pool, (gpointer)1, NULL);
     }
+
+    /* if the repo has layers, perform update of them too */
+    if (repo->layers)
+        mapdb_initiate_update (repo->layers, zoom, tilex, tiley, update_type, batch_id, priority, NULL);
 
     vprintf("%s(): return FALSE (2)\n", __PRETTY_FUNCTION__);
     return FALSE;
@@ -1604,7 +1609,7 @@ thread_proc_mut()
 guint
 mut_exists_hashfunc(const MapUpdateTask *a)
 {
-    gint sum = a->zoom + a->tilex + a->tiley + a->update_type;
+    gint sum = a->zoom + a->tilex + a->tiley + a->update_type + a->layer_level;
     return g_int_hash(&sum);
 }
 
@@ -1614,7 +1619,8 @@ mut_exists_equalfunc(const MapUpdateTask *a, const MapUpdateTask *b)
     return (a->tilex == b->tilex
             && a->tiley == b->tiley
             && a->zoom == b->zoom
-            && a->update_type == b->update_type);
+            && a->update_type == b->update_type
+            && a->layer_level == b->layer_level);
 }
 
 gint
@@ -1628,6 +1634,9 @@ mut_priority_comparefunc(const MapUpdateTask *a, const MapUpdateTask *b)
     if(diff)
         return diff;
     diff = (a->priority - b->priority); /* Lower priority numbers first. */
+    if(diff)
+        return diff;
+    diff = (a->layer_level - b->layer_level); /* Lower layers first. */
     if(diff)
         return diff;
 
@@ -2416,6 +2425,7 @@ repoman_dialog()
             rd->max_zoom = hildon_number_editor_get_value(
                     HILDON_NUMBER_EDITOR(rei->num_max_zoom));
             rd->layers = NULL;
+            rd->layer_level = 0;
             set_repo_type(rd);
 
             _repo_list = g_list_append(_repo_list, rd);

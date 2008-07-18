@@ -1862,6 +1862,7 @@ settings_parse_repo(gchar *str)
         rd->layers->name = g_strdup ("Google traffic");
         rd->layers->url  = g_strdup ("http://mt.google.com/mapstt?x=%d&y=%d&zoom=%d");
         rd->layers->db_filename = g_strdup ("/home/user/GTraf.db");
+        rd->layers->layer_level = 1;
         set_repo_type (rd->layers);
     }
 #endif
@@ -2247,6 +2248,7 @@ settings_init()
         repo->min_zoom = REPO_DEFAULT_MIN_ZOOM;
         repo->max_zoom = REPO_DEFAULT_MAX_ZOOM;
         repo->layers = NULL;
+        repo->layer_level = 0;
         set_repo_type(repo);
 
         _repo_list = g_list_append(_repo_list, repo);

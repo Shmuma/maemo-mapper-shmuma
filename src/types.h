@@ -362,6 +362,7 @@ struct _RepoData {
     gint max_zoom;
     RepoType type;
     RepoData *layers;
+    gint8 layer_level;
 #ifdef MAPDB_SQLITE
     sqlite3 *db;
     sqlite3_stmt *stmt_map_select;
@@ -464,6 +465,7 @@ struct _MapUpdateTask
     gint8 zoom;
     gint8 vfs_result;
     gint8 batch_id;
+    gint8 layer_level;
 };
 
 /** Data used during the asynchronous automatic route downloading operation. */
