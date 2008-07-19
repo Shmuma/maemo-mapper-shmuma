@@ -1608,7 +1608,6 @@ thread_proc_mut()
             /* DO NOT USE mut FROM THIS POINT ON. */
 
             /* Also attempt to add to the database. */
-            printf ("Just before mapdb_update for repo '%s'\n", repo->name);
             mapdb_update(exists, repo, zoom,
                     tilex, tiley, bytes, size);
 
