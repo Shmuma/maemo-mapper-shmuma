@@ -125,6 +125,7 @@ struct _MapCacheKey {
     gint           zoom;
     gint           tilex;
     gint           tiley;
+    gint8	   layer;
 };
 
 typedef struct _MapCacheEntry MapCacheEntry;
@@ -291,7 +292,7 @@ static gboolean map_cache_key_equal(gconstpointer _v1, gconstpointer _v2){
     key1 = (const MapCacheKey *)_v1;
     key2 = (const MapCacheKey *)_v2;
     return key1->tilex == key2->tilex && key1->tiley == key2->tiley &&
-     key1->zoom == key2->zoom && key1->repo == key2->repo;
+     key1->zoom == key2->zoom && key1->repo == key2->repo && key1->layer == key2->layer;
 }
 
 static void map_cache_entry_make_pixbuf(MapCacheEntry *_entry){
@@ -420,6 +421,7 @@ map_cache_get(RepoData *repo, gint zoom, gint tilex, gint tiley)
     key.zoom = zoom;
     key.tilex = tilex;
     key.tiley = tiley;
+    key.layer = repo->layer_level;
     entry = (MapCacheEntry *)g_hash_table_lookup(_map_cache.entries, &key);
     if(entry != NULL)
     {
@@ -486,6 +488,7 @@ map_cache_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
     key.zoom = zoom;
     key.tilex = tilex;
     key.tiley = tiley;
+    key.layer = repo->layer_level;
     entry = (MapCacheEntry *)g_hash_table_lookup(_map_cache.entries, &key);
     if(entry != NULL)
     {
@@ -510,6 +513,7 @@ map_cache_remove(RepoData *repo, gint zoom, gint tilex, gint tiley)
     key.zoom = zoom;
     key.tilex = tilex;
     key.tiley = tiley;
+    key.layer = repo->layer_level;
     g_hash_table_remove(_map_cache.entries, &key);
 }
 
@@ -584,6 +588,7 @@ mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
         key.zoom = zoom;
         key.tilex = tilex;
         key.tiley = tiley;
+        key.layer = repo->layer_level;
         entry = (MapCacheEntry *)g_hash_table_lookup(_map_cache.entries, &key);
         if(entry != NULL)
         {
@@ -965,6 +970,8 @@ repo_make_db(RepoData *rd)
 gboolean
 repo_set_curr(RepoData *rd)
 {
+    RepoData* repo_p;
+
     printf("%s()\n", __PRETTY_FUNCTION__);
     if(!rd->db_filename || !*rd->db_filename
             || repo_make_db(rd))
@@ -976,10 +983,16 @@ repo_set_curr(RepoData *rd)
                 g_mutex_lock(_mapdb_mutex);
 #ifdef MAPDB_SQLITE
                 sqlite3_close(_curr_repo->db);
-#else
-                gdbm_close(_curr_repo->db);
-#endif
                 _curr_repo->db = NULL;
+#else
+                repo_p = _curr_repo;
+                while (repo_p) {
+                    if (repo_p->db)
+                        gdbm_close(repo_p->db);
+                    repo_p->db = NULL;
+                    repo_p = repo_p->layers;
+                }
+#endif
                 g_mutex_unlock(_mapdb_mutex);
             }
         }
@@ -1089,8 +1102,14 @@ repo_set_curr(RepoData *rd)
                 popup_error(_window, buffer);
             }
 #else
-            _curr_repo->db = gdbm_open(_curr_repo->db_filename,
-                    0, GDBM_WRCREAT | GDBM_FAST, 0644, NULL);
+            /* initialize all databases for all layers */
+            repo_p = _curr_repo;
+            while (repo_p) {
+                if (repo_p->db_filename)
+                    repo_p->db = gdbm_open(repo_p->db_filename, 0, GDBM_WRCREAT | GDBM_FAST, 0644, NULL);
+                repo_p = repo_p->layers;
+            }
+
             if(!_curr_repo->db)
             {
                 gchar buffer[BUFFER_SIZE];
@@ -1589,6 +1608,7 @@ thread_proc_mut()
             /* DO NOT USE mut FROM THIS POINT ON. */
 
             /* Also attempt to add to the database. */
+            printf ("Just before mapdb_update for repo '%s'\n", repo->name);
             mapdb_update(exists, repo, zoom,
                     tilex, tiley, bytes, size);
 
