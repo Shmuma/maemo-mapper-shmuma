@@ -1860,7 +1860,7 @@ settings_parse_repo(gchar *str)
         rd->layers = g_new0 (RepoData, 1);
         /* only that fields have meaning for layer. All other attrs are zero and inherited from parent repo. */
         rd->layers->name = g_strdup ("Google traffic");
-        rd->layers->url  = g_strdup ("http://mt.google.com/mapstt?x=%d&y=%d&zoom=%d");
+        rd->layers->url  = g_strdup ("http://mt.google.com/mapstt?zoom=%0d&x=%d&y=%d");
         rd->layers->db_filename = g_strdup ("/home/user/GTraf.db");
         rd->layers->layer_level = 1;
         set_repo_type (rd->layers);
