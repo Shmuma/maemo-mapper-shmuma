@@ -1853,7 +1853,6 @@ settings_parse_repo(gchar *str)
 
     set_repo_type(rd);
 
-#ifdef DEBUG
     /* temporary dirty hack: append debug layer if this is google repo. Of course, there will be nice
        dialog to customize this, but so far this is sufficient to debug core things. */
     if (rd->url && strstr (rd->url, "mt.google.com")) {
@@ -1865,7 +1864,6 @@ settings_parse_repo(gchar *str)
         rd->layers->layer_level = 1;
         set_repo_type (rd->layers);
     }
-#endif
 
     vprintf("%s(): return %p\n", __PRETTY_FUNCTION__, rd);
     return rd;

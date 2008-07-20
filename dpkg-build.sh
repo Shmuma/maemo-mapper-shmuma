@@ -15,7 +15,7 @@ if [ "x$MAEMO_VERSION" = "x1" ]
 then
     VERSION_SUFFIX=-os2006-os2007
 else
-    VERSION_SUFFIX=-os2008
+    VERSION_SUFFIX=-os2008-layers1
 fi
 
 # Test if this is the armel build (as opposed to the x86 build)
