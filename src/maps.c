@@ -1140,6 +1140,24 @@ repo_set_curr(RepoData *rd)
     }
 }
 
+
+/**
+ * Returns true if:
+ * 1. base == layer, or
+ * 2. layer is sublayer of base
+ */
+gboolean repo_is_layer (RepoData* base, RepoData* layer)
+{
+    while (base) {
+        if (base == layer)
+            return TRUE;
+        base = base->layers;
+    }
+
+    return FALSE;
+}
+
+
 /**
  * Given a wms uri pattern, compute the coordinate transformation and
  * trimming.
@@ -1450,22 +1468,7 @@ thread_proc_mut()
         printf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
                 mut->repo->name, mut->zoom, mut->tilex, mut->tiley);
 
-        layer_tile = FALSE;
-        if(mut->repo != _curr_repo)
-        {
-            RepoData* repo_p = _curr_repo;
-
-            /* is it the sublayer of current repo? */
-            while (repo_p)
-            {
-                if (repo_p->layers == mut->repo)
-                {
-                    layer_tile = TRUE;
-                    break;
-                }
-                repo_p = repo_p->layers;
-            }
-        }
+        layer_tile = mut->repo != _curr_repo && repo_is_layer (_curr_repo, mut->repo);
 
         if (mut->repo != _curr_repo && !layer_tile)
         {

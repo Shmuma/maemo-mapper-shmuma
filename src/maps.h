@@ -33,6 +33,7 @@ GdkPixbuf* mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley);
 
 void set_repo_type(RepoData *repo);
 gboolean repo_set_curr(RepoData *rd);
+gboolean repo_is_layer (RepoData* base, RepoData* layer);
 
 gboolean mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex,
         gint tiley, gint update_type, gint batch_id, gint priority,
