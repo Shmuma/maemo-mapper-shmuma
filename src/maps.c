@@ -1428,17 +1428,6 @@ mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
             g_thread_pool_push(_mut_thread_pool, (gpointer)1, NULL);
     }
 
-    /* if the repo has layers, perform update of enabled layers */
-    if (repo->layer_level == 0) {
-        RepoData* rd = repo->layers;
-
-        while (rd) {
-            if (rd->layer_enabled)
-                mapdb_initiate_update (rd, zoom, tilex, tiley, update_type, batch_id, priority, NULL);
-            rd = rd->layers;
-        }
-    }
-
     vprintf("%s(): return FALSE (2)\n", __PRETTY_FUNCTION__);
     return FALSE;
 }
