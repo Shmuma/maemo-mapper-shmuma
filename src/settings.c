@@ -33,6 +33,7 @@
 #include <dbus/dbus-glib.h>
 #include <bt-dbus.h>
 #include <gconf/gconf-client.h>
+#include <glib.h>
 
 #ifndef LEGACY
 #    include <hildon/hildon-help.h>
@@ -1863,6 +1864,8 @@ settings_parse_repo(gchar *str)
         rd->layers->db_filename = g_strdup ("/home/user/GTraf.db");
         rd->layers->layer_level = 1;
         rd->layers->layer_enabled = FALSE;
+        rd->layers->layer_refresh_interval = 1; /* refetch traffic every minute */
+        rd->layers->layer_refresh_countdown = rd->layers->layer_refresh_interval;
         set_repo_type (rd->layers);
     }
 
@@ -2228,6 +2231,9 @@ settings_init()
             g_free(curr->data);
         }
         g_slist_free(list);
+
+        /* this timer decrements layers' counters and frefresh map if needed */
+        g_timeout_add (60 * 1000, map_layer_refresh_cb, NULL);
     }
 
 

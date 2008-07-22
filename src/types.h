@@ -364,6 +364,8 @@ struct _RepoData {
     RepoData *layers;
     gint8 layer_level;
     gboolean layer_enabled;
+    gint layer_refresh_interval;
+    gint layer_refresh_countdown;
 #ifdef MAPDB_SQLITE
     sqlite3 *db;
     sqlite3_stmt *stmt_map_select;

@@ -49,4 +49,6 @@ gboolean repoman_dialog(void);
 
 gboolean mapman_dialog(void);
 
+gboolean map_layer_refresh_cb (gpointer data);
+
 #endif /* ifndef MAEMO_MAPPER_MAPS_H */

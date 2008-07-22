@@ -3171,3 +3171,36 @@ mapman_dialog()
     return TRUE;
 }
 
+
+/* this routine fired by timer every minute and decrements refetch counter of every active layer of
+   current repository. If one of layer is expired, it forces map redraw. Redraw routine checks every
+   layer's tile download timestamp and desides performs refetch if needed */
+gboolean
+map_layer_refresh_cb (gpointer data)
+{
+    RepoData* rd = _curr_repo;
+    gboolean refresh = FALSE;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if (rd) {
+        rd = rd->layers;
+
+        while (rd) {
+            if (rd->layer_enabled && rd->layer_refresh_interval) {
+                rd->layer_refresh_countdown--;
+                if (rd->layer_refresh_countdown <= 0) {
+                    rd->layer_refresh_countdown = rd->layer_refresh_interval;
+                    refresh = TRUE;
+                }
+            }
+
+            rd = rd->layers;
+        }
+    }
+
+    if (refresh)
+        map_refresh_mark (TRUE);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
