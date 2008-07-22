@@ -1420,7 +1420,7 @@ map_download_refresh_idle(MapUpdateTask *mut)
             mut->zoom, mut->tilex, mut->tiley);
 
     /* Test if download succeeded (only if retries != 0). */
-    if(mut->pixbuf && repo_is_layer (_curr_repo, mut->repo))
+    if(mut->pixbuf && repo_is_layer (_curr_repo, mut->repo) && (_curr_repo == mut->repo || mut->repo->layer_enabled))
     {
         gint zoff = mut->zoom - _zoom;
         /* Update the UI to reflect the updated map database. */
@@ -1816,15 +1816,16 @@ thread_render_map(MapRenderTask *mrt)
 
                 /* before we rotate the resulting tile, we look for other layer's pixbufs */
                 while (repo_p) {
-                    if(NULL != (layer_pixbuf = mapdb_get(
+                    if(repo_p->layer_enabled &&
+                       NULL != (layer_pixbuf = mapdb_get(
                                     repo_p, mrt->zoom + zoff,
                                     tilex >> zoff,
                                     tiley >> zoff)))
                     {
                         /* join pixbufs together */
-                        gdk_pixbuf_composite (layer_pixbuf, tile_pixbuf, 0, 0, 
-                                              gdk_pixbuf_get_width (tile_pixbuf), 
-                                              gdk_pixbuf_get_height (tile_pixbuf), 
+                        gdk_pixbuf_composite (layer_pixbuf, tile_pixbuf, 0, 0,
+                                              gdk_pixbuf_get_width (tile_pixbuf),
+                                              gdk_pixbuf_get_height (tile_pixbuf),
                                               0, 0, 1, 1, GDK_INTERP_NEAREST, 255);
                         g_object_unref (layer_pixbuf);
                     }

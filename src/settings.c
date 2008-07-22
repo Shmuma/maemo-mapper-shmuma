@@ -1855,13 +1855,14 @@ settings_parse_repo(gchar *str)
 
     /* temporary dirty hack: append debug layer if this is google repo. Of course, there will be nice
        dialog to customize this, but so far this is sufficient to debug core things. */
-    if (rd->url && strstr (rd->url, "mt.google.com")) {
+    if (rd->url && strstr (rd->url, ".google.com")) {
         rd->layers = g_new0 (RepoData, 1);
         /* only that fields have meaning for layer. All other attrs are zero and inherited from parent repo. */
         rd->layers->name = g_strdup ("Google traffic");
         rd->layers->url  = g_strdup ("http://mt.google.com/mapstt?zoom=%0d&x=%d&y=%d");
         rd->layers->db_filename = g_strdup ("/home/user/GTraf.db");
         rd->layers->layer_level = 1;
+        rd->layers->layer_enabled = FALSE;
         set_repo_type (rd->layers);
     }
 

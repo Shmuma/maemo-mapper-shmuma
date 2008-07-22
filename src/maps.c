@@ -125,7 +125,6 @@ struct _MapCacheKey {
     gint           zoom;
     gint           tilex;
     gint           tiley;
-    gint8	   layer;
 };
 
 typedef struct _MapCacheEntry MapCacheEntry;
@@ -292,7 +291,7 @@ static gboolean map_cache_key_equal(gconstpointer _v1, gconstpointer _v2){
     key1 = (const MapCacheKey *)_v1;
     key2 = (const MapCacheKey *)_v2;
     return key1->tilex == key2->tilex && key1->tiley == key2->tiley &&
-     key1->zoom == key2->zoom && key1->repo == key2->repo && key1->layer == key2->layer;
+     key1->zoom == key2->zoom && key1->repo == key2->repo;
 }
 
 static void map_cache_entry_make_pixbuf(MapCacheEntry *_entry){
@@ -421,7 +420,6 @@ map_cache_get(RepoData *repo, gint zoom, gint tilex, gint tiley)
     key.zoom = zoom;
     key.tilex = tilex;
     key.tiley = tiley;
-    key.layer = repo->layer_level;
     entry = (MapCacheEntry *)g_hash_table_lookup(_map_cache.entries, &key);
     if(entry != NULL)
     {
@@ -488,7 +486,6 @@ map_cache_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
     key.zoom = zoom;
     key.tilex = tilex;
     key.tiley = tiley;
-    key.layer = repo->layer_level;
     entry = (MapCacheEntry *)g_hash_table_lookup(_map_cache.entries, &key);
     if(entry != NULL)
     {
@@ -513,7 +510,6 @@ map_cache_remove(RepoData *repo, gint zoom, gint tilex, gint tiley)
     key.zoom = zoom;
     key.tilex = tilex;
     key.tiley = tiley;
-    key.layer = repo->layer_level;
     g_hash_table_remove(_map_cache.entries, &key);
 }
 
@@ -563,6 +559,17 @@ map_cache_destroy(void)
     g_mutex_unlock(_mapdb_mutex);
 }
 
+
+void
+map_cache_clean (void)
+{
+    g_mutex_lock(_mapdb_mutex);
+    if(_map_cache.entries != NULL)
+        g_hash_table_remove_all (_map_cache.entries);
+    g_mutex_unlock(_mapdb_mutex);
+}
+
+
 gboolean
 mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
@@ -588,7 +595,6 @@ mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
         key.zoom = zoom;
         key.tilex = tilex;
         key.tiley = tiley;
-        key.layer = repo->layer_level;
         entry = (MapCacheEntry *)g_hash_table_lookup(_map_cache.entries, &key);
         if(entry != NULL)
         {
@@ -1422,9 +1428,16 @@ mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
             g_thread_pool_push(_mut_thread_pool, (gpointer)1, NULL);
     }
 
-    /* if the repo has layers, perform update of them too */
-    if (repo->layers)
-        mapdb_initiate_update (repo->layers, zoom, tilex, tiley, update_type, batch_id, priority, NULL);
+    /* if the repo has layers, perform update of enabled layers */
+    if (repo->layer_level == 0) {
+        RepoData* rd = repo->layers;
+
+        while (rd) {
+            if (rd->layer_enabled)
+                mapdb_initiate_update (rd, zoom, tilex, tiley, update_type, batch_id, priority, NULL);
+            rd = rd->layers;
+        }
+    }
 
     vprintf("%s(): return FALSE (2)\n", __PRETTY_FUNCTION__);
     return FALSE;

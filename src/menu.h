@@ -29,6 +29,7 @@ gboolean menu_cb_view_goto_nearpoi(GtkMenuItem *item);
 
 void menu_maps_remove_repos(void);
 void menu_maps_add_repos(void);
+void menu_layers_add_repos(void);
 void menu_init(void);
 
 #endif /* ifndef MAEMO_MAPPER_MENU_H */
