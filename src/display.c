@@ -1755,20 +1755,29 @@ thread_render_map(MapRenderTask *mrt)
                                         tilex >> zoff,
                                         tiley >> zoff)))
                         {
-                            /* Found a map. */
-                            /* if this is a layer's tile, join with main tile */
-                            if (repo_p != mrt->repo) {
-                                /* but only if main layer is exists */
-                                if (tile_pixbuf)
-                                    gdk_pixbuf_composite (layer_pixbuf, tile_pixbuf, 0, 0,
-                                                          gdk_pixbuf_get_width (tile_pixbuf),
-                                                          gdk_pixbuf_get_height (tile_pixbuf),
-                                                          0, 0, 1, 1, GDK_INTERP_NEAREST, 255);
-                                g_object_unref (layer_pixbuf);
+                            /* Found a map. Check for it's age. */
+                            gint age = get_tile_age (layer_pixbuf);
+                            printf ("Checking for tile age (%d)\n", age);
+                            if (!repo_p->layer_refresh_interval ||
+                                get_tile_age (layer_pixbuf) < repo_p->layer_refresh_interval * 60)
+                            {
+                                /* if this is a layer's tile, join with main tile */
+                                if (repo_p != mrt->repo)
+                                {
+                                    /* but only if main layer is exists */
+                                    if (tile_pixbuf)
+                                        gdk_pixbuf_composite (layer_pixbuf, tile_pixbuf, 0, 0,
+                                                              gdk_pixbuf_get_width (tile_pixbuf),
+                                                              gdk_pixbuf_get_height (tile_pixbuf),
+                                                              0, 0, 1, 1, GDK_INTERP_NEAREST, 255);
+                                    g_object_unref (layer_pixbuf);
+                                }
+                                else
+                                    tile_pixbuf = layer_pixbuf;
+                                break;
                             }
                             else
-                                tile_pixbuf = layer_pixbuf;
-                            break;
+                                g_object_unref (layer_pixbuf);
                         }
                     }
                     /* Else we're not going to be drawing this map, so just check

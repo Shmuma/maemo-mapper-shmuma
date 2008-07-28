@@ -51,4 +51,7 @@ gboolean mapman_dialog(void);
 
 gboolean map_layer_refresh_cb (gpointer data);
 
+/* returns amount of seconds since tile downloaded */
+gint get_tile_age (GdkPixbuf* pixbuf);
+
 #endif /* ifndef MAEMO_MAPPER_MAPS_H */

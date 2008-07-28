@@ -33,6 +33,7 @@
 #include <glib/gstdio.h>
 #include <fcntl.h>
 #include <locale.h>
+#include <time.h>
 
 #ifndef LEGACY
 #    include <hildon/hildon-help.h>
@@ -159,6 +160,8 @@ struct _MapCache {
 };
 
 static MapCache _map_cache;
+
+const gchar* layer_timestamp_key = "tEXt::mm_ts";
 
 
 static guint
@@ -1563,6 +1566,24 @@ thread_proc_mut()
                 continue;
             }
             g_object_unref(loader);
+
+            /* attach timestamp with loaded pixbuf */
+            {
+                gchar* new_bytes;
+                gsize new_size;
+                GError* error = NULL;
+                char ts_val[12];
+
+                sprintf (ts_val, "%u", (unsigned int)time (NULL));
+
+                /* update bytes with new, timestamped pixbuf */
+                if (gdk_pixbuf_save_to_buffer (mut->pixbuf, &new_bytes, &new_size, "png", &error, layer_timestamp_key, ts_val, NULL))
+                {
+                    g_free (bytes);
+                    bytes = new_bytes;
+                    size = new_size;
+                }
+            }
 
             /* Copy database-relevant mut data before we release it. */
             repo = mut->repo;
@@ -3203,4 +3224,26 @@ map_layer_refresh_cb (gpointer data)
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
+}
+
+
+
+/*
+   Returns amount of seconds since tile downloaded or 0 if tile
+   have no such information.
+*/
+gint get_tile_age (GdkPixbuf* pixbuf)
+{
+    const char* ts;
+    guint val;
+
+    ts = gdk_pixbuf_get_option (pixbuf, layer_timestamp_key);
+
+    if (!ts)
+        return 0;
+
+    if (sscanf (ts, "%u", &val))
+        return time (NULL) - val;
+    else
+        return 0;
 }
