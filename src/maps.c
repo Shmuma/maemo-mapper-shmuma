@@ -2285,6 +2285,53 @@ repoman_download(GtkWidget *widget, RepoManInfo *rmi)
     return TRUE;
 }
 
+
+static gboolean
+repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
+{
+    GtkWidget *dialog = NULL;
+    const char* t_header = _("Manage layers [%s]");
+    char* header = NULL;
+    RepoEditInfo* rei = NULL;
+    gint curr_repo_index = gtk_combo_box_get_active (GTK_COMBO_BOX (rmi->cmb_repos));
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if (curr_repo_index < 0) {
+        vprintf("%s(): return FALSE (1)\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    rei = g_list_nth_data (rmi->repo_edits, curr_repo_index);
+
+    if (!rei) {
+        vprintf("%s(): return FALSE (2)\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    header = g_malloc (strlen (t_header) + strlen (rei->name));
+    sprintf (header, t_header, rei->name);
+
+    printf ("Creating dialog with header: %s\n", header);
+
+    dialog = gtk_dialog_new_with_buttons (header, GTK_WINDOW (rmi->dialog), GTK_DIALOG_MODAL, 
+                                          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, 
+                                          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, NULL);
+
+    gtk_widget_show_all (dialog);
+
+    while (GTK_RESPONSE_ACCEPT == gtk_dialog_run (GTK_DIALOG (dialog)))
+    {
+        break;
+    }
+
+    gtk_widget_destroy (dialog);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
 gboolean
 repoman_dialog()
 {
@@ -2296,6 +2343,7 @@ repoman_dialog()
     static GtkWidget *btn_new = NULL;
     static GtkWidget *btn_reset = NULL;
     static GtkWidget *btn_download = NULL;
+    static GtkWidget *btn_layers = NULL;
     gint i, curr_repo_index = 0;
     GList *curr;
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -2327,6 +2375,12 @@ repoman_dialog()
                 btn_download = gtk_button_new_with_label(_("Download...")));
         g_signal_connect(G_OBJECT(btn_download), "clicked",
                           G_CALLBACK(repoman_download), &rmi);
+
+        /* Layers button. */
+        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
+                btn_layers = gtk_button_new_with_label(_("Layers...")));
+        g_signal_connect(G_OBJECT(btn_layers), "clicked",
+                          G_CALLBACK(repoman_layers), &rmi);
 
         /* Cancel button. */
         gtk_dialog_add_button(GTK_DIALOG(dialog),
