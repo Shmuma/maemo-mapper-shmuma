@@ -1860,13 +1860,25 @@ settings_parse_repo(gchar *str)
         rd->layers = g_new0 (RepoData, 1);
         /* only that fields have meaning for layer. All other attrs are zero and inherited from parent repo. */
         rd->layers->name = g_strdup ("Google traffic");
-        rd->layers->url  = g_strdup ("http://mt.google.com/mapstt?zoom=%0d&x=%d&y=%d");
+        rd->layers->url  = g_strdup ("http://mt0.google.com/mapstt?zoom=%0d&x=%d&y=%d");
         rd->layers->db_filename = g_strdup ("/home/user/GTraf.db");
         rd->layers->layer_level = 1;
         rd->layers->layer_enabled = FALSE;
         rd->layers->layer_refresh_interval = 1; /* refetch traffic every minute */
         rd->layers->layer_refresh_countdown = rd->layers->layer_refresh_interval;
         set_repo_type (rd->layers);
+
+        rd->layers->layers = g_new0 (RepoData, 1);
+        /* only that fields have meaning for layer. All other attrs are zero and inherited from parent repo. */
+        rd->layers->layers->name = g_strdup ("Google traffic2");
+        rd->layers->layers->url  = g_strdup ("http://mt0.google.com/mapstt?zoom=%0d&x=%d&y=%d");
+        rd->layers->layers->db_filename = g_strdup ("/home/user/GTraf.db");
+        rd->layers->layers->layer_level = 2;
+        rd->layers->layers->layer_enabled = FALSE;
+        rd->layers->layers->layer_refresh_interval = 10; /* refetch traffic every minute */
+        rd->layers->layers->layer_refresh_countdown = rd->layers->layers->layer_refresh_interval;
+        set_repo_type (rd->layers->layers);
+
     }
 
     vprintf("%s(): return %p\n", __PRETTY_FUNCTION__, rd);

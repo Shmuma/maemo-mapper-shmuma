@@ -85,7 +85,9 @@ struct _RepoEditInfo {
     GtkWidget *num_min_zoom;
     GtkWidget *num_max_zoom;
     BrowseInfo browse_info;
+    RepoData *repo;
 };
+
 
 typedef struct _MapmanInfo MapmanInfo;
 struct _MapmanInfo {
@@ -110,6 +112,7 @@ struct _MapmanInfo {
     /* The "Zoom" tab. */
     GtkWidget *chk_zoom_levels[MAX_ZOOM + 1];
 };
+
 
 typedef struct _CompactInfo CompactInfo;
 struct _CompactInfo {
@@ -2290,10 +2293,19 @@ static gboolean
 repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
 {
     GtkWidget *dialog = NULL;
+    GtkWidget *hbox = NULL;
+    GtkWidget *layers_list = NULL;
+    GtkWidget *notebook = NULL;
+    GtkListStore *layers_store = NULL;
+    GtkTreeIter layers_iter;
+    GtkCellRenderer *layers_rendeder = NULL;
+    GtkTreeViewColumn *layers_column = NULL;
+
     const char* t_header = _("Manage layers [%s]");
     char* header = NULL;
     RepoEditInfo* rei = NULL;
     gint curr_repo_index = gtk_combo_box_get_active (GTK_COMBO_BOX (rmi->cmb_repos));
+    RepoData *rd;
 
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -2317,6 +2329,100 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
     dialog = gtk_dialog_new_with_buttons (header, GTK_WINDOW (rmi->dialog), GTK_DIALOG_MODAL, 
                                           GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, 
                                           GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, NULL);
+
+    layers_store = gtk_list_store_new (1, G_TYPE_STRING);
+    layers_list = gtk_tree_view_new_with_model (GTK_TREE_MODEL (layers_store));
+    layers_rendeder = gtk_cell_renderer_text_new ();
+    layers_column = gtk_tree_view_column_new_with_attributes ("Fuck", layers_rendeder, "text", 0, NULL);
+    gtk_tree_view_append_column (GTK_TREE_VIEW (layers_list), layers_column);
+
+    /* notebook with layers' attributes */
+    notebook = gtk_notebook_new ();
+
+    gtk_notebook_set_show_tabs(GTK_NOTEBOOK(notebook), FALSE);
+    gtk_notebook_set_show_border(GTK_NOTEBOOK(notebook), FALSE);
+
+    /* walk through all layers and add notebook pages */
+    rd = rei->repo->layers;
+    while (rd) {
+        GtkWidget *vbox;
+        GtkWidget *hbox2;
+        GtkWidget *table;
+        GtkWidget *label;
+        GtkWidget *txt_name;
+        GtkWidget *txt_url;
+        GtkWidget *txt_filename;
+        GtkWidget *btn_browse;
+        GtkWidget *refetch_editor;
+        GtkWidget *chk_visible;
+
+        gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox = gtk_vbox_new (FALSE, 4),
+                                  gtk_label_new (rd->name));
+
+        gtk_box_pack_start (GTK_BOX (vbox), table = gtk_table_new (4, 2, FALSE),
+                            FALSE, FALSE, 0);
+
+        /* Layer name */
+        gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Name")),
+                          0, 1, 0, 1, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
+        gtk_table_attach (GTK_TABLE (table), txt_name = gtk_entry_new (),
+                          1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+        gtk_entry_set_text (GTK_ENTRY (txt_name), rd->name);
+
+        /* URL format */
+        gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("URL")),
+                          0, 1, 1, 2, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
+        gtk_table_attach (GTK_TABLE (table), txt_url = gtk_entry_new (),
+                          1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+        gtk_entry_set_text (GTK_ENTRY (txt_url), rd->url);
+
+        /* Map directory */
+        gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Cache DB")),
+                          0, 1, 2, 3, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
+        gtk_table_attach (GTK_TABLE (table), hbox2 = gtk_hbox_new (FALSE, 4),
+                          1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+        gtk_box_pack_start (GTK_BOX (hbox2), txt_filename = gtk_entry_new (),
+                            TRUE, TRUE, 0);
+        gtk_box_pack_start (GTK_BOX (hbox2), btn_browse = gtk_button_new_with_label (_("Browse...")),
+                            FALSE, FALSE, 0);
+        gtk_entry_set_text (GTK_ENTRY (txt_filename), rd->db_filename);
+
+        /* Autorefresh */
+        gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Autofetch")),
+                          0, 1, 3, 4, GTK_FILL, 0, 2, 0);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        gtk_table_attach (GTK_TABLE (table), hbox2 = gtk_hbox_new (FALSE, 4),
+                          1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+        gtk_box_pack_start (GTK_BOX (hbox2), refetch_editor = hildon_number_editor_new (0, 120),
+                            FALSE, FALSE, 4);
+        gtk_box_pack_start (GTK_BOX (hbox2), label = gtk_label_new (_("min.")), FALSE, FALSE, 4);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+        hildon_number_editor_set_value (HILDON_NUMBER_EDITOR (refetch_editor), rd->layer_refresh_interval);
+
+        /* Visible */
+        gtk_box_pack_start (GTK_BOX (vbox), chk_visible = gtk_check_button_new_with_label (_("Layer is visible")),
+                            FALSE, FALSE, 4);
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (chk_visible), rd->layer_enabled);
+
+        gtk_widget_show_all (vbox);
+
+        gtk_list_store_append (layers_store, &layers_iter);
+        gtk_list_store_set (layers_store, &layers_iter, 0, rd->name, -1);
+
+        rd = rd->layers;
+    }
+
+    /* pack all widgets together */
+    hbox = gtk_hbox_new (FALSE, 4);
+
+    gtk_box_pack_start (GTK_BOX (hbox), layers_list, TRUE, TRUE, 4);
+    gtk_box_pack_start (GTK_BOX (hbox), gtk_vseparator_new (), FALSE, FALSE, 4);
+    gtk_box_pack_start (GTK_BOX (hbox), notebook, TRUE, TRUE, 4);
+
+    gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), hbox, FALSE, FALSE, 4);
 
     gtk_widget_show_all (dialog);
 
@@ -2432,6 +2538,9 @@ repoman_dialog()
     {
         RepoData *rd = (RepoData*)curr->data;
         RepoEditInfo *rei = repoman_dialog_add_repo(&rmi, g_strdup(rd->name));
+
+        /* store this to be able to walk through layers attached to repo */
+        rei->repo = rd;
 
         /* Initialize fields with data from the RepoData object. */
         gtk_entry_set_text(GTK_ENTRY(rei->txt_url), rd->url);
