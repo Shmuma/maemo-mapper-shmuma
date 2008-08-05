@@ -107,6 +107,7 @@ struct _LayerEditInfo {
     GtkWidget *txt_db;
     GtkWidget *num_autofetch;
     GtkWidget *chk_visible;
+    GtkWidget *vbox;
 };
 
 
@@ -2462,7 +2463,7 @@ repoman_layers_new (GtkWidget *widget, RepoLayersInfo *rli)
 
 
 static gboolean
-repoman_layers_del (GtkWidget *widget, RepoLayersInfo *rmi)
+repoman_layers_del (GtkWidget *widget, RepoLayersInfo *rli)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -2471,18 +2472,104 @@ repoman_layers_del (GtkWidget *widget, RepoLayersInfo *rmi)
 
 
 static gboolean
-repoman_layers_up (GtkWidget *widget, RepoLayersInfo *rmi)
+repoman_layers_up (GtkWidget *widget, RepoLayersInfo *rli)
 {
+    GtkTreeSelection *selection;
+    GtkTreeIter iter, iter2;
+    GtkTreePath *path;
+    gint page;
+
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* find selected entry in list view */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (rli->layers_list));
+
+    if (!gtk_tree_selection_get_selected (selection, NULL, &iter)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    iter2 = iter;
+    path = gtk_tree_model_get_path (GTK_TREE_MODEL (rli->layers_store), &iter);
+    if (!gtk_tree_path_prev (path) || !gtk_tree_model_get_iter (GTK_TREE_MODEL (rli->layers_store), &iter, path)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    /* move it up */
+    gtk_list_store_move_before (rli->layers_store, &iter2, &iter);
+
+    /* reorder notebook tabs */
+    page = gtk_notebook_get_current_page (GTK_NOTEBOOK (rli->notebook));
+    gtk_notebook_reorder_child (GTK_NOTEBOOK (rli->notebook), gtk_notebook_get_nth_page (GTK_NOTEBOOK (rli->notebook), page), page-1);
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
 
 static gboolean
-repoman_layers_dn (GtkWidget *widget, RepoLayersInfo *rmi)
+repoman_layers_dn (GtkWidget *widget, RepoLayersInfo *rli)
 {
+    GtkTreeSelection *selection;
+    GtkTreeIter iter, iter2;
+    gint page;
+
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* find selected entry in list view */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (rli->layers_list));
+
+    if (!gtk_tree_selection_get_selected (selection, NULL, &iter)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    iter2 = iter;
+    if (!gtk_tree_model_iter_next (GTK_TREE_MODEL (rli->layers_store), &iter)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    /* move it down */
+    gtk_list_store_move_after (rli->layers_store, &iter2, &iter);
+
+    /* reorder notebook tabs */
+    page = gtk_notebook_get_current_page (GTK_NOTEBOOK (rli->notebook));
+    gtk_notebook_reorder_child (GTK_NOTEBOOK (rli->notebook), gtk_notebook_get_nth_page (GTK_NOTEBOOK (rli->notebook), page), page+1);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+static gboolean
+repoman_layer_selected (GtkTreeSelection *selection, RepoLayersInfo *rli)
+{
+    GtkTreeIter cur, p;
+    GtkTreePath *p1, *p2;
+    gint index = 0;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    gtk_tree_model_get_iter_first (GTK_TREE_MODEL (rli->layers_store), &p);
+
+    if (!gtk_tree_selection_get_selected (selection, NULL, &cur)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    p1 = gtk_tree_model_get_path (GTK_TREE_MODEL (rli->layers_store), &cur);
+    p2 = gtk_tree_model_get_path (GTK_TREE_MODEL (rli->layers_store), &p);
+
+    while (gtk_tree_path_compare (p1, p2) != 0) {
+        gtk_tree_path_next (p2);
+        index++;
+    }
+
+    /* we know the index of page we need to activate */
+    gtk_notebook_set_current_page (GTK_NOTEBOOK (rli->notebook), index);
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -2496,6 +2583,7 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
     GtkWidget *buttons_hbox = NULL;
     GtkCellRenderer *layers_rendeder = NULL;
     GtkTreeViewColumn *layers_column = NULL;
+    GtkTreeSelection *selection;
 
     /* layers buttons */
     GtkWidget *btn_new = NULL;
@@ -2539,6 +2627,8 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
     layers_column = gtk_tree_view_column_new_with_attributes ("Column", layers_rendeder, "text", 0, NULL);
     gtk_tree_view_append_column (GTK_TREE_VIEW (rli.layers_list), layers_column);
 
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (rli.layers_list));
+
     /* beside layers list with have buttons on bottom */
     layers_vbox = gtk_vbox_new (FALSE, 4);
     gtk_box_pack_start (GTK_BOX (layers_vbox), rli.layers_list, TRUE, TRUE, 0);
@@ -2551,6 +2641,7 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
     gtk_box_pack_start (GTK_BOX (buttons_hbox), btn_dn  = gtk_button_new_with_label (_("Dn")), FALSE, FALSE, 0);
 
     /* signals */
+    g_signal_connect(G_OBJECT(selection), "changed", G_CALLBACK(repoman_layer_selected), &rli);
     g_signal_connect(G_OBJECT(btn_new), "clicked", G_CALLBACK(repoman_layers_new), &rli);
     g_signal_connect(G_OBJECT(btn_del), "clicked", G_CALLBACK(repoman_layers_del), &rli);
     g_signal_connect(G_OBJECT(btn_up),  "clicked", G_CALLBACK(repoman_layers_up), &rli);
