@@ -89,6 +89,27 @@ struct _RepoEditInfo {
 };
 
 
+typedef struct _RepoLayersInfo RepoLayersInfo;
+struct _RepoLayersInfo {
+    GtkWidget *dialog;
+    GtkWidget *notebook;
+    GtkListStore *layers_store;
+};
+
+
+typedef struct _LayerEditInfo LayerEditInfo;
+struct _LayerEditInfo {
+    RepoLayersInfo *rli;
+
+    GtkWidget *txt_name;
+    GtkWidget *txt_url;
+    GtkWidget *txt_db;
+    GtkWidget *num_autofetch;
+    GtkWidget *chk_visible;
+};
+
+
+
 typedef struct _MapmanInfo MapmanInfo;
 struct _MapmanInfo {
     GtkWidget *dialog;
@@ -2289,21 +2310,173 @@ repoman_download(GtkWidget *widget, RepoManInfo *rmi)
 }
 
 
+static LayerEditInfo*
+repoman_layers_add_layer (RepoLayersInfo *rli, gchar* name)
+{
+    LayerEditInfo *lei = g_new (LayerEditInfo, 1);
+    GtkWidget *vbox;
+    GtkWidget *hbox2;
+    GtkWidget *table;
+    GtkWidget *label;
+    GtkWidget *btn_browse;
+    GtkTreeIter layers_iter;
+    
+    printf("%s(%s)\n", __PRETTY_FUNCTION__, name);
+
+    lei->rli = rli;
+
+    gtk_notebook_append_page (GTK_NOTEBOOK (rli->notebook), vbox = gtk_vbox_new (FALSE, 4),
+                              gtk_label_new (name));
+
+    gtk_box_pack_start (GTK_BOX (vbox), table = gtk_table_new (4, 2, FALSE),
+                        FALSE, FALSE, 0);
+
+    /* Layer name */
+    gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Name")),
+                      0, 1, 0, 1, GTK_FILL, 0, 2, 0);
+    gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
+    gtk_table_attach (GTK_TABLE (table), lei->txt_name = gtk_entry_new (),
+                      1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+    gtk_entry_set_text (GTK_ENTRY (lei->txt_name), name);
+
+    /* URL format */
+    gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("URL")),
+                      0, 1, 1, 2, GTK_FILL, 0, 2, 0);
+    gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
+    gtk_table_attach (GTK_TABLE (table), lei->txt_url = gtk_entry_new (),
+                      1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+
+    /* Map directory */
+    gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Cache DB")),
+                      0, 1, 2, 3, GTK_FILL, 0, 2, 0);
+    gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
+    gtk_table_attach (GTK_TABLE (table), hbox2 = gtk_hbox_new (FALSE, 4),
+                      1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+    gtk_box_pack_start (GTK_BOX (hbox2), lei->txt_db = gtk_entry_new (),
+                        TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (hbox2), btn_browse = gtk_button_new_with_label (_("Browse...")),
+                        FALSE, FALSE, 0);
+
+    /* Autorefresh */
+    gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Autofetch")),
+                      0, 1, 3, 4, GTK_FILL, 0, 2, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach (GTK_TABLE (table), hbox2 = gtk_hbox_new (FALSE, 4),
+                      1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+    gtk_box_pack_start (GTK_BOX (hbox2), lei->num_autofetch = hildon_number_editor_new (0, 120),
+                        FALSE, FALSE, 4);
+    gtk_box_pack_start (GTK_BOX (hbox2), label = gtk_label_new (_("min.")), FALSE, FALSE, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+    /* Visible */
+    gtk_box_pack_start (GTK_BOX (vbox), lei->chk_visible = gtk_check_button_new_with_label (_("Layer is visible")),
+                        FALSE, FALSE, 4);
+
+    gtk_widget_show_all (vbox);
+
+    /* Side list view with layers */
+    gtk_list_store_append (rli->layers_store, &layers_iter);
+    gtk_list_store_set (rli->layers_store, &layers_iter, 0, name, -1);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+
+    return lei;
+}
+
+
+
+static gboolean
+repoman_layers_new (GtkWidget *widget, RepoLayersInfo *rli)
+{
+    static GtkWidget *hbox = NULL;
+    static GtkWidget *label = NULL;
+    static GtkWidget *txt_name = NULL;
+    static GtkWidget *dialog = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(dialog == NULL)
+    {
+        dialog = gtk_dialog_new_with_buttons(_("New Layer"),
+                GTK_WINDOW(rli->dialog), GTK_DIALOG_MODAL,
+                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                NULL);
+
+        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+                hbox = gtk_hbox_new(FALSE, 4), FALSE, FALSE, 4);
+
+        gtk_box_pack_start(GTK_BOX(hbox),
+                label = gtk_label_new(_("Name")),
+                FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox),
+                txt_name = gtk_entry_new(),
+                TRUE, TRUE, 0);
+    }
+
+    gtk_entry_set_text(GTK_ENTRY(txt_name), "");
+
+    gtk_widget_show_all(dialog);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        repoman_layers_add_layer(rli,
+                g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_name))));
+        break;
+    }
+
+    gtk_widget_hide(dialog);
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+static gboolean
+repoman_layers_del (GtkWidget *widget, RepoLayersInfo *rmi)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+static gboolean
+repoman_layers_up (GtkWidget *widget, RepoLayersInfo *rmi)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+static gboolean
+repoman_layers_dn (GtkWidget *widget, RepoLayersInfo *rmi)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
 static gboolean
 repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
 {
-    GtkWidget *dialog = NULL;
     GtkWidget *hbox = NULL;
     GtkWidget *layers_list = NULL;
-    GtkWidget *notebook = NULL;
-    GtkListStore *layers_store = NULL;
-    GtkTreeIter layers_iter;
+    GtkWidget *layers_vbox = NULL;
+    GtkWidget *buttons_hbox = NULL;
     GtkCellRenderer *layers_rendeder = NULL;
     GtkTreeViewColumn *layers_column = NULL;
+
+    /* layers buttons */
+    GtkWidget *btn_new = NULL;
+    GtkWidget *btn_del = NULL;
+    GtkWidget *btn_up = NULL;
+    GtkWidget *btn_dn = NULL;
 
     const char* t_header = _("Manage layers [%s]");
     char* header = NULL;
     RepoEditInfo* rei = NULL;
+    RepoLayersInfo rli;
     gint curr_repo_index = gtk_combo_box_get_active (GTK_COMBO_BOX (rmi->cmb_repos));
     RepoData *rd;
 
@@ -2326,91 +2499,48 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
 
     printf ("Creating dialog with header: %s\n", header);
 
-    dialog = gtk_dialog_new_with_buttons (header, GTK_WINDOW (rmi->dialog), GTK_DIALOG_MODAL, 
-                                          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT, 
-                                          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, NULL);
+    rli.dialog = gtk_dialog_new_with_buttons (header, GTK_WINDOW (rmi->dialog), GTK_DIALOG_MODAL, 
+                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, NULL);
 
-    layers_store = gtk_list_store_new (1, G_TYPE_STRING);
-    layers_list = gtk_tree_view_new_with_model (GTK_TREE_MODEL (layers_store));
+    rli.layers_store = gtk_list_store_new (1, G_TYPE_STRING);
+    layers_list = gtk_tree_view_new_with_model (GTK_TREE_MODEL (rli.layers_store));
     layers_rendeder = gtk_cell_renderer_text_new ();
-    layers_column = gtk_tree_view_column_new_with_attributes ("Fuck", layers_rendeder, "text", 0, NULL);
+    layers_column = gtk_tree_view_column_new_with_attributes ("Column", layers_rendeder, "text", 0, NULL);
     gtk_tree_view_append_column (GTK_TREE_VIEW (layers_list), layers_column);
 
-    /* notebook with layers' attributes */
-    notebook = gtk_notebook_new ();
+    /* beside layers list with have buttons on bottom */
+    layers_vbox = gtk_vbox_new (FALSE, 4);
+    gtk_box_pack_start (GTK_BOX (layers_vbox), layers_list, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (layers_vbox), buttons_hbox = gtk_hbox_new (FALSE, 4), FALSE, FALSE, 0);
 
-    gtk_notebook_set_show_tabs(GTK_NOTEBOOK(notebook), FALSE);
-    gtk_notebook_set_show_border(GTK_NOTEBOOK(notebook), FALSE);
+    /* buttons */
+    gtk_box_pack_start (GTK_BOX (buttons_hbox), btn_new = gtk_button_new_with_label (_("New")), FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (buttons_hbox), btn_del = gtk_button_new_with_label (_("Del")), FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (buttons_hbox), btn_up  = gtk_button_new_with_label (_("Up")), FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (buttons_hbox), btn_dn  = gtk_button_new_with_label (_("Dn")), FALSE, FALSE, 0);
+
+    /* signals */
+    g_signal_connect(G_OBJECT(btn_new), "clicked", G_CALLBACK(repoman_layers_new), &rli);
+    g_signal_connect(G_OBJECT(btn_del), "clicked", G_CALLBACK(repoman_layers_del), &rli);
+    g_signal_connect(G_OBJECT(btn_up),  "clicked", G_CALLBACK(repoman_layers_up), &rli);
+    g_signal_connect(G_OBJECT(btn_dn),  "clicked", G_CALLBACK(repoman_layers_dn), &rli);
+
+    /* notebook with layers' attributes */
+    rli.notebook = gtk_notebook_new ();
+
+    gtk_notebook_set_show_tabs(GTK_NOTEBOOK(rli.notebook), FALSE);
+    gtk_notebook_set_show_border(GTK_NOTEBOOK(rli.notebook), FALSE);
 
     /* walk through all layers and add notebook pages */
     rd = rei->repo->layers;
     while (rd) {
-        GtkWidget *vbox;
-        GtkWidget *hbox2;
-        GtkWidget *table;
-        GtkWidget *label;
-        GtkWidget *txt_name;
-        GtkWidget *txt_url;
-        GtkWidget *txt_filename;
-        GtkWidget *btn_browse;
-        GtkWidget *refetch_editor;
-        GtkWidget *chk_visible;
+        LayerEditInfo *lei = repoman_layers_add_layer (&rli, rd->name);
 
-        gtk_notebook_append_page (GTK_NOTEBOOK (notebook), vbox = gtk_vbox_new (FALSE, 4),
-                                  gtk_label_new (rd->name));
-
-        gtk_box_pack_start (GTK_BOX (vbox), table = gtk_table_new (4, 2, FALSE),
-                            FALSE, FALSE, 0);
-
-        /* Layer name */
-        gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Name")),
-                          0, 1, 0, 1, GTK_FILL, 0, 2, 0);
-        gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
-        gtk_table_attach (GTK_TABLE (table), txt_name = gtk_entry_new (),
-                          1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 0);
-        gtk_entry_set_text (GTK_ENTRY (txt_name), rd->name);
-
-        /* URL format */
-        gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("URL")),
-                          0, 1, 1, 2, GTK_FILL, 0, 2, 0);
-        gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
-        gtk_table_attach (GTK_TABLE (table), txt_url = gtk_entry_new (),
-                          1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 0);
-        gtk_entry_set_text (GTK_ENTRY (txt_url), rd->url);
-
-        /* Map directory */
-        gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Cache DB")),
-                          0, 1, 2, 3, GTK_FILL, 0, 2, 0);
-        gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
-        gtk_table_attach (GTK_TABLE (table), hbox2 = gtk_hbox_new (FALSE, 4),
-                          1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 0);
-        gtk_box_pack_start (GTK_BOX (hbox2), txt_filename = gtk_entry_new (),
-                            TRUE, TRUE, 0);
-        gtk_box_pack_start (GTK_BOX (hbox2), btn_browse = gtk_button_new_with_label (_("Browse...")),
-                            FALSE, FALSE, 0);
-        gtk_entry_set_text (GTK_ENTRY (txt_filename), rd->db_filename);
-
-        /* Autorefresh */
-        gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Autofetch")),
-                          0, 1, 3, 4, GTK_FILL, 0, 2, 0);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach (GTK_TABLE (table), hbox2 = gtk_hbox_new (FALSE, 4),
-                          1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 0);
-        gtk_box_pack_start (GTK_BOX (hbox2), refetch_editor = hildon_number_editor_new (0, 120),
-                            FALSE, FALSE, 4);
-        gtk_box_pack_start (GTK_BOX (hbox2), label = gtk_label_new (_("min.")), FALSE, FALSE, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        hildon_number_editor_set_value (HILDON_NUMBER_EDITOR (refetch_editor), rd->layer_refresh_interval);
-
-        /* Visible */
-        gtk_box_pack_start (GTK_BOX (vbox), chk_visible = gtk_check_button_new_with_label (_("Layer is visible")),
-                            FALSE, FALSE, 4);
-        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (chk_visible), rd->layer_enabled);
-
-        gtk_widget_show_all (vbox);
-
-        gtk_list_store_append (layers_store, &layers_iter);
-        gtk_list_store_set (layers_store, &layers_iter, 0, rd->name, -1);
+        gtk_entry_set_text (GTK_ENTRY (lei->txt_url),  rd->url);
+        gtk_entry_set_text (GTK_ENTRY (lei->txt_db),   rd->db_filename);
+        hildon_number_editor_set_value (HILDON_NUMBER_EDITOR (lei->num_autofetch), rd->layer_refresh_interval);
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (lei->chk_visible), rd->layer_enabled);
 
         rd = rd->layers;
     }
@@ -2418,20 +2548,20 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
     /* pack all widgets together */
     hbox = gtk_hbox_new (FALSE, 4);
 
-    gtk_box_pack_start (GTK_BOX (hbox), layers_list, TRUE, TRUE, 4);
+    gtk_box_pack_start (GTK_BOX (hbox), layers_vbox, TRUE, TRUE, 4);
     gtk_box_pack_start (GTK_BOX (hbox), gtk_vseparator_new (), FALSE, FALSE, 4);
-    gtk_box_pack_start (GTK_BOX (hbox), notebook, TRUE, TRUE, 4);
+    gtk_box_pack_start (GTK_BOX (hbox), rli.notebook, TRUE, TRUE, 4);
 
-    gtk_box_pack_start (GTK_BOX (GTK_DIALOG (dialog)->vbox), hbox, FALSE, FALSE, 4);
+    gtk_box_pack_start (GTK_BOX (GTK_DIALOG (rli.dialog)->vbox), hbox, FALSE, FALSE, 4);
 
-    gtk_widget_show_all (dialog);
+    gtk_widget_show_all (rli.dialog);
 
-    while (GTK_RESPONSE_ACCEPT == gtk_dialog_run (GTK_DIALOG (dialog)))
+    while (GTK_RESPONSE_ACCEPT == gtk_dialog_run (GTK_DIALOG (rli.dialog)))
     {
         break;
     }
 
-    gtk_widget_destroy (dialog);
+    gtk_widget_destroy (rli.dialog);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
