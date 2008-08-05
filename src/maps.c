@@ -94,6 +94,7 @@ struct _RepoLayersInfo {
     GtkWidget *dialog;
     GtkWidget *notebook;
     GtkListStore *layers_store;
+    GtkWidget *layers_list;
 };
 
 
@@ -2310,6 +2311,33 @@ repoman_download(GtkWidget *widget, RepoManInfo *rmi)
 }
 
 
+static gboolean
+layer_name_changed (GtkWidget *entry, LayerEditInfo *lei)
+{
+    const gchar* name;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* take new name  */
+    name = gtk_entry_get_text (GTK_ENTRY (entry));
+
+    /* find selected entry in list view */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (lei->rli->layers_list));
+
+    if (!gtk_tree_selection_get_selected (selection, NULL, &iter)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    gtk_list_store_set (lei->rli->layers_store, &iter, 0, name, -1);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
 static LayerEditInfo*
 repoman_layers_add_layer (RepoLayersInfo *rli, gchar* name)
 {
@@ -2338,6 +2366,9 @@ repoman_layers_add_layer (RepoLayersInfo *rli, gchar* name)
     gtk_table_attach (GTK_TABLE (table), lei->txt_name = gtk_entry_new (),
                       1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 0);
     gtk_entry_set_text (GTK_ENTRY (lei->txt_name), name);
+
+    /* signals */
+    g_signal_connect(G_OBJECT(lei->txt_name), "changed", G_CALLBACK(layer_name_changed), lei);
 
     /* URL format */
     gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("URL")),
@@ -2461,7 +2492,6 @@ static gboolean
 repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
 {
     GtkWidget *hbox = NULL;
-    GtkWidget *layers_list = NULL;
     GtkWidget *layers_vbox = NULL;
     GtkWidget *buttons_hbox = NULL;
     GtkCellRenderer *layers_rendeder = NULL;
@@ -2504,14 +2534,14 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, NULL);
 
     rli.layers_store = gtk_list_store_new (1, G_TYPE_STRING);
-    layers_list = gtk_tree_view_new_with_model (GTK_TREE_MODEL (rli.layers_store));
+    rli.layers_list = gtk_tree_view_new_with_model (GTK_TREE_MODEL (rli.layers_store));
     layers_rendeder = gtk_cell_renderer_text_new ();
     layers_column = gtk_tree_view_column_new_with_attributes ("Column", layers_rendeder, "text", 0, NULL);
-    gtk_tree_view_append_column (GTK_TREE_VIEW (layers_list), layers_column);
+    gtk_tree_view_append_column (GTK_TREE_VIEW (rli.layers_list), layers_column);
 
     /* beside layers list with have buttons on bottom */
     layers_vbox = gtk_vbox_new (FALSE, 4);
-    gtk_box_pack_start (GTK_BOX (layers_vbox), layers_list, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (layers_vbox), rli.layers_list, TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (layers_vbox), buttons_hbox = gtk_hbox_new (FALSE, 4), FALSE, FALSE, 0);
 
     /* buttons */
