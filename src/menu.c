@@ -1402,11 +1402,29 @@ menu_maps_remove_repos()
     {
         gtk_widget_destroy(gtk_container_get_children(
                     GTK_CONTAINER(_menu_maps_submenu))->data);
+    }
+
+    menu_layers_remove_repos ();
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+
+void
+menu_layers_remove_repos()
+{
+    GList *curr;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Delete one menu item for each repo. */
+    for(curr = _repo_list; curr; curr = curr->next)
+    {
         if (gtk_container_get_children(GTK_CONTAINER(_menu_layers_submenu)))
             gtk_widget_destroy(gtk_container_get_children(GTK_CONTAINER(_menu_layers_submenu))->data);
     }
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
+
 
 void
 menu_maps_add_repos()
@@ -1446,6 +1464,8 @@ menu_maps_add_repos()
     }
 
     gtk_widget_show_all(_menu_maps_submenu);
+    menu_layers_add_repos ();
+
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 

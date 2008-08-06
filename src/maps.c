@@ -95,6 +95,7 @@ struct _RepoLayersInfo {
     GtkWidget *notebook;
     GtkListStore *layers_store;
     GtkWidget *layers_list;
+    GList *layer_edits;
 };
 
 
@@ -1011,25 +1012,23 @@ repo_set_curr(RepoData *rd)
     if(!rd->db_filename || !*rd->db_filename
             || repo_make_db(rd))
     {
-        if(_curr_repo)
+        repo_p = _curr_repo;
+
+        while (repo_p)
         {
-            if(_curr_repo->db)
+            if(repo_p->db)
             {
                 g_mutex_lock(_mapdb_mutex);
 #ifdef MAPDB_SQLITE
-                sqlite3_close(_curr_repo->db);
-                _curr_repo->db = NULL;
+                sqlite3_close(repo_p->db);
+                repo_p->db = NULL;
 #else
-                repo_p = _curr_repo;
-                while (repo_p) {
-                    if (repo_p->db)
-                        gdbm_close(repo_p->db);
-                    repo_p->db = NULL;
-                    repo_p = repo_p->layers;
-                }
+                gdbm_close(repo_p->db);
+                repo_p->db = NULL;
 #endif
                 g_mutex_unlock(_mapdb_mutex);
             }
+            repo_p = repo_p->layers;
         }
 
         /* Set the current repository! */
@@ -2414,6 +2413,8 @@ repoman_layers_add_layer (RepoLayersInfo *rli, gchar* name)
 
     lei->rli = rli;
 
+    rli->layer_edits = g_list_append (rli->layer_edits, lei);
+
     gtk_notebook_append_page (GTK_NOTEBOOK (rli->notebook), vbox = gtk_vbox_new (FALSE, 4),
                               gtk_label_new (name));
 
@@ -2544,6 +2545,8 @@ repoman_layers_del (GtkWidget *widget, RepoLayersInfo *rli)
     index = layer_get_page_index (rli, iter);
     gtk_list_store_remove (rli->layers_store, &iter);
 
+    rli->layer_edits = g_list_remove_link (rli->layer_edits, g_list_nth (rli->layer_edits, index));
+
     /* delete notebook page */
     gtk_notebook_remove_page (GTK_NOTEBOOK (rli->notebook), index);
 
@@ -2559,6 +2562,7 @@ repoman_layers_up (GtkWidget *widget, RepoLayersInfo *rli)
     GtkTreeIter iter, iter2;
     GtkTreePath *path;
     gint page;
+    LayerEditInfo *lei;
 
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -2586,6 +2590,11 @@ repoman_layers_up (GtkWidget *widget, RepoLayersInfo *rli)
     page = gtk_notebook_get_current_page (GTK_NOTEBOOK (rli->notebook));
     gtk_notebook_reorder_child (GTK_NOTEBOOK (rli->notebook), gtk_notebook_get_nth_page (GTK_NOTEBOOK (rli->notebook), page), page-1);
 
+    /* reorder layer edits */
+    lei = (LayerEditInfo*)g_list_nth (rli->layer_edits, page);
+    rli->layer_edits = g_list_remove_link (rli->layer_edits, lei);
+    rli->layer_edits = g_list_insert (rli->layer_edits, lei, page-1);
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -2597,6 +2606,7 @@ repoman_layers_dn (GtkWidget *widget, RepoLayersInfo *rli)
     GtkTreeSelection *selection;
     GtkTreeIter iter, iter2;
     gint page;
+    LayerEditInfo *lei;
 
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -2620,6 +2630,11 @@ repoman_layers_dn (GtkWidget *widget, RepoLayersInfo *rli)
     /* reorder notebook tabs */
     page = gtk_notebook_get_current_page (GTK_NOTEBOOK (rli->notebook));
     gtk_notebook_reorder_child (GTK_NOTEBOOK (rli->notebook), gtk_notebook_get_nth_page (GTK_NOTEBOOK (rli->notebook), page), page+1);
+
+    /* reorder layer edits */
+    lei = (LayerEditInfo*)g_list_nth (rli->layer_edits, page);
+    rli->layer_edits = g_list_remove_link (rli->layer_edits, lei);
+    rli->layer_edits = g_list_insert (rli->layer_edits, lei, page+1);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -2688,6 +2703,7 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
 
     printf ("Creating dialog with header: %s\n", header);
 
+    rli.layer_edits = NULL;
     rli.dialog = gtk_dialog_new_with_buttons (header, GTK_WINDOW (rmi->dialog), GTK_DIALOG_MODAL, 
                                               GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                               GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, NULL);
@@ -2753,6 +2769,39 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
 
     while (GTK_RESPONSE_ACCEPT == gtk_dialog_run (GTK_DIALOG (rli.dialog)))
     {
+        RepoData **rdp;
+        gint i;
+        GList *curr;
+
+        menu_layers_remove_repos ();
+
+        /* iterate over notebook's pages and build layers */
+        /* keep list in memory in case downloads use it (TODO: reference counting) */
+        rdp = &rei->repo->layers;
+        *rdp = NULL;
+
+        for (i = 0, curr = rli.layer_edits; curr; curr = curr->next, i++)  {
+            LayerEditInfo *lei = curr->data;
+
+            rd = g_new0 (RepoData, 1);
+            *rdp = rd;
+
+            rd->name = g_strdup (gtk_entry_get_text (GTK_ENTRY (lei->txt_name)));
+            rd->url = g_strdup (gtk_entry_get_text (GTK_ENTRY (lei->txt_url)));
+            rd->db_filename = g_strdup (gtk_entry_get_text (GTK_ENTRY (lei->txt_db)));
+            rd->layer_enabled = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (lei->chk_visible));
+            rd->layer_refresh_interval = hildon_number_editor_get_value (HILDON_NUMBER_EDITOR (lei->num_autofetch));
+            rd->layer_refresh_countdown = rd->layer_refresh_interval;
+            rd->layer_level = i+1;
+            set_repo_type (rd);
+            rdp = &rd->layers;
+        }
+
+        menu_layers_add_repos ();
+        repo_set_curr(_curr_repo);
+        settings_save ();
+        map_cache_clean ();
+        map_refresh_mark (TRUE);
         break;
     }
 
@@ -2941,6 +2990,7 @@ repoman_dialog()
         {
             RepoEditInfo *rei = curr->data;
             RepoData *rd = g_new(RepoData, 1);
+            RepoData *rd0, **rd1;
             rd->name = g_strdup(rei->name);
             rd->url = g_strdup(gtk_entry_get_text(GTK_ENTRY(rei->txt_url)));
             rd->db_filename = gnome_vfs_expand_initial_tilde(
@@ -2957,7 +3007,27 @@ repoman_dialog()
                     HILDON_NUMBER_EDITOR(rei->num_min_zoom));
             rd->max_zoom = hildon_number_editor_get_value(
                     HILDON_NUMBER_EDITOR(rei->num_max_zoom));
-            rd->layers = NULL;
+
+            /* clone layers */
+            rd0 = rei->repo->layers;
+            rd1 = &rd->layers;
+
+            while (rd0) {
+                *rd1 = g_new0 (RepoData, 1);
+                (*rd1)->name = rd0->name;
+                (*rd1)->url = rd0->url;
+                (*rd1)->db_filename = rd0->db_filename;
+                (*rd1)->layer_enabled = rd0->layer_enabled;
+                (*rd1)->layer_refresh_interval = rd0->layer_refresh_interval;
+                (*rd1)->layer_refresh_countdown = rd0->layer_refresh_countdown;
+                (*rd1)->layer_level = rd0->layer_level;
+                set_repo_type (*rd1);
+
+                rd0 = rd0->layers;
+                rd1 = &(*rd1)->layers;
+            }
+            *rd1 = NULL;
+
             rd->layer_level = 0;
             set_repo_type(rd);
 
@@ -2983,6 +3053,7 @@ repoman_dialog()
         repoman_delete(&rmi, 0);
 
     map_set_zoom(_zoom); /* make sure we're at an appropriate zoom level. */
+    map_refresh_mark (TRUE);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
