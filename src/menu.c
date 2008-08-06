@@ -1402,8 +1402,8 @@ menu_maps_remove_repos()
     {
         gtk_widget_destroy(gtk_container_get_children(
                     GTK_CONTAINER(_menu_maps_submenu))->data);
-        gtk_widget_destroy(gtk_container_get_children(
-                    GTK_CONTAINER(_menu_layers_submenu))->data);
+        if (gtk_container_get_children(GTK_CONTAINER(_menu_layers_submenu)))
+            gtk_widget_destroy(gtk_container_get_children(GTK_CONTAINER(_menu_layers_submenu))->data);
     }
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -1473,14 +1473,14 @@ menu_layers_add_repos()
             if (!submenu)
                 submenu = gtk_menu_new ();
             gtk_menu_append (submenu, layer_item = gtk_check_menu_item_new_with_label (rd->name));
-            gtk_check_menu_item_set_active (layer_item, rd->layer_enabled);
+            gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (layer_item), rd->layer_enabled);
             g_signal_connect (G_OBJECT (layer_item), "toggled", G_CALLBACK (menu_cb_layers_toggle), rd);
             rd->menu_item = layer_item;
             rd = rd->layers;
         }
 
         if (submenu)
-            gtk_menu_item_set_submenu (item, submenu);
+            gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), submenu);
     }
 
     gtk_widget_show_all(_menu_layers_submenu);

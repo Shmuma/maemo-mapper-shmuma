@@ -2312,6 +2312,30 @@ repoman_download(GtkWidget *widget, RepoManInfo *rmi)
 }
 
 
+static gint
+layer_get_page_index (RepoLayersInfo *rli, GtkTreeIter list_it)
+{
+    GtkTreePath *p1, *p2;
+    GtkTreeIter p;
+    gint index = 0;
+
+    gtk_tree_model_get_iter_first (GTK_TREE_MODEL (rli->layers_store), &p);
+
+    p1 = gtk_tree_model_get_path (GTK_TREE_MODEL (rli->layers_store), &list_it);
+    p2 = gtk_tree_model_get_path (GTK_TREE_MODEL (rli->layers_store), &p);
+
+    while (gtk_tree_path_compare (p1, p2) != 0) {
+        gtk_tree_path_next (p2);
+        index++;
+    }
+
+    gtk_tree_path_free (p1);
+    gtk_tree_path_free (p2);
+
+    return index;
+}
+
+
 static gboolean
 layer_name_changed (GtkWidget *entry, LayerEditInfo *lei)
 {
@@ -2465,7 +2489,26 @@ repoman_layers_new (GtkWidget *widget, RepoLayersInfo *rli)
 static gboolean
 repoman_layers_del (GtkWidget *widget, RepoLayersInfo *rli)
 {
+    GtkTreeIter iter;
+    GtkTreeSelection *selection;
+    gint index;
+
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* delete list item */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (rli->layers_list));
+
+    if (!gtk_tree_selection_get_selected (selection, NULL, &iter)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    index = layer_get_page_index (rli, iter);
+    gtk_list_store_remove (rli->layers_store, &iter);
+
+    /* delete notebook page */
+    gtk_notebook_remove_page (GTK_NOTEBOOK (rli->notebook), index);
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -2495,6 +2538,8 @@ repoman_layers_up (GtkWidget *widget, RepoLayersInfo *rli)
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
     }
+
+    gtk_tree_path_free (path);
 
     /* move it up */
     gtk_list_store_move_before (rli->layers_store, &iter2, &iter);
@@ -2546,29 +2591,16 @@ repoman_layers_dn (GtkWidget *widget, RepoLayersInfo *rli)
 static gboolean
 repoman_layer_selected (GtkTreeSelection *selection, RepoLayersInfo *rli)
 {
-    GtkTreeIter cur, p;
-    GtkTreePath *p1, *p2;
-    gint index = 0;
+    GtkTreeIter cur;
 
     printf("%s()\n", __PRETTY_FUNCTION__);
-
-    gtk_tree_model_get_iter_first (GTK_TREE_MODEL (rli->layers_store), &p);
 
     if (!gtk_tree_selection_get_selected (selection, NULL, &cur)) {
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
     }
 
-    p1 = gtk_tree_model_get_path (GTK_TREE_MODEL (rli->layers_store), &cur);
-    p2 = gtk_tree_model_get_path (GTK_TREE_MODEL (rli->layers_store), &p);
-
-    while (gtk_tree_path_compare (p1, p2) != 0) {
-        gtk_tree_path_next (p2);
-        index++;
-    }
-
-    /* we know the index of page we need to activate */
-    gtk_notebook_set_current_page (GTK_NOTEBOOK (rli->notebook), index);
+    gtk_notebook_set_current_page (GTK_NOTEBOOK (rli->notebook), layer_get_page_index (rli, cur));
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
