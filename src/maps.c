@@ -2651,6 +2651,7 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
     GtkWidget *hbox = NULL;
     GtkWidget *layers_vbox = NULL;
     GtkWidget *buttons_hbox = NULL;
+    GtkWidget *frame;
     GtkCellRenderer *layers_rendeder = NULL;
     GtkTreeViewColumn *layers_column = NULL;
     GtkTreeSelection *selection;
@@ -2699,9 +2700,13 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
 
     selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (rli.layers_list));
 
+    frame = gtk_frame_new (NULL);
+    gtk_container_add (GTK_CONTAINER (frame), rli.layers_list);
+    gtk_widget_set_size_request (frame, -1, 100);
+
     /* beside layers list with have buttons on bottom */
     layers_vbox = gtk_vbox_new (FALSE, 4);
-    gtk_box_pack_start (GTK_BOX (layers_vbox), rli.layers_list, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (layers_vbox), frame, TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (layers_vbox), buttons_hbox = gtk_hbox_new (FALSE, 4), FALSE, FALSE, 0);
 
     /* buttons */
@@ -2740,7 +2745,6 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
     hbox = gtk_hbox_new (FALSE, 4);
 
     gtk_box_pack_start (GTK_BOX (hbox), layers_vbox, TRUE, TRUE, 4);
-    gtk_box_pack_start (GTK_BOX (hbox), gtk_vseparator_new (), FALSE, FALSE, 4);
     gtk_box_pack_start (GTK_BOX (hbox), rli.notebook, TRUE, TRUE, 4);
 
     gtk_box_pack_start (GTK_BOX (GTK_DIALOG (rli.dialog)->vbox), hbox, FALSE, FALSE, 4);
