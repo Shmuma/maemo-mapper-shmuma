@@ -2363,6 +2363,42 @@ layer_name_changed (GtkWidget *entry, LayerEditInfo *lei)
 }
 
 
+static gboolean
+layer_dialog_browse (GtkWidget *widget, LayerEditInfo *lei)
+{
+    GtkWidget *dialog;
+    gchar *basename;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    dialog = GTK_WIDGET(
+            hildon_file_chooser_dialog_new(GTK_WINDOW(lei->rli->dialog),
+            GTK_FILE_CHOOSER_ACTION_SAVE));
+
+    gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(dialog),
+            gtk_entry_get_text(GTK_ENTRY(lei->txt_db)));
+
+    /* Work around a bug in HildonFileChooserDialog. */
+    basename = g_path_get_basename(
+            gtk_entry_get_text(GTK_ENTRY(lei->txt_db)));
+    g_object_set(G_OBJECT(dialog), "autonaming", FALSE, NULL);
+    gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), basename);
+
+    if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        gchar *filename = gtk_file_chooser_get_filename(
+                GTK_FILE_CHOOSER(dialog));
+        gtk_entry_set_text(GTK_ENTRY(lei->txt_db), filename);
+        g_free(filename);
+    }
+
+    gtk_widget_destroy(dialog);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+
 static LayerEditInfo*
 repoman_layers_add_layer (RepoLayersInfo *rli, gchar* name)
 {
@@ -2412,6 +2448,8 @@ repoman_layers_add_layer (RepoLayersInfo *rli, gchar* name)
                         TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (hbox2), btn_browse = gtk_button_new_with_label (_("Browse...")),
                         FALSE, FALSE, 0);
+
+    g_signal_connect(G_OBJECT(btn_browse), "clicked", G_CALLBACK(layer_dialog_browse), lei);
 
     /* Autorefresh */
     gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Autofetch")),
