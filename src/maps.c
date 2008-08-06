@@ -2793,6 +2793,14 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
             rd->layer_refresh_interval = hildon_number_editor_get_value (HILDON_NUMBER_EDITOR (lei->num_autofetch));
             rd->layer_refresh_countdown = rd->layer_refresh_interval;
             rd->layer_level = i+1;
+
+            rd->dl_zoom_steps = rei->repo->dl_zoom_steps;
+            rd->view_zoom_steps = rei->repo->view_zoom_steps;
+            rd->double_size = rei->repo->double_size;
+            rd->nextable = rei->repo->nextable;
+            rd->min_zoom = rei->repo->min_zoom;
+            rd->max_zoom = rei->repo->max_zoom;
+
             set_repo_type (rd);
             rdp = &rd->layers;
         }
@@ -3021,6 +3029,14 @@ repoman_dialog()
                 (*rd1)->layer_refresh_interval = rd0->layer_refresh_interval;
                 (*rd1)->layer_refresh_countdown = rd0->layer_refresh_countdown;
                 (*rd1)->layer_level = rd0->layer_level;
+
+                (*rd1)->dl_zoom_steps = rd0->dl_zoom_steps;
+                (*rd1)->view_zoom_steps = rd0->view_zoom_steps;
+                (*rd1)->double_size = rd0->double_size;
+                (*rd1)->nextable = rd0->nextable;
+                (*rd1)->min_zoom = rd0->min_zoom;
+                (*rd1)->max_zoom = rd0->max_zoom;
+
                 set_repo_type (*rd1);
 
                 rd0 = rd0->layers;
@@ -3148,11 +3164,17 @@ mapman_by_area(gdouble start_lat, gdouble start_lon,
                     if((unsigned)tilex < unit2ztile(WORLD_SIZE_UNITS, z)
                       && (unsigned)tiley < unit2ztile(WORLD_SIZE_UNITS, z))
                     {
-                        mapdb_initiate_update(_curr_repo, z, tilex, tiley,
-                                update_type, download_batch_id,
-                                (abs(tilex - unit2tile(_next_center.unitx))
-                                 + abs(tiley - unit2tile(_next_center.unity))),
-                                NULL);
+                        RepoData* rd = _curr_repo;
+
+                        while (rd) {
+                            if (rd == _curr_repo || rd->layer_enabled)
+                                mapdb_initiate_update(rd, z, tilex, tiley,
+                                                      update_type, download_batch_id,
+                                                      (abs(tilex - unit2tile(_next_center.unitx))
+                                                       + abs(tiley - unit2tile(_next_center.unity))),
+                                                      NULL);
+                            rd = rd->layers;
+                        }
                     }
                 }
             }
