@@ -590,15 +590,6 @@ map_cache_destroy(void)
 }
 
 
-void
-map_cache_clean (void)
-{
-    g_mutex_lock(_mapdb_mutex);
-    if(_map_cache.entries != NULL)
-        g_hash_table_remove_all (_map_cache.entries);
-    g_mutex_unlock(_mapdb_mutex);
-}
-
 
 gboolean
 mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
@@ -2808,7 +2799,6 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
         menu_layers_add_repos ();
         repo_set_curr(_curr_repo);
         settings_save ();
-        map_cache_clean ();
         map_refresh_mark (TRUE);
         break;
     }
@@ -3808,7 +3798,6 @@ void maps_toggle_visible_layers ()
     if (changed) {
         menu_layers_remove_repos ();
         menu_layers_add_repos ();
-        map_cache_clean ();
         map_refresh_mark (TRUE);
     }
 

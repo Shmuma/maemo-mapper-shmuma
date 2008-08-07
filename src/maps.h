@@ -27,7 +27,6 @@
 void map_cache_init(size_t cache_size);
 size_t map_cache_resize(size_t cache_size);
 void map_cache_destroy(void);
-void map_cache_clean (void);
 
 gboolean mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley);
 GdkPixbuf* mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley);
