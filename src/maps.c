@@ -2997,7 +2997,7 @@ repoman_dialog()
         for(i = 0, curr = rmi.repo_edits; curr; curr = curr->next, i++)
         {
             RepoEditInfo *rei = curr->data;
-            RepoData *rd = g_new(RepoData, 1);
+            RepoData *rd = g_new0(RepoData, 1);
             RepoData *rd0, **rd1;
             rd->name = g_strdup(rei->name);
             rd->url = g_strdup(gtk_entry_get_text(GTK_ENTRY(rei->txt_url)));
@@ -3772,6 +3772,49 @@ mapman_dialog()
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
+
+
+/* changes visibility of current repo's layers to it's previous state */
+void maps_toggle_visible_layers ()
+{
+    RepoData *rd = _curr_repo;
+    gboolean changed = FALSE;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if (!rd) {
+        vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    rd = rd->layers;
+
+    while (rd) {
+        if (rd->layer_enabled) {
+            changed = TRUE;
+            rd->layer_was_enabled = rd->layer_enabled;
+            rd->layer_enabled = FALSE;
+        }
+        else {
+            rd->layer_enabled = rd->layer_was_enabled;
+            if (rd->layer_was_enabled)
+                changed = TRUE;
+        }
+
+        rd = rd->layers;
+    }
+
+    /* redraw map */
+    if (changed) {
+        menu_layers_remove_repos ();
+        menu_layers_add_repos ();
+        map_cache_clean ();
+        map_refresh_mark (TRUE);
+    }
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
 
 
 /* this routine fired by timer every minute and decrements refetch counter of every active layer of

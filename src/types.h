@@ -211,6 +211,7 @@ typedef enum
     CUSTOM_ACTION_TOGGLE_GPSINFO,
     CUSTOM_ACTION_TOGGLE_SPEEDLIMIT,
     CUSTOM_ACTION_RESET_BLUETOOTH,
+    CUSTOM_ACTION_TOGGLE_LAYERS,
     CUSTOM_ACTION_ENUM_COUNT
 } CustomAction;
 
@@ -364,6 +365,7 @@ struct _RepoData {
     RepoData *layers;
     gint8 layer_level;
     gboolean layer_enabled;
+    gboolean layer_was_enabled; /* needed for ability to temporarily toggle layers on and off */
     gint layer_refresh_interval;
     gint layer_refresh_countdown;
 #ifdef MAPDB_SQLITE

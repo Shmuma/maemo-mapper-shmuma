@@ -315,6 +315,7 @@ maemo_mapper_init(gint argc, gchar **argv)
         = _("Toggle Speed Limit");
     CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_RESET_BLUETOOTH]
         = _("Reset Bluetooth");
+    CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_TOGGLE_LAYERS] = _("Toggle Layers");
 
     DEG_FORMAT_ENUM_TEXT[DDPDDDDD] = "-dd.ddddd°";
     DEG_FORMAT_ENUM_TEXT[DD_MMPMMM] = "-dd°mm.mmm'";

@@ -2288,7 +2288,7 @@ settings_init()
     if(_repo_list == NULL)
     {
         /* We have no repositories - create a default one. */
-        RepoData *repo = g_new(RepoData, 1);
+        RepoData *repo = g_new0(RepoData, 1);
 
         repo->db_filename = gnome_vfs_expand_initial_tilde(
                 REPO_DEFAULT_CACHE_DIR);
