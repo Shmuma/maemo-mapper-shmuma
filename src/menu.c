@@ -1413,11 +1413,11 @@ menu_maps_remove_repos()
 void
 menu_layers_remove_repos()
 {
-    GList *curr, *child;
+    GList *child;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     /* Delete one menu item for each repo. */
-    while (child = gtk_container_get_children(GTK_CONTAINER(_menu_layers_submenu)))
+    while ((child = gtk_container_get_children(GTK_CONTAINER(_menu_layers_submenu))))
         gtk_widget_destroy (child->data);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
@@ -1598,7 +1598,7 @@ menu_init()
     gtk_menu_append(submenu, _menu_poi_categories_item
             = gtk_menu_item_new_with_label(_("Categories...")));
 
-    _menu_layers_submenu = gtk_menu_new()
+    _menu_layers_submenu = gtk_menu_new();
 
     /* The "Maps" submenu. */
     gtk_menu_append(menu, menu_item
