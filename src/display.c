@@ -1496,10 +1496,12 @@ map_download_refresh_idle(MapUpdateTask *mut)
 #endif
         if(_dl_errors)
         {
-            gchar buffer[BUFFER_SIZE];
-            snprintf(buffer, sizeof(buffer), "%d %s", _dl_errors,
-                    _("maps failed to download."));
-            MACRO_BANNER_SHOW_INFO(_window, buffer);
+            if (mut->repo->layer_level == 0) {
+                gchar buffer[BUFFER_SIZE];
+                snprintf(buffer, sizeof(buffer), "%d %s", _dl_errors,
+                         _("maps failed to download."));
+                MACRO_BANNER_SHOW_INFO(_window, buffer);
+            }
             _dl_errors = 0;
         }
         else if(mut->update_type != MAP_UPDATE_AUTO)
@@ -1732,11 +1734,12 @@ thread_render_map(MapRenderTask *mrt)
 
             tilex = x + start_tilex;
 
-            zoff = mrt->repo->double_size ? 1 : 0;
-
             /* iterating over tile and all it's layers */
             while (repo_p)
             {
+                zoff = mrt->repo->double_size ? 1 : 0;
+                started_download = FALSE;
+
                 /* if this is not a bottom layer and layer not enabled, skip it */
                 if (repo_p != mrt->repo && !repo_p->layer_enabled)
                 {
@@ -1757,9 +1760,12 @@ thread_render_map(MapRenderTask *mrt)
                         {
                             /* Found a map. Check for it's age. */
                             gint age = get_tile_age (layer_pixbuf);
-                            printf ("Checking for tile age (%d)\n", age);
+                            printf ("Tile age (%d)\n", age);
+
+                            /* throw away tile only if we can download something */
                             if (!repo_p->layer_refresh_interval ||
-                                get_tile_age (layer_pixbuf) < repo_p->layer_refresh_interval * 60)
+                                age < repo_p->layer_refresh_interval * 60 ||
+                                !_auto_download)
                             {
                                 /* if this is a layer's tile, join with main tile */
                                 if (repo_p != mrt->repo)

@@ -1515,7 +1515,7 @@ thread_proc_mut()
             /* Report that there is no error. */
             mut->vfs_result = GNOME_VFS_OK;
         }
-        else for(retries = INITIAL_DOWNLOAD_RETRIES; retries > 0; --retries)
+        else for(retries = mut->repo->layer_level ? 1 : INITIAL_DOWNLOAD_RETRIES; retries > 0; --retries)
         {
             gboolean exists = FALSE;
             gchar *src_url;
