@@ -581,6 +581,7 @@ menu_cb_layers_toggle(GtkCheckMenuItem *item, gpointer layer)
     if (repo_is_layer (_curr_repo, rd)) {
         /* reset layer's countdown */
         rd->layer_refresh_countdown = rd->layer_refresh_interval;
+        map_cache_clean ();
         map_refresh_mark (TRUE);
     }
 
