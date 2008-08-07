@@ -1598,6 +1598,8 @@ menu_init()
     gtk_menu_append(submenu, _menu_poi_categories_item
             = gtk_menu_item_new_with_label(_("Categories...")));
 
+    _menu_layers_submenu = gtk_menu_new()
+
     /* The "Maps" submenu. */
     gtk_menu_append(menu, menu_item
             = gtk_menu_item_new_with_label(_("Maps")));
@@ -1612,10 +1614,6 @@ menu_init()
             = gtk_check_menu_item_new_with_label(_("Auto-Download")));
     gtk_check_menu_item_set_active(
             GTK_CHECK_MENU_ITEM(_menu_maps_auto_download_item),_auto_download);
-    gtk_menu_append(_menu_maps_submenu, menu_item
-            = gtk_menu_item_new_with_label(_("Layers")));
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
-            _menu_layers_submenu = gtk_menu_new());
     menu_maps_add_repos();
 
     gtk_menu_append(menu, gtk_separator_menu_item_new());
@@ -1625,6 +1623,11 @@ menu_init()
             = gtk_menu_item_new_with_label(_("View")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
             submenu = gtk_menu_new());
+
+    /* The View/Layers submenu */
+    gtk_menu_append(submenu, menu_item
+            = gtk_menu_item_new_with_label(_("Layers")));
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), _menu_layers_submenu);
 
     /* The "View"/"Zoom" submenu. */
     gtk_menu_append(submenu, menu_item
