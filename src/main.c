@@ -201,8 +201,12 @@ maemo_mapper_destroy()
         g_mutex_lock(_mapdb_mutex);
         repo_p = _curr_repo;
         while (repo_p) {
-            if (repo_p->db)
+            if (repo_p->db) {
+                /* perform reorganization for layers which are auto refreshed */
+                if (repo_p->layer_level && repo_p->layer_refresh_interval)
+                    gdbm_reorganize (repo_p->db);
                 gdbm_close(repo_p->db);
+            }
             repo_p->db = NULL;
             repo_p = repo_p->layers;
         }
