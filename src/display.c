@@ -1420,7 +1420,7 @@ map_download_refresh_idle(MapUpdateTask *mut)
             mut->zoom, mut->tilex, mut->tiley);
 
     /* Test if download succeeded (only if retries != 0). */
-    if(mut->pixbuf && repo_is_layer (_curr_repo, mut->repo) && (_curr_repo == mut->repo || mut->repo->layer_enabled))
+    if(mut->pixbuf)
     {
         gint zoff = mut->zoom - _zoom;
         /* Update the UI to reflect the updated map database. */
@@ -1504,7 +1504,8 @@ map_download_refresh_idle(MapUpdateTask *mut)
             }
             _dl_errors = 0;
         }
-        else if(mut->update_type != MAP_UPDATE_AUTO)
+
+        if(mut->update_type != MAP_UPDATE_AUTO || _refresh_map_after_download)
         {
             /* Update the map. */
             map_refresh_mark(TRUE);
@@ -1718,6 +1719,7 @@ thread_render_map(MapRenderTask *mrt)
 
     mrt->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
             mrt->screen_width_pixels, mrt->screen_height_pixels);
+    _refresh_map_after_download = FALSE;
 
     /* Iterate through the tiles, get them (or queue a download if they're
      * not in the cache), and rotate them into the pixbuf. */
@@ -1785,6 +1787,9 @@ thread_render_map(MapRenderTask *mrt)
                             else
                                 g_object_unref (layer_pixbuf);
                         }
+                        else
+                            if (repo_p->layers)
+                                _refresh_map_after_download = TRUE;
                     }
                     /* Else we're not going to be drawing this map, so just check
                      * if it's in the database. */

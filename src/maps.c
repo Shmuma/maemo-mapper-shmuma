@@ -1139,7 +1139,7 @@ repo_set_curr(RepoData *rd)
             /* initialize all databases for all layers */
             repo_p = _curr_repo;
             while (repo_p) {
-                if (repo_p->db_filename)
+                if (repo_p->db_filename && repo_make_db (repo_p))
                     repo_p->db = gdbm_open(repo_p->db_filename, 0, GDBM_WRCREAT | GDBM_FAST, 0644, NULL);
                 repo_p = repo_p->layers;
             }
@@ -1617,8 +1617,8 @@ thread_proc_mut()
             tiley = mut->tiley;
 
             /* Pass the mut to the GTK thread for redrawing, but only if a
-             * redraw isn't already in the pipeline and mut is not a layer. */
-            if(mut->refresh_latch && !layer_tile)
+             * redraw isn't already in the pipeline. */
+            if(mut->refresh_latch)
             {
                 /* Wait until the latch is open. */
                 g_mutex_lock(mut->refresh_latch->mutex);
@@ -3167,7 +3167,7 @@ mapman_by_area(gdouble start_lat, gdouble start_lon,
                         RepoData* rd = _curr_repo;
 
                         while (rd) {
-                            if (rd == _curr_repo || rd->layer_enabled)
+                            if (rd == _curr_repo || (rd->layer_enabled && rd->db))
                                 mapdb_initiate_update(rd, z, tilex, tiley,
                                                       update_type, download_batch_id,
                                                       (abs(tilex - unit2tile(_next_center.unitx))
