@@ -372,28 +372,56 @@ settings_save()
         for(curr = _repo_list; curr != NULL; curr = curr->next)
         {
             /* Build from each part of a repo, delimited by newline characters:
-             * 1. url
-             * 2. db_filename
-             * 3. dl_zoom_steps
-             * 4. view_zoom_steps
+             * 1. name
+             * 2. url
+             * 3. db_filename
+             * 4. dl_zoom_steps
+             * 5. view_zoom_steps
+             * 6. layer_level
+             *
+             * If layer_level > 0, have additional fields:
+             * 7. layer_enabled
+             * 8. layer_refresh_interval
              */
             RepoData *rd = curr->data;
             gchar buffer[BUFFER_SIZE];
-            snprintf(buffer, sizeof(buffer),
-                    "%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d",
-                    rd->name,
-                    rd->url,
-                    rd->db_filename,
-                    rd->dl_zoom_steps,
-                    rd->view_zoom_steps,
-                    rd->double_size,
-                    rd->nextable,
-                    rd->min_zoom,
-                    rd->max_zoom);
-            temp_list = g_slist_append(temp_list, g_strdup(buffer));
-            if(rd == _curr_repo)
-                gconf_client_set_int(gconf_client,
-                        GCONF_KEY_CURRREPO, curr_repo_index, NULL);
+
+            while (rd) {
+                if (!rd->layer_level)
+                    snprintf(buffer, sizeof(buffer),
+                             "%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
+                             rd->name,
+                             rd->url,
+                             rd->db_filename,
+                             rd->dl_zoom_steps,
+                             rd->view_zoom_steps,
+                             rd->double_size,
+                             rd->nextable,
+                             rd->min_zoom,
+                             rd->max_zoom,
+                             rd->layer_level);
+                else
+                    snprintf(buffer, sizeof(buffer),
+                             "%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
+                             rd->name,
+                             rd->url,
+                             rd->db_filename,
+                             rd->dl_zoom_steps,
+                             rd->view_zoom_steps,
+                             rd->double_size,
+                             rd->nextable,
+                             rd->min_zoom,
+                             rd->max_zoom,
+                             rd->layer_level,
+                             rd->layer_enabled,
+                             rd->layer_refresh_interval
+                             );
+                temp_list = g_slist_append(temp_list, g_strdup(buffer));
+                if(rd == _curr_repo)
+                    gconf_client_set_int(gconf_client,
+                                         GCONF_KEY_CURRREPO, curr_repo_index, NULL);
+                rd = rd->layers;
+            }
             curr_repo_index++;
         }
         gconf_client_set_list(gconf_client,
@@ -1798,6 +1826,11 @@ settings_parse_repo(gchar *str)
      * 3. db_filename
      * 4. dl_zoom_steps
      * 5. view_zoom_steps
+     * 6. layer_level
+     *
+     * If layer_level > 0, have additional fields:
+     * 7. layer_enabled
+     * 8. layer_refresh_interval
      */
     gchar *token, *error_check;
     printf("%s(%s)\n", __PRETTY_FUNCTION__, str);
@@ -1852,34 +1885,27 @@ settings_parse_repo(gchar *str)
             || (rd->max_zoom = strtol(token, &error_check, 10), token == str))
         rd->max_zoom = 20;
 
-    set_repo_type(rd);
+    /* Parse layer_level */
+    token = strsep(&str, "\n\t");
+    if(!token || !*token
+            || (rd->layer_level = strtol(token, &error_check, 10), token == str))
+        rd->layer_level = 0;
 
-    /* temporary dirty hack: append debug layer if this is google repo. Of course, there will be nice
-       dialog to customize this, but so far this is sufficient to debug core things. */
-    if (rd->url && strstr (rd->url, ".google.com")) {
-        rd->layers = g_new0 (RepoData, 1);
-        /* only that fields have meaning for layer. All other attrs are zero and inherited from parent repo. */
-        rd->layers->name = g_strdup ("Google traffic");
-        rd->layers->url  = g_strdup ("http://mt0.google.com/mapstt?zoom=%0d&x=%d&y=%d");
-        rd->layers->db_filename = g_strdup ("/home/user/GTraf.db");
-        rd->layers->layer_level = 1;
-        rd->layers->layer_enabled = FALSE;
-        rd->layers->layer_refresh_interval = 1; /* refetch traffic every minute */
-        rd->layers->layer_refresh_countdown = rd->layers->layer_refresh_interval;
-        set_repo_type (rd->layers);
+    if (rd->layer_level) {
+        /* Parse layer_enabled */
+        token = strsep(&str, "\n\t");
+        if(!token || !*token || (rd->layer_enabled = strtol(token, &error_check, 10), token == str))
+            rd->layer_enabled = 0;
 
-        rd->layers->layers = g_new0 (RepoData, 1);
-        /* only that fields have meaning for layer. All other attrs are zero and inherited from parent repo. */
-        rd->layers->layers->name = g_strdup ("Google traffic2");
-        rd->layers->layers->url  = g_strdup ("http://mt0.google.com/mapstt?zoom=%0d&x=%d&y=%d");
-        rd->layers->layers->db_filename = g_strdup ("/home/user/GTraf.db");
-        rd->layers->layers->layer_level = 2;
-        rd->layers->layers->layer_enabled = FALSE;
-        rd->layers->layers->layer_refresh_interval = 10; /* refetch traffic every minute */
-        rd->layers->layers->layer_refresh_countdown = rd->layers->layers->layer_refresh_interval;
-        set_repo_type (rd->layers->layers);
+        /* Parse layer_refresh_interval */
+        token = strsep(&str, "\n\t");
+        if(!token || !*token || (rd->layer_refresh_interval = strtol(token, &error_check, 10), token == str))
+            rd->layer_refresh_interval = 0;
 
+        rd->layer_refresh_countdown = rd->layer_refresh_interval;
     }
+
+    set_repo_type(rd);
 
     vprintf("%s(): return %p\n", __PRETTY_FUNCTION__, rd);
     return rd;
@@ -2229,6 +2255,7 @@ settings_init()
     /* Load the repositories. */
     {
         GSList *list, *curr;
+        RepoData *prev_repo = NULL, *curr_repo = NULL;
         gint curr_repo_index = gconf_client_get_int(gconf_client,
             GCONF_KEY_CURRREPO, NULL);
         list = gconf_client_get_list(gconf_client,
@@ -2237,12 +2264,21 @@ settings_init()
         for(curr = list; curr != NULL; curr = curr->next)
         {
             RepoData *rd = settings_parse_repo(curr->data);
-            _repo_list = g_list_append(_repo_list, rd);
-            if(!curr_repo_index--)
-                repo_set_curr(rd);
+
+            if (rd->layer_level == 0) {
+                _repo_list = g_list_append(_repo_list, rd);
+                if(!curr_repo_index--)
+                    curr_repo = rd;
+            }
+            else
+                prev_repo->layers = rd;
+            prev_repo = rd;
             g_free(curr->data);
         }
         g_slist_free(list);
+
+        if (curr_repo)
+            repo_set_curr(curr_repo);
 
         /* this timer decrements layers' counters and frefresh map if needed */
         g_timeout_add (60 * 1000, map_layer_refresh_cb, NULL);
