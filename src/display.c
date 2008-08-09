@@ -1730,17 +1730,20 @@ thread_render_map(MapRenderTask *mrt)
         {
             GdkPixbuf *tile_pixbuf = NULL, *layer_pixbuf = NULL;
             gboolean started_download = FALSE;
-            gint zoff;
+            gint zoff, zoff_base;
             gint tilex;
             RepoData* repo_p = mrt->repo;
 
             tilex = x + start_tilex;
+            zoff_base = mrt->repo->double_size ? 1 : 0;
 
             /* iterating over tile and all it's layers */
             while (repo_p)
             {
-                zoff = mrt->repo->double_size ? 1 : 0;
                 started_download = FALSE;
+
+                /* for layers we must use resolution of underlying map */
+                zoff = zoff_base;
 
                 /* if this is not a bottom layer and layer not enabled, skip it */
                 if (repo_p != mrt->repo && !repo_p->layer_enabled)
@@ -1780,8 +1783,10 @@ thread_render_map(MapRenderTask *mrt)
                                                               0, 0, 1, 1, GDK_INTERP_NEAREST, 255);
                                     g_object_unref (layer_pixbuf);
                                 }
-                                else
+                                else {
                                     tile_pixbuf = layer_pixbuf;
+                                    zoff_base = zoff;
+                                }
                                 break;
                             }
                             else
@@ -1798,6 +1803,7 @@ thread_render_map(MapRenderTask *mrt)
                                         tilex >> zoff,
                                         tiley >> zoff))
                     {
+                        zoff_base = zoff;
                         break;
                     }
 
@@ -1856,6 +1862,9 @@ thread_render_map(MapRenderTask *mrt)
 
                 repo_p = repo_p->layers;
             }
+
+            /* use zoom of the base map */
+            zoff = zoff_base;
 
             if(tile_pixbuf)
             {
