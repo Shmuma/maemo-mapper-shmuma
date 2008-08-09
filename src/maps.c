@@ -2154,6 +2154,10 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
                     gtk_combo_box_get_model(GTK_COMBO_BOX(rmi->cmb_repos))),
                 NULL) - 1);
 
+    /* newly created repos keep this NULL in rei, indicating
+       that layes cannot be added so far */
+    rei->repo = NULL;
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return rei;
 }
@@ -2698,6 +2702,20 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
         return FALSE;
     }
 
+    /* check that rei have repo data structure. If it haven't, it means that repository have just
+       added, so report about this */
+    if (!rei->repo) {
+        GtkWidget *msg = hildon_note_new_information ( GTK_WINDOW (rmi->dialog),
+                           _("You cannot add layers to not saved repository,\nsorry. So, press ok in repository manager\n"
+                             "and open this dialog again."));
+
+        gtk_dialog_run (GTK_DIALOG (msg));
+        gtk_widget_destroy (msg);
+
+        vprintf("%s(): return FALSE (3)\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
     header = g_malloc (strlen (t_header) + strlen (rei->name));
     sprintf (header, t_header, rei->name);
 
@@ -3016,33 +3034,37 @@ repoman_dialog()
             rd->max_zoom = hildon_number_editor_get_value(
                     HILDON_NUMBER_EDITOR(rei->num_max_zoom));
 
-            /* clone layers */
-            rd0 = rei->repo->layers;
-            rd1 = &rd->layers;
+            if (rei->repo) {
+                /* clone layers */
+                rd0 = rei->repo->layers;
+                rd1 = &rd->layers;
 
-            while (rd0) {
-                *rd1 = g_new0 (RepoData, 1);
-                (*rd1)->name = rd0->name;
-                (*rd1)->url = rd0->url;
-                (*rd1)->db_filename = rd0->db_filename;
-                (*rd1)->layer_enabled = rd0->layer_enabled;
-                (*rd1)->layer_refresh_interval = rd0->layer_refresh_interval;
-                (*rd1)->layer_refresh_countdown = rd0->layer_refresh_countdown;
-                (*rd1)->layer_level = rd0->layer_level;
+                while (rd0) {
+                    *rd1 = g_new0 (RepoData, 1);
+                    (*rd1)->name = rd0->name;
+                    (*rd1)->url = rd0->url;
+                    (*rd1)->db_filename = rd0->db_filename;
+                    (*rd1)->layer_enabled = rd0->layer_enabled;
+                    (*rd1)->layer_refresh_interval = rd0->layer_refresh_interval;
+                    (*rd1)->layer_refresh_countdown = rd0->layer_refresh_countdown;
+                    (*rd1)->layer_level = rd0->layer_level;
 
-                (*rd1)->dl_zoom_steps = rd0->dl_zoom_steps;
-                (*rd1)->view_zoom_steps = rd0->view_zoom_steps;
-                (*rd1)->double_size = rd0->double_size;
-                (*rd1)->nextable = rd0->nextable;
-                (*rd1)->min_zoom = rd0->min_zoom;
-                (*rd1)->max_zoom = rd0->max_zoom;
+                    (*rd1)->dl_zoom_steps = rd0->dl_zoom_steps;
+                    (*rd1)->view_zoom_steps = rd0->view_zoom_steps;
+                    (*rd1)->double_size = rd0->double_size;
+                    (*rd1)->nextable = rd0->nextable;
+                    (*rd1)->min_zoom = rd0->min_zoom;
+                    (*rd1)->max_zoom = rd0->max_zoom;
 
-                set_repo_type (*rd1);
+                    set_repo_type (*rd1);
 
-                rd0 = rd0->layers;
-                rd1 = &(*rd1)->layers;
+                    rd0 = rd0->layers;
+                    rd1 = &(*rd1)->layers;
+                }
+                *rd1 = NULL;
             }
-            *rd1 = NULL;
+            else
+                rd->layers = NULL;
 
             rd->layer_level = 0;
             set_repo_type(rd);
