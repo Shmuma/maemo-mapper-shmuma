@@ -1602,6 +1602,64 @@ map_replace_pixbuf_idle(MapRenderTask *mrt)
     return FALSE;
 }
 
+
+/* Routine draws one partly-transparent pixbuf on top of the another (base map). For efficiency, we
+   assume that base map's tile have no transparent pixels (because it should not have them). We also
+   assume that pixbufs are have the same size. */
+static void
+combine_tiles (GdkPixbuf *dst_pixbuf, GdkPixbuf *src_pixbuf)
+{
+    gint s_n_channels = gdk_pixbuf_get_n_channels (src_pixbuf);
+    gint d_n_channels = gdk_pixbuf_get_n_channels (dst_pixbuf);
+    gint bps = gdk_pixbuf_get_bits_per_sample (dst_pixbuf);
+    gint width, height, x, y, d_delta, s_delta;
+    guchar *d_p, *s_p;
+
+    if (gdk_pixbuf_get_colorspace (dst_pixbuf) != gdk_pixbuf_get_colorspace (src_pixbuf)) {
+        printf ("combine return (1)\n");
+        return;
+    }
+    if (gdk_pixbuf_get_colorspace (dst_pixbuf) != GDK_COLORSPACE_RGB) {
+        printf ("combine return (2)\n");
+        return;
+    }
+
+    if (bps != gdk_pixbuf_get_bits_per_sample (src_pixbuf)) {
+        printf ("combine return (5)\n");
+        return;
+    }
+
+    width = gdk_pixbuf_get_width (dst_pixbuf);
+    height = gdk_pixbuf_get_height (dst_pixbuf);
+
+    if (width != gdk_pixbuf_get_width (src_pixbuf)) {
+        printf ("combine return (6)\n");
+        return;
+    }
+    if (height != gdk_pixbuf_get_height (src_pixbuf)) {
+        printf ("combine return (7)\n");
+        return;
+    }
+
+    s_delta = (bps >> 3) * s_n_channels;
+    d_delta = (bps >> 3) * d_n_channels;
+    d_p = gdk_pixbuf_get_pixels (dst_pixbuf);
+    s_p = gdk_pixbuf_get_pixels (src_pixbuf);
+
+    /* ok, we're ready to combine */
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++, d_p += d_delta, s_p += s_delta) {
+            /* TODO: alpha blending? */
+            if (s_n_channels == 3 || s_p[3]) {
+                d_p[0] = s_p[0];
+                d_p[1] = s_p[1];
+                d_p[2] = s_p[2];
+            }
+        }
+    }
+}
+
+
 gboolean
 thread_render_map(MapRenderTask *mrt)
 {
@@ -1777,10 +1835,7 @@ thread_render_map(MapRenderTask *mrt)
                                 {
                                     /* but only if main layer is exists */
                                     if (tile_pixbuf)
-                                        gdk_pixbuf_composite (layer_pixbuf, tile_pixbuf, 0, 0,
-                                                              gdk_pixbuf_get_width (tile_pixbuf),
-                                                              gdk_pixbuf_get_height (tile_pixbuf),
-                                                              0, 0, 1, 1, GDK_INTERP_NEAREST, 255);
+                                        combine_tiles (tile_pixbuf, layer_pixbuf);
                                     g_object_unref (layer_pixbuf);
                                 }
                                 else {
