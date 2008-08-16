@@ -228,7 +228,8 @@ poi_db_connect()
                         " where c.enabled = 1"
                         " and p.label like $QUERY or p.desc like $QUERY"
                         " order by (($LAT - p.lat) * ($LAT - p.lat) "
-                                 "+ ($LON - p.lon) * ($LON - p.lon)) DESC",
+                                 "+ ($LON - p.lon) * ($LON - p.lon)) DESC "
+                        " limit 100",
                         -1, &_stmt_browse_poi, NULL);
 
         /* browse poi by category */
@@ -241,7 +242,8 @@ poi_db_connect()
                         " and p.cat_id = $CATID"
                         " and ( p.label like $QUERY or p.desc like $QUERY )"
                         " order by (($LAT - p.lat) * ($LAT - p.lat) "
-                                 "+ ($LON - p.lon) * ($LON - p.lon)) DESC",
+                                 "+ ($LON - p.lon) * ($LON - p.lon)) DESC"
+                        " limit 100",
                         -1, &_stmt_browsecat_poi, NULL);
 
         /* Prepare our SQL statements. */

@@ -942,7 +942,7 @@ track_add(time_t time, gboolean newly_fixed)
 #               define _voice_synth_path "/usr/bin/flite"
                         printf("%s %s\n", _voice_synth_path,
                                 _last_spoken_phrase);
-                        execl(_voice_synth_path, _voice_synth_path,
+                        execl("/bin/sh", _voice_synth_path, _voice_synth_path,
                                 "-t", _last_spoken_phrase, (char *)NULL);
                         exit(0);
                     }

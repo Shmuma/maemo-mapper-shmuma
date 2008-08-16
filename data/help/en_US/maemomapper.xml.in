@@ -977,12 +977,10 @@
         <display_text>By Area</display_text> option is selected in the
         <display_text>Setup</display_text> tab, defines the rectangular area
         of the world for which maps will be downloaded or deleted.  If
-        applicable, the fields are pre-filled with your current and previous
-        view center coordinates.  This allows you to graphically choose your
-        rectangle by first centering on one corner of the rectangle, then
-        centering on the opposite corner, by tapping the screen or by using
-        the <display_text>Lat/Lon</display_text> menu item of the
-        <display_text>Go to</display_text> menu.
+        applicable, the fields are pre-filled to specify the area
+        visible on-screen. This allows you to graphically change your
+        rectangle simply by zooming in and panning to see the area you
+        want to download.
       </para>
     </topic>
     <topic>

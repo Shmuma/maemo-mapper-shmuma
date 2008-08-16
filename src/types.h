@@ -81,25 +81,6 @@ typedef enum
     CENTER_LATLON = 2
 } CenterMode;
 
-/** This enum defines the states of the SAX parsing state machine. */
-typedef enum
-{
-    START,
-    INSIDE_GPX,
-    INSIDE_WPT,
-    INSIDE_WPT_NAME,
-    INSIDE_WPT_DESC,
-    INSIDE_PATH,
-    INSIDE_PATH_SEGMENT,
-    INSIDE_PATH_POINT,
-    INSIDE_PATH_POINT_ELE,
-    INSIDE_PATH_POINT_TIME,
-    INSIDE_PATH_POINT_DESC,
-    FINISH,
-    UNKNOWN,
-    ERROR,
-} SaxState;
-
 /** POI dialog action **/
 typedef enum
 {
@@ -312,22 +293,6 @@ struct _Path {
     WayPoint *wcap; /* points after last slot in array. */
 };
 
-/** Data used during the SAX parsing operation. */
-typedef struct _SaxData SaxData;
-struct _SaxData {
-    SaxState state;
-    SaxState prev_state;
-    gint unknown_depth;
-    gboolean at_least_one_trkpt;
-    GString *chars;
-};
-
-typedef struct _PathSaxData PathSaxData;
-struct _PathSaxData {
-    SaxData sax_data;
-    Path path;
-};
-
 /** Data to describe a POI. */
 typedef struct _PoiInfo PoiInfo;
 struct _PoiInfo {
@@ -338,13 +303,6 @@ struct _PoiInfo {
     gchar *label;
     gchar *desc;
     gchar *clabel;
-};
-
-typedef struct _PoiSaxData PoiSaxData;
-struct _PoiSaxData {
-    SaxData sax_data;
-    GList *poi_list;
-    PoiInfo *curr_poi;
 };
 
 /** Data regarding a map repository. */
