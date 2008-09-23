@@ -1,0 +1,1791 @@
+# This is an en_US "translation" file for Maemo Mapper.  To translate this to
+# another language, first copy this file to a filename with the appropriate
+# language/country code, then modify the "msgstr" strings with the correct
+# translation.
+#
+# Copyright (C) 2006 John Costigan
+# This file is distributed under the same license as the maemo-mapper package.
+# John Costigan <gnuite@gmail.com>, 2006.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: maemo-mapper 1.2.4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-03-17 01:55-0400\n"
+"PO-Revision-Date: 2008-09-23 17:15+0200\n"
+"Last-Translator: Sergey Fialko <zero984@gmail.com>\n"
+"Language-Team: Sergey Fialko <zero984@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Russian\n"
+"X-Poedit-Country: BELARUS\n"
+
+#: ../src/poi.c:979
+msgid "# POIs"
+msgstr "# Достопримечательности"
+
+#: ../src/menu.c:1686
+msgid "About..."
+msgstr "О программе"
+
+#: ../src/poi.c:658
+msgid "Add Category"
+msgstr "Добавить категорию"
+
+#: ../src/poi.c:1146
+msgid "Add POI"
+msgstr "Добавить POI"
+
+#: ../src/cmenu.c:656
+#: ../src/cmenu.c:690
+msgid "Add POI..."
+msgstr "Добавить POI..."
+
+#: ../src/cmenu.c:652
+#: ../src/cmenu.c:710
+msgid "Add Route Point"
+msgstr "Добавьте пункт маршрута"
+
+#: ../src/path.c:1498
+msgid "Add Waypoint"
+msgstr "Добавить точку"
+
+#: ../src/cmenu.c:654
+#: ../src/cmenu.c:712
+msgid "Add Waypoint..."
+msgstr "Добавить точку..."
+
+#: ../src/poi.c:935
+msgid "Add..."
+msgstr "Добавить..."
+
+#: ../src/menu.c:926
+msgid "Address"
+msgstr "Адрес"
+
+#: ../src/menu.c:951
+msgid "Address Located"
+msgstr ""
+
+#: ../src/menu.c:1578
+msgid "Address..."
+msgstr "Адрес..."
+
+#: ../src/settings.c:1342
+msgid "Advance Notice"
+msgstr "Предварительное Уведомление"
+
+#: ../src/maps.c:2807
+msgid "Along Route - Radius (tiles):"
+msgstr ""
+
+#: ../src/display.c:820
+msgid "Altitude"
+msgstr "Высота"
+
+#: ../src/settings.c:666
+msgid "An error occurred while attempting to scan for bluetooth devices."
+msgstr "Произошла ошибка при сканировании bluetooth устройств."
+
+#: ../src/maps.c:2166
+msgid "An error occurred while retrieving the repositories.  The web service may be temporarily down."
+msgstr "Произошла ошибка при извлечении данных.Web-сервисы временно не доступны."
+
+#: ../src/maps.c:1697
+msgid "An error occurred while trying to compact the database."
+msgstr "Произошла ошибка при попытке сжать базу данных."
+
+#: ../src/gps.c:891
+msgid ""
+"An error occurred while trying to reset the bluetooth radio.\n"
+"\n"
+"Did you make sure to modify\n"
+"the /etc/sudoers file?"
+msgstr ""
+
+#: ../src/settings.c:1330
+msgid "Announce"
+msgstr "Объявить"
+
+#: ../src/cmenu.c:662
+msgid "Apply Map Correction"
+msgstr "Приминить исправление карты"
+
+#: ../src/maps.c:2847
+msgid "Area"
+msgstr "Область"
+
+#: ../src/menu.c:1629
+#: ../src/settings.c:1259
+msgid "Auto-Center"
+msgstr ""
+
+#: ../src/menu.c:1204
+msgid "Auto-Center Mode: Lat/Lon"
+msgstr ""
+
+#: ../src/menu.c:1187
+msgid "Auto-Center Mode: Lead"
+msgstr ""
+
+#: ../src/menu.c:1221
+msgid "Auto-Center Off"
+msgstr ""
+
+#: ../src/menu.c:1507
+msgid "Auto-Download"
+msgstr ""
+
+#: ../src/settings.c:1437
+msgid "Auto-Download Pre-cache"
+msgstr ""
+
+#: ../src/menu.c:1543
+msgid "Auto-Rotate"
+msgstr ""
+
+#: ../src/menu.c:663
+msgid "Auto-Rotate Disabled"
+msgstr ""
+
+#: ../src/menu.c:658
+msgid "Auto-Rotate Enabled"
+msgstr ""
+
+#: ../src/path.c:1261
+msgid "Auto-Update"
+msgstr ""
+
+#: ../src/path.c:1267
+msgid "Avoid Highways"
+msgstr "Избегайте дорог"
+
+#: ../src/poi.c:2228
+msgid "Bear."
+msgstr ""
+
+#: ../src/main.c:328
+#: ../src/settings.c:1189
+msgid "Bluetooth"
+msgstr "Bluetooth"
+
+#: ../src/main.c:326
+msgid "Bottom-Left"
+msgstr ""
+
+#: ../src/main.c:325
+#: ../src/maps.c:2934
+msgid "Bottom-Right"
+msgstr ""
+
+#: ../src/cmenu.c:649
+msgid "Browse POI..."
+msgstr "Просмотреть достопримечательность..."
+
+#: ../src/poi.c:2851
+msgid "Browse POIs"
+msgstr "Просмотреть достопримечательности"
+
+#: ../src/maps.c:1936
+#: ../src/menu.c:1492
+#: ../src/settings.c:1227
+#: ../src/settings.c:1500
+msgid "Browse..."
+msgstr "Просмотреть..."
+
+#: ../src/poi.c:189
+msgid "Bus stops, airports, train stations, etc."
+msgstr "Автобусные остановки,аэропорты,вокзалы и т.д."
+
+#: ../src/poi.c:194
+msgid "Business"
+msgstr "Бизнес"
+
+#: ../src/maps.c:2798
+msgid "By Area (see tab)"
+msgstr "По направлению (см.вкладку)"
+
+#: ../src/maps.c:1926
+msgid "Cache DB"
+msgstr ""
+
+#: ../src/maps.c:1866
+msgid "Cannot delete the last repository - there must be at lease one repository."
+msgstr "Не удается удалить последний хранилище - там должно быть минимум одно хранилище."
+
+#: ../src/menu.c:1494
+msgid "Categories..."
+msgstr "Категории..."
+
+#: ../src/poi.c:511
+#: ../src/poi.c:1181
+#: ../src/poi.c:1431
+#: ../src/poi.c:1787
+#: ../src/poi.c:2210
+#: ../src/poi.c:2389
+#: ../src/poi.c:2569
+#: ../src/poi.c:2886
+msgid "Category"
+msgstr "Категория"
+
+#: ../src/poi.c:2103
+#: ../src/poi.c:2264
+msgid "Checked POI Actions..."
+msgstr ""
+
+#: ../src/maps.c:2751
+#: ../src/menu.c:1456
+#: ../src/menu.c:1476
+msgid "Clear"
+msgstr "Очистить"
+
+#: ../src/main.c:301
+msgid "Clear Track"
+msgstr "Очистить путь"
+
+#: ../src/menu.c:1536
+msgid "Clockwise"
+msgstr "По часовой стрелке"
+
+#: ../src/menu.c:1688
+msgid "Close"
+msgstr "Закрыть"
+
+#: ../src/settings.c:891
+msgid "Colors"
+msgstr "Цвета"
+
+#: ../src/settings.c:1173
+msgid "Colors..."
+msgstr "Цвета..."
+
+#: ../src/maps.c:1718
+msgid "Compact Database"
+msgstr "Компактная база данных"
+
+#: ../src/maps.c:1939
+msgid "Compact..."
+msgstr "Компактный..."
+
+#: ../src/maps.c:1777
+msgid "Compacting database..."
+msgstr "Сжатие базы данных..."
+
+#: ../src/menu.c:1604
+msgid "Compass Rose"
+msgstr ""
+
+#: ../src/maps.c:2479
+#: ../src/maps.c:2579
+msgid "Confirm DELETION of"
+msgstr "Подтвердить удаление из"
+
+#: ../src/maps.c:1873
+msgid "Confirm delete of repository"
+msgstr "Потвердите удаление из хранилища"
+
+#: ../src/cmenu.c:427
+msgid "Confirm delete of waypoint"
+msgstr ""
+
+#: ../src/maps.c:2485
+#: ../src/maps.c:2585
+msgid "Confirm download of"
+msgstr "Подтвердить загрузку из"
+
+#: ../src/settings.c:830
+msgid "Continue?"
+msgstr "Продолжить?"
+
+#: ../src/display.c:2420
+msgid "Copy"
+msgstr "Копировать"
+
+#: ../src/cmenu.c:680
+msgid "Copy Description"
+msgstr "Копировать описание"
+
+#: ../src/cmenu.c:678
+msgid "Copy Lat/Lon"
+msgstr ""
+
+#: ../src/menu.c:1538
+msgid "Counter"
+msgstr ""
+
+#: ../src/path.c:1581
+msgid "Creating a \"waypoint\" with no description actually adds a break point.  Is that what you want?"
+msgstr ""
+
+#: ../src/display.c:293
+msgid "DGPS"
+msgstr ""
+
+#: ../src/poi.c:2379
+msgid "Default Category"
+msgstr "Категория по умолчанию"
+
+#: ../src/settings.c:1424
+msgid "Degrees Format"
+msgstr ""
+
+#: ../src/maps.c:2788
+msgid "Delete Maps"
+msgstr "Стереть карты"
+
+#: ../src/poi.c:1017
+msgid "Delete POI?"
+msgstr "Удалить достопримечательности?"
+
+#: ../src/poi.c:559
+msgid "Delete category?"
+msgstr "Удалить категорию?"
+
+#: ../src/poi.c:2017
+msgid "Delete selected POI?"
+msgstr "Удалить выбранные достопримечательности?"
+
+#: ../src/cmenu.c:687
+#: ../src/maps.c:2275
+#: ../src/poi.c:638
+#: ../src/poi.c:1397
+#: ../src/poi.c:2118
+msgid "Delete..."
+msgstr "Удалить..."
+
+#: ../src/menu.c:322
+#: ../src/path.c:1523
+#: ../src/poi.c:677
+#: ../src/poi.c:974
+#: ../src/poi.c:1197
+#: ../src/poi.c:1447
+#: ../src/settings.c:654
+msgid "Description"
+msgstr "Описание"
+
+#: ../src/path.c:1289
+msgid "Destination"
+msgstr "Пункт назначения"
+
+#: ../src/menu.c:1671
+msgid "Details..."
+msgstr "Детали..."
+
+#: ../src/poi.c:2218
+msgid "Dist."
+msgstr ""
+
+#: ../src/cmenu.c:123
+#: ../src/path.c:529
+#: ../src/path.c:589
+msgid "Distance"
+msgstr "Расстояние"
+
+#: ../src/maps.c:1998
+msgid "Double Pixels"
+msgstr ""
+
+#: ../src/main.c:229
+#: ../src/menu.c:1555
+msgid "Down"
+msgstr "Вниз"
+
+#: ../src/maps.c:2775
+msgid "Download Maps"
+msgstr "Загрузить карты"
+
+#: ../src/cmenu.c:647
+msgid "Download POI..."
+msgstr "Загрузить достопримечательность..."
+
+#: ../src/poi.c:2524
+msgid "Download POIs"
+msgstr "Загрузить достопримечательности"
+
+#: ../src/path.c:1215
+msgid "Download Route"
+msgstr "Загрузить маршрут"
+
+#: ../src/cmenu.c:645
+#: ../src/cmenu.c:685
+#: ../src/cmenu.c:707
+msgid "Download Route to..."
+msgstr "Загрузить маршрут к..."
+
+#: ../src/maps.c:1961
+msgid "Download Zoom Steps"
+msgstr ""
+
+#: ../src/maps.c:2256
+#: ../src/menu.c:1446
+#: ../src/menu.c:1490
+msgid "Download..."
+msgstr "Загрузить..."
+
+#: ../src/maps.c:2013
+msgid "Downloadable Zooms:"
+msgstr ""
+
+#: ../src/maps.c:1086
+#: ../src/maps.c:1099
+msgid "Downloaded maps will not be cached."
+msgstr "Загруженные карты не будут кэшироваться."
+
+#: ../src/menu.c:1568
+msgid "East"
+msgstr "Восток"
+
+#: ../src/poi.c:1193
+#: ../src/poi.c:1443
+#: ../src/poi.c:1796
+#: ../src/poi.c:2398
+msgid "Edit Categories..."
+msgstr "Редактировать категории..."
+
+#: ../src/poi.c:632
+msgid "Edit Category"
+msgstr "Редактировать категорию"
+
+#: ../src/poi.c:1391
+msgid "Edit POI"
+msgstr "Изменить достопримечательность"
+
+#: ../src/poi.c:932
+#: ../src/poi.c:2260
+msgid "Edit..."
+msgstr "Редактировать..."
+
+#: ../src/poi.c:193
+msgid "Elementary schools, college campuses, etc."
+msgstr "Начальные школы, колледж городка и т.д."
+
+#: ../src/menu.c:1663
+msgid "Enable GPS"
+msgstr "Включить GPS"
+
+#: ../src/menu.c:1478
+msgid "Enable Tracking"
+msgstr "Включить отслеживание"
+
+#: ../src/settings.c:1355
+msgid "Enable Voice Synthesis (requires flite)"
+msgstr ""
+
+#: ../src/settings.c:1335
+msgid "Enable Waypoint Announcements"
+msgstr "Включить точку Объявления"
+
+#: ../src/poi.c:701
+#: ../src/poi.c:964
+msgid "Enabled"
+msgstr "Разрешено"
+
+#: ../src/poi.c:1346
+msgid "Error adding POI"
+msgstr "Ошибка добовления достопримечательности"
+
+#: ../src/poi.c:764
+msgid "Error adding category"
+msgstr "Ошибка добовления категории"
+
+#: ../src/gps.c:576
+msgid "Error connecting to GPS receiver."
+msgstr "Ошибка при соединении с GPS приемником."
+
+#: ../src/gps.c:675
+msgid "Error connecting to GPSD server."
+msgstr "Ошибка при подключении к серверу GPSD."
+
+#: ../src/poi.c:574
+#: ../src/poi.c:1028
+#: ../src/poi.c:2046
+msgid "Error deleting POI"
+msgstr "Ошибка удаления достопримечательности"
+
+#: ../src/poi.c:583
+msgid "Error deleting category"
+msgstr "Ошибка удаления категории"
+
+#: ../src/gps.c:623
+msgid "Error opening GPS device."
+msgstr "Ошибка открытия GPS устройства."
+
+#: ../src/main.c:506
+#: ../src/menu.c:134
+#: ../src/menu.c:246
+#: ../src/path.c:692
+#: ../src/poi.c:2441
+#: ../src/poi.c:2819
+msgid "Error parsing GPX file."
+msgstr ""
+
+#: ../src/gps.c:700
+msgid "Error reading GPS data."
+msgstr "Ошибка при чтении данных GPS."
+
+#: ../src/poi.c:808
+msgid "Error updating Category"
+msgstr "Ошибка обновления категории"
+
+#: ../src/poi.c:1579
+#: ../src/poi.c:1872
+msgid "Error updating POI"
+msgstr "Ошибка обновления достопримечательности"
+
+#: ../src/poi.c:749
+msgid "Error updating category"
+msgstr "Ошибка обновления категории"
+
+#: ../src/gpx.c:112
+#: ../src/gpx.c:140
+msgid "Error while writing to file"
+msgstr "Ошибка при записи в файл"
+
+#: ../src/poi.c:140
+msgid "Error with POI database"
+msgstr ""
+
+#: ../src/menu.c:165
+#: ../src/menu.c:268
+#: ../src/poi.c:2086
+msgid "Error writing GPX file."
+msgstr "Ошибка записи файла GPX."
+
+#: ../src/gps.c:830
+msgid "Establishing GPS fix"
+msgstr ""
+
+#: ../src/display.c:297
+msgid "Estimated"
+msgstr ""
+
+#: ../src/poi.c:2123
+msgid "Export to GPX..."
+msgstr "Экспорт в GPX ..."
+
+#: ../src/util.c:147
+msgid "Failed to connect to GPX Directions server"
+msgstr ""
+
+#: ../src/settings.c:1899
+msgid "Failed to initialize GConf.  Quitting."
+msgstr "Сбой при инициализации GConf. Выход."
+
+#: ../src/settings.c:179
+msgid "Failed to initialize GConf.  Settings were not saved."
+msgstr "Сбой при инициализации GConf. Настройки не были сохранены."
+
+#: ../src/display.c:2526
+#: ../src/main.c:494
+msgid "Failed to open file for reading"
+msgstr "Не удалось прочитать файл"
+
+#: ../src/display.c:2527
+msgid "Failed to open file for writing"
+msgstr "Не удалось записать файл"
+
+#: ../src/maps.c:1693
+msgid "Failed to open map database for compacting."
+msgstr ""
+
+#: ../src/maps.c:1084
+#: ../src/maps.c:1098
+msgid "Failed to open map database for repository"
+msgstr ""
+
+#: ../src/poi.c:207
+msgid "Failed to open or create database"
+msgstr "Не удается открыть или создать базу данных"
+
+#: ../src/path.c:1719
+msgid "Failed to open path database. Tracks and routes will not be saved."
+msgstr "Не удалось открыть путь базы данных. Пути и маршруты не будут сохранены."
+
+#: ../src/path.c:206
+#: ../src/path.c:232
+#: ../src/path.c:251
+msgid "Failed to write to path database. Tracks and routes may not be saved."
+msgstr "Не удалось записать путь к базе данных. Пути и маршруты не могут быть сохранены."
+
+#: ../src/main.c:330
+msgid "File"
+msgstr "Файл"
+
+#: ../src/settings.c:1211
+msgid "File Path"
+msgstr "Путь к файлу"
+
+#: ../src/gpx.c:113
+#: ../src/gpx.c:141
+msgid "File is incomplete."
+msgstr "Файл не полный."
+
+#: ../src/display.c:865
+msgid "Fix"
+msgstr "Устранить"
+
+#: ../src/display.c:874
+msgid "Fix Quality"
+msgstr ""
+
+#: ../src/settings.c:1278
+msgid "Fixed"
+msgstr ""
+
+#: ../src/display.c:296
+msgid "Float RTK"
+msgstr ""
+
+#: ../src/display.c:2411
+msgid "Format"
+msgstr "Формат"
+
+#: ../src/menu.c:1653
+msgid "Full Screen"
+msgstr "Полный экран"
+
+#: ../src/menu.c:1659
+#: ../src/settings.c:909
+#: ../src/settings.c:1184
+msgid "GPS"
+msgstr "GPS"
+
+#: ../src/display.c:768
+msgid "GPS Details"
+msgstr "Подробности GPS"
+
+#: ../src/display.c:781
+msgid "GPS Information"
+msgstr "Информация GPS"
+
+#: ../src/maps.c:2861
+#: ../src/menu.c:1580
+msgid "GPS Location"
+msgstr "Местоположение GPS"
+
+#: ../src/main.c:329
+msgid "GPSD"
+msgstr ""
+
+#: ../src/settings.c:1233
+msgid "GPSD Host"
+msgstr ""
+
+#: ../src/poi.c:197
+msgid "General landmarks."
+msgstr ""
+
+#: ../src/poi.c:195
+msgid "General places of business."
+msgstr "Общие коммерческие предприятия."
+
+#: ../src/maps.c:1738
+msgid ""
+"Generally, deleted maps create an empty space in the database that is later reused when downloading new maps.  Compacting the database reorganizes it such that all that blank space is eliminated.  This is the only way that the size of the database can decrease.\n"
+"This reorganization requires creating a new file and inserting all the maps in the old database file into the new file. The new file is then renamed to the same name as the old file and dbf is updated to contain all the correct information about the new file.  Note that this can require free space on disk of an amount up to the size of the map database.\n"
+"This process may take several minutes, especially if your map database is large.  As a rough estimate, you can expect to wait approximately 2-5 seconds per megabyte of map data (34-85 minutes per gigabyte).  There is no progress indicator, although you can watch the new file grow in any file manager.  Do not attempt to close Maemo Mapper while the compacting operation is in progress."
+msgstr ""
+
+#: ../src/menu.c:1572
+#: ../src/poi.c:2257
+msgid "Go to"
+msgstr "Перейти к"
+
+#: ../src/menu.c:916
+msgid "Go to Address"
+msgstr "Перейти по адресу"
+
+#: ../src/menu.c:810
+msgid "Go to Lat/Lon"
+msgstr ""
+
+#: ../src/cmenu.c:715
+msgid "Go to Nearest"
+msgstr "Перейти к ближайшему"
+
+#: ../src/cmenu.c:693
+msgid "Go to Next"
+msgstr "Перейти к следующему"
+
+#: ../src/settings.c:775
+msgid "Hardware Keys"
+msgstr ""
+
+#: ../src/settings.c:1170
+msgid "Hardware Keys..."
+msgstr ""
+
+#: ../src/display.c:829
+msgid "Heading"
+msgstr "Заголовок"
+
+#: ../src/menu.c:1684
+msgid "Help..."
+msgstr "Помощь..."
+
+#: ../src/poi.c:181
+msgid "Houses, apartments, or other residences of import."
+msgstr ""
+
+#: ../src/poi.c:956
+msgid "ID"
+msgstr "ID"
+
+#: ../src/menu.c:1488
+msgid "Import..."
+msgstr "Импорт..."
+
+#: ../src/poi.c:187
+msgid "Indoor or Outdoor places to have fun."
+msgstr ""
+
+#: ../src/settings.c:1390
+msgid "Info Font Size"
+msgstr ""
+
+#: ../src/menu.c:1468
+msgid "Insert Break"
+msgstr ""
+
+#: ../src/menu.c:302
+msgid "Insert Mark"
+msgstr ""
+
+#: ../src/menu.c:1470
+msgid "Insert Mark..."
+msgstr ""
+
+#: ../src/main.c:300
+msgid "Insert Track Break"
+msgstr ""
+
+#: ../src/maps.c:3099
+msgid "Invalid Bottom-Right Latitude"
+msgstr ""
+
+#: ../src/maps.c:3106
+msgid "Invalid Bottom-Right Longitude"
+msgstr ""
+
+#: ../src/menu.c:881
+#: ../src/poi.c:1292
+#: ../src/poi.c:1520
+msgid "Invalid Latitude"
+msgstr ""
+
+#: ../src/menu.c:888
+#: ../src/poi.c:1299
+#: ../src/poi.c:1527
+msgid "Invalid Longitude"
+msgstr ""
+
+#: ../src/gps.c:71
+#: ../src/gps.c:82
+msgid "Invalid NMEA input from receiver!"
+msgstr ""
+
+#: ../src/maps.c:3085
+msgid "Invalid Top-Left Latitude"
+msgstr ""
+
+#: ../src/maps.c:3092
+msgid "Invalid Top-Left Longitude"
+msgstr ""
+
+#: ../src/util.c:158
+msgid "Invalid address."
+msgstr ""
+
+#: ../src/poi.c:2801
+msgid "Invalid origin or query."
+msgstr ""
+
+#: ../src/path.c:671
+msgid "Invalid source or destination."
+msgstr ""
+
+#: ../src/display.c:1105
+msgid "It looks like this is your first time running Maemo Mapper.  Press OK to view the the help pages. Otherwise, press Cancel to continue."
+msgstr ""
+
+#: ../src/poi.c:506
+#: ../src/poi.c:669
+#: ../src/poi.c:969
+#: ../src/poi.c:1173
+#: ../src/poi.c:1423
+#: ../src/poi.c:2237
+msgid "Label"
+msgstr ""
+
+#: ../src/poi.c:196
+msgid "Landmark"
+msgstr ""
+
+#: ../src/display.c:2393
+#: ../src/poi.c:1157
+#: ../src/poi.c:1407
+msgid "Lat"
+msgstr ""
+
+#: ../src/menu.c:312
+#: ../src/path.c:1508
+msgid "Lat, Lon:"
+msgstr ""
+
+#: ../src/menu.c:1633
+msgid "Lat/Lon"
+msgstr ""
+
+#: ../src/menu.c:1576
+msgid "Lat/Lon..."
+msgstr ""
+
+#: ../src/cmenu.c:69
+#: ../src/display.c:793
+#: ../src/maps.c:2851
+#: ../src/menu.c:820
+msgid "Latitude"
+msgstr "Широта"
+
+#: ../src/menu.c:1639
+msgid "Lead"
+msgstr ""
+
+#: ../src/settings.c:1263
+msgid "Lead Amount"
+msgstr ""
+
+#: ../src/main.c:230
+#: ../src/menu.c:1557
+msgid "Left"
+msgstr ""
+
+#: ../src/settings.c:1367
+msgid "Line Width"
+msgstr "Широта"
+
+#: ../src/display.c:838
+msgid "Local time"
+msgstr "Местное время"
+
+#: ../src/poi.c:501
+#: ../src/settings.c:1465
+msgid "Location"
+msgstr "Местоположение"
+
+#: ../src/poi.c:190
+msgid "Lodging"
+msgstr "Жилье"
+
+#: ../src/display.c:2402
+#: ../src/poi.c:1165
+#: ../src/poi.c:1415
+msgid "Lon"
+msgstr ""
+
+#: ../src/cmenu.c:70
+#: ../src/display.c:802
+#: ../src/maps.c:2855
+#: ../src/menu.c:839
+msgid "Longitude"
+msgstr "Долгота"
+
+#: ../src/settings.c:649
+msgid "MAC"
+msgstr ""
+
+#: ../src/maps.c:2147
+msgid "Maemo Mapper will now download and add a list of possibly-duplicate repositories from the internet.  Continue?"
+msgstr ""
+
+#: ../src/maps.c:2736
+msgid "Manage Maps"
+msgstr "Управлять картами"
+
+#: ../src/menu.c:1503
+msgid "Manage Maps..."
+msgstr "Управлять картами..."
+
+#: ../src/maps.c:2235
+msgid "Manage Repositories"
+msgstr ""
+
+#: ../src/menu.c:1505
+msgid "Manage Repositories..."
+msgstr ""
+
+#: ../src/display.c:298
+msgid "Manual"
+msgstr "Руководство"
+
+#: ../src/cmenu.c:279
+msgid "Map correction applied."
+msgstr ""
+
+#: ../src/cmenu.c:286
+msgid "Map correction removed."
+msgstr ""
+
+#: ../src/menu.c:1498
+msgid "Maps"
+msgstr "Карты"
+
+#: ../src/display.c:883
+msgid "Max speed"
+msgstr "Максимальная скорость"
+
+#: ../src/maps.c:2033
+msgid "Max."
+msgstr "Макс."
+
+#: ../src/maps.c:2022
+msgid "Min."
+msgstr "Мин."
+
+#: ../src/settings.c:1297
+msgid "Min. Speed"
+msgstr "Мин.скорость"
+
+#: ../src/maps.c:2367
+msgid "Minimum Downloadable Zoom must be less than Maximum Downloadable Zoom."
+msgstr ""
+
+#: ../src/settings.c:1363
+msgid "Misc."
+msgstr ""
+
+#: ../src/settings.c:1420
+msgid "Misc. 2"
+msgstr ""
+
+#: ../src/poi.c:199
+msgid "Miscellaneous category for everything else."
+msgstr ""
+
+#: ../src/maps.c:3051
+#: ../src/menu.c:553
+msgid "NOTE: You must set a Map URI in the current repository in order to download maps."
+msgstr ""
+
+#: ../src/maps.c:1810
+#: ../src/maps.c:2086
+msgid "Name"
+msgstr "Имя"
+
+#: ../src/menu.c:1584
+msgid "Nearest POI"
+msgstr ""
+
+#: ../src/main.c:236
+msgid "Never"
+msgstr "Никогда"
+
+#: ../src/maps.c:1800
+msgid "New Name"
+msgstr "Новое имя"
+
+#: ../src/maps.c:2076
+msgid "New Repository"
+msgstr "Новое хранилище"
+
+#: ../src/maps.c:2278
+msgid "New..."
+msgstr "Новый..."
+
+#: ../src/menu.c:1582
+msgid "Next Waypoint"
+msgstr "Следующая точка"
+
+#: ../src/maps.c:2006
+msgid "Next-able"
+msgstr ""
+
+#: ../src/menu.c:1039
+#: ../src/poi.c:444
+#: ../src/poi.c:3126
+msgid "No POIs found."
+msgstr ""
+
+#: ../src/poi.c:1671
+msgid "No POIs were found."
+msgstr ""
+
+#: ../src/menu.c:1645
+msgid "None"
+msgstr "Нету"
+
+#: ../src/menu.c:1562
+msgid "North"
+msgstr "Север"
+
+#: ../src/menu.c:1444
+#: ../src/menu.c:1464
+msgid "Open..."
+msgstr "Открыть..."
+
+#: ../src/display.c:1122
+msgid "OpenStreetMap.org provides public, free-to-use maps.  You can also download a sample set of repositories from  the internet by using the \"Download...\" button."
+msgstr ""
+
+#: ../src/path.c:1274
+#: ../src/poi.c:2594
+#: ../src/poi.c:2911
+msgid "Origin"
+msgstr "Исходный"
+
+#: ../src/poi.c:198
+msgid "Other"
+msgstr "Другой"
+
+#: ../src/maps.c:2782
+msgid "Overwrite"
+msgstr "Переписать"
+
+#: ../src/poi.c:2474
+msgid "Overwrite query with the following text?"
+msgstr ""
+
+#: ../src/cmenu.c:697
+#: ../src/menu.c:1484
+#: ../src/menu.c:1623
+#: ../src/settings.c:954
+#: ../src/settings.c:1480
+msgid "POI"
+msgstr "Достопримечательность"
+
+#: ../src/poi.c:918
+msgid "POI Categories"
+msgstr "Категории достопримечательностей"
+
+#: ../src/poi.c:2168
+msgid "POI List"
+msgstr "Список достопримечательностей"
+
+#: ../src/settings.c:1484
+msgid "POI database"
+msgstr "База достопримечательностей"
+
+#: ../src/poi.c:2082
+msgid "POIs Exported"
+msgstr ""
+
+#: ../src/poi.c:1665
+msgid "POIs were added to the POI database.  The following screen will allow you to modify or delete any of the new POIs."
+msgstr ""
+
+#: ../src/display.c:294
+msgid "PPS"
+msgstr ""
+
+#: ../src/poi.c:2578
+msgid "Page"
+msgstr "Страница"
+
+#: ../src/menu.c:1549
+msgid "Pan"
+msgstr ""
+
+#: ../src/main.c:271
+msgid "Pan Down"
+msgstr ""
+
+#: ../src/main.c:269
+msgid "Pan East"
+msgstr ""
+
+#: ../src/main.c:272
+msgid "Pan Left"
+msgstr ""
+
+#: ../src/main.c:266
+msgid "Pan North"
+msgstr ""
+
+#: ../src/main.c:273
+msgid "Pan Right"
+msgstr ""
+
+#: ../src/settings.c:1282
+msgid "Pan Sensitivity"
+msgstr ""
+
+#: ../src/main.c:268
+msgid "Pan South"
+msgstr ""
+
+#: ../src/main.c:270
+msgid "Pan Up"
+msgstr ""
+
+#: ../src/main.c:267
+msgid "Pan West"
+msgstr ""
+
+#: ../src/poi.c:183
+msgid "Places to eat or drink."
+msgstr ""
+
+#: ../src/poi.c:185
+msgid "Places to shop or acquire services."
+msgstr ""
+
+#: ../src/poi.c:191
+msgid "Places to stay temporarily or for the night."
+msgstr ""
+
+#: ../src/menu.c:376
+msgid "Please provide a description for the mark."
+msgstr ""
+
+#: ../src/settings.c:684
+msgid "Please select a bluetooth device from the list."
+msgstr "Пожалуйста выбирете bluetooth устройство из списка."
+
+#: ../src/settings.c:1610
+msgid "Please specify a GPS file pathname."
+msgstr ""
+
+#: ../src/settings.c:1603
+msgid "Please specify a GPSD hostname."
+msgstr ""
+
+#: ../src/poi.c:1318
+#: ../src/poi.c:1546
+#: ../src/poi.c:1820
+msgid "Please specify a category."
+msgstr "Пожалуйста установите категорию."
+
+#: ../src/poi.c:2416
+#: ../src/poi.c:2766
+msgid "Please specify a default category."
+msgstr ""
+
+#: ../src/poi.c:727
+msgid "Please specify a name for the category."
+msgstr "Пожалуйста установите имя категории."
+
+#: ../src/poi.c:1311
+#: ../src/poi.c:1539
+msgid "Please specify a name."
+msgstr "Пожалуйста установите имя."
+
+#: ../src/poi.c:2773
+msgid "Please specify a query."
+msgstr ""
+
+#: ../src/path.c:1378
+#: ../src/poi.c:2706
+msgid "Please specify a source URL."
+msgstr ""
+
+#: ../src/path.c:1420
+msgid "Please specify a start location."
+msgstr ""
+
+#: ../src/path.c:1427
+msgid "Please specify an end location."
+msgstr ""
+
+#: ../src/poi.c:2760
+#: ../src/poi.c:3054
+msgid "Please specify an origin."
+msgstr ""
+
+#: ../src/settings.c:1318
+msgid "Points"
+msgstr "Точки"
+
+#: ../src/settings.c:1249
+msgid "Port"
+msgstr "Порт"
+
+#: ../src/maps.c:1294
+msgid "Processing Maps"
+msgstr "Обработка карт"
+
+#: ../src/poi.c:2609
+#: ../src/poi.c:2926
+msgid "Query"
+msgstr "Вопрос"
+
+#: ../src/display.c:295
+msgid "Real Time Kinematic"
+msgstr ""
+
+#: ../src/path.c:1007
+msgid "Really clear the track?"
+msgstr ""
+
+#: ../src/path.c:887
+msgid "Recalculating directions..."
+msgstr ""
+
+#: ../src/poi.c:186
+msgid "Recreation"
+msgstr "Отдых"
+
+#: ../src/maps.c:2272
+msgid "Rename..."
+msgstr "Переименовать..."
+
+#: ../src/maps.c:2117
+msgid "Replace all repositories with the default repository?"
+msgstr ""
+
+#: ../src/menu.c:1454
+#: ../src/menu.c:1541
+msgid "Reset"
+msgstr "Сброс"
+
+#: ../src/main.c:311
+#: ../src/menu.c:1674
+msgid "Reset Bluetooth"
+msgstr "Сбросить Bluetooth"
+
+#: ../src/main.c:275
+msgid "Reset Viewing Angle"
+msgstr ""
+
+#: ../src/settings.c:861
+msgid "Reset all colors to their original defaults?"
+msgstr ""
+
+#: ../src/settings.c:747
+msgid "Reset all hardware keys to their original defaults?"
+msgstr ""
+
+#: ../src/maps.c:2250
+#: ../src/settings.c:781
+#: ../src/settings.c:897
+msgid "Reset..."
+msgstr "Сброс..."
+
+#: ../src/poi.c:180
+msgid "Residence"
+msgstr "Место жительства"
+
+#: ../src/poi.c:182
+msgid "Restaurant"
+msgstr "Ресторан"
+
+#: ../src/main.c:228
+#: ../src/menu.c:1559
+msgid "Right"
+msgstr "Вправо"
+
+#: ../src/menu.c:1532
+msgid "Rotate"
+msgstr "Повернуть"
+
+#: ../src/settings.c:1305
+msgid "Rotate Sensit."
+msgstr ""
+
+#: ../src/main.c:277
+msgid "Rotate View Clockwise"
+msgstr ""
+
+#: ../src/main.c:279
+msgid "Rotate View Counter-Clockwise"
+msgstr ""
+
+#: ../src/menu.c:1440
+#: ../src/menu.c:1609
+#: ../src/settings.c:939
+msgid "Route"
+msgstr "Маршрут"
+
+#: ../src/path.c:686
+msgid "Route Downloaded"
+msgstr "Маршрут загружен"
+
+#: ../src/main.c:503
+#: ../src/menu.c:131
+msgid "Route Opened"
+msgstr "Маршрут открыт"
+
+#: ../src/menu.c:162
+msgid "Route Saved"
+msgstr "Маршрут сохранен"
+
+#: ../src/menu.c:1137
+msgid "Routes are now hidden"
+msgstr ""
+
+#: ../src/menu.c:1131
+msgid "Routes are now shown"
+msgstr ""
+
+#: ../src/display.c:292
+msgid "SPS"
+msgstr ""
+
+#: ../src/display.c:856
+msgid "Sat in use"
+msgstr ""
+
+#: ../src/display.c:847
+msgid "Sat in view"
+msgstr ""
+
+#: ../src/display.c:788
+msgid "Satellites details"
+msgstr "Детали спутников"
+
+#: ../src/display.c:714
+msgid "Satellites in view"
+msgstr ""
+
+#: ../src/menu.c:1448
+#: ../src/menu.c:1466
+msgid "Save..."
+msgstr "Сохранить..."
+
+#: ../src/menu.c:1599
+msgid "Scale"
+msgstr "Масштаб"
+
+#: ../src/settings.c:1205
+msgid "Scan..."
+msgstr "Сканировать..."
+
+#: ../src/settings.c:660
+msgid "Scanning for Bluetooth Devices"
+msgstr "Поиск Bluetooth устройств"
+
+#: ../src/poi.c:192
+msgid "School"
+msgstr "Школа"
+
+#: ../src/gps.c:819
+msgid "Searching for GPS receiver"
+msgstr "Поиск GPS приемника"
+
+#: ../src/settings.c:624
+msgid "Select Bluetooth Device"
+msgstr "Выбор Bluetooth устройства"
+
+#: ../src/main.c:295
+msgid "Select Next Repository"
+msgstr "Выбрать следующее хранилище"
+
+#: ../src/poi.c:474
+msgid "Select POI"
+msgstr ""
+
+#: ../src/poi.c:2108
+msgid ""
+"Select an operation to perform\n"
+"on the POIs that you checked\n"
+"in the POI list."
+msgstr ""
+
+#: ../src/poi.c:539
+msgid "Select one POI from the list."
+msgstr ""
+
+#: ../src/poi.c:178
+msgid "Service Station"
+msgstr "Станция обслуживания"
+
+#: ../src/poi.c:1777
+#: ../src/poi.c:2114
+msgid "Set Category..."
+msgstr "Установить категорию..."
+
+#: ../src/cmenu.c:659
+msgid "Set as GPS Location"
+msgstr ""
+
+#: ../src/settings.c:1156
+msgid "Settings"
+msgstr "Настройки"
+
+#: ../src/menu.c:1681
+msgid "Settings..."
+msgstr "Настройки..."
+
+#: ../src/maps.c:2765
+msgid "Setup"
+msgstr "Установка"
+
+#: ../src/poi.c:184
+msgid "Shopping/Services"
+msgstr ""
+
+#: ../src/menu.c:1590
+msgid "Show"
+msgstr "Показать"
+
+#: ../src/cmenu.c:676
+msgid "Show Description"
+msgstr "Показать описание"
+
+#: ../src/main.c:305
+#: ../src/menu.c:1474
+msgid "Show Distance from Beginning"
+msgstr "Показать расстояние от начала"
+
+#: ../src/main.c:303
+msgid "Show Distance from Last Break"
+msgstr "Показать расстояние от последней остановки"
+
+#: ../src/menu.c:1472
+msgid "Show Distance from Last Mark"
+msgstr "Показать расстояние от последней отметки"
+
+#: ../src/cmenu.c:643
+#: ../src/cmenu.c:683
+#: ../src/cmenu.c:705
+msgid "Show Distance to"
+msgstr "Показать расстояние до"
+
+#: ../src/main.c:299
+#: ../src/menu.c:1452
+msgid "Show Distance to End of Route"
+msgstr "Показать расстояние до конца маршрута"
+
+#: ../src/main.c:297
+#: ../src/menu.c:1450
+msgid "Show Distance to Next Waypoint"
+msgstr "Показать расстояние до следующей точки"
+
+#: ../src/menu.c:1667
+msgid "Show Information"
+msgstr "Показать информацию"
+
+#: ../src/cmenu.c:640
+#: ../src/cmenu.c:674
+msgid "Show Lat/Lon"
+msgstr "Показать шир./долг."
+
+#: ../src/settings.c:1505
+msgid "Show POI below zoom"
+msgstr ""
+
+#: ../src/display.c:2383
+msgid "Show Position"
+msgstr "Показать позицию"
+
+#: ../src/display.c:299
+msgid "Simulation"
+msgstr "Симуляция"
+
+#: ../src/path.c:1234
+#: ../src/poi.c:2546
+msgid "Source URL"
+msgstr ""
+
+#: ../src/menu.c:1564
+msgid "South"
+msgstr "Юг"
+
+#: ../src/display.c:811
+msgid "Speed"
+msgstr "Скорость"
+
+#: ../src/settings.c:1455
+msgid "Speed Limit"
+msgstr "Ограничение скорости"
+
+#: ../src/poi.c:179
+msgid "Stations for purchasing fuel for vehicles."
+msgstr "Заправочные станции."
+
+#: ../src/maps.c:1700
+msgid "Successfully compacted database."
+msgstr ""
+
+#: ../src/cmenu.c:634
+msgid "Tap Point"
+msgstr ""
+
+#: ../src/maps.c:936
+msgid "The current repository is in a legacy format and will be converted.  You should delete your old maps if you no longer plan to use them."
+msgstr ""
+
+#: ../src/path.c:563
+msgid "The current route is empty."
+msgstr ""
+
+#: ../src/path.c:609
+#: ../src/path.c:624
+msgid "The current track is empty."
+msgstr ""
+
+#: ../src/settings.c:827
+msgid "The following action is mapped to multiple keys"
+msgstr ""
+
+#: ../src/input.c:390
+msgid "There are no other next-able repositories."
+msgstr ""
+
+#: ../src/cmenu.c:307
+#: ../src/cmenu.c:329
+#: ../src/cmenu.c:348
+#: ../src/cmenu.c:368
+#: ../src/cmenu.c:387
+#: ../src/cmenu.c:406
+#: ../src/cmenu.c:484
+#: ../src/cmenu.c:503
+msgid "There are no waypoints."
+msgstr ""
+
+#: ../src/menu.c:1001
+#: ../src/path.c:544
+msgid "There is no next waypoint."
+msgstr ""
+
+#: ../src/main.c:281
+msgid "Toggle Auto-Center"
+msgstr "Включить автоцентрирование"
+
+#: ../src/main.c:283
+msgid "Toggle Auto-Rotate"
+msgstr ""
+
+#: ../src/main.c:285
+msgid "Toggle Fullscreen"
+msgstr ""
+
+#: ../src/main.c:306
+msgid "Toggle GPS"
+msgstr ""
+
+#: ../src/main.c:307
+msgid "Toggle GPS Info"
+msgstr ""
+
+#: ../src/main.c:293
+msgid "Toggle POIs"
+msgstr ""
+
+#: ../src/main.c:292
+msgid "Toggle Scale"
+msgstr ""
+
+#: ../src/main.c:309
+msgid "Toggle Speed Limit"
+msgstr ""
+
+#: ../src/main.c:289
+msgid "Toggle Tracking"
+msgstr ""
+
+#: ../src/main.c:291
+msgid "Toggle Tracks/Routes"
+msgstr ""
+
+#: ../src/main.c:323
+#: ../src/maps.c:2896
+msgid "Top-Left"
+msgstr ""
+
+#: ../src/main.c:324
+msgid "Top-Right"
+msgstr ""
+
+#: ../src/menu.c:1460
+#: ../src/menu.c:1614
+#: ../src/settings.c:924
+msgid "Track"
+msgstr "Путь"
+
+#: ../src/menu.c:243
+msgid "Track Opened"
+msgstr "Путь загружен"
+
+#: ../src/menu.c:265
+msgid "Track Saved"
+msgstr "Путь сохранен"
+
+#: ../src/menu.c:433
+msgid "Tracking Disabled"
+msgstr ""
+
+#: ../src/menu.c:437
+msgid "Tracking Enabled"
+msgstr ""
+
+#: ../src/menu.c:1074
+msgid "Tracks are now hidden"
+msgstr ""
+
+#: ../src/menu.c:1068
+msgid "Tracks are now shown"
+msgstr ""
+
+#: ../src/poi.c:188
+msgid "Transportation"
+msgstr "Перевозка"
+
+#: ../src/maps.c:1917
+msgid "URL Format"
+msgstr ""
+
+#: ../src/maps.c:1116
+msgid "Unable to create map database for repository"
+msgstr ""
+
+#: ../src/settings.c:1378
+msgid "Unblank Screen"
+msgstr ""
+
+#: ../src/settings.c:1407
+msgid "Units"
+msgstr "Единицы"
+
+#: ../src/util.c:163
+msgid "Unknown error while locating address."
+msgstr ""
+
+#: ../src/main.c:227
+#: ../src/menu.c:1553
+msgid "Up"
+msgstr "Вверх"
+
+#: ../src/path.c:1251
+#: ../src/poi.c:2559
+#: ../src/poi.c:2877
+msgid "Use End of Route"
+msgstr "Использовать конец маршрута"
+
+#: ../src/path.c:1245
+#: ../src/poi.c:2553
+#: ../src/poi.c:2871
+msgid "Use GPS Location"
+msgstr ""
+
+#: ../src/menu.c:1619
+msgid "Velocity Vector"
+msgstr ""
+
+#: ../src/menu.c:1516
+msgid "View"
+msgstr "Просмотр"
+
+#: ../src/maps.c:2877
+msgid "View Center"
+msgstr "Центр просмотра"
+
+#: ../src/maps.c:1977
+msgid "View Zoom Steps"
+msgstr ""
+
+#: ../src/cmenu.c:702
+msgid "View/Edit..."
+msgstr "Просмотреть/Изменить..."
+
+#: ../src/poi.c:561
+msgid "WARNING: All POIs in that category will also be deleted!"
+msgstr ""
+
+#: ../src/cmenu.c:669
+msgid "Waypoint"
+msgstr "Точка"
+
+#: ../src/menu.c:1566
+msgid "West"
+msgstr "Запад"
+
+#: ../src/main.c:235
+msgid "When Approaching a Waypoint"
+msgstr ""
+
+#: ../src/main.c:233
+msgid "When Moving"
+msgstr "При движении"
+
+#: ../src/main.c:234
+msgid "When Moving (Full Screen Only)"
+msgstr ""
+
+#: ../src/main.c:232
+msgid "When Receiving Any GPS Data"
+msgstr ""
+
+#: ../src/display.c:1129
+msgid "You will now see a blank screen.  You can download maps using the \"Manage Maps\" menu item in the \"Maps\" menu.  Or, press OK now to enable Auto-Download."
+msgstr ""
+
+#: ../src/maps.c:2820
+#: ../src/menu.c:1522
+msgid "Zoom"
+msgstr "Масштаб"
+
+#: ../src/main.c:286
+#: ../src/menu.c:1526
+msgid "Zoom In"
+msgstr "Зуммировать"
+
+#: ../src/menu.c:1594
+msgid "Zoom Level"
+msgstr ""
+
+#: ../src/maps.c:2826
+msgid "Zoom Levels to Download: (0 = most detail)"
+msgstr ""
+
+#: ../src/main.c:287
+#: ../src/menu.c:1528
+msgid "Zoom Out"
+msgstr ""
+
+#: ../src/input.c:117
+#: ../src/input.c:310
+#: ../src/menu.c:579
+#: ../src/menu.c:597
+msgid "Zoom to Level"
+msgstr ""
+
+#: ../src/maps.c:2579
+#: ../src/maps.c:2586
+msgid "about"
+msgstr "О программе"
+
+#: ../src/display.c:715
+msgid "in use"
+msgstr "в употреблении"
+
+#: ../src/main.c:223
+msgid "km"
+msgstr "км"
+
+#: ../src/maps.c:2486
+#: ../src/maps.c:2587
+msgid "maps"
+msgstr "Карты"
+
+#: ../src/maps.c:2480
+#: ../src/maps.c:2580
+msgid "maps "
+msgstr "Карты"
+
+#: ../src/display.c:1501
+msgid "maps failed to download."
+msgstr "Загрузка карт потеряна."
+
+#: ../src/main.c:224
+msgid "mi."
+msgstr ""
+
+#: ../src/main.c:225
+msgid "n.m."
+msgstr ""
+
+#: ../src/display.c:869
+msgid "nofix"
+msgstr ""
+
+#: ../src/display.c:300
+#: ../src/display.c:878
+msgid "none"
+msgstr ""
+
+#: ../src/maps.c:2486
+#: ../src/maps.c:2587
+msgid "up to about"
+msgstr ""
+
