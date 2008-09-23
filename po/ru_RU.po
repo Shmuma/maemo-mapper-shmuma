@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-03-17 01:55-0400\n"
-"PO-Revision-Date: 2008-09-23 17:15+0200\n"
+"PO-Revision-Date: 2008-09-23 18:22+0200\n"
 "Last-Translator: Sergey Fialko <zero984@gmail.com>\n"
 "Language-Team: Sergey Fialko <zero984@gmail.com>\n"
 "MIME-Version: 1.0\n"
@@ -119,7 +119,7 @@ msgstr "Область"
 #: ../src/menu.c:1629
 #: ../src/settings.c:1259
 msgid "Auto-Center"
-msgstr ""
+msgstr "Авто-центр"
 
 #: ../src/menu.c:1204
 msgid "Auto-Center Mode: Lat/Lon"
@@ -131,11 +131,11 @@ msgstr ""
 
 #: ../src/menu.c:1221
 msgid "Auto-Center Off"
-msgstr ""
+msgstr "Авто-центр выключен"
 
 #: ../src/menu.c:1507
 msgid "Auto-Download"
-msgstr ""
+msgstr "Авто-загрузка"
 
 #: ../src/settings.c:1437
 msgid "Auto-Download Pre-cache"
@@ -143,19 +143,19 @@ msgstr ""
 
 #: ../src/menu.c:1543
 msgid "Auto-Rotate"
-msgstr ""
+msgstr "Авто-поворот"
 
 #: ../src/menu.c:663
 msgid "Auto-Rotate Disabled"
-msgstr ""
+msgstr "Авто-поворот запрещен"
 
 #: ../src/menu.c:658
 msgid "Auto-Rotate Enabled"
-msgstr ""
+msgstr "Авто-поворот разрешен"
 
 #: ../src/path.c:1261
 msgid "Auto-Update"
-msgstr ""
+msgstr "Авто-обновление"
 
 #: ../src/path.c:1267
 msgid "Avoid Highways"
@@ -666,11 +666,11 @@ msgstr "Местоположение GPS"
 
 #: ../src/main.c:329
 msgid "GPSD"
-msgstr ""
+msgstr "GPSD"
 
 #: ../src/settings.c:1233
 msgid "GPSD Host"
-msgstr ""
+msgstr "Сервер GPSD"
 
 #: ../src/poi.c:197
 msgid "General landmarks."
@@ -746,15 +746,15 @@ msgstr ""
 
 #: ../src/menu.c:1468
 msgid "Insert Break"
-msgstr ""
+msgstr "Вставить остановку"
 
 #: ../src/menu.c:302
 msgid "Insert Mark"
-msgstr ""
+msgstr "Вставить метку"
 
 #: ../src/menu.c:1470
 msgid "Insert Mark..."
-msgstr ""
+msgstr "Вставить метку..."
 
 #: ../src/main.c:300
 msgid "Insert Track Break"
@@ -772,18 +772,18 @@ msgstr ""
 #: ../src/poi.c:1292
 #: ../src/poi.c:1520
 msgid "Invalid Latitude"
-msgstr ""
+msgstr "Неправильная широта"
 
 #: ../src/menu.c:888
 #: ../src/poi.c:1299
 #: ../src/poi.c:1527
 msgid "Invalid Longitude"
-msgstr ""
+msgstr "Неправильная долгота"
 
 #: ../src/gps.c:71
 #: ../src/gps.c:82
 msgid "Invalid NMEA input from receiver!"
-msgstr ""
+msgstr "Неправильная NMEA посылка с приемника!"
 
 #: ../src/maps.c:3085
 msgid "Invalid Top-Left Latitude"
@@ -816,7 +816,7 @@ msgstr ""
 #: ../src/poi.c:1423
 #: ../src/poi.c:2237
 msgid "Label"
-msgstr ""
+msgstr "Ярлык"
 
 #: ../src/poi.c:196
 msgid "Landmark"
@@ -826,20 +826,20 @@ msgstr ""
 #: ../src/poi.c:1157
 #: ../src/poi.c:1407
 msgid "Lat"
-msgstr ""
+msgstr "Шир."
 
 #: ../src/menu.c:312
 #: ../src/path.c:1508
 msgid "Lat, Lon:"
-msgstr ""
+msgstr "Шир., Долг.:"
 
 #: ../src/menu.c:1633
 msgid "Lat/Lon"
-msgstr ""
+msgstr "Шир./Долг."
 
 #: ../src/menu.c:1576
 msgid "Lat/Lon..."
-msgstr ""
+msgstr "Шир./Долг..."
 
 #: ../src/cmenu.c:69
 #: ../src/display.c:793
@@ -882,7 +882,7 @@ msgstr "Жилье"
 #: ../src/poi.c:1165
 #: ../src/poi.c:1415
 msgid "Lon"
-msgstr ""
+msgstr "Долг."
 
 #: ../src/cmenu.c:70
 #: ../src/display.c:802
@@ -909,11 +909,11 @@ msgstr "Управлять картами..."
 
 #: ../src/maps.c:2235
 msgid "Manage Repositories"
-msgstr ""
+msgstr "Управление хранилищами"
 
 #: ../src/menu.c:1505
 msgid "Manage Repositories..."
-msgstr ""
+msgstr "Управление хранилищами..."
 
 #: ../src/display.c:298
 msgid "Manual"
@@ -921,7 +921,7 @@ msgstr "Руководство"
 
 #: ../src/cmenu.c:279
 msgid "Map correction applied."
-msgstr ""
+msgstr "Применить коррекцию карты."
 
 #: ../src/cmenu.c:286
 msgid "Map correction removed."
@@ -953,11 +953,11 @@ msgstr ""
 
 #: ../src/settings.c:1363
 msgid "Misc."
-msgstr ""
+msgstr "Разное."
 
 #: ../src/settings.c:1420
 msgid "Misc. 2"
-msgstr ""
+msgstr "Разное. 2"
 
 #: ../src/poi.c:199
 msgid "Miscellaneous category for everything else."
@@ -966,7 +966,7 @@ msgstr ""
 #: ../src/maps.c:3051
 #: ../src/menu.c:553
 msgid "NOTE: You must set a Map URI in the current repository in order to download maps."
-msgstr ""
+msgstr "Примечание: Для загрузки карт вы должны установить URI для текущего хранилища."
 
 #: ../src/maps.c:1810
 #: ../src/maps.c:2086
@@ -1026,7 +1026,7 @@ msgstr "Открыть..."
 
 #: ../src/display.c:1122
 msgid "OpenStreetMap.org provides public, free-to-use maps.  You can also download a sample set of repositories from  the internet by using the \"Download...\" button."
-msgstr ""
+msgstr "OpenStreetMap.org предоставляет открытые, свободные для использования карты. Вы также можете загрузить образцовый набор хранилищ из интернета с помощью кнопки \"Загрузить...\"."
 
 #: ../src/path.c:1274
 #: ../src/poi.c:2594
@@ -1044,7 +1044,7 @@ msgstr "Переписать"
 
 #: ../src/poi.c:2474
 msgid "Overwrite query with the following text?"
-msgstr ""
+msgstr "Переписать запрос с текстом следующего содержания?"
 
 #: ../src/cmenu.c:697
 #: ../src/menu.c:1484
@@ -1072,7 +1072,7 @@ msgstr ""
 
 #: ../src/poi.c:1665
 msgid "POIs were added to the POI database.  The following screen will allow you to modify or delete any of the new POIs."
-msgstr ""
+msgstr "Достопримечательности были добавлены в базу данных. Следующий экран позволит вам изменять или удалять любой из новых объектов."
 
 #: ../src/display.c:294
 msgid "PPS"
@@ -1124,15 +1124,15 @@ msgstr ""
 
 #: ../src/poi.c:183
 msgid "Places to eat or drink."
-msgstr ""
+msgstr "Места для еды или питья."
 
 #: ../src/poi.c:185
 msgid "Places to shop or acquire services."
-msgstr ""
+msgstr "Магазины или службы обслуживания."
 
 #: ../src/poi.c:191
 msgid "Places to stay temporarily or for the night."
-msgstr ""
+msgstr "Места для отдыха или начевки."
 
 #: ../src/menu.c:376
 msgid "Please provide a description for the mark."
@@ -1231,7 +1231,7 @@ msgstr "Переименовать..."
 
 #: ../src/maps.c:2117
 msgid "Replace all repositories with the default repository?"
-msgstr ""
+msgstr "Заменить все хранилища хранилищем по умолчанию?"
 
 #: ../src/menu.c:1454
 #: ../src/menu.c:1541
@@ -1245,15 +1245,15 @@ msgstr "Сбросить Bluetooth"
 
 #: ../src/main.c:275
 msgid "Reset Viewing Angle"
-msgstr ""
+msgstr "Сбросить угол просмотра"
 
 #: ../src/settings.c:861
 msgid "Reset all colors to their original defaults?"
-msgstr ""
+msgstr "Сделать цвета по умолчанию?"
 
 #: ../src/settings.c:747
 msgid "Reset all hardware keys to their original defaults?"
-msgstr ""
+msgstr "Установить все аппаратные ключи по умолчанию?"
 
 #: ../src/maps.c:2250
 #: ../src/settings.c:781
@@ -1284,11 +1284,11 @@ msgstr ""
 
 #: ../src/main.c:277
 msgid "Rotate View Clockwise"
-msgstr ""
+msgstr "Повернуть просмотр по часовой стрелке"
 
 #: ../src/main.c:279
 msgid "Rotate View Counter-Clockwise"
-msgstr ""
+msgstr "Повернуть просмотр против часовой стрелке"
 
 #: ../src/menu.c:1440
 #: ../src/menu.c:1609
