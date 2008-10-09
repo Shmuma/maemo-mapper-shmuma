@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 4.0.0), intltool, hildon-libs-dev | libhildon1-dev,
 Standards-Version: 3.6.0
 
 Package: maemo-mapper
-Architecture: armel arm i386
+Architecture: armel i386
 Pre-Depends: maemo-select-menu-location
 Depends: ${shlibs:Depends}
 Suggests: flite, proj
