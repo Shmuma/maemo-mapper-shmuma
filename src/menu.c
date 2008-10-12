@@ -28,6 +28,7 @@
 #define _GNU_SOURCE
 
 #include <math.h>
+#include <string.h>
 
 #ifndef LEGACY
 #    include <hildon/hildon-help.h>
@@ -469,6 +470,15 @@ menu_cb_maps_repoman(GtkMenuItem *item)
 }
 
 static gboolean
+menu_cb_maps_repodown(GtkMenuItem *item)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+    repoman_download();
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+static gboolean
 menu_cb_maps_select(GtkMenuItem *item, gpointer new_repo)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -514,6 +524,35 @@ menu_cb_maps_auto_download(GtkMenuItem *item)
 
 /****************************************************************************
  * ABOVE: MAPS MENU *********************************************************
+ ****************************************************************************/
+
+/****************************************************************************
+ * BELOW: LAYERS MENU *******************************************************
+ ****************************************************************************/
+
+static gboolean
+menu_cb_layers_toggle(GtkCheckMenuItem *item, gpointer layer)
+{
+    RepoData* rd = (RepoData*)layer;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    rd->layer_enabled = !rd->layer_enabled;
+
+    /* refresh if layer is on top of active map */
+    if (repo_is_layer (_curr_repo, rd)) {
+        /* reset layer's countdown */
+        rd->layer_refresh_countdown = rd->layer_refresh_interval;
+        map_cache_clean ();
+        map_refresh_mark (TRUE);
+    }
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+/****************************************************************************
+ * ABOVE: LAYERS MENU *******************************************************
  ****************************************************************************/
 
 /****************************************************************************
@@ -1330,8 +1369,26 @@ menu_maps_remove_repos()
         gtk_widget_destroy(gtk_container_get_children(
                     GTK_CONTAINER(_menu_maps_submenu))->data);
     }
+
+    menu_layers_remove_repos ();
+
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
+
+
+void
+menu_layers_remove_repos()
+{
+    GList *child;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Delete one menu item for each repo. */
+    while ((child = gtk_container_get_children(GTK_CONTAINER(_menu_layers_submenu))))
+        gtk_widget_destroy (child->data);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
 
 void
 menu_maps_add_repos()
@@ -1371,8 +1428,64 @@ menu_maps_add_repos()
     }
 
     gtk_widget_show_all(_menu_maps_submenu);
+    menu_layers_add_repos ();
+
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
+
+
+void
+menu_layers_add_repos()
+{
+    GList *curr;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    for(curr = _repo_list; curr; curr = curr->next)
+    {
+        RepoData* rd = (RepoData*)curr->data;
+        GtkWidget *item, *submenu = NULL, *layer_item;
+
+        /* if repository doesn't have layers, skip it */
+        if (!rd->layers)
+            continue;
+
+        /* if it has only one layer, add just one check menu item */
+        if (!rd->layers->layers) {
+            gchar *title = g_malloc (strlen (rd->name) + strlen (rd->layers->name) + 3);
+
+            sprintf (title, "%s[%s]", rd->name, rd->layers->name);
+
+            rd = rd->layers;
+            gtk_menu_append (_menu_layers_submenu, layer_item = gtk_check_menu_item_new_with_label (title));
+            gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (layer_item), rd->layer_enabled);
+            g_signal_connect (G_OBJECT (layer_item), "toggled", G_CALLBACK (menu_cb_layers_toggle), rd);
+            rd->menu_item = layer_item;
+        }
+        else {
+            /* append main repository menu item  */
+            gtk_menu_append (_menu_layers_submenu, item = gtk_menu_item_new_with_label(rd->name));
+
+            rd = rd->layers;
+            while (rd) {
+                if (!submenu)
+                    submenu = gtk_menu_new ();
+                gtk_menu_append (submenu, layer_item = gtk_check_menu_item_new_with_label (rd->name));
+                gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (layer_item), rd->layer_enabled);
+                g_signal_connect (G_OBJECT (layer_item), "toggled", G_CALLBACK (menu_cb_layers_toggle), rd);
+                rd->menu_item = layer_item;
+                rd = rd->layers;
+            }
+
+            if (submenu)
+                gtk_menu_item_set_submenu (GTK_MENU_ITEM (item), submenu);
+        }
+    }
+
+    gtk_widget_show_all(_menu_layers_submenu);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
 
 /**
  * Create the menu items needed for the drop down menu.
@@ -1450,6 +1563,8 @@ menu_init()
     gtk_menu_append(submenu, _menu_poi_categories_item
             = gtk_menu_item_new_with_label(_("Categories...")));
 
+    _menu_layers_submenu = gtk_menu_new();
+
     /* The "Maps" submenu. */
     gtk_menu_append(menu, menu_item
             = gtk_menu_item_new_with_label(_("Maps")));
@@ -1458,12 +1573,16 @@ menu_init()
     gtk_menu_append(_menu_maps_submenu, gtk_separator_menu_item_new());
     gtk_menu_append(_menu_maps_submenu, _menu_maps_mapman_item
             = gtk_menu_item_new_with_label(_("Manage Maps...")));
-    gtk_menu_append(_menu_maps_submenu, _menu_maps_repoman_item
-            = gtk_menu_item_new_with_label(_("Manage Repositories...")));
     gtk_menu_append(_menu_maps_submenu, _menu_maps_auto_download_item
             = gtk_check_menu_item_new_with_label(_("Auto-Download")));
     gtk_check_menu_item_set_active(
             GTK_CHECK_MENU_ITEM(_menu_maps_auto_download_item),_auto_download);
+    gtk_menu_append(_menu_maps_submenu, gtk_separator_menu_item_new());
+    gtk_menu_append(_menu_maps_submenu, _menu_maps_repoman_item
+            = gtk_menu_item_new_with_label(_("Manage Repositories...")));
+    gtk_menu_append(_menu_maps_submenu, _menu_maps_repodown_item
+            = gtk_menu_item_new_with_label(
+                _("Download Sample Repositories...")));
     menu_maps_add_repos();
 
     gtk_menu_append(menu, gtk_separator_menu_item_new());
@@ -1473,6 +1592,11 @@ menu_init()
             = gtk_menu_item_new_with_label(_("View")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
             submenu = gtk_menu_new());
+
+    /* The View/Layers submenu */
+    gtk_menu_append(submenu, menu_item
+            = gtk_menu_item_new_with_label(_("Layers")));
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item), _menu_layers_submenu);
 
     /* The "View"/"Zoom" submenu. */
     gtk_menu_append(submenu, menu_item
@@ -1696,6 +1820,8 @@ menu_init()
     /* Connect the "Maps" signals. */
     g_signal_connect(G_OBJECT(_menu_maps_repoman_item), "activate",
                       G_CALLBACK(menu_cb_maps_repoman), NULL);
+    g_signal_connect(G_OBJECT(_menu_maps_repodown_item), "activate",
+                      G_CALLBACK(menu_cb_maps_repodown), NULL);
     g_signal_connect(G_OBJECT(_menu_maps_mapman_item), "activate",
                       G_CALLBACK(menu_cb_maps_mapman), NULL);
     g_signal_connect(G_OBJECT(_menu_maps_auto_download_item), "toggled",

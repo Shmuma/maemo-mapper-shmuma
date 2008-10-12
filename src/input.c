@@ -436,6 +436,10 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
             _speed_limit_on ^= 1;
             break;
 
+        case CUSTOM_ACTION_TOGGLE_LAYERS:
+            maps_toggle_visible_layers ();
+            break;
+
         default:
             vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
             return FALSE;

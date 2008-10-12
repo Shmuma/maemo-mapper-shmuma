@@ -27,12 +27,14 @@
 void map_cache_init(size_t cache_size);
 size_t map_cache_resize(size_t cache_size);
 void map_cache_destroy(void);
+void map_cache_clean (void);
 
 gboolean mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley);
 GdkPixbuf* mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley);
 
 void set_repo_type(RepoData *repo);
 gboolean repo_set_curr(RepoData *rd);
+gboolean repo_is_layer (RepoData* base, RepoData* layer);
 
 gboolean mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex,
         gint tiley, gint update_type, gint batch_id, gint priority,
@@ -45,6 +47,15 @@ gboolean thread_proc_mut(void);
 
 gboolean repoman_dialog(void);
 
+gboolean repoman_download(void);
+
 gboolean mapman_dialog(void);
+
+gboolean map_layer_refresh_cb (gpointer data);
+
+void maps_toggle_visible_layers ();
+
+/* returns amount of seconds since tile downloaded */
+gint get_tile_age (GdkPixbuf* pixbuf);
 
 #endif /* ifndef MAEMO_MAPPER_MAPS_H */

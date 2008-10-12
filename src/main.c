@@ -203,6 +203,7 @@ maemo_mapper_destroy()
 
     if(_curr_repo->db)
     {
+        RepoData* repo_p;
 #ifdef MAPDB_SQLITE
         g_mutex_lock(_mapdb_mutex);
         sqlite3_close(_curr_repo->db);
@@ -210,8 +211,17 @@ maemo_mapper_destroy()
         g_mutex_unlock(_mapdb_mutex);
 #else
         g_mutex_lock(_mapdb_mutex);
-        gdbm_close(_curr_repo->db);
-        _curr_repo->db = NULL;
+        repo_p = _curr_repo;
+        while (repo_p) {
+            if (repo_p->db) {
+/*                 /\* perform reorganization for layers which are auto refreshed *\/ */
+/*                 if (repo_p->layer_level && repo_p->layer_refresh_interval) */
+/*                     gdbm_reorganize (repo_p->db); */
+                gdbm_close(repo_p->db);
+            }
+            repo_p->db = NULL;
+            repo_p = repo_p->layers;
+        }
         g_mutex_unlock(_mapdb_mutex);
 #endif
     }
@@ -333,6 +343,7 @@ maemo_mapper_init(gint argc, gchar **argv)
         = _("Toggle Speed Limit");
     CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_RESET_BLUETOOTH]
         = _("Reset Bluetooth");
+    CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_TOGGLE_LAYERS] = _("Toggle Layers");
 
     DEG_FORMAT_ENUM_TEXT[DDPDDDDD] = "-dd.ddddd°";
     DEG_FORMAT_ENUM_TEXT[DD_MMPMMM] = "-dd°mm.mmm'";

@@ -33,6 +33,7 @@
 #include <glib/gstdio.h>
 #include <fcntl.h>
 #include <locale.h>
+#include <time.h>
 
 #ifndef LEGACY
 #    include <hildon/hildon-help.h>
@@ -84,7 +85,33 @@ struct _RepoEditInfo {
     GtkWidget *num_min_zoom;
     GtkWidget *num_max_zoom;
     BrowseInfo browse_info;
+    RepoData *repo;
 };
+
+
+typedef struct _RepoLayersInfo RepoLayersInfo;
+struct _RepoLayersInfo {
+    GtkWidget *dialog;
+    GtkWidget *notebook;
+    GtkListStore *layers_store;
+    GtkWidget *layers_list;
+    GList *layer_edits;
+};
+
+
+typedef struct _LayerEditInfo LayerEditInfo;
+struct _LayerEditInfo {
+    RepoLayersInfo *rli;
+
+    GtkWidget *txt_name;
+    GtkWidget *txt_url;
+    GtkWidget *txt_db;
+    GtkWidget *num_autofetch;
+    GtkWidget *chk_visible;
+    GtkWidget *vbox;
+};
+
+
 
 typedef struct _MapmanInfo MapmanInfo;
 struct _MapmanInfo {
@@ -109,6 +136,7 @@ struct _MapmanInfo {
     /* The "Zoom" tab. */
     GtkWidget *chk_zoom_levels[MAX_ZOOM + 1];
 };
+
 
 typedef struct _CompactInfo CompactInfo;
 struct _CompactInfo {
@@ -159,6 +187,8 @@ struct _MapCache {
 };
 
 static MapCache _map_cache;
+
+const gchar* layer_timestamp_key = "tEXt::mm_ts";
 
 
 static guint
@@ -558,6 +588,17 @@ map_cache_destroy(void)
     }
     g_mutex_unlock(_mapdb_mutex);
 }
+
+
+void
+map_cache_clean (void)
+{
+    g_mutex_lock(_mapdb_mutex);
+    if(_map_cache.entries != NULL)
+        g_hash_table_remove_all (_map_cache.entries);
+    g_mutex_unlock(_mapdb_mutex);
+}
+
 
 gboolean
 mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
@@ -965,23 +1006,29 @@ repo_make_db(RepoData *rd)
 gboolean
 repo_set_curr(RepoData *rd)
 {
+    RepoData* repo_p;
+
     printf("%s()\n", __PRETTY_FUNCTION__);
     if(!rd->db_filename || !*rd->db_filename
             || repo_make_db(rd))
     {
-        if(_curr_repo)
+        repo_p = _curr_repo;
+
+        while (repo_p)
         {
-            if(_curr_repo->db)
+            if(repo_p->db)
             {
                 g_mutex_lock(_mapdb_mutex);
 #ifdef MAPDB_SQLITE
-                sqlite3_close(_curr_repo->db);
+                sqlite3_close(repo_p->db);
+                repo_p->db = NULL;
 #else
-                gdbm_close(_curr_repo->db);
+                gdbm_close(repo_p->db);
+                repo_p->db = NULL;
 #endif
-                _curr_repo->db = NULL;
                 g_mutex_unlock(_mapdb_mutex);
             }
+            repo_p = repo_p->layers;
         }
 
         /* Set the current repository! */
@@ -1089,8 +1136,16 @@ repo_set_curr(RepoData *rd)
                 popup_error(_window, buffer);
             }
 #else
-            _curr_repo->db = gdbm_open(_curr_repo->db_filename,
-                    0, GDBM_WRCREAT | GDBM_FAST, 0644, NULL);
+            /* initialize all databases for all layers */
+            repo_p = _curr_repo;
+            while (repo_p) {
+                if (repo_p->db_filename && *repo_p->db_filename
+                        && repo_make_db (repo_p))
+                    repo_p->db = gdbm_open(repo_p->db_filename,
+                            0, GDBM_WRCREAT | GDBM_FAST, 0644, NULL);
+                repo_p = repo_p->layers;
+            }
+
             if(!_curr_repo->db)
             {
                 gchar buffer[BUFFER_SIZE];
@@ -1120,6 +1175,24 @@ repo_set_curr(RepoData *rd)
         return FALSE;
     }
 }
+
+
+/**
+ * Returns true if:
+ * 1. base == layer, or
+ * 2. layer is sublayer of base
+ */
+gboolean repo_is_layer (RepoData* base, RepoData* layer)
+{
+    while (base) {
+        if (base == layer)
+            return TRUE;
+        base = base->layers;
+    }
+
+    return FALSE;
+}
+
 
 /**
  * Given a wms uri pattern, compute the coordinate transformation and
@@ -1328,6 +1401,7 @@ mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
     mut->tilex = tilex;
     mut->tiley = tiley;
     mut->update_type = update_type;
+    mut->layer_level = repo->layer_level;
 
     /* Lock the mutex if this is an auto-update. */
     if(update_type == MAP_UPDATE_AUTO)
@@ -1406,7 +1480,7 @@ thread_proc_mut()
     while(conic_ensure_connected())
     {
         gint retries;
-        gboolean refresh_sent = FALSE;
+        gboolean refresh_sent = FALSE, layer_tile;
         MapUpdateTask *mut = NULL;
 
         /* Get the next MUT from the mut tree. */
@@ -1426,7 +1500,9 @@ thread_proc_mut()
         printf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
                 mut->repo->name, mut->zoom, mut->tilex, mut->tiley);
 
-        if(mut->repo != _curr_repo)
+        layer_tile = mut->repo != _curr_repo && repo_is_layer (_curr_repo, mut->repo);
+
+        if (mut->repo != _curr_repo && !layer_tile)
         {
             /* Do nothing, except report that there is no error. */
             mut->vfs_result = GNOME_VFS_OK;
@@ -1441,7 +1517,7 @@ thread_proc_mut()
             /* Report that there is no error. */
             mut->vfs_result = GNOME_VFS_OK;
         }
-        else for(retries = INITIAL_DOWNLOAD_RETRIES; retries > 0; --retries)
+        else for(retries = mut->repo->layer_level ? 1 : INITIAL_DOWNLOAD_RETRIES; retries > 0; --retries)
         {
             gboolean exists = FALSE;
             gchar *src_url;
@@ -1518,6 +1594,24 @@ thread_proc_mut()
             }
             g_object_unref(loader);
 
+            /* attach timestamp with loaded pixbuf */
+            {
+                gchar* new_bytes;
+                gsize new_size;
+                GError* error = NULL;
+                char ts_val[12];
+
+                sprintf (ts_val, "%u", (unsigned int)time (NULL));
+
+                /* update bytes with new, timestamped pixbuf */
+                if (gdk_pixbuf_save_to_buffer (mut->pixbuf, &new_bytes, &new_size, "png", &error, layer_timestamp_key, ts_val, NULL))
+                {
+                    g_free (bytes);
+                    bytes = new_bytes;
+                    size = new_size;
+                }
+            }
+
             /* Copy database-relevant mut data before we release it. */
             repo = mut->repo;
             zoom = mut->zoom;
@@ -1587,7 +1681,7 @@ thread_proc_mut()
 guint
 mut_exists_hashfunc(const MapUpdateTask *a)
 {
-    gint sum = a->zoom + a->tilex + a->tiley + a->update_type;
+    gint sum = a->zoom + a->tilex + a->tiley + a->update_type + a->layer_level;
     return g_int_hash(&sum);
 }
 
@@ -1597,7 +1691,8 @@ mut_exists_equalfunc(const MapUpdateTask *a, const MapUpdateTask *b)
     return (a->tilex == b->tilex
             && a->tiley == b->tiley
             && a->zoom == b->zoom
-            && a->update_type == b->update_type);
+            && a->update_type == b->update_type
+            && a->layer_level == b->layer_level);
 }
 
 gint
@@ -1611,6 +1706,9 @@ mut_priority_comparefunc(const MapUpdateTask *a, const MapUpdateTask *b)
     if(diff)
         return diff;
     diff = (a->priority - b->priority); /* Lower priority numbers first. */
+    if(diff)
+        return diff;
+    diff = (a->layer_level - b->layer_level); /* Lower layers first. */
     if(diff)
         return diff;
 
@@ -2058,6 +2156,10 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
                     gtk_combo_box_get_model(GTK_COMBO_BOX(rmi->cmb_repos))),
                 NULL) - 1);
 
+    /* newly created repos keep this NULL in rei, indicating
+       that layes cannot be added so far */
+    rei->repo = NULL;
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return rei;
 }
@@ -2136,14 +2238,13 @@ repoman_reset(GtkWidget *widget, RepoManInfo *rmi)
     return TRUE;
 }
 
-static gboolean
-repoman_download(GtkWidget *widget, RepoManInfo *rmi)
+gboolean
+repoman_download()
 {
     GtkWidget *confirm;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    confirm = hildon_note_new_confirmation(
-            GTK_WINDOW(rmi->dialog),
+    confirm = hildon_note_new_confirmation(GTK_WINDOW(_window),
             _("Maemo Mapper will now download and add a list of "
                 "possibly-duplicate repositories from the internet.  "
                 "Continue?"));
@@ -2159,10 +2260,11 @@ repoman_download(GtkWidget *widget, RepoManInfo *rmi)
 
         /* Get repo config file from www.gnuite.com. */
         if(GNOME_VFS_OK != (vfs_result = gnome_vfs_read_entire_file(
-                    "http://www.gnuite.com/nokia770/maemo-mapper/repos.txt",
+                    "http://www.gnuite.com/nokia770/maemo-mapper/"
+                    "repos-with-layers.txt",
                     &size, &bytes)))
         {
-            popup_error(rmi->dialog,
+            popup_error(_window,
                     _("An error occurred while retrieving the repositories.  "
                         "The web service may be temporarily down."));
             g_printerr("Error while download repositories: %s\n",
@@ -2171,41 +2273,26 @@ repoman_download(GtkWidget *widget, RepoManInfo *rmi)
         /* Parse each line as a reposotory. */
         else
         {
+            RepoData *prev_repo = NULL;
+            menu_maps_remove_repos();
             for(head = bytes; head && *head; head = tail)
             {
-                gchar buffer[BUFFER_SIZE];
                 RepoData *rd;
-                RepoEditInfo *rei;
                 tail = strchr(head, '\n');
                 *tail++ = '\0';
 
                 rd = settings_parse_repo(head);
-                snprintf(buffer, sizeof(buffer), "%s.db", rd->db_filename);
-                rei = repoman_dialog_add_repo(
-                        rmi, g_strdup(rd->name));
-                /* Initialize fields with data from the RepoData object. */
-                gtk_entry_set_text(GTK_ENTRY(rei->txt_url), rd->url);
-                gtk_entry_set_text(GTK_ENTRY(rei->txt_db_filename), buffer);
-                hildon_controlbar_set_value(
-                        HILDON_CONTROLBAR(rei->num_dl_zoom_steps),
-                        rd->dl_zoom_steps);
-                hildon_controlbar_set_value(
-                        HILDON_CONTROLBAR(rei->num_view_zoom_steps),
-                        rd->view_zoom_steps);
-                gtk_toggle_button_set_active(
-                        GTK_TOGGLE_BUTTON(rei->chk_double_size),
-                        rd->double_size);
-                gtk_toggle_button_set_active(
-                        GTK_TOGGLE_BUTTON(rei->chk_nextable),
-                        rd->nextable);
-                hildon_number_editor_set_value(
-                        HILDON_NUMBER_EDITOR(rei->num_min_zoom),
-                        rd->min_zoom);
-                hildon_number_editor_set_value(
-                        HILDON_NUMBER_EDITOR(rei->num_max_zoom),
-                        rd->max_zoom);
+                if (rd->layer_level == 0) {
+                    _repo_list = g_list_append(_repo_list, rd);
+                }
+                else
+                    prev_repo->layers = rd;
+
+                prev_repo = rd;
             }
             g_free(bytes);
+            menu_maps_add_repos();
+            settings_save();
         }
     }
     gtk_widget_destroy(confirm);
@@ -2213,6 +2300,534 @@ repoman_download(GtkWidget *widget, RepoManInfo *rmi)
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
+
+
+static gint
+layer_get_page_index (RepoLayersInfo *rli, GtkTreeIter list_it)
+{
+    GtkTreePath *p1, *p2;
+    GtkTreeIter p;
+    gint index = 0;
+
+    gtk_tree_model_get_iter_first (GTK_TREE_MODEL (rli->layers_store), &p);
+
+    p1 = gtk_tree_model_get_path (GTK_TREE_MODEL (rli->layers_store), &list_it);
+    p2 = gtk_tree_model_get_path (GTK_TREE_MODEL (rli->layers_store), &p);
+
+    while (gtk_tree_path_compare (p1, p2) != 0) {
+        gtk_tree_path_next (p2);
+        index++;
+    }
+
+    gtk_tree_path_free (p1);
+    gtk_tree_path_free (p2);
+
+    return index;
+}
+
+
+static gboolean
+layer_name_changed (GtkWidget *entry, LayerEditInfo *lei)
+{
+    const gchar* name;
+    GtkTreeSelection *selection;
+    GtkTreeIter iter;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* take new name  */
+    name = gtk_entry_get_text (GTK_ENTRY (entry));
+
+    /* find selected entry in list view */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (lei->rli->layers_list));
+
+    if (!gtk_tree_selection_get_selected (selection, NULL, &iter)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    gtk_list_store_set (lei->rli->layers_store, &iter, 0, name, -1);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+static gboolean
+layer_dialog_browse (GtkWidget *widget, LayerEditInfo *lei)
+{
+    GtkWidget *dialog;
+    gchar *basename;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    dialog = GTK_WIDGET(
+            hildon_file_chooser_dialog_new(GTK_WINDOW(lei->rli->dialog),
+            GTK_FILE_CHOOSER_ACTION_SAVE));
+
+    gtk_file_chooser_set_uri(GTK_FILE_CHOOSER(dialog),
+            gtk_entry_get_text(GTK_ENTRY(lei->txt_db)));
+
+    /* Work around a bug in HildonFileChooserDialog. */
+    basename = g_path_get_basename(
+            gtk_entry_get_text(GTK_ENTRY(lei->txt_db)));
+    g_object_set(G_OBJECT(dialog), "autonaming", FALSE, NULL);
+    gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(dialog), basename);
+
+    if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        gchar *filename = gtk_file_chooser_get_filename(
+                GTK_FILE_CHOOSER(dialog));
+        gtk_entry_set_text(GTK_ENTRY(lei->txt_db), filename);
+        g_free(filename);
+    }
+
+    gtk_widget_destroy(dialog);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+
+static LayerEditInfo*
+repoman_layers_add_layer (RepoLayersInfo *rli, gchar* name)
+{
+    LayerEditInfo *lei = g_new (LayerEditInfo, 1);
+    GtkWidget *vbox;
+    GtkWidget *hbox2;
+    GtkWidget *table;
+    GtkWidget *label;
+    GtkWidget *btn_browse;
+    GtkTreeIter layers_iter;
+    
+    printf("%s(%s)\n", __PRETTY_FUNCTION__, name);
+
+    lei->rli = rli;
+
+    rli->layer_edits = g_list_append (rli->layer_edits, lei);
+
+    gtk_notebook_append_page (GTK_NOTEBOOK (rli->notebook), vbox = gtk_vbox_new (FALSE, 4),
+                              gtk_label_new (name));
+
+    gtk_box_pack_start (GTK_BOX (vbox), table = gtk_table_new (4, 2, FALSE),
+                        FALSE, FALSE, 0);
+
+    /* Layer name */
+    gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Name")),
+                      0, 1, 0, 1, GTK_FILL, 0, 2, 0);
+    gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
+    gtk_table_attach (GTK_TABLE (table), lei->txt_name = gtk_entry_new (),
+                      1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+    gtk_entry_set_text (GTK_ENTRY (lei->txt_name), name);
+
+    /* signals */
+    g_signal_connect(G_OBJECT(lei->txt_name), "changed", G_CALLBACK(layer_name_changed), lei);
+
+    /* URL format */
+    gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("URL")),
+                      0, 1, 1, 2, GTK_FILL, 0, 2, 0);
+    gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
+    gtk_table_attach (GTK_TABLE (table), lei->txt_url = gtk_entry_new (),
+                      1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+
+    /* Map directory */
+    gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Cache DB")),
+                      0, 1, 2, 3, GTK_FILL, 0, 2, 0);
+    gtk_misc_set_alignment (GTK_MISC (label), 1.f, 0.5f);
+    gtk_table_attach (GTK_TABLE (table), hbox2 = gtk_hbox_new (FALSE, 4),
+                      1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+    gtk_box_pack_start (GTK_BOX (hbox2), lei->txt_db = gtk_entry_new (),
+                        TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (hbox2), btn_browse = gtk_button_new_with_label (_("Browse...")),
+                        FALSE, FALSE, 0);
+
+    g_signal_connect(G_OBJECT(btn_browse), "clicked", G_CALLBACK(layer_dialog_browse), lei);
+
+    /* Autorefresh */
+    gtk_table_attach (GTK_TABLE (table), label = gtk_label_new (_("Autofetch")),
+                      0, 1, 3, 4, GTK_FILL, 0, 2, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+    gtk_table_attach (GTK_TABLE (table), hbox2 = gtk_hbox_new (FALSE, 4),
+                      1, 2, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 0);
+    gtk_box_pack_start (GTK_BOX (hbox2), lei->num_autofetch = hildon_number_editor_new (0, 120),
+                        FALSE, FALSE, 4);
+    gtk_box_pack_start (GTK_BOX (hbox2), label = gtk_label_new (_("min.")), FALSE, FALSE, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+    /* Visible */
+    gtk_box_pack_start (GTK_BOX (vbox), lei->chk_visible = gtk_check_button_new_with_label (_("Layer is visible")),
+                        FALSE, FALSE, 4);
+
+    gtk_widget_show_all (vbox);
+
+    /* Side list view with layers */
+    gtk_list_store_append (rli->layers_store, &layers_iter);
+    gtk_list_store_set (rli->layers_store, &layers_iter, 0, name, -1);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+
+    return lei;
+}
+
+
+
+static gboolean
+repoman_layers_new (GtkWidget *widget, RepoLayersInfo *rli)
+{
+    static GtkWidget *hbox = NULL;
+    static GtkWidget *label = NULL;
+    static GtkWidget *txt_name = NULL;
+    static GtkWidget *dialog = NULL;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(dialog == NULL)
+    {
+        dialog = gtk_dialog_new_with_buttons(_("New Layer"),
+                GTK_WINDOW(rli->dialog), GTK_DIALOG_MODAL,
+                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
+                NULL);
+
+        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+                hbox = gtk_hbox_new(FALSE, 4), FALSE, FALSE, 4);
+
+        gtk_box_pack_start(GTK_BOX(hbox),
+                label = gtk_label_new(_("Name")),
+                FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox),
+                txt_name = gtk_entry_new(),
+                TRUE, TRUE, 0);
+    }
+
+    gtk_entry_set_text(GTK_ENTRY(txt_name), "");
+
+    gtk_widget_show_all(dialog);
+
+    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    {
+        repoman_layers_add_layer(rli,
+                g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_name))));
+        break;
+    }
+
+    gtk_widget_hide(dialog);
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+static gboolean
+repoman_layers_del (GtkWidget *widget, RepoLayersInfo *rli)
+{
+    GtkTreeIter iter;
+    GtkTreeSelection *selection;
+    gint index;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* delete list item */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (rli->layers_list));
+
+    if (!gtk_tree_selection_get_selected (selection, NULL, &iter)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    index = layer_get_page_index (rli, iter);
+    gtk_list_store_remove (rli->layers_store, &iter);
+
+    rli->layer_edits = g_list_remove_link (rli->layer_edits, g_list_nth (rli->layer_edits, index));
+
+    /* delete notebook page */
+    gtk_notebook_remove_page (GTK_NOTEBOOK (rli->notebook), index);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+static gboolean
+repoman_layers_up (GtkWidget *widget, RepoLayersInfo *rli)
+{
+    GtkTreeSelection *selection;
+    GtkTreeIter iter, iter2;
+    GtkTreePath *path;
+    gint page;
+    LayerEditInfo *lei;
+    GList *list_elem;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* find selected entry in list view */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (rli->layers_list));
+
+    if (!gtk_tree_selection_get_selected (selection, NULL, &iter)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    iter2 = iter;
+    path = gtk_tree_model_get_path (GTK_TREE_MODEL (rli->layers_store), &iter);
+    if (!gtk_tree_path_prev (path) || !gtk_tree_model_get_iter (GTK_TREE_MODEL (rli->layers_store), &iter, path)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    gtk_tree_path_free (path);
+
+    /* move it up */
+    gtk_list_store_move_before (rli->layers_store, &iter2, &iter);
+
+    /* reorder notebook tabs */
+    page = gtk_notebook_get_current_page (GTK_NOTEBOOK (rli->notebook));
+    gtk_notebook_reorder_child (GTK_NOTEBOOK (rli->notebook), gtk_notebook_get_nth_page (GTK_NOTEBOOK (rli->notebook), page), page-1);
+
+    /* reorder layer edits */
+    list_elem = g_list_nth (rli->layer_edits, page);
+    lei = list_elem->data;
+    rli->layer_edits = g_list_remove_link (rli->layer_edits, list_elem);
+    rli->layer_edits = g_list_insert (rli->layer_edits, lei, page-1);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+static gboolean
+repoman_layers_dn (GtkWidget *widget, RepoLayersInfo *rli)
+{
+    GtkTreeSelection *selection;
+    GtkTreeIter iter, iter2;
+    gint page;
+    LayerEditInfo *lei;
+    GList *list_elem;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* find selected entry in list view */
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (rli->layers_list));
+
+    if (!gtk_tree_selection_get_selected (selection, NULL, &iter)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    iter2 = iter;
+    if (!gtk_tree_model_iter_next (GTK_TREE_MODEL (rli->layers_store), &iter)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    /* move it down */
+    gtk_list_store_move_after (rli->layers_store, &iter2, &iter);
+
+    /* reorder notebook tabs */
+    page = gtk_notebook_get_current_page (GTK_NOTEBOOK (rli->notebook));
+    gtk_notebook_reorder_child (GTK_NOTEBOOK (rli->notebook), gtk_notebook_get_nth_page (GTK_NOTEBOOK (rli->notebook), page), page+1);
+
+    /* reorder layer edits */
+    list_elem = g_list_nth (rli->layer_edits, page);
+    lei = list_elem->data;
+    rli->layer_edits = g_list_remove_link (rli->layer_edits, list_elem);
+    rli->layer_edits = g_list_insert (rli->layer_edits, lei, page+1);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+static gboolean
+repoman_layer_selected (GtkTreeSelection *selection, RepoLayersInfo *rli)
+{
+    GtkTreeIter cur;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if (!gtk_tree_selection_get_selected (selection, NULL, &cur)) {
+        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    gtk_notebook_set_current_page (GTK_NOTEBOOK (rli->notebook), layer_get_page_index (rli, cur));
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+static gboolean
+repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
+{
+    GtkWidget *hbox = NULL;
+    GtkWidget *layers_vbox = NULL;
+    GtkWidget *buttons_hbox = NULL;
+    GtkWidget *frame;
+    GtkCellRenderer *layers_rendeder = NULL;
+    GtkTreeViewColumn *layers_column = NULL;
+    GtkTreeSelection *selection;
+
+    /* layers buttons */
+    GtkWidget *btn_new = NULL;
+    GtkWidget *btn_del = NULL;
+    GtkWidget *btn_up = NULL;
+    GtkWidget *btn_dn = NULL;
+
+    const char* t_header = _("Manage layers [%s]");
+    char* header = NULL;
+    RepoEditInfo* rei = NULL;
+    RepoLayersInfo rli;
+    gint curr_repo_index = gtk_combo_box_get_active (GTK_COMBO_BOX (rmi->cmb_repos));
+    RepoData *rd;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if (curr_repo_index < 0) {
+        vprintf("%s(): return FALSE (1)\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    rei = g_list_nth_data (rmi->repo_edits, curr_repo_index);
+
+    if (!rei) {
+        vprintf("%s(): return FALSE (2)\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    /* check that rei have repo data structure. If it haven't, it means that repository have just
+       added, so report about this */
+    if (!rei->repo) {
+        GtkWidget *msg = hildon_note_new_information ( GTK_WINDOW (rmi->dialog),
+                           _("You cannot add layers to not saved repository,\nsorry. So, press ok in repository manager\n"
+                             "and open this dialog again."));
+
+        gtk_dialog_run (GTK_DIALOG (msg));
+        gtk_widget_destroy (msg);
+
+        vprintf("%s(): return FALSE (3)\n", __PRETTY_FUNCTION__);
+        return FALSE;
+    }
+
+    header = g_malloc (strlen (t_header) + strlen (rei->name));
+    sprintf (header, t_header, rei->name);
+
+    printf ("Creating dialog with header: %s\n", header);
+
+    rli.layer_edits = NULL;
+    rli.dialog = gtk_dialog_new_with_buttons (header, GTK_WINDOW (rmi->dialog), GTK_DIALOG_MODAL, 
+                                              GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                              GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT, NULL);
+
+    rli.layers_store = gtk_list_store_new (1, G_TYPE_STRING);
+    rli.layers_list = gtk_tree_view_new_with_model (GTK_TREE_MODEL (rli.layers_store));
+    layers_rendeder = gtk_cell_renderer_text_new ();
+    layers_column = gtk_tree_view_column_new_with_attributes ("Column", layers_rendeder, "text", 0, NULL);
+    gtk_tree_view_append_column (GTK_TREE_VIEW (rli.layers_list), layers_column);
+
+    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (rli.layers_list));
+
+    frame = gtk_frame_new (NULL);
+    gtk_container_add (GTK_CONTAINER (frame), rli.layers_list);
+    gtk_widget_set_size_request (frame, -1, 100);
+
+    /* beside layers list with have buttons on bottom */
+    layers_vbox = gtk_vbox_new (FALSE, 4);
+    gtk_box_pack_start (GTK_BOX (layers_vbox), frame, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (layers_vbox), buttons_hbox = gtk_hbox_new (FALSE, 4), FALSE, FALSE, 0);
+
+    /* buttons */
+    gtk_box_pack_start (GTK_BOX (buttons_hbox), btn_new = gtk_button_new_with_label (_("New")), FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (buttons_hbox), btn_del = gtk_button_new_with_label (_("Del")), FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (buttons_hbox), btn_up  = gtk_button_new_with_label (_("Up")), FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (buttons_hbox), btn_dn  = gtk_button_new_with_label (_("Dn")), FALSE, FALSE, 0);
+
+    /* signals */
+    g_signal_connect(G_OBJECT(selection), "changed", G_CALLBACK(repoman_layer_selected), &rli);
+    g_signal_connect(G_OBJECT(btn_new), "clicked", G_CALLBACK(repoman_layers_new), &rli);
+    g_signal_connect(G_OBJECT(btn_del), "clicked", G_CALLBACK(repoman_layers_del), &rli);
+    g_signal_connect(G_OBJECT(btn_up),  "clicked", G_CALLBACK(repoman_layers_up), &rli);
+    g_signal_connect(G_OBJECT(btn_dn),  "clicked", G_CALLBACK(repoman_layers_dn), &rli);
+
+    /* notebook with layers' attributes */
+    rli.notebook = gtk_notebook_new ();
+
+    gtk_notebook_set_show_tabs(GTK_NOTEBOOK(rli.notebook), FALSE);
+    gtk_notebook_set_show_border(GTK_NOTEBOOK(rli.notebook), FALSE);
+
+    /* walk through all layers and add notebook pages */
+    rd = rei->repo->layers;
+    while (rd) {
+        LayerEditInfo *lei = repoman_layers_add_layer (&rli, rd->name);
+
+        gtk_entry_set_text (GTK_ENTRY (lei->txt_url),  rd->url);
+        gtk_entry_set_text (GTK_ENTRY (lei->txt_db),   rd->db_filename);
+        hildon_number_editor_set_value (HILDON_NUMBER_EDITOR (lei->num_autofetch), rd->layer_refresh_interval);
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (lei->chk_visible), rd->layer_enabled);
+
+        rd = rd->layers;
+    }
+
+    /* pack all widgets together */
+    hbox = gtk_hbox_new (FALSE, 4);
+
+    gtk_box_pack_start (GTK_BOX (hbox), layers_vbox, TRUE, TRUE, 4);
+    gtk_box_pack_start (GTK_BOX (hbox), rli.notebook, TRUE, TRUE, 4);
+
+    gtk_box_pack_start (GTK_BOX (GTK_DIALOG (rli.dialog)->vbox), hbox, FALSE, FALSE, 4);
+
+    gtk_widget_show_all (rli.dialog);
+
+    while (GTK_RESPONSE_ACCEPT == gtk_dialog_run (GTK_DIALOG (rli.dialog)))
+    {
+        RepoData **rdp;
+        gint i;
+        GList *curr;
+
+        menu_layers_remove_repos ();
+
+        /* iterate over notebook's pages and build layers */
+        /* keep list in memory in case downloads use it (TODO: reference counting) */
+        rdp = &rei->repo->layers;
+        *rdp = NULL;
+
+        for (i = 0, curr = rli.layer_edits; curr; curr = curr->next, i++)  {
+            LayerEditInfo *lei = curr->data;
+
+            rd = g_new0 (RepoData, 1);
+            *rdp = rd;
+
+            rd->name = g_strdup (gtk_entry_get_text (GTK_ENTRY (lei->txt_name)));
+            rd->url = g_strdup (gtk_entry_get_text (GTK_ENTRY (lei->txt_url)));
+            rd->db_filename = g_strdup (gtk_entry_get_text (GTK_ENTRY (lei->txt_db)));
+            rd->layer_enabled = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (lei->chk_visible));
+            rd->layer_refresh_interval = hildon_number_editor_get_value (HILDON_NUMBER_EDITOR (lei->num_autofetch));
+            rd->layer_refresh_countdown = rd->layer_refresh_interval;
+            rd->layer_level = i+1;
+
+            rd->dl_zoom_steps = rei->repo->dl_zoom_steps;
+            rd->view_zoom_steps = rei->repo->view_zoom_steps;
+            rd->double_size = rei->repo->double_size;
+            rd->nextable = rei->repo->nextable;
+            rd->min_zoom = rei->repo->min_zoom;
+            rd->max_zoom = rei->repo->max_zoom;
+
+            set_repo_type (rd);
+            rdp = &rd->layers;
+        }
+
+        menu_layers_add_repos ();
+        repo_set_curr(_curr_repo);
+        settings_save ();
+        map_cache_clean ();
+        map_refresh_mark (TRUE);
+        break;
+    }
+
+    gtk_widget_destroy (rli.dialog);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
 
 gboolean
 repoman_dialog()
@@ -2224,7 +2839,7 @@ repoman_dialog()
     static GtkWidget *btn_delete = NULL;
     static GtkWidget *btn_new = NULL;
     static GtkWidget *btn_reset = NULL;
-    static GtkWidget *btn_download = NULL;
+    static GtkWidget *btn_layers = NULL;
     gint i, curr_repo_index = 0;
     GList *curr;
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -2251,11 +2866,11 @@ repoman_dialog()
         g_signal_connect(G_OBJECT(btn_reset), "clicked",
                           G_CALLBACK(repoman_reset), &rmi);
 
-        /* Download button. */
+        /* Layers button. */
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
-                btn_download = gtk_button_new_with_label(_("Download...")));
-        g_signal_connect(G_OBJECT(btn_download), "clicked",
-                          G_CALLBACK(repoman_download), &rmi);
+                btn_layers = gtk_button_new_with_label(_("Layers...")));
+        g_signal_connect(G_OBJECT(btn_layers), "clicked",
+                          G_CALLBACK(repoman_layers), &rmi);
 
         /* Cancel button. */
         gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -2307,6 +2922,9 @@ repoman_dialog()
     {
         RepoData *rd = (RepoData*)curr->data;
         RepoEditInfo *rei = repoman_dialog_add_repo(&rmi, g_strdup(rd->name));
+
+        /* store this to be able to walk through layers attached to repo */
+        rei->repo = rd;
 
         /* Initialize fields with data from the RepoData object. */
         gtk_entry_set_text(GTK_ENTRY(rei->txt_url), rd->url);
@@ -2381,7 +2999,8 @@ repoman_dialog()
         for(i = 0, curr = rmi.repo_edits; curr; curr = curr->next, i++)
         {
             RepoEditInfo *rei = curr->data;
-            RepoData *rd = g_new(RepoData, 1);
+            RepoData *rd = g_new0(RepoData, 1);
+            RepoData *rd0, **rd1;
             rd->name = g_strdup(rei->name);
             rd->url = g_strdup(gtk_entry_get_text(GTK_ENTRY(rei->txt_url)));
             rd->db_filename = gnome_vfs_expand_initial_tilde(
@@ -2398,6 +3017,40 @@ repoman_dialog()
                     HILDON_NUMBER_EDITOR(rei->num_min_zoom));
             rd->max_zoom = hildon_number_editor_get_value(
                     HILDON_NUMBER_EDITOR(rei->num_max_zoom));
+
+            if (rei->repo) {
+                /* clone layers */
+                rd0 = rei->repo->layers;
+                rd1 = &rd->layers;
+
+                while (rd0) {
+                    *rd1 = g_new0 (RepoData, 1);
+                    (*rd1)->name = rd0->name;
+                    (*rd1)->url = rd0->url;
+                    (*rd1)->db_filename = rd0->db_filename;
+                    (*rd1)->layer_enabled = rd0->layer_enabled;
+                    (*rd1)->layer_refresh_interval = rd0->layer_refresh_interval;
+                    (*rd1)->layer_refresh_countdown = rd0->layer_refresh_countdown;
+                    (*rd1)->layer_level = rd0->layer_level;
+
+                    (*rd1)->dl_zoom_steps = rd0->dl_zoom_steps;
+                    (*rd1)->view_zoom_steps = rd0->view_zoom_steps;
+                    (*rd1)->double_size = rd0->double_size;
+                    (*rd1)->nextable = rd0->nextable;
+                    (*rd1)->min_zoom = rd0->min_zoom;
+                    (*rd1)->max_zoom = rd0->max_zoom;
+
+                    set_repo_type (*rd1);
+
+                    rd0 = rd0->layers;
+                    rd1 = &(*rd1)->layers;
+                }
+                *rd1 = NULL;
+            }
+            else
+                rd->layers = NULL;
+
+            rd->layer_level = 0;
             set_repo_type(rd);
 
             _repo_list = g_list_append(_repo_list, rd);
@@ -2422,6 +3075,7 @@ repoman_dialog()
         repoman_delete(&rmi, 0);
 
     map_set_zoom(_zoom); /* make sure we're at an appropriate zoom level. */
+    map_refresh_mark (TRUE);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -2516,11 +3170,17 @@ mapman_by_area(gdouble start_lat, gdouble start_lon,
                     if((unsigned)tilex < unit2ztile(WORLD_SIZE_UNITS, z)
                       && (unsigned)tiley < unit2ztile(WORLD_SIZE_UNITS, z))
                     {
-                        mapdb_initiate_update(_curr_repo, z, tilex, tiley,
-                                update_type, download_batch_id,
-                                (abs(tilex - unit2tile(_next_center.unitx))
-                                 + abs(tiley - unit2tile(_next_center.unity))),
-                                NULL);
+                        RepoData* rd = _curr_repo;
+
+                        while (rd) {
+                            if (rd == _curr_repo || (rd->layer_enabled && rd->db))
+                                mapdb_initiate_update(rd, z, tilex, tiley,
+                                                      update_type, download_batch_id,
+                                                      (abs(tilex - unit2tile(_next_center.unitx))
+                                                       + abs(tiley - unit2tile(_next_center.unity))),
+                                                      NULL);
+                            rd = rd->layers;
+                        }
                     }
                 }
             }
@@ -3127,3 +3787,101 @@ mapman_dialog()
     return TRUE;
 }
 
+
+/* changes visibility of current repo's layers to it's previous state */
+void maps_toggle_visible_layers ()
+{
+    RepoData *rd = _curr_repo;
+    gboolean changed = FALSE;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if (!rd) {
+        vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+        return;
+    }
+
+    rd = rd->layers;
+
+    while (rd) {
+        if (rd->layer_enabled) {
+            changed = TRUE;
+            rd->layer_was_enabled = rd->layer_enabled;
+            rd->layer_enabled = FALSE;
+        }
+        else {
+            rd->layer_enabled = rd->layer_was_enabled;
+            if (rd->layer_was_enabled)
+                changed = TRUE;
+        }
+
+        rd = rd->layers;
+    }
+
+    /* redraw map */
+    if (changed) {
+        menu_layers_remove_repos ();
+        menu_layers_add_repos ();
+        map_cache_clean ();
+        map_refresh_mark (TRUE);
+    }
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+
+
+/* this routine fired by timer every minute and decrements refetch counter of every active layer of
+   current repository. If one of layer is expired, it forces map redraw. Redraw routine checks every
+   layer's tile download timestamp and desides performs refetch if needed */
+gboolean
+map_layer_refresh_cb (gpointer data)
+{
+    RepoData* rd = _curr_repo;
+    gboolean refresh = FALSE;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if (rd) {
+        rd = rd->layers;
+
+        while (rd) {
+            if (rd->layer_enabled && rd->layer_refresh_interval) {
+                rd->layer_refresh_countdown--;
+                if (rd->layer_refresh_countdown <= 0) {
+                    rd->layer_refresh_countdown = rd->layer_refresh_interval;
+                    refresh = TRUE;
+                }
+            }
+
+            rd = rd->layers;
+        }
+    }
+
+    if (refresh)
+        map_refresh_mark (TRUE);
+
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
+}
+
+
+
+/*
+   Returns amount of seconds since tile downloaded or 0 if tile
+   have no such information.
+*/
+gint get_tile_age (GdkPixbuf* pixbuf)
+{
+    const char* ts;
+    guint val;
+
+    ts = gdk_pixbuf_get_option (pixbuf, layer_timestamp_key);
+
+    if (!ts)
+        return 0;
+
+    if (sscanf (ts, "%u", &val))
+        return time (NULL) - val;
+    else
+        return 0;
+}

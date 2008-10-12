@@ -1420,7 +1420,7 @@ map_download_refresh_idle(MapUpdateTask *mut)
             mut->zoom, mut->tilex, mut->tiley);
 
     /* Test if download succeeded (only if retries != 0). */
-    if(mut->pixbuf && mut->repo == _curr_repo)
+    if(mut->pixbuf)
     {
         gint zoff = mut->zoom - _zoom;
         /* Update the UI to reflect the updated map database. */
@@ -1496,13 +1496,16 @@ map_download_refresh_idle(MapUpdateTask *mut)
 #endif
         if(_dl_errors)
         {
-            gchar buffer[BUFFER_SIZE];
-            snprintf(buffer, sizeof(buffer), "%d %s", _dl_errors,
-                    _("maps failed to download."));
-            MACRO_BANNER_SHOW_INFO(_window, buffer);
+            if (mut->repo->layer_level == 0) {
+                gchar buffer[BUFFER_SIZE];
+                snprintf(buffer, sizeof(buffer), "%d %s", _dl_errors,
+                         _("maps failed to download."));
+                MACRO_BANNER_SHOW_INFO(_window, buffer);
+            }
             _dl_errors = 0;
         }
-        else if(mut->update_type != MAP_UPDATE_AUTO)
+
+        if(mut->update_type != MAP_UPDATE_AUTO || _refresh_map_after_download)
         {
             /* Update the map. */
             map_refresh_mark(TRUE);
@@ -1598,6 +1601,64 @@ map_replace_pixbuf_idle(MapRenderTask *mrt)
     vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
     return FALSE;
 }
+
+
+/* Routine draws one partly-transparent pixbuf on top of the another (base map). For efficiency, we
+   assume that base map's tile have no transparent pixels (because it should not have them). We also
+   assume that pixbufs are have the same size. */
+static void
+combine_tiles (GdkPixbuf *dst_pixbuf, GdkPixbuf *src_pixbuf)
+{
+    gint s_n_channels = gdk_pixbuf_get_n_channels (src_pixbuf);
+    gint d_n_channels = gdk_pixbuf_get_n_channels (dst_pixbuf);
+    gint bps = gdk_pixbuf_get_bits_per_sample (dst_pixbuf);
+    gint width, height, x, y, d_delta, s_delta;
+    guchar *d_p, *s_p;
+
+    if (gdk_pixbuf_get_colorspace (dst_pixbuf) != gdk_pixbuf_get_colorspace (src_pixbuf)) {
+        printf ("combine return (1)\n");
+        return;
+    }
+    if (gdk_pixbuf_get_colorspace (dst_pixbuf) != GDK_COLORSPACE_RGB) {
+        printf ("combine return (2)\n");
+        return;
+    }
+
+    if (bps != gdk_pixbuf_get_bits_per_sample (src_pixbuf)) {
+        printf ("combine return (5)\n");
+        return;
+    }
+
+    width = gdk_pixbuf_get_width (dst_pixbuf);
+    height = gdk_pixbuf_get_height (dst_pixbuf);
+
+    if (width != gdk_pixbuf_get_width (src_pixbuf)) {
+        printf ("combine return (6)\n");
+        return;
+    }
+    if (height != gdk_pixbuf_get_height (src_pixbuf)) {
+        printf ("combine return (7)\n");
+        return;
+    }
+
+    s_delta = (bps >> 3) * s_n_channels;
+    d_delta = (bps >> 3) * d_n_channels;
+    d_p = gdk_pixbuf_get_pixels (dst_pixbuf);
+    s_p = gdk_pixbuf_get_pixels (src_pixbuf);
+
+    /* ok, we're ready to combine */
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++, d_p += d_delta, s_p += s_delta) {
+            /* TODO: alpha blending? */
+            if (s_n_channels == 3 || s_p[3]) {
+                d_p[0] = s_p[0];
+                d_p[1] = s_p[1];
+                d_p[2] = s_p[2];
+            }
+        }
+    }
+}
+
 
 gboolean
 thread_render_map(MapRenderTask *mrt)
@@ -1716,6 +1777,7 @@ thread_render_map(MapRenderTask *mrt)
 
     mrt->pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
             mrt->screen_width_pixels, mrt->screen_height_pixels);
+    _refresh_map_after_download = FALSE;
 
     /* Iterate through the tiles, get them (or queue a download if they're
      * not in the cache), and rotate them into the pixbuf. */
@@ -1724,93 +1786,145 @@ thread_render_map(MapRenderTask *mrt)
         gint tiley = y + start_tiley;
         for(x = 0; x < num_tilex; ++x)
         {
-            GdkPixbuf *tile_pixbuf = NULL;
+            GdkPixbuf *tile_pixbuf = NULL, *layer_pixbuf = NULL;
             gboolean started_download = FALSE;
-            gint zoff;
+            gint zoff, zoff_base;
             gint tilex;
+            RepoData* repo_p = mrt->repo;
 
             tilex = x + start_tilex;
+            zoff_base = mrt->repo->double_size ? 1 : 0;
 
-            zoff = mrt->repo->double_size ? 1 : 0;
-
-            /* Iteratively try to retrieve a map to draw the tile. */
-            while((mrt->zoom + zoff) <= MAX_ZOOM && zoff < TILE_SIZE_P2)
+            /* iterating over tile and all it's layers */
+            while (repo_p)
             {
-                /* Check if we're actually going to draw this map. */
-                if(tile_dev[2 * (y*num_tilex + x)] != FLT_MAX)
+                started_download = FALSE;
+
+                /* for layers we must use resolution of underlying map */
+                zoff = zoff_base;
+
+                /* if this is not a bottom layer and layer not enabled, skip it */
+                if (repo_p != mrt->repo && !repo_p->layer_enabled)
                 {
-                    if(NULL != (tile_pixbuf = mapdb_get(
-                                    mrt->repo, mrt->zoom + zoff,
-                                    tilex >> zoff,
-                                    tiley >> zoff)))
+                    repo_p = repo_p->layers;
+                    continue;
+                }
+
+                /* Iteratively try to retrieve a map to draw the tile. */
+                while((mrt->zoom + zoff) <= MAX_ZOOM && zoff < TILE_SIZE_P2)
+                {
+                    /* Check if we're actually going to draw this map. */
+                    if(tile_dev[2 * (y*num_tilex + x)] != FLT_MAX)
                     {
-                        /* Found a map. */
+                        if(NULL != (layer_pixbuf = mapdb_get(
+                                        repo_p, mrt->zoom + zoff,
+                                        tilex >> zoff,
+                                        tiley >> zoff)))
+                        {
+                            /* Found a map. Check for it's age. */
+                            gint age = get_tile_age (layer_pixbuf);
+                            printf ("Tile age (%d)\n", age);
+
+                            /* throw away tile only if we can download something */
+                            if (!repo_p->layer_refresh_interval ||
+                                age < repo_p->layer_refresh_interval * 60 ||
+                                !_auto_download)
+                            {
+                                /* if this is a layer's tile, join with main tile */
+                                if (repo_p != mrt->repo)
+                                {
+                                    /* but only if main layer is exists */
+                                    if (tile_pixbuf)
+                                        combine_tiles (tile_pixbuf, layer_pixbuf);
+                                    g_object_unref (layer_pixbuf);
+                                }
+                                else {
+                                    tile_pixbuf = layer_pixbuf;
+                                    zoff_base = zoff;
+                                }
+                                break;
+                            }
+                            else
+                                g_object_unref (layer_pixbuf);
+                        }
+                        else
+                            if (repo_p->layers)
+                                _refresh_map_after_download = TRUE;
+                    }
+                    /* Else we're not going to be drawing this map, so just check
+                     * if it's in the database. */
+                    else if(mapdb_exists(
+                                        repo_p, mrt->zoom + zoff,
+                                        tilex >> zoff,
+                                        tiley >> zoff))
+                    {
+                        zoff_base = zoff;
                         break;
                     }
-                }
-                /* Else we're not going to be drawing this map, so just check
-                 * if it's in the database. */
-                else if(mapdb_exists(
-                                    mrt->repo, mrt->zoom + zoff,
-                                    tilex >> zoff,
-                                    tiley >> zoff))
-                {
-                    break;
-                }
 
-                /* No map; download, if we should. */
-                if(!started_download && _auto_download
-                        && mrt->repo->type != REPOTYPE_NONE
-                        /* Make sure this map is within dl zoom limits. */
-                        && ((unsigned)(mrt->zoom + zoff - mrt->repo->min_zoom)
-                            <= (mrt->repo->max_zoom - mrt->repo->min_zoom))
-                        /* Make sure this map matches the dl_zoom_steps,
-                         * or that there currently is no cache. */
-                        && (!mrt->repo->db || !((mrt->zoom + zoff
-                                    - (mrt->repo->double_size ? 1 : 0))
-                                % mrt->repo->dl_zoom_steps))
-                    /* Make sure this tile is even possible. */
-                    && ((unsigned)(tilex >> zoff)
-                            < unit2ztile(WORLD_SIZE_UNITS, mrt->zoom + zoff)
-                      && (unsigned)(tiley >> zoff)
-                            < unit2ztile(WORLD_SIZE_UNITS, mrt->zoom + zoff)))
-                {
-                    started_download = TRUE;
-
-                    if(!refresh_latch)
+                    /* No map; download, if we should. */
+                    if(!started_download && _auto_download
+                       && mrt->repo->type != REPOTYPE_NONE
+                       /* Make sure this map is within dl zoom limits. */
+                       && ((unsigned)(mrt->zoom + zoff - mrt->repo->min_zoom)
+                           <= (mrt->repo->max_zoom - mrt->repo->min_zoom))
+                       /* Make sure this map matches the dl_zoom_steps,
+                        * or that there currently is no cache. */
+                       && (!repo_p->db || !((mrt->zoom + zoff
+                                             - (mrt->repo->double_size ? 1 : 0))
+                                            % mrt->repo->dl_zoom_steps))
+                       /* Make sure this tile is even possible. */
+                       && ((unsigned)(tilex >> zoff)
+                           < unit2ztile(WORLD_SIZE_UNITS, mrt->zoom + zoff)
+                           && (unsigned)(tiley >> zoff)
+                           < unit2ztile(WORLD_SIZE_UNITS, mrt->zoom + zoff)))
                     {
-                        refresh_latch = g_slice_new(ThreadLatch);
-                        refresh_latch->is_open = FALSE;
-                        refresh_latch->is_done_adding_tasks = FALSE;
-                        refresh_latch->num_tasks = 1;
-                        refresh_latch->num_done = 0;
-                        refresh_latch->mutex = g_mutex_new();
-                        refresh_latch->cond = g_cond_new();
-                    }
-                    else
-                        ++refresh_latch->num_tasks;
+                        started_download = TRUE;
 
-                    mapdb_initiate_update(
-                            mrt->repo,
-                            mrt->zoom + zoff,
-                            tilex >> zoff,
-                            tiley >> zoff,
-                            MAP_UPDATE_AUTO,
-                            auto_download_batch_id,
-                            (abs((tilex >> zoff) - unit2ztile(
+                        if(!refresh_latch)
+                        {
+                            refresh_latch = g_slice_new(ThreadLatch);
+                            refresh_latch->is_open = FALSE;
+                            refresh_latch->is_done_adding_tasks = FALSE;
+                            refresh_latch->num_tasks = 1;
+                            refresh_latch->num_done = 0;
+                            refresh_latch->mutex = g_mutex_new();
+                            refresh_latch->cond = g_cond_new();
+                        }
+                        else
+                            ++refresh_latch->num_tasks;
+
+                        mapdb_initiate_update(
+                                repo_p,
+                                mrt->zoom + zoff,
+                                tilex >> zoff,
+                                tiley >> zoff,
+                                MAP_UPDATE_AUTO,
+                                auto_download_batch_id,
+                                (abs((tilex >> zoff) - unit2ztile(
                                      mrt->new_center.unitx, mrt->zoom + zoff))
-                             + abs((tiley >> zoff) - unit2ztile(
-                                    mrt->new_center.unity, mrt->zoom + zoff))),
-                            refresh_latch);
+                                 + abs((tiley >> zoff) - unit2ztile(
+                                     mrt->new_center.unity, mrt->zoom + zoff))),
+                                refresh_latch);
+                    }
+
+                    /* Try again at a coarser resolution. Only for underlying map.*/
+                    if (repo_p == mrt->repo)
+                        ++zoff;
+                    else
+                        break;
                 }
 
-                /* Try again at a coarser resolution. */
-                ++zoff;
+                repo_p = repo_p->layers;
             }
+
+            /* use zoom of the base map */
+            zoff = zoff_base;
 
             if(tile_pixbuf)
             {
                 gint boundx, boundy, width, height;
+
                 if(zoff)
                     gdk_pixbuf_rotate_matrix_mult_number(matrix, 1 << zoff);
                 gdk_pixbuf_rotate(mrt->pixbuf,

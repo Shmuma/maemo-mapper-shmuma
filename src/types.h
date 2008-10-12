@@ -192,6 +192,7 @@ typedef enum
     CUSTOM_ACTION_TOGGLE_GPSINFO,
     CUSTOM_ACTION_TOGGLE_SPEEDLIMIT,
     CUSTOM_ACTION_RESET_BLUETOOTH,
+    CUSTOM_ACTION_TOGGLE_LAYERS,
     CUSTOM_ACTION_ENUM_COUNT
 } CustomAction;
 
@@ -319,6 +320,12 @@ struct _RepoData {
     gint min_zoom;
     gint max_zoom;
     RepoType type;
+    RepoData *layers;
+    gint8 layer_level;
+    gboolean layer_enabled;
+    gboolean layer_was_enabled; /* needed for ability to temporarily toggle layers on and off */
+    gint layer_refresh_interval;
+    gint layer_refresh_countdown;
 #ifdef MAPDB_SQLITE
     sqlite3 *db;
     sqlite3_stmt *stmt_map_select;
@@ -421,6 +428,7 @@ struct _MapUpdateTask
     gint8 zoom;
     gint8 vfs_result;
     gint8 batch_id;
+    gint8 layer_level;
 };
 
 /** Data used during the asynchronous automatic route downloading operation. */

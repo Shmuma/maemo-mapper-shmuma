@@ -137,6 +137,7 @@ extern GTree *_mut_priority_tree;
 extern GMutex *_mut_priority_mutex;
 extern GThreadPool *_mut_thread_pool;
 extern GThreadPool *_mrt_thread_pool;
+extern gboolean _refresh_map_after_download;
 
 /** CONFIGURATION INFORMATION. */
 extern GpsRcvrInfo _gri;
@@ -227,9 +228,11 @@ extern GtkWidget *_menu_poi_categories_item;
 
 /* Menu items for the "Maps" submenu. */
 extern GtkWidget *_menu_maps_submenu;
+extern GtkWidget *_menu_layers_submenu;
 extern GtkWidget *_menu_maps_mapman_item;
-extern GtkWidget *_menu_maps_repoman_item;
 extern GtkWidget *_menu_maps_auto_download_item;
+extern GtkWidget *_menu_maps_repoman_item;
+extern GtkWidget *_menu_maps_repodown_item;
 
 /* Menu items for the "View" submenu. */
 extern GtkWidget *_menu_view_zoom_in_item;
