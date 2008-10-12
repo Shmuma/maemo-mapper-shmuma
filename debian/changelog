@@ -1,3 +1,12 @@
+maemo-mapper (2.5) unstable; urgency=low
+
+  * Added support for layered maps.  This support is still very
+    experimental, and the potential for crashes is rather large.  Still,
+    there is demand for it, so I'm posting it early.  By default, layers are
+    disabled, so it should not affect normal users.
+
+ -- John Costigan <gnuite@gmail.com>  Sat, 11 Oct 2008 22:00:00 -0700
+
 maemo-mapper (2.4.2) unstable; urgency=low
 
   * Made compatible with new Debian autobuilder architecture.
