@@ -543,10 +543,9 @@ map_cache_remove(RepoData *repo, gint zoom, gint tilex, gint tiley)
     g_hash_table_remove(_map_cache.entries, &key);
 }
 
-void
-map_cache_init(size_t cache_size)
+static void
+map_cache_init_unlocked(size_t cache_size)
 {
-    g_mutex_lock(_mapdb_mutex);
     if(_map_cache.entries == NULL)
         _map_cache.entries = g_hash_table_new_full(map_cache_key_hash,
          map_cache_key_equal, NULL, (GDestroyNotify)map_cache_entry_free);
@@ -554,6 +553,13 @@ map_cache_init(size_t cache_size)
     if(_map_cache.p > cache_size)
         _map_cache.p = cache_size;
     map_cache_evict(0);
+}
+
+void
+map_cache_init(size_t cache_size)
+{
+    g_mutex_lock(_mapdb_mutex);
+    map_cache_init_unlocked(cache_size);
     g_mutex_unlock(_mapdb_mutex);
 }
 
@@ -569,10 +575,9 @@ map_cache_resize(size_t cache_size)
     return total_size;
 }
 
-void
-map_cache_destroy(void)
+static void
+map_cache_destroy_unlocked(void)
 {
-    g_mutex_lock(_mapdb_mutex);
     if(_map_cache.entries != NULL)
     {
         g_hash_table_destroy(_map_cache.entries);
@@ -586,6 +591,12 @@ map_cache_destroy(void)
          _map_cache.misses, 100*_map_cache.misses/(double)(
          _map_cache.thits+_map_cache.bhits+_map_cache.misses));
     }
+}
+void
+map_cache_destroy(void)
+{
+    g_mutex_lock(_mapdb_mutex);
+    map_cache_destroy_unlocked();
     g_mutex_unlock(_mapdb_mutex);
 }
 
@@ -594,8 +605,9 @@ void
 map_cache_clean (void)
 {
     g_mutex_lock(_mapdb_mutex);
-    if(_map_cache.entries != NULL)
-        g_hash_table_remove_all (_map_cache.entries);
+    gint old_size = _map_cache.cache_size;
+    map_cache_destroy_unlocked();
+    map_cache_init_unlocked(old_size);
     g_mutex_unlock(_mapdb_mutex);
 }
 
