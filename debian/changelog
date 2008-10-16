@@ -1,3 +1,9 @@
+maemo-mapper (2.5.1) unstable; urgency=low
+
+  * Fixed bug with invocation of flite.
+
+ -- John Costigan <gnuite@gmail.com>  Thu, 16 Oct 2008 02:00:00 -0700
+
 maemo-mapper (2.5) unstable; urgency=low
 
   * Added support for layered maps.  This support is still very

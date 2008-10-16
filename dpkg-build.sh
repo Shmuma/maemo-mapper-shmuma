@@ -16,11 +16,10 @@ then
     VERSION_SUFFIX=-os2006-os2007
 else
     VERSION_SUFFIX=-os2008
-    EXTRA_BUILD_ARGS=-S
 fi
 
 sed -i "1,1s/(\([0-9.][0-9.]*\)[-a-zA-Z0-9]*)/(\1$VERSION_SUFFIX)/" $CHANGELOG
 
-dpkg-buildpackage -rfakeroot -i -sa $EXTRA_BUILD_ARGS
+dpkg-buildpackage -rfakeroot -i -sa
 
 sed -i "1,1s/(\([0-9.][0-9.]*\)[-a-zA-Z0-9]*)/(\1)/" $CHANGELOG
