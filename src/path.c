@@ -944,7 +944,7 @@ track_add(time_t time, gboolean newly_fixed)
                         execl(_voice_synth_path, basename(_voice_synth_path),
                                 "-t", _last_spoken_phrase, (char *)NULL);
                         /* No good?  Try to launch it with /bin/sh */
-                        execl("/bin/sh", "sh", "-c", _voice_synth_path,
+                        execl("/bin/sh", "sh", _voice_synth_path,
                                 "-t", _last_spoken_phrase, (char *)NULL);
                         /* Still no good? Oh well... */
                         exit(0);
