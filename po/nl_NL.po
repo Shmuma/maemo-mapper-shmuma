@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.0.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-03-17 01:55-0400\n"
+"POT-Creation-Date: 2008-10-11 23:01-0400\n"
 "PO-Revision-Date: 2006-07-04 09:56+0200\n"
 "Last-Translator: Mischa Molhoek <mischamolhoek@gmail.com>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
@@ -19,62 +19,62 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/poi.c:979
+#: ../src/poi.c:981
 msgid "# POIs"
 msgstr ""
 
-#: ../src/menu.c:1686
+#: ../src/menu.c:1767
 #, fuzzy
 msgid "About..."
 msgstr "Route"
 
-#: ../src/poi.c:658
+#: ../src/poi.c:660
 msgid "Add Category"
 msgstr ""
 
-#: ../src/poi.c:1146
+#: ../src/poi.c:1148
 msgid "Add POI"
 msgstr ""
 
-#: ../src/cmenu.c:656 ../src/cmenu.c:690
+#: ../src/cmenu.c:655 ../src/cmenu.c:689
 msgid "Add POI..."
 msgstr ""
 
-#: ../src/cmenu.c:652 ../src/cmenu.c:710
+#: ../src/cmenu.c:651 ../src/cmenu.c:709
 msgid "Add Route Point"
 msgstr ""
 
-#: ../src/path.c:1498
+#: ../src/path.c:1502
 #, fuzzy
 msgid "Add Waypoint"
 msgstr "Route Markering"
 
-#: ../src/cmenu.c:654 ../src/cmenu.c:712
+#: ../src/cmenu.c:653 ../src/cmenu.c:711
 #, fuzzy
 msgid "Add Waypoint..."
 msgstr "Route Markering..."
 
-#: ../src/poi.c:935
+#: ../src/poi.c:937
 msgid "Add..."
 msgstr ""
 
-#: ../src/menu.c:926
+#: ../src/menu.c:922
 msgid "Address"
 msgstr ""
 
-#: ../src/menu.c:951
+#: ../src/menu.c:947
 msgid "Address Located"
 msgstr ""
 
-#: ../src/menu.c:1578
+#: ../src/menu.c:1659
 msgid "Address..."
 msgstr ""
 
-#: ../src/settings.c:1342
+#: ../src/settings.c:1387
 msgid "Advance Notice"
 msgstr "Aankondiging"
 
-#: ../src/maps.c:2807
+#: ../src/maps.c:3467
 msgid "Along Route - Radius (tiles):"
 msgstr ""
 
@@ -83,21 +83,21 @@ msgstr ""
 msgid "Altitude"
 msgstr "Breedtegraad"
 
-#: ../src/settings.c:666
+#: ../src/settings.c:695
 msgid "An error occurred while attempting to scan for bluetooth devices."
 msgstr ""
 
-#: ../src/maps.c:2166
+#: ../src/maps.c:2268
 msgid ""
 "An error occurred while retrieving the repositories.  The web service may be "
 "temporarily down."
 msgstr ""
 
-#: ../src/maps.c:1697
+#: ../src/maps.c:1795
 msgid "An error occurred while trying to compact the database."
 msgstr ""
 
-#: ../src/gps.c:891
+#: ../src/gps.c:912
 msgid ""
 "An error occurred while trying to reset the bluetooth radio.\n"
 "\n"
@@ -105,53 +105,53 @@ msgid ""
 "the /etc/sudoers file?"
 msgstr ""
 
-#: ../src/settings.c:1330
+#: ../src/settings.c:1375
 msgid "Announce"
 msgstr "Aankondigen"
 
-#: ../src/cmenu.c:662
+#: ../src/cmenu.c:661
 msgid "Apply Map Correction"
 msgstr ""
 
-#: ../src/maps.c:2847
+#: ../src/maps.c:3507
 msgid "Area"
 msgstr "Gebied"
 
-#: ../src/menu.c:1629 ../src/settings.c:1259
+#: ../src/menu.c:1710 ../src/settings.c:1304
 msgid "Auto-Center"
 msgstr "Automatisch-Centreren"
 
-#: ../src/menu.c:1204
+#: ../src/menu.c:1200
 msgid "Auto-Center Mode: Lat/Lon"
 msgstr "Automatisch-Centreren Mode: Lengtegr/Breedtegr"
 
-#: ../src/menu.c:1187
+#: ../src/menu.c:1183
 msgid "Auto-Center Mode: Lead"
 msgstr "Automatisch-Centreren Mode: Lead"
 
-#: ../src/menu.c:1221
+#: ../src/menu.c:1217
 msgid "Auto-Center Off"
 msgstr "Automatisch-Centreren Uit"
 
-#: ../src/menu.c:1507
+#: ../src/menu.c:1577
 msgid "Auto-Download"
 msgstr "Automatisch-Downloaden"
 
-#: ../src/settings.c:1437
+#: ../src/settings.c:1482
 #, fuzzy
 msgid "Auto-Download Pre-cache"
 msgstr "Automatisch-Downloaden"
 
-#: ../src/menu.c:1543
+#: ../src/menu.c:1624
 #, fuzzy
 msgid "Auto-Rotate"
 msgstr "Automatisch-Updaten"
 
-#: ../src/menu.c:663
+#: ../src/menu.c:655
 msgid "Auto-Rotate Disabled"
 msgstr ""
 
-#: ../src/menu.c:658
+#: ../src/menu.c:650
 msgid "Auto-Rotate Enabled"
 msgstr ""
 
@@ -159,40 +159,45 @@ msgstr ""
 msgid "Auto-Update"
 msgstr "Automatisch-Updaten"
 
+#: ../src/maps.c:2447
+#, fuzzy
+msgid "Autofetch"
+msgstr "Automatisch-Centreren"
+
 #: ../src/path.c:1267
 msgid "Avoid Highways"
 msgstr ""
 
-#: ../src/poi.c:2228
+#: ../src/poi.c:2230
 #, fuzzy
 msgid "Bear."
 msgstr "Opschonen"
 
-#: ../src/main.c:328 ../src/settings.c:1189
+#: ../src/main.c:363 ../src/settings.c:1218
 msgid "Bluetooth"
 msgstr ""
 
-#: ../src/main.c:326
+#: ../src/main.c:361
 #, fuzzy
 msgid "Bottom-Left"
 msgstr "Rechts-onder"
 
-#: ../src/main.c:325 ../src/maps.c:2934
+#: ../src/main.c:360 ../src/maps.c:3598
 msgid "Bottom-Right"
 msgstr "Rechts-onder"
 
-#: ../src/cmenu.c:649
+#: ../src/cmenu.c:648
 #, fuzzy
 msgid "Browse POI..."
 msgstr "Activeer GPS"
 
-#: ../src/poi.c:2851
+#: ../src/poi.c:2857
 #, fuzzy
 msgid "Browse POIs"
 msgstr "Activeer GPS"
 
-#: ../src/maps.c:1936 ../src/menu.c:1492 ../src/settings.c:1227
-#: ../src/settings.c:1500
+#: ../src/maps.c:2034 ../src/maps.c:2441 ../src/menu.c:1562
+#: ../src/settings.c:1265 ../src/settings.c:1547
 msgid "Browse..."
 msgstr "Blader..."
 
@@ -204,82 +209,82 @@ msgstr ""
 msgid "Business"
 msgstr ""
 
-#: ../src/maps.c:2798
+#: ../src/maps.c:3458
 msgid "By Area (see tab)"
 msgstr ""
 
-#: ../src/maps.c:1926
+#: ../src/maps.c:2024 ../src/maps.c:2434
 msgid "Cache DB"
 msgstr ""
 
-#: ../src/maps.c:1866
+#: ../src/maps.c:1964
 msgid ""
 "Cannot delete the last repository - there must be at lease one repository."
 msgstr ""
 
-#: ../src/menu.c:1494
+#: ../src/menu.c:1564
 #, fuzzy
 msgid "Categories..."
 msgstr "POI Categories..."
 
-#: ../src/poi.c:511 ../src/poi.c:1181 ../src/poi.c:1431 ../src/poi.c:1787
-#: ../src/poi.c:2210 ../src/poi.c:2389 ../src/poi.c:2569 ../src/poi.c:2886
+#: ../src/poi.c:513 ../src/poi.c:1183 ../src/poi.c:1433 ../src/poi.c:1789
+#: ../src/poi.c:2212 ../src/poi.c:2391 ../src/poi.c:2571 ../src/poi.c:2892
 msgid "Category"
 msgstr ""
 
-#: ../src/poi.c:2103 ../src/poi.c:2264
+#: ../src/poi.c:2105 ../src/poi.c:2266
 msgid "Checked POI Actions..."
 msgstr ""
 
-#: ../src/maps.c:2751 ../src/menu.c:1456 ../src/menu.c:1476
+#: ../src/maps.c:3411 ../src/menu.c:1526 ../src/menu.c:1546
 msgid "Clear"
 msgstr "Opschonen"
 
-#: ../src/main.c:301
+#: ../src/main.c:335
 #, fuzzy
 msgid "Clear Track"
 msgstr "Opschonen"
 
-#: ../src/menu.c:1536
+#: ../src/menu.c:1617
 #, fuzzy
 msgid "Clockwise"
 msgstr "Sluiten"
 
-#: ../src/menu.c:1688
+#: ../src/menu.c:1769
 msgid "Close"
 msgstr "Sluiten"
 
-#: ../src/settings.c:891
+#: ../src/settings.c:920
 #, fuzzy
 msgid "Colors"
 msgstr "Sluiten"
 
-#: ../src/settings.c:1173
+#: ../src/settings.c:1202
 #, fuzzy
 msgid "Colors..."
 msgstr "Download..."
 
-#: ../src/maps.c:1718
+#: ../src/maps.c:1816
 msgid "Compact Database"
 msgstr ""
 
-#: ../src/maps.c:1939
+#: ../src/maps.c:2037
 msgid "Compact..."
 msgstr ""
 
-#: ../src/maps.c:1777
+#: ../src/maps.c:1875
 msgid "Compacting database..."
 msgstr ""
 
-#: ../src/menu.c:1604
+#: ../src/menu.c:1685
 msgid "Compass Rose"
 msgstr ""
 
-#: ../src/maps.c:2479 ../src/maps.c:2579
+#: ../src/maps.c:3133 ../src/maps.c:3239
 msgid "Confirm DELETION of"
 msgstr ""
 
-#: ../src/maps.c:1873
+#: ../src/maps.c:1971
 msgid "Confirm delete of repository"
 msgstr ""
 
@@ -287,33 +292,33 @@ msgstr ""
 msgid "Confirm delete of waypoint"
 msgstr ""
 
-#: ../src/maps.c:2485 ../src/maps.c:2585
+#: ../src/maps.c:3139 ../src/maps.c:3245
 msgid "Confirm download of"
 msgstr ""
 
-#: ../src/settings.c:830
+#: ../src/settings.c:859
 msgid "Continue?"
 msgstr ""
 
-#: ../src/display.c:2420
+#: ../src/display.c:2534
 msgid "Copy"
 msgstr ""
 
-#: ../src/cmenu.c:680
+#: ../src/cmenu.c:679
 #, fuzzy
 msgid "Copy Description"
 msgstr "Bestemming"
 
-#: ../src/cmenu.c:678
+#: ../src/cmenu.c:677
 #, fuzzy
 msgid "Copy Lat/Lon"
 msgstr "Breedte/Lengtegraad"
 
-#: ../src/menu.c:1538
+#: ../src/menu.c:1619
 msgid "Counter"
 msgstr ""
 
-#: ../src/path.c:1581
+#: ../src/path.c:1585
 msgid ""
 "Creating a \"waypoint\" with no description actually adds a break point.  Is "
 "that what you want?"
@@ -324,52 +329,56 @@ msgstr ""
 msgid "DGPS"
 msgstr "GPS"
 
-#: ../src/poi.c:2379
+#: ../src/poi.c:2381
 #, fuzzy
 msgid "Default Category"
 msgstr "Category: "
 
-#: ../src/settings.c:1424
+#: ../src/settings.c:1469
 msgid "Degrees Format"
 msgstr ""
 
-#: ../src/maps.c:2788
+#: ../src/maps.c:2739
+msgid "Del"
+msgstr ""
+
+#: ../src/maps.c:3448
 msgid "Delete Maps"
 msgstr ""
 
-#: ../src/poi.c:1017
+#: ../src/poi.c:1019
 msgid "Delete POI?"
 msgstr ""
 
-#: ../src/poi.c:559
+#: ../src/poi.c:561
 msgid "Delete category?"
 msgstr ""
 
-#: ../src/poi.c:2017
+#: ../src/poi.c:2019
 msgid "Delete selected POI?"
 msgstr ""
 
-#: ../src/cmenu.c:687 ../src/maps.c:2275 ../src/poi.c:638 ../src/poi.c:1397
-#: ../src/poi.c:2118
+#: ../src/cmenu.c:686 ../src/maps.c:2890 ../src/poi.c:640 ../src/poi.c:1399
+#: ../src/poi.c:2120
 msgid "Delete..."
 msgstr ""
 
-#: ../src/menu.c:322 ../src/path.c:1523 ../src/poi.c:677 ../src/poi.c:974
-#: ../src/poi.c:1197 ../src/poi.c:1447 ../src/settings.c:654
+#: ../src/menu.c:276 ../src/path.c:1527 ../src/poi.c:679 ../src/poi.c:976
+#: ../src/poi.c:1199 ../src/poi.c:1449 ../src/settings.c:683
 #, fuzzy
 msgid "Description"
 msgstr "Bestemming"
 
-#: ../src/path.c:1289
+#: ../src/path.c:1291
 msgid "Destination"
 msgstr "Bestemming"
 
-#: ../src/menu.c:1671
+#: ../src/menu.c:1752
 #, fuzzy
 msgid "Details..."
 msgstr "Instellingen..."
 
-#: ../src/poi.c:2218
+#: ../src/poi.c:2220
 #, fuzzy
 msgid "Dist."
 msgstr "Show Distance to"
@@ -379,25 +388,29 @@ msgstr "Show Distance to"
 msgid "Distance"
 msgstr "Show Distance to"
 
-#: ../src/maps.c:1998
+#: ../src/maps.c:2741
+msgid "Dn"
+msgstr ""
+
+#: ../src/maps.c:2096
 msgid "Double Pixels"
 msgstr ""
 
-#: ../src/main.c:229 ../src/menu.c:1555
+#: ../src/main.c:251 ../src/menu.c:1636
 msgid "Down"
 msgstr ""
 
-#: ../src/maps.c:2775
+#: ../src/maps.c:3435
 #, fuzzy
 msgid "Download Maps"
 msgstr "Landkaarten worden gedownload"
 
-#: ../src/cmenu.c:647
+#: ../src/cmenu.c:646
 #, fuzzy
 msgid "Download POI..."
 msgstr "Landkaarten worden gedownload"
 
-#: ../src/poi.c:2524
+#: ../src/poi.c:2526
 #, fuzzy
 msgid "Download POIs"
 msgstr "Landkaarten worden gedownload"
@@ -406,45 +419,50 @@ msgstr "Landkaarten worden gedownload"
 msgid "Download Route"
 msgstr ""
 
-#: ../src/cmenu.c:645 ../src/cmenu.c:685 ../src/cmenu.c:707
+#: ../src/cmenu.c:644 ../src/cmenu.c:684 ../src/cmenu.c:706
 msgid "Download Route to..."
 msgstr ""
 
-#: ../src/maps.c:1961
+#: ../src/menu.c:1585
+#, fuzzy
+msgid "Download Sample Repositories..."
+msgstr "Manage Repositories..."
+
+#: ../src/maps.c:2059
 #, fuzzy
 msgid "Download Zoom Steps"
 msgstr "Download Route"
 
-#: ../src/maps.c:2256 ../src/menu.c:1446 ../src/menu.c:1490
+#: ../src/menu.c:1516 ../src/menu.c:1560
 msgid "Download..."
 msgstr ""
 
-#: ../src/maps.c:2013
+#: ../src/maps.c:2111
 #, fuzzy
 msgid "Downloadable Zooms:"
 msgstr "Download Route"
 
-#: ../src/maps.c:1086 ../src/maps.c:1099
+#: ../src/maps.c:1133 ../src/maps.c:1154
 msgid "Downloaded maps will not be cached."
 msgstr ""
 
-#: ../src/menu.c:1568
+#: ../src/menu.c:1649
 msgid "East"
 msgstr ""
 
-#: ../src/poi.c:1193 ../src/poi.c:1443 ../src/poi.c:1796 ../src/poi.c:2398
+#: ../src/poi.c:1195 ../src/poi.c:1445 ../src/poi.c:1798 ../src/poi.c:2400
 msgid "Edit Categories..."
 msgstr ""
 
-#: ../src/poi.c:632
+#: ../src/poi.c:634
 msgid "Edit Category"
 msgstr ""
 
-#: ../src/poi.c:1391
+#: ../src/poi.c:1393
 msgid "Edit POI"
 msgstr ""
 
-#: ../src/poi.c:932 ../src/poi.c:2260
+#: ../src/poi.c:934 ../src/poi.c:2262
 msgid "Edit..."
 msgstr ""
 
@@ -452,86 +470,86 @@ msgstr ""
 msgid "Elementary schools, college campuses, etc."
 msgstr ""
 
-#: ../src/menu.c:1663
+#: ../src/menu.c:1744
 msgid "Enable GPS"
 msgstr "Activeer GPS"
 
-#: ../src/menu.c:1478
+#: ../src/menu.c:1548
 #, fuzzy
 msgid "Enable Tracking"
 msgstr "Opschonen"
 
-#: ../src/settings.c:1355
+#: ../src/settings.c:1400
 msgid "Enable Voice Synthesis (requires flite)"
 msgstr "Activeer Spraak (heeft geinstallerde flite nodig)"
 
-#: ../src/settings.c:1335
+#: ../src/settings.c:1380
 msgid "Enable Waypoint Announcements"
 msgstr ""
 
-#: ../src/poi.c:701 ../src/poi.c:964
+#: ../src/poi.c:703 ../src/poi.c:966
 #, fuzzy
 msgid "Enabled"
 msgstr "Activeer GPS"
 
-#: ../src/poi.c:1346
+#: ../src/poi.c:1348
 #, fuzzy
 msgid "Error adding POI"
 msgstr "Fout by verwerken GPX bestand."
 
-#: ../src/poi.c:764
+#: ../src/poi.c:766
 #, fuzzy
 msgid "Error adding category"
 msgstr "Fout by verwerken GPX bestand."
 
-#: ../src/gps.c:576
+#: ../src/gps.c:590
 #, fuzzy
 msgid "Error connecting to GPS receiver."
 msgstr "Failed to connect to GPX Directions server"
 
-#: ../src/gps.c:675
+#: ../src/gps.c:692
 #, fuzzy
 msgid "Error connecting to GPSD server."
 msgstr "Failed to connect to GPX Directions server"
 
-#: ../src/poi.c:574 ../src/poi.c:1028 ../src/poi.c:2046
+#: ../src/poi.c:576 ../src/poi.c:1030 ../src/poi.c:2048
 msgid "Error deleting POI"
 msgstr ""
 
-#: ../src/poi.c:583
+#: ../src/poi.c:585
 #, fuzzy
 msgid "Error deleting category"
 msgstr "Fout bij schrijven GPX bestand."
 
-#: ../src/gps.c:623
+#: ../src/gps.c:639
 #, fuzzy
 msgid "Error opening GPS device."
 msgstr "Fout by verwerken GPX bestand."
 
-#: ../src/main.c:506 ../src/menu.c:134 ../src/menu.c:246 ../src/path.c:692
-#: ../src/poi.c:2441 ../src/poi.c:2819
+#: ../src/main.c:545 ../src/menu.c:88 ../src/menu.c:200 ../src/path.c:692
+#: ../src/poi.c:2443 ../src/poi.c:2825
 msgid "Error parsing GPX file."
 msgstr "Fout by verwerken GPX bestand."
 
-#: ../src/gps.c:700
+#: ../src/gps.c:717
 #, fuzzy
 msgid "Error reading GPS data."
 msgstr "Fout by verwerken GPX bestand."
 
-#: ../src/poi.c:808
+#: ../src/poi.c:810
 msgid "Error updating Category"
 msgstr ""
 
-#: ../src/poi.c:1579 ../src/poi.c:1872
+#: ../src/poi.c:1581 ../src/poi.c:1874
 #, fuzzy
 msgid "Error updating POI"
 msgstr "Fout by verwerken GPX bestand."
 
-#: ../src/poi.c:749
+#: ../src/poi.c:751
 msgid "Error updating category"
 msgstr ""
 
-#: ../src/gpx.c:112 ../src/gpx.c:140
+#: ../src/gpx.c:157 ../src/gpx.c:185
 #, fuzzy
 msgid "Error while writing to file"
 msgstr "Fout bij schrijven GPX bestand."
@@ -541,11 +559,11 @@ msgstr "Fout bij schrijven GPX bestand."
 msgid "Error with POI database"
 msgstr "Fout by verwerken GPX bestand."
 
-#: ../src/menu.c:165 ../src/menu.c:268 ../src/poi.c:2086
+#: ../src/menu.c:119 ../src/menu.c:222 ../src/poi.c:2088
 msgid "Error writing GPX file."
 msgstr "Fout bij schrijven GPX bestand."
 
-#: ../src/gps.c:830
+#: ../src/gps.c:851
 msgid "Establishing GPS fix"
 msgstr "GPS zoekt satellieten"
 
@@ -553,7 +571,7 @@ msgstr "GPS zoekt satellieten"
 msgid "Estimated"
 msgstr ""
 
-#: ../src/poi.c:2123
+#: ../src/poi.c:2125
 msgid "Export to GPX..."
 msgstr ""
 
@@ -561,27 +579,27 @@ msgstr ""
 msgid "Failed to connect to GPX Directions server"
 msgstr ""
 
-#: ../src/settings.c:1899
+#: ../src/settings.c:1971
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "initialiseren GConf mislukt.  Programma wordt afgesloten."
 
-#: ../src/settings.c:179
+#: ../src/settings.c:180
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "initialiseren GConf mislukt.  Instellingen niet opgeslagen."
 
-#: ../src/display.c:2526 ../src/main.c:494
+#: ../src/display.c:2640 ../src/main.c:533
 msgid "Failed to open file for reading"
 msgstr ""
 
-#: ../src/display.c:2527
+#: ../src/display.c:2641
 msgid "Failed to open file for writing"
 msgstr ""
 
-#: ../src/maps.c:1693
+#: ../src/maps.c:1791
 msgid "Failed to open map database for compacting."
 msgstr ""
 
-#: ../src/maps.c:1084 ../src/maps.c:1098
+#: ../src/maps.c:1131 ../src/maps.c:1153
 msgid "Failed to open map database for repository"
 msgstr ""
 
@@ -589,7 +607,7 @@ msgstr ""
 msgid "Failed to open or create database"
 msgstr ""
 
-#: ../src/path.c:1719
+#: ../src/path.c:1723
 msgid "Failed to open path database. Tracks and routes will not be saved."
 msgstr ""
 
@@ -597,15 +615,15 @@ msgstr ""
 msgid "Failed to write to path database. Tracks and routes may not be saved."
 msgstr ""
 
-#: ../src/main.c:330
+#: ../src/main.c:365
 msgid "File"
 msgstr ""
 
-#: ../src/settings.c:1211
+#: ../src/settings.c:1247
 msgid "File Path"
 msgstr ""
 
-#: ../src/gpx.c:113 ../src/gpx.c:141
+#: ../src/gpx.c:158 ../src/gpx.c:186
 msgid "File is incomplete."
 msgstr ""
 
@@ -617,7 +635,7 @@ msgstr ""
 msgid "Fix Quality"
 msgstr ""
 
-#: ../src/settings.c:1278
+#: ../src/settings.c:1323
 msgid "Fixed"
 msgstr ""
 
@@ -625,16 +643,16 @@ msgstr ""
 msgid "Float RTK"
 msgstr ""
 
-#: ../src/display.c:2411
+#: ../src/display.c:2525
 #, fuzzy
 msgid "Format"
 msgstr "URI Formaat"
 
-#: ../src/menu.c:1653
+#: ../src/menu.c:1734
 msgid "Full Screen"
 msgstr "Volledig Scherm"
 
-#: ../src/menu.c:1659 ../src/settings.c:909 ../src/settings.c:1184
+#: ../src/menu.c:1740 ../src/settings.c:938 ../src/settings.c:1213
 msgid "GPS"
 msgstr ""
 
@@ -647,16 +665,16 @@ msgstr ""
 msgid "GPS Information"
 msgstr "GPS Locatie"
 
-#: ../src/maps.c:2861 ../src/menu.c:1580
+#: ../src/maps.c:3521 ../src/menu.c:1661
 msgid "GPS Location"
 msgstr "GPS Locatie"
 
-#: ../src/main.c:329
+#: ../src/main.c:364
 #, fuzzy
 msgid "GPSD"
 msgstr "GPS"
 
-#: ../src/settings.c:1233
+#: ../src/settings.c:1276
 msgid "GPSD Host"
 msgstr ""
 
@@ -668,7 +686,7 @@ msgstr ""
 msgid "General places of business."
 msgstr ""
 
-#: ../src/maps.c:1738
+#: ../src/maps.c:1836
 msgid ""
 "Generally, deleted maps create an empty space in the database that is later "
 "reused when downloading new maps.  Compacting the database reorganizes it "
@@ -687,32 +705,32 @@ msgid ""
 "operation is in progress."
 msgstr ""
 
-#: ../src/menu.c:1572 ../src/poi.c:2257
+#: ../src/menu.c:1653 ../src/poi.c:2259
 msgid "Go to"
 msgstr ""
 
-#: ../src/menu.c:916
+#: ../src/menu.c:912
 msgid "Go to Address"
 msgstr ""
 
-#: ../src/menu.c:810
+#: ../src/menu.c:802
 #, fuzzy
 msgid "Go to Lat/Lon"
 msgstr "Breedte/Lengtegraad"
 
-#: ../src/cmenu.c:715
+#: ../src/cmenu.c:714
 msgid "Go to Nearest"
 msgstr ""
 
-#: ../src/cmenu.c:693
+#: ../src/cmenu.c:692
 msgid "Go to Next"
 msgstr ""
 
-#: ../src/settings.c:775
+#: ../src/settings.c:804
 msgid "Hardware Keys"
 msgstr ""
 
-#: ../src/settings.c:1170
+#: ../src/settings.c:1199
 msgid "Hardware Keys..."
 msgstr ""
 
@@ -720,7 +738,7 @@ msgstr ""
 msgid "Heading"
 msgstr ""
 
-#: ../src/menu.c:1684
+#: ../src/menu.c:1765
 #, fuzzy
 msgid "Help..."
 msgstr "Open..."
@@ -729,11 +747,11 @@ msgstr "Open..."
 msgid "Houses, apartments, or other residences of import."
 msgstr ""
 
-#: ../src/poi.c:956
+#: ../src/poi.c:958
 msgid "ID"
 msgstr ""
 
-#: ../src/menu.c:1488
+#: ../src/menu.c:1558
 msgid "Import..."
 msgstr ""
 
@@ -741,58 +759,58 @@ msgstr ""
 msgid "Indoor or Outdoor places to have fun."
 msgstr ""
 
-#: ../src/settings.c:1390
+#: ../src/settings.c:1435
 #, fuzzy
 msgid "Info Font Size"
 msgstr "GPS Locatie"
 
-#: ../src/menu.c:1468
+#: ../src/menu.c:1538
 #, fuzzy
 msgid "Insert Break"
 msgstr "Insert Breakpoint"
 
-#: ../src/menu.c:302
+#: ../src/menu.c:256
 #, fuzzy
 msgid "Insert Mark"
 msgstr "Insert Breakpoint"
 
-#: ../src/menu.c:1470
+#: ../src/menu.c:1540
 #, fuzzy
 msgid "Insert Mark..."
 msgstr "Insert Breakpoint"
 
-#: ../src/main.c:300
+#: ../src/main.c:334
 #, fuzzy
 msgid "Insert Track Break"
 msgstr "Insert Breakpoint"
 
-#: ../src/maps.c:3099
+#: ../src/maps.c:3767
 msgid "Invalid Bottom-Right Latitude"
 msgstr "Ongeldige Rechts-Onder Breedtegraad"
 
-#: ../src/maps.c:3106
+#: ../src/maps.c:3774
 msgid "Invalid Bottom-Right Longitude"
 msgstr "Ongeldige Rechts-Onder Lengtegraad"
 
-#: ../src/menu.c:881 ../src/poi.c:1292 ../src/poi.c:1520
+#: ../src/menu.c:877 ../src/poi.c:1294 ../src/poi.c:1522
 #, fuzzy
 msgid "Invalid Latitude"
 msgstr "Ongeldige Links-Boven Breedtegraad"
 
-#: ../src/menu.c:888 ../src/poi.c:1299 ../src/poi.c:1527
+#: ../src/menu.c:884 ../src/poi.c:1301 ../src/poi.c:1529
 #, fuzzy
 msgid "Invalid Longitude"
 msgstr "Ongeldige Links-Boven Lengtegraad"
 
-#: ../src/gps.c:71 ../src/gps.c:82
+#: ../src/gps.c:79 ../src/gps.c:90
 msgid "Invalid NMEA input from receiver!"
 msgstr "Ongeldige NMEA invoer van ontvanger!"
 
-#: ../src/maps.c:3085
+#: ../src/maps.c:3753
 msgid "Invalid Top-Left Latitude"
 msgstr "Ongeldige Links-Boven Breedtegraad"
 
-#: ../src/maps.c:3092
+#: ../src/maps.c:3760
 msgid "Invalid Top-Left Longitude"
 msgstr "Ongeldige Links-Boven Lengtegraad"
 
@@ -801,7 +819,7 @@ msgstr "Ongeldige Links-Boven Lengtegraad"
 msgid "Invalid address."
 msgstr "Ongeldige Links-Boven Breedtegraad"
 
-#: ../src/poi.c:2801
+#: ../src/poi.c:2807
 #, fuzzy
 msgid "Invalid origin or query."
 msgstr "Ongeldige Links-Boven Lengtegraad"
@@ -816,8 +834,8 @@ msgid ""
 "view the the help pages. Otherwise, press Cancel to continue."
 msgstr ""
 
-#: ../src/poi.c:506 ../src/poi.c:669 ../src/poi.c:969 ../src/poi.c:1173
-#: ../src/poi.c:1423 ../src/poi.c:2237
+#: ../src/poi.c:508 ../src/poi.c:671 ../src/poi.c:971 ../src/poi.c:1175
+#: ../src/poi.c:1425 ../src/poi.c:2239
 msgid "Label"
 msgstr ""
 
@@ -825,43 +843,56 @@ msgstr ""
 msgid "Landmark"
 msgstr ""
 
-#: ../src/display.c:2393 ../src/poi.c:1157 ../src/poi.c:1407
+#: ../src/display.c:2507 ../src/poi.c:1159 ../src/poi.c:1409
 #, fuzzy
 msgid "Lat"
 msgstr "Breedte/Lengtegraad"
 
-#: ../src/menu.c:312 ../src/path.c:1508
+#: ../src/menu.c:266 ../src/path.c:1512
 #, fuzzy
 msgid "Lat, Lon:"
 msgstr "Breedte/Lengtegraad"
 
-#: ../src/menu.c:1633
+#: ../src/menu.c:1714
 msgid "Lat/Lon"
 msgstr "Breedte/Lengtegraad"
 
-#: ../src/menu.c:1576
+#: ../src/menu.c:1657
 #, fuzzy
 msgid "Lat/Lon..."
 msgstr "Breedte/Lengtegraad"
 
-#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:2851 ../src/menu.c:820
+#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:3511 ../src/menu.c:812
 msgid "Latitude"
 msgstr "Breedtegraad"
 
-#: ../src/menu.c:1639
+#: ../src/maps.c:2458
+msgid "Layer is visible"
+msgstr ""
+
+#: ../src/menu.c:1598
+msgid "Layers"
+msgstr ""
+
+#: ../src/maps.c:2871
+#, fuzzy
+msgid "Layers..."
+msgstr "POI Categories..."
+
+#: ../src/menu.c:1720
 msgid "Lead"
 msgstr "Vooraf"
 
-#: ../src/settings.c:1263
+#: ../src/settings.c:1308
 msgid "Lead Amount"
 msgstr "Hoeveel Vooraf"
 
-#: ../src/main.c:230 ../src/menu.c:1557
+#: ../src/main.c:252 ../src/menu.c:1638
 #, fuzzy
 msgid "Left"
 msgstr "Links-Boven"
 
-#: ../src/settings.c:1367
+#: ../src/settings.c:1412
 msgid "Line Width"
 msgstr "Lijn Breedte"
 
@@ -869,7 +900,7 @@ msgstr "Lijn Breedte"
 msgid "Local time"
 msgstr ""
 
-#: ../src/poi.c:501 ../src/settings.c:1465
+#: ../src/poi.c:503 ../src/settings.c:1510
 #, fuzzy
 msgid "Location"
 msgstr "GPS Locatie"
@@ -878,40 +909,45 @@ msgstr "GPS Locatie"
 msgid "Lodging"
 msgstr ""
 
-#: ../src/display.c:2402 ../src/poi.c:1165 ../src/poi.c:1415
+#: ../src/display.c:2516 ../src/poi.c:1167 ../src/poi.c:1417
 #, fuzzy
 msgid "Lon"
 msgstr "Breedte/Lengtegraad"
 
-#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:2855 ../src/menu.c:839
+#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:3515 ../src/menu.c:833
 msgid "Longitude"
 msgstr "Lengtegraad"
 
-#: ../src/settings.c:649
+#: ../src/settings.c:678
 msgid "MAC"
 msgstr ""
 
-#: ../src/maps.c:2147
+#: ../src/maps.c:2248
 msgid ""
 "Maemo Mapper will now download and add a list of possibly-duplicate "
 "repositories from the internet.  Continue?"
 msgstr ""
 
-#: ../src/maps.c:2736
+#: ../src/maps.c:3396
 msgid "Manage Maps"
 msgstr ""
 
-#: ../src/menu.c:1503
+#: ../src/menu.c:1575
 msgid "Manage Maps..."
 msgstr ""
 
-#: ../src/maps.c:2235
+#: ../src/maps.c:2850
 #, fuzzy
 msgid "Manage Repositories"
 msgstr "Manage Repositories..."
 
-#: ../src/menu.c:1505
+#: ../src/menu.c:1582
 msgid "Manage Repositories..."
+msgstr ""
+
+#: ../src/maps.c:2675
+#, c-format
+msgid "Manage layers [%s]"
 msgstr ""
 
 #: ../src/display.c:298
@@ -926,7 +962,7 @@ msgstr ""
 msgid "Map correction removed."
 msgstr ""
 
-#: ../src/menu.c:1498
+#: ../src/menu.c:1570
 msgid "Maps"
 msgstr "Kaarten"
 
@@ -934,28 +970,28 @@ msgstr "Kaarten"
 msgid "Max speed"
 msgstr ""
 
-#: ../src/maps.c:2033
+#: ../src/maps.c:2131
 msgid "Max."
 msgstr ""
 
-#: ../src/maps.c:2022
+#: ../src/maps.c:2120
 msgid "Min."
 msgstr ""
 
-#: ../src/settings.c:1297
+#: ../src/settings.c:1342
 #, fuzzy
 msgid "Min. Speed"
 msgstr "Snelheid"
 
-#: ../src/maps.c:2367
+#: ../src/maps.c:2985
 msgid "Minimum Downloadable Zoom must be less than Maximum Downloadable Zoom."
 msgstr ""
 
-#: ../src/settings.c:1363
+#: ../src/settings.c:1408
 msgid "Misc."
 msgstr ""
 
-#: ../src/settings.c:1420
+#: ../src/settings.c:1465
 #, fuzzy
 msgid "Misc. 2"
 msgstr "Misc."
@@ -964,7 +1000,7 @@ msgstr "Misc."
 msgid "Miscellaneous category for everything else."
 msgstr ""
 
-#: ../src/maps.c:3051 ../src/menu.c:553
+#: ../src/maps.c:3719 ../src/menu.c:516
 #, fuzzy
 msgid ""
 "NOTE: You must set a Map URI in the current repository in order to download "
@@ -973,59 +1009,68 @@ msgstr ""
 "NOTE: You must set a Map URI in the Repository Manager in order to download "
 "maps."
 
-#: ../src/maps.c:1810 ../src/maps.c:2086
+#: ../src/maps.c:1908 ../src/maps.c:2188 ../src/maps.c:2416 ../src/maps.c:2495
 msgid "Name"
 msgstr ""
 
-#: ../src/menu.c:1584
+#: ../src/menu.c:1665
 #, fuzzy
 msgid "Nearest POI"
 msgstr "Select POI"
 
-#: ../src/main.c:236
+#: ../src/main.c:258
 msgid "Never"
 msgstr ""
 
-#: ../src/maps.c:1800
+#: ../src/maps.c:2738
+#, fuzzy
+msgid "New"
+msgstr "Open..."
+
+#: ../src/maps.c:2485
+msgid "New Layer"
+msgstr ""
+
+#: ../src/maps.c:1898
 msgid "New Name"
 msgstr ""
 
-#: ../src/maps.c:2076
+#: ../src/maps.c:2178
 msgid "New Repository"
 msgstr ""
 
-#: ../src/maps.c:2278
+#: ../src/maps.c:2893
 #, fuzzy
 msgid "New..."
 msgstr "Open..."
 
-#: ../src/menu.c:1582
+#: ../src/menu.c:1663
 #, fuzzy
 msgid "Next Waypoint"
 msgstr "Route Markering"
 
-#: ../src/maps.c:2006
+#: ../src/maps.c:2104
 msgid "Next-able"
 msgstr ""
 
-#: ../src/menu.c:1039 ../src/poi.c:444 ../src/poi.c:3126
+#: ../src/menu.c:1035 ../src/poi.c:446 ../src/poi.c:3136
 msgid "No POIs found."
 msgstr ""
 
-#: ../src/poi.c:1671
+#: ../src/poi.c:1673
 msgid "No POIs were found."
 msgstr ""
 
-#: ../src/menu.c:1645
+#: ../src/menu.c:1726
 msgid "None"
 msgstr "Geen"
 
-#: ../src/menu.c:1562
+#: ../src/menu.c:1643
 #, fuzzy
 msgid "North"
 msgstr "URI Formaat"
 
-#: ../src/menu.c:1444 ../src/menu.c:1464
+#: ../src/menu.c:1514 ../src/menu.c:1534
 msgid "Open..."
 msgstr ""
 
@@ -1036,7 +1081,7 @@ msgid ""
 "button."
 msgstr ""
 
-#: ../src/path.c:1274 ../src/poi.c:2594 ../src/poi.c:2911
+#: ../src/path.c:1274 ../src/poi.c:2596 ../src/poi.c:2917
 msgid "Origin"
 msgstr "Oorsprong"
 
@@ -1044,38 +1089,38 @@ msgstr "Oorsprong"
 msgid "Other"
 msgstr ""
 
-#: ../src/maps.c:2782
+#: ../src/maps.c:3442
 msgid "Overwrite"
 msgstr ""
 
-#: ../src/poi.c:2474
+#: ../src/poi.c:2476
 msgid "Overwrite query with the following text?"
 msgstr ""
 
-#: ../src/cmenu.c:697 ../src/menu.c:1484 ../src/menu.c:1623
-#: ../src/settings.c:954 ../src/settings.c:1480
+#: ../src/cmenu.c:696 ../src/menu.c:1554 ../src/menu.c:1704
+#: ../src/settings.c:983 ../src/settings.c:1525
 msgid "POI"
 msgstr ""
 
-#: ../src/poi.c:918
+#: ../src/poi.c:920
 #, fuzzy
 msgid "POI Categories"
 msgstr "POI Categories..."
 
-#: ../src/poi.c:2168
+#: ../src/poi.c:2170
 #, fuzzy
 msgid "POI List"
 msgstr "POI"
 
-#: ../src/settings.c:1484
+#: ../src/settings.c:1529
 msgid "POI database"
 msgstr ""
 
-#: ../src/poi.c:2082
+#: ../src/poi.c:2084
 msgid "POIs Exported"
 msgstr ""
 
-#: ../src/poi.c:1665
+#: ../src/poi.c:1667
 msgid ""
 "POIs were added to the POI database.  The following screen will allow you to "
 "modify or delete any of the new POIs."
@@ -1086,50 +1131,50 @@ msgstr ""
 msgid "PPS"
 msgstr "GPS"
 
-#: ../src/poi.c:2578
+#: ../src/poi.c:2580
 msgid "Page"
 msgstr ""
 
-#: ../src/menu.c:1549
+#: ../src/menu.c:1630
 msgid "Pan"
 msgstr ""
 
-#: ../src/main.c:271
+#: ../src/main.c:305
 msgid "Pan Down"
 msgstr ""
 
-#: ../src/main.c:269
+#: ../src/main.c:303
 msgid "Pan East"
 msgstr ""
 
-#: ../src/main.c:272
+#: ../src/main.c:306
 #, fuzzy
 msgid "Pan Left"
 msgstr "Links-Boven"
 
-#: ../src/main.c:266
+#: ../src/main.c:300
 msgid "Pan North"
 msgstr ""
 
-#: ../src/main.c:273
+#: ../src/main.c:307
 #, fuzzy
 msgid "Pan Right"
 msgstr "Rechts-onder"
 
-#: ../src/settings.c:1282
+#: ../src/settings.c:1327
 #, fuzzy
 msgid "Pan Sensitivity"
 msgstr "Gevoeligheid"
 
-#: ../src/main.c:268
+#: ../src/main.c:302
 msgid "Pan South"
 msgstr ""
 
-#: ../src/main.c:270
+#: ../src/main.c:304
 msgid "Pan Up"
 msgstr ""
 
-#: ../src/main.c:267
+#: ../src/main.c:301
 msgid "Pan West"
 msgstr ""
 
@@ -1145,82 +1190,82 @@ msgstr ""
 msgid "Places to stay temporarily or for the night."
 msgstr ""
 
-#: ../src/menu.c:376
+#: ../src/menu.c:330
 #, fuzzy
 msgid "Please provide a description for the mark."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/settings.c:684
+#: ../src/settings.c:713
 msgid "Please select a bluetooth device from the list."
 msgstr ""
 
-#: ../src/settings.c:1610
+#: ../src/settings.c:1657
 #, fuzzy
 msgid "Please specify a GPS file pathname."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/settings.c:1603
+#: ../src/settings.c:1650
 #, fuzzy
 msgid "Please specify a GPSD hostname."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/poi.c:1318 ../src/poi.c:1546 ../src/poi.c:1820
+#: ../src/poi.c:1320 ../src/poi.c:1548 ../src/poi.c:1822
 #, fuzzy
 msgid "Please specify a category."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/poi.c:2416 ../src/poi.c:2766
+#: ../src/poi.c:2418 ../src/poi.c:2772
 #, fuzzy
 msgid "Please specify a default category."
 msgstr "Geef een start locatie op a.u.b."
 
-#: ../src/poi.c:727
+#: ../src/poi.c:729
 #, fuzzy
 msgid "Please specify a name for the category."
 msgstr "Geef een start locatie op a.u.b."
 
-#: ../src/poi.c:1311 ../src/poi.c:1539
+#: ../src/poi.c:1313 ../src/poi.c:1541
 #, fuzzy
 msgid "Please specify a name."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/poi.c:2773
+#: ../src/poi.c:2779
 #, fuzzy
 msgid "Please specify a query."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/path.c:1378 ../src/poi.c:2706
+#: ../src/path.c:1382 ../src/poi.c:2712
 #, fuzzy
 msgid "Please specify a source URL."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/path.c:1420
+#: ../src/path.c:1424
 msgid "Please specify a start location."
 msgstr "Geef een start locatie op a.u.b."
 
-#: ../src/path.c:1427
+#: ../src/path.c:1431
 msgid "Please specify an end location."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/poi.c:2760 ../src/poi.c:3054
+#: ../src/poi.c:2766 ../src/poi.c:3064
 #, fuzzy
 msgid "Please specify an origin."
 msgstr "Geef een bestemmings locatie op a.u.b."
 
-#: ../src/settings.c:1318
+#: ../src/settings.c:1363
 msgid "Points"
 msgstr ""
 
-#: ../src/settings.c:1249
+#: ../src/settings.c:1294
 #, fuzzy
 msgid "Port"
 msgstr "URI Formaat"
 
-#: ../src/maps.c:1294
+#: ../src/maps.c:1367
 msgid "Processing Maps"
 msgstr ""
 
-#: ../src/poi.c:2609 ../src/poi.c:2926
+#: ../src/poi.c:2613 ../src/poi.c:2934
 msgid "Query"
 msgstr ""
 
@@ -1241,36 +1286,36 @@ msgstr ""
 msgid "Recreation"
 msgstr "GPS Locatie"
 
-#: ../src/maps.c:2272
+#: ../src/maps.c:2887
 #, fuzzy
 msgid "Rename..."
 msgstr "Open..."
 
-#: ../src/maps.c:2117
+#: ../src/maps.c:2219
 msgid "Replace all repositories with the default repository?"
 msgstr ""
 
-#: ../src/menu.c:1454 ../src/menu.c:1541
+#: ../src/menu.c:1524 ../src/menu.c:1622
 msgid "Reset"
 msgstr ""
 
-#: ../src/main.c:311 ../src/menu.c:1674
+#: ../src/main.c:345 ../src/menu.c:1755
 msgid "Reset Bluetooth"
 msgstr ""
 
-#: ../src/main.c:275
+#: ../src/main.c:309
 msgid "Reset Viewing Angle"
 msgstr ""
 
-#: ../src/settings.c:861
+#: ../src/settings.c:890
 msgid "Reset all colors to their original defaults?"
 msgstr ""
 
-#: ../src/settings.c:747
+#: ../src/settings.c:776
 msgid "Reset all hardware keys to their original defaults?"
 msgstr ""
 
-#: ../src/maps.c:2250 ../src/settings.c:781 ../src/settings.c:897
+#: ../src/maps.c:2865 ../src/settings.c:810 ../src/settings.c:926
 #, fuzzy
 msgid "Reset..."
 msgstr "Open..."
@@ -1283,30 +1328,30 @@ msgstr ""
 msgid "Restaurant"
 msgstr ""
 
-#: ../src/main.c:228 ../src/menu.c:1559
+#: ../src/main.c:250 ../src/menu.c:1640
 #, fuzzy
 msgid "Right"
 msgstr "Rechts-onder"
 
-#: ../src/menu.c:1532
+#: ../src/menu.c:1613
 #, fuzzy
 msgid "Rotate"
 msgstr "Automatisch-Updaten"
 
-#: ../src/settings.c:1305
+#: ../src/settings.c:1350
 #, fuzzy
 msgid "Rotate Sensit."
 msgstr "Gevoeligheid"
 
-#: ../src/main.c:277
+#: ../src/main.c:311
 msgid "Rotate View Clockwise"
 msgstr ""
 
-#: ../src/main.c:279
+#: ../src/main.c:313
 msgid "Rotate View Counter-Clockwise"
 msgstr ""
 
-#: ../src/menu.c:1440 ../src/menu.c:1609 ../src/settings.c:939
+#: ../src/menu.c:1510 ../src/menu.c:1690 ../src/settings.c:968
 msgid "Route"
 msgstr ""
 
@@ -1314,19 +1359,19 @@ msgstr ""
 msgid "Route Downloaded"
 msgstr ""
 
-#: ../src/main.c:503 ../src/menu.c:131
+#: ../src/main.c:542 ../src/menu.c:85
 msgid "Route Opened"
 msgstr "Route Geopend"
 
-#: ../src/menu.c:162
+#: ../src/menu.c:116
 msgid "Route Saved"
 msgstr "Route Opgeslagen"
 
-#: ../src/menu.c:1137
+#: ../src/menu.c:1133
 msgid "Routes are now hidden"
 msgstr "Routes zijn nu verborgen"
 
-#: ../src/menu.c:1131
+#: ../src/menu.c:1127
 msgid "Routes are now shown"
 msgstr "Routes zijn nu zichtbaar"
 
@@ -1350,20 +1395,20 @@ msgstr ""
 msgid "Satellites in view"
 msgstr ""
 
-#: ../src/menu.c:1448 ../src/menu.c:1466
+#: ../src/menu.c:1518 ../src/menu.c:1536
 msgid "Save..."
 msgstr "Opslaan..."
 
-#: ../src/menu.c:1599
+#: ../src/menu.c:1680
 msgid "Scale"
 msgstr ""
 
-#: ../src/settings.c:1205
+#: ../src/settings.c:1236
 #, fuzzy
 msgid "Scan..."
 msgstr "Opslaan..."
 
-#: ../src/settings.c:660
+#: ../src/settings.c:689
 #, fuzzy
 msgid "Scanning for Bluetooth Devices"
 msgstr "Er wordt naar bluetooth apparaten gezocht"
@@ -1372,32 +1417,32 @@ msgstr "Er wordt naar bluetooth apparaten gezocht"
 msgid "School"
 msgstr ""
 
-#: ../src/gps.c:819
+#: ../src/gps.c:840
 msgid "Searching for GPS receiver"
 msgstr "Er wordt naar GPS ontvanger gezocht"
 
-#: ../src/settings.c:624
+#: ../src/settings.c:653
 #, fuzzy
 msgid "Select Bluetooth Device"
 msgstr "Er wordt naar bluetooth apparaten gezocht"
 
-#: ../src/main.c:295
+#: ../src/main.c:329
 #, fuzzy
 msgid "Select Next Repository"
 msgstr "Next Repository"
 
-#: ../src/poi.c:474
+#: ../src/poi.c:476
 msgid "Select POI"
 msgstr ""
 
-#: ../src/poi.c:2108
+#: ../src/poi.c:2110
 msgid ""
 "Select an operation to perform\n"
 "on the POIs that you checked\n"
 "in the POI list."
 msgstr ""
 
-#: ../src/poi.c:539
+#: ../src/poi.c:541
 msgid "Select one POI from the list."
 msgstr ""
 
@@ -1406,26 +1451,26 @@ msgstr ""
 msgid "Service Station"
 msgstr "GPS Locatie"
 
-#: ../src/poi.c:1777 ../src/poi.c:2114
+#: ../src/poi.c:1779 ../src/poi.c:2116
 #, fuzzy
 msgid "Set Category..."
 msgstr "Category: "
 
-#: ../src/cmenu.c:659
+#: ../src/cmenu.c:658
 #, fuzzy
 msgid "Set as GPS Location"
 msgstr "Bebruik GPS Locatie"
 
-#: ../src/settings.c:1156
+#: ../src/settings.c:1185
 #, fuzzy
 msgid "Settings"
 msgstr "Instellingen..."
 
-#: ../src/menu.c:1681
+#: ../src/menu.c:1762
 msgid "Settings..."
 msgstr "Instellingen..."
 
-#: ../src/maps.c:2765
+#: ../src/maps.c:3425
 msgid "Setup"
 msgstr ""
 
@@ -1433,57 +1478,57 @@ msgstr ""
 msgid "Shopping/Services"
 msgstr ""
 
-#: ../src/menu.c:1590
+#: ../src/menu.c:1671
 msgid "Show"
 msgstr ""
 
-#: ../src/cmenu.c:676
+#: ../src/cmenu.c:675
 msgid "Show Description"
 msgstr ""
 
-#: ../src/main.c:305 ../src/menu.c:1474
+#: ../src/main.c:339 ../src/menu.c:1544
 #, fuzzy
 msgid "Show Distance from Beginning"
 msgstr "Show Distance to"
 
-#: ../src/main.c:303
+#: ../src/main.c:337
 #, fuzzy
 msgid "Show Distance from Last Break"
 msgstr "Show Distance to"
 
-#: ../src/menu.c:1472
+#: ../src/menu.c:1542
 #, fuzzy
 msgid "Show Distance from Last Mark"
 msgstr "Show Distance to"
 
-#: ../src/cmenu.c:643 ../src/cmenu.c:683 ../src/cmenu.c:705
+#: ../src/cmenu.c:642 ../src/cmenu.c:682 ../src/cmenu.c:704
 msgid "Show Distance to"
 msgstr ""
 
-#: ../src/main.c:299 ../src/menu.c:1452
+#: ../src/main.c:333 ../src/menu.c:1522
 #, fuzzy
 msgid "Show Distance to End of Route"
 msgstr "Show Distance to"
 
-#: ../src/main.c:297 ../src/menu.c:1450
+#: ../src/main.c:331 ../src/menu.c:1520
 #, fuzzy
 msgid "Show Distance to Next Waypoint"
 msgstr "Route Markering"
 
-#: ../src/menu.c:1667
+#: ../src/menu.c:1748
 msgid "Show Information"
 msgstr ""
 
-#: ../src/cmenu.c:640 ../src/cmenu.c:674
+#: ../src/cmenu.c:639 ../src/cmenu.c:673
 #, fuzzy
 msgid "Show Lat/Lon"
 msgstr "Breedte/Lengtegraad"
 
-#: ../src/settings.c:1505
+#: ../src/settings.c:1552
 msgid "Show POI below zoom"
 msgstr ""
 
-#: ../src/display.c:2383
+#: ../src/display.c:2497
 #, fuzzy
 msgid "Show Position"
 msgstr "GPS Locatie"
@@ -1492,11 +1537,11 @@ msgstr "GPS Locatie"
 msgid "Simulation"
 msgstr ""
 
-#: ../src/path.c:1234 ../src/poi.c:2546
+#: ../src/path.c:1234 ../src/poi.c:2548
 msgid "Source URL"
 msgstr ""
 
-#: ../src/menu.c:1564
+#: ../src/menu.c:1645
 #, fuzzy
 msgid "South"
 msgstr "Route"
@@ -1505,7 +1550,7 @@ msgstr "Route"
 msgid "Speed"
 msgstr "Snelheid"
 
-#: ../src/settings.c:1455
+#: ../src/settings.c:1500
 #, fuzzy
 msgid "Speed Limit"
 msgstr "Snelheid"
@@ -1514,16 +1559,16 @@ msgstr "Snelheid"
 msgid "Stations for purchasing fuel for vehicles."
 msgstr ""
 
-#: ../src/maps.c:1700
+#: ../src/maps.c:1798
 msgid "Successfully compacted database."
 msgstr ""
 
-#: ../src/cmenu.c:634
+#: ../src/cmenu.c:633
 #, fuzzy
 msgid "Tap Point"
 msgstr "Route Markering"
 
-#: ../src/maps.c:936
+#: ../src/maps.c:977
 msgid ""
 "The current repository is in a legacy format and will be converted.  You "
 "should delete your old maps if you no longer plan to use them."
@@ -1537,7 +1582,7 @@ msgstr ""
 msgid "The current track is empty."
 msgstr ""
 
-#: ../src/settings.c:827
+#: ../src/settings.c:856
 msgid "The following action is mapped to multiple keys"
 msgstr ""
 
@@ -1550,93 +1595,98 @@ msgstr ""
 msgid "There are no waypoints."
 msgstr ""
 
-#: ../src/menu.c:1001 ../src/path.c:544
+#: ../src/menu.c:997 ../src/path.c:544
 msgid "There is no next waypoint."
 msgstr ""
 
-#: ../src/main.c:281
+#: ../src/main.c:315
 #, fuzzy
 msgid "Toggle Auto-Center"
 msgstr "Automatisch-Centreren"
 
-#: ../src/main.c:283
+#: ../src/main.c:317
 #, fuzzy
 msgid "Toggle Auto-Rotate"
 msgstr "Automatisch-Centreren"
 
-#: ../src/main.c:285
+#: ../src/main.c:319
 #, fuzzy
 msgid "Toggle Fullscreen"
 msgstr "Volledig Scherm"
 
-#: ../src/main.c:306
+#: ../src/main.c:340
 #, fuzzy
 msgid "Toggle GPS"
 msgstr "Activeer GPS"
 
-#: ../src/main.c:307
+#: ../src/main.c:341
 msgid "Toggle GPS Info"
 msgstr ""
 
-#: ../src/main.c:293
+#: ../src/main.c:346
+#, fuzzy
+msgid "Toggle Layers"
+msgstr "Activeer GPS"
+
+#: ../src/main.c:327
 #, fuzzy
 msgid "Toggle POIs"
 msgstr "Activeer GPS"
 
-#: ../src/main.c:292
+#: ../src/main.c:326
 #, fuzzy
 msgid "Toggle Scale"
 msgstr "Activeer GPS"
 
-#: ../src/main.c:309
+#: ../src/main.c:343
 msgid "Toggle Speed Limit"
 msgstr ""
 
-#: ../src/main.c:289
+#: ../src/main.c:323
 #, fuzzy
 msgid "Toggle Tracking"
 msgstr "Opschonen"
 
-#: ../src/main.c:291
+#: ../src/main.c:325
 msgid "Toggle Tracks/Routes"
 msgstr ""
 
-#: ../src/main.c:323 ../src/maps.c:2896
+#: ../src/main.c:358 ../src/maps.c:3556
 msgid "Top-Left"
 msgstr "Links-Boven"
 
-#: ../src/main.c:324
+#: ../src/main.c:359
 #, fuzzy
 msgid "Top-Right"
 msgstr "Rechts-onder"
 
-#: ../src/menu.c:1460 ../src/menu.c:1614 ../src/settings.c:924
+#: ../src/menu.c:1530 ../src/menu.c:1695 ../src/settings.c:953
 msgid "Track"
 msgstr "Route"
 
-#: ../src/menu.c:243
+#: ../src/menu.c:197
 msgid "Track Opened"
 msgstr "Route Geopend"
 
-#: ../src/menu.c:265
+#: ../src/menu.c:219
 msgid "Track Saved"
 msgstr "Route Opgeslagen"
 
-#: ../src/menu.c:433
+#: ../src/menu.c:387
 #, fuzzy
 msgid "Tracking Disabled"
 msgstr "Route Opgeslagen"
 
-#: ../src/menu.c:437
+#: ../src/menu.c:391
 #, fuzzy
 msgid "Tracking Enabled"
 msgstr "Route Opgeslagen"
 
-#: ../src/menu.c:1074
+#: ../src/menu.c:1070
 msgid "Tracks are now hidden"
 msgstr "Routes zijn nu verborgen"
 
-#: ../src/menu.c:1068
+#: ../src/menu.c:1064
 msgid "Tracks are now shown"
 msgstr "Routes zijn nu zichtbaar"
 
@@ -1644,20 +1694,24 @@ msgstr "Routes zijn nu zichtbaar"
 msgid "Transportation"
 msgstr ""
 
-#: ../src/maps.c:1917
+#: ../src/maps.c:2427
+msgid "URL"
+msgstr ""
+
+#: ../src/maps.c:2015
 msgid "URL Format"
 msgstr "URI Formaat"
 
-#: ../src/maps.c:1116
+#: ../src/maps.c:1171
 msgid "Unable to create map database for repository"
 msgstr ""
 
-#: ../src/settings.c:1378
+#: ../src/settings.c:1423
 #, fuzzy
 msgid "Unblank Screen"
 msgstr "Volledig Scherm"
 
-#: ../src/settings.c:1407
+#: ../src/settings.c:1452
 msgid "Units"
 msgstr ""
 
@@ -1665,66 +1719,73 @@ msgstr ""
 msgid "Unknown error while locating address."
 msgstr ""
 
-#: ../src/main.c:227 ../src/menu.c:1553
+#: ../src/main.c:249 ../src/maps.c:2740 ../src/menu.c:1634
 msgid "Up"
 msgstr ""
 
-#: ../src/path.c:1251 ../src/poi.c:2559 ../src/poi.c:2877
+#: ../src/path.c:1251 ../src/poi.c:2561 ../src/poi.c:2883
 msgid "Use End of Route"
 msgstr ""
 
-#: ../src/path.c:1245 ../src/poi.c:2553 ../src/poi.c:2871
+#: ../src/path.c:1245 ../src/poi.c:2555 ../src/poi.c:2877
 msgid "Use GPS Location"
 msgstr "Bebruik GPS Locatie"
 
-#: ../src/menu.c:1619
+#: ../src/menu.c:1700
 msgid "Velocity Vector"
 msgstr "Snelheids Factor"
 
-#: ../src/menu.c:1516
+#: ../src/menu.c:1592
 msgid "View"
 msgstr ""
 
-#: ../src/maps.c:2877
+#: ../src/maps.c:3537
 msgid "View Center"
 msgstr "Bekijk Midden"
 
-#: ../src/maps.c:1977
+#: ../src/maps.c:2075
 #, fuzzy
 msgid "View Zoom Steps"
 msgstr "Vergrootings-Stappen"
 
-#: ../src/cmenu.c:702
+#: ../src/cmenu.c:701
 msgid "View/Edit..."
 msgstr ""
 
-#: ../src/poi.c:561
+#: ../src/poi.c:563
 msgid "WARNING: All POIs in that category will also be deleted!"
 msgstr ""
 
-#: ../src/cmenu.c:669
+#: ../src/cmenu.c:668
 #, fuzzy
 msgid "Waypoint"
 msgstr "Route Markering"
 
-#: ../src/menu.c:1566
+#: ../src/menu.c:1647
 msgid "West"
 msgstr ""
 
-#: ../src/main.c:235
+#: ../src/main.c:257
 msgid "When Approaching a Waypoint"
 msgstr ""
 
-#: ../src/main.c:233
+#: ../src/main.c:255
 msgid "When Moving"
 msgstr ""
 
-#: ../src/main.c:234
+#: ../src/main.c:256
 msgid "When Moving (Full Screen Only)"
 msgstr ""
 
-#: ../src/main.c:232
+#: ../src/main.c:254
 msgid "When Receiving Any GPS Data"
+msgstr ""
+
+#: ../src/maps.c:2700
+msgid ""
+"You cannot add layers to not saved repository,\n"
+"sorry. So, press ok in repository manager\n"
+"and open this dialog again."
 msgstr ""
 
 #: ../src/display.c:1129
@@ -1734,35 +1795,35 @@ msgid ""
 "Download."
 msgstr ""
 
-#: ../src/maps.c:2820 ../src/menu.c:1522
+#: ../src/maps.c:3480 ../src/menu.c:1603
 msgid "Zoom"
 msgstr "Vergroot"
 
-#: ../src/main.c:286 ../src/menu.c:1526
+#: ../src/main.c:320 ../src/menu.c:1607
 #, fuzzy
 msgid "Zoom In"
 msgstr "Vergroot"
 
-#: ../src/menu.c:1594
+#: ../src/menu.c:1675
 #, fuzzy
 msgid "Zoom Level"
 msgstr "Vergrootings-Stappen"
 
-#: ../src/maps.c:2826
+#: ../src/maps.c:3486
 msgid "Zoom Levels to Download: (0 = most detail)"
 msgstr "Vergrotings-niveaus om te Downloaden: (0 = meeste detail)"
 
-#: ../src/main.c:287 ../src/menu.c:1528
+#: ../src/main.c:321 ../src/menu.c:1609
 #, fuzzy
 msgid "Zoom Out"
 msgstr "Vergroot"
 
-#: ../src/input.c:117 ../src/input.c:310 ../src/menu.c:579 ../src/menu.c:597
+#: ../src/input.c:117 ../src/input.c:310 ../src/menu.c:571 ../src/menu.c:589
 #, fuzzy
 msgid "Zoom to Level"
 msgstr "Vergrootings-Stappen"
 
-#: ../src/maps.c:2579 ../src/maps.c:2586
+#: ../src/maps.c:3239 ../src/maps.c:3246
 #, fuzzy
 msgid "about"
 msgstr "Route"
@@ -1771,27 +1832,31 @@ msgstr "Route"
 msgid "in use"
 msgstr ""
 
-#: ../src/main.c:223
+#: ../src/main.c:245
 msgid "km"
 msgstr ""
 
-#: ../src/maps.c:2486 ../src/maps.c:2587
+#: ../src/maps.c:3140 ../src/maps.c:3247
 msgid "maps"
 msgstr "kaarten"
 
-#: ../src/maps.c:2480 ../src/maps.c:2580
+#: ../src/maps.c:3134 ../src/maps.c:3240
 msgid "maps "
 msgstr "kaarten"
 
-#: ../src/display.c:1501
+#: ../src/display.c:1502
 msgid "maps failed to download."
 msgstr ""
 
-#: ../src/main.c:224
+#: ../src/main.c:246
 msgid "mi."
 msgstr ""
 
-#: ../src/main.c:225
+#: ../src/maps.c:2454
+msgid "min."
+msgstr ""
+
+#: ../src/main.c:247
 msgid "n.m."
 msgstr ""
 
@@ -1804,7 +1869,7 @@ msgstr ""
 msgid "none"
 msgstr "Geen"
 
-#: ../src/maps.c:2486 ../src/maps.c:2587
+#: ../src/maps.c:3140 ../src/maps.c:3247
 msgid "up to about"
 msgstr ""
 

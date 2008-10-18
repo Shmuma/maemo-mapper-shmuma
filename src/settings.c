@@ -33,6 +33,7 @@
 #include <dbus/dbus-glib.h>
 #include <bt-dbus.h>
 #include <gconf/gconf-client.h>
+#include <glib.h>
 
 #ifndef LEGACY
 #    include <hildon/hildon-help.h>
@@ -371,28 +372,56 @@ settings_save()
         for(curr = _repo_list; curr != NULL; curr = curr->next)
         {
             /* Build from each part of a repo, delimited by newline characters:
-             * 1. url
-             * 2. db_filename
-             * 3. dl_zoom_steps
-             * 4. view_zoom_steps
+             * 1. name
+             * 2. url
+             * 3. db_filename
+             * 4. dl_zoom_steps
+             * 5. view_zoom_steps
+             * 6. layer_level
+             *
+             * If layer_level > 0, have additional fields:
+             * 7. layer_enabled
+             * 8. layer_refresh_interval
              */
             RepoData *rd = curr->data;
             gchar buffer[BUFFER_SIZE];
-            snprintf(buffer, sizeof(buffer),
-                    "%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d",
-                    rd->name,
-                    rd->url,
-                    rd->db_filename,
-                    rd->dl_zoom_steps,
-                    rd->view_zoom_steps,
-                    rd->double_size,
-                    rd->nextable,
-                    rd->min_zoom,
-                    rd->max_zoom);
-            temp_list = g_slist_append(temp_list, g_strdup(buffer));
-            if(rd == _curr_repo)
-                gconf_client_set_int(gconf_client,
-                        GCONF_KEY_CURRREPO, curr_repo_index, NULL);
+
+            while (rd) {
+                if (!rd->layer_level)
+                    snprintf(buffer, sizeof(buffer),
+                             "%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
+                             rd->name,
+                             rd->url,
+                             rd->db_filename,
+                             rd->dl_zoom_steps,
+                             rd->view_zoom_steps,
+                             rd->double_size,
+                             rd->nextable,
+                             rd->min_zoom,
+                             rd->max_zoom,
+                             rd->layer_level);
+                else
+                    snprintf(buffer, sizeof(buffer),
+                             "%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
+                             rd->name,
+                             rd->url,
+                             rd->db_filename,
+                             rd->dl_zoom_steps,
+                             rd->view_zoom_steps,
+                             rd->double_size,
+                             rd->nextable,
+                             rd->min_zoom,
+                             rd->max_zoom,
+                             rd->layer_level,
+                             rd->layer_enabled,
+                             rd->layer_refresh_interval
+                             );
+                temp_list = g_slist_append(temp_list, g_strdup(buffer));
+                if(rd == _curr_repo)
+                    gconf_client_set_int(gconf_client,
+                                         GCONF_KEY_CURRREPO, curr_repo_index, NULL);
+                rd = rd->layers;
+            }
             curr_repo_index++;
         }
         gconf_client_set_list(gconf_client,
@@ -1195,15 +1224,22 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_gps_bt_mac = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(txt_gps_bt_mac), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(txt_gps_bt_mac), HILDON_AUTOCAP, FALSE, NULL);
 #endif
+#endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 btn_scan = gtk_button_new_with_label(_("Scan...")),
                 FALSE, FALSE, 0);
+#ifndef HAVE_LIBGPSBT
+	gtk_widget_set_sensitive(rad_gps_bt, FALSE);
+	gtk_widget_set_sensitive(txt_gps_bt_mac, FALSE);
+	gtk_widget_set_sensitive(btn_scan, FALSE);
+#endif
 
         /* File Path (RFComm). */
         gtk_table_attach(GTK_TABLE(table),
@@ -1217,15 +1253,22 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_gps_file_path = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(txt_gps_file_path), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(txt_gps_file_path), HILDON_AUTOCAP, FALSE, NULL);
 #endif
+#endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 btn_browse_gps = gtk_button_new_with_label(_("Browse...")),
                 FALSE, FALSE, 0);
+#ifndef HAVE_LIBGPSBT
+	gtk_widget_set_sensitive(rad_gps_file, FALSE);
+	gtk_widget_set_sensitive(txt_gps_file_path, FALSE);
+	gtk_widget_set_sensitive(btn_browse_gps, FALSE);
+#endif
 
         /* GPSD Hostname and Port. */
         gtk_table_attach(GTK_TABLE(table),
@@ -1239,11 +1282,13 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_gps_gpsd_host = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(txt_gps_gpsd_host), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(txt_gps_gpsd_host), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 label = gtk_label_new(_("Port")),
@@ -1490,11 +1535,13 @@ settings_dialog()
         gtk_box_pack_start(GTK_BOX(hbox),
                 txt_poi_db = gtk_entry_new(),
                 TRUE, TRUE, 0);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(txt_poi_db), "hildon-input-mode",
                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(txt_poi_db), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
         gtk_box_pack_start(GTK_BOX(hbox),
                 btn_browse_poi = gtk_button_new_with_label(_("Browse...")),
@@ -1797,6 +1844,11 @@ settings_parse_repo(gchar *str)
      * 3. db_filename
      * 4. dl_zoom_steps
      * 5. view_zoom_steps
+     * 6. layer_level
+     *
+     * If layer_level > 0, have additional fields:
+     * 7. layer_enabled
+     * 8. layer_refresh_interval
      */
     gchar *token, *error_check;
     printf("%s(%s)\n", __PRETTY_FUNCTION__, str);
@@ -1850,6 +1902,26 @@ settings_parse_repo(gchar *str)
     if(!token || !*token
             || (rd->max_zoom = strtol(token, &error_check, 10), token == str))
         rd->max_zoom = 20;
+
+    /* Parse layer_level */
+    token = strsep(&str, "\n\t");
+    if(!token || !*token
+            || (rd->layer_level = strtol(token, &error_check, 10), token == str))
+        rd->layer_level = 0;
+
+    if (rd->layer_level) {
+        /* Parse layer_enabled */
+        token = strsep(&str, "\n\t");
+        if(!token || !*token || (rd->layer_enabled = strtol(token, &error_check, 10), token == str))
+            rd->layer_enabled = 0;
+
+        /* Parse layer_refresh_interval */
+        token = strsep(&str, "\n\t");
+        if(!token || !*token || (rd->layer_refresh_interval = strtol(token, &error_check, 10), token == str))
+            rd->layer_refresh_interval = 0;
+
+        rd->layer_refresh_countdown = rd->layer_refresh_interval;
+    }
 
     set_repo_type(rd);
 
@@ -2201,6 +2273,7 @@ settings_init()
     /* Load the repositories. */
     {
         GSList *list, *curr;
+        RepoData *prev_repo = NULL, *curr_repo = NULL;
         gint curr_repo_index = gconf_client_get_int(gconf_client,
             GCONF_KEY_CURRREPO, NULL);
         list = gconf_client_get_list(gconf_client,
@@ -2209,19 +2282,31 @@ settings_init()
         for(curr = list; curr != NULL; curr = curr->next)
         {
             RepoData *rd = settings_parse_repo(curr->data);
-            _repo_list = g_list_append(_repo_list, rd);
-            if(!curr_repo_index--)
-                repo_set_curr(rd);
+
+            if (rd->layer_level == 0) {
+                _repo_list = g_list_append(_repo_list, rd);
+                if(!curr_repo_index--)
+                    curr_repo = rd;
+            }
+            else
+                prev_repo->layers = rd;
+            prev_repo = rd;
             g_free(curr->data);
         }
         g_slist_free(list);
+
+        if (curr_repo)
+            repo_set_curr(curr_repo);
+
+        /* this timer decrements layers' counters and frefresh map if needed */
+        g_timeout_add (60 * 1000, map_layer_refresh_cb, NULL);
     }
 
 
     if(_repo_list == NULL)
     {
         /* We have no repositories - create a default one. */
-        RepoData *repo = g_new(RepoData, 1);
+        RepoData *repo = g_new0(RepoData, 1);
 
         repo->db_filename = gnome_vfs_expand_initial_tilde(
                 REPO_DEFAULT_CACHE_DIR);
@@ -2233,6 +2318,8 @@ settings_init()
         repo->nextable = TRUE;
         repo->min_zoom = REPO_DEFAULT_MIN_ZOOM;
         repo->max_zoom = REPO_DEFAULT_MAX_ZOOM;
+        repo->layers = NULL;
+        repo->layer_level = 0;
         set_repo_type(repo);
 
         _repo_list = g_list_append(_repo_list, repo);

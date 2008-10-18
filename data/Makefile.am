@@ -17,14 +17,16 @@
 # along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
 #
  
-serviceentry_DATA = com.gnuite.maemo_mapper.service
+servicedir = $(datadir)/dbus-1/services
+service_DATA = com.gnuite.maemo_mapper.service
 
-desktopentry_DATA = maemo-mapper.desktop
+desktopdir = $(datadir)/applications/hildon
+desktop_DATA = maemo-mapper.desktop
 
 icon_26x26_DATA = icons/26x26/maemo-mapper.png 
 icon_40x40_DATA = icons/40x40/maemo-mapper.png
 icon_scalable_DATA = icons/scalable/maemo-mapper.png icons/scalable/maemo-mapper-wait.png
 
-EXTRA_DIST = $(serviceentry_DATA) $(desktopentry_DATA) $(icon_26x26_DATA) $(icon_40x40_DATA) $(icon_scalable_DATA)
+EXTRA_DIST = $(service_DATA) $(desktop_DATA) $(icon_26x26_DATA) $(icon_40x40_DATA) $(icon_scalable_DATA)
 
 SUBDIRS = help

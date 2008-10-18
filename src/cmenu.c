@@ -621,16 +621,15 @@ cmenu_cb_hide(GtkMenuItem *item)
 void cmenu_init()
 {
     /* Create needed handles. */
-    GtkMenu *menu;
     GtkWidget *submenu;
     GtkWidget *menu_item;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     /* Setup the context menu. */
-    menu = GTK_MENU(gtk_menu_new());
+    _map_cmenu = GTK_MENU(gtk_menu_new());
 
     /* Setup the map context menu. */
-    gtk_menu_append(menu, menu_item
+    gtk_menu_append(_map_cmenu, menu_item
             = gtk_menu_item_new_with_label(_("Tap Point")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
             submenu = gtk_menu_new());
@@ -665,7 +664,7 @@ void cmenu_init()
             _map_correction_unitx != 0 || _map_correction_unity != 0);
 
     /* Setup the waypoint context menu. */
-    gtk_menu_append(menu, menu_item
+    gtk_menu_append(_map_cmenu, menu_item
             = gtk_menu_item_new_with_label(_("Waypoint")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
             submenu = gtk_menu_new());
@@ -693,7 +692,7 @@ void cmenu_init()
                 = gtk_menu_item_new_with_label(_("Go to Next")));
 
     /* Setup the POI context menu. */
-    gtk_menu_append(menu, _cmenu_poi_submenu
+    gtk_menu_append(_map_cmenu, _cmenu_poi_submenu
             = gtk_menu_item_new_with_label(_("POI")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(_cmenu_poi_submenu),
             submenu = gtk_menu_new());
@@ -768,13 +767,15 @@ void cmenu_init()
     g_signal_connect(G_OBJECT(_cmenu_poi_goto_nearpoi_item), "activate",
                         G_CALLBACK(menu_cb_view_goto_nearpoi), NULL);
 
-    gtk_widget_show_all(GTK_WIDGET(menu));
+    gtk_widget_show_all(GTK_WIDGET(_map_cmenu));
 
-    gtk_widget_tap_and_hold_setup(_map_widget, GTK_WIDGET(menu), NULL, 0);
+#ifdef MAEMO_CHANGES
+    gtk_widget_tap_and_hold_setup(_map_widget, GTK_WIDGET(_map_cmenu), NULL, 0);
+#endif
 
     /* Add a "hide" signal event handler to handle dismissing the context
      * menu. */
-    g_signal_connect(GTK_WIDGET(menu), "hide",
+    g_signal_connect(GTK_WIDGET(_map_cmenu), "hide",
             G_CALLBACK(cmenu_cb_hide), NULL);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);

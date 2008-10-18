@@ -49,7 +49,15 @@
 
 #include "display.h"
 #include "gps.h"
-#include "gpsbt.h"
+
+#ifdef HAVE_LIBGPSBT
+#    include "gpsbt.h"
+#endif
+
+#ifdef HAVE_LIBGPSMGR
+#    include "gpsmgr.h"
+#endif
+
 #include "path.h"
 #include "util.h"
 
@@ -549,7 +557,12 @@ thread_read_nmea(GpsRcvrInfo *gri)
     GnomeVFSSocket *socket = NULL;
     GThread *my_thread = g_thread_self();
     gboolean error = FALSE;
-    gpsbt_t gps_context;
+#ifdef HAVE_LIBGPSBT
+    gpsbt_t gpsbt_context;
+#endif
+#ifdef HAVE_LIBGPSMGR
+    gpsmgr_t gpsmgr_context;
+#endif
     gboolean is_context = FALSE;
 
     printf("%s(%d)\n", __PRETTY_FUNCTION__, gri->type);
@@ -560,14 +573,15 @@ thread_read_nmea(GpsRcvrInfo *gri)
 
     switch(gri->type)
     {
+#ifdef HAVE_LIBGPSBT
         case GPS_RCVR_BT:
         {
             gchar errstr[BUFFER_SIZE] = "";
             /* We need to start gpsd (via gpsbt) first. */
-            memset(&gps_context, 0, sizeof(gps_context));
+            memset(&gpsbt_context, 0, sizeof(gpsbt_context));
             errno = 0;
             if(gpsbt_start(gri->bt_mac, 0, 0, 0, errstr, sizeof(errstr),
-                        0, &gps_context) < 0)
+                        0, &gpsbt_context) < 0)
             {
                 g_printerr("Error connecting to GPS receiver: (%d) %s (%s)\n",
                         errno, strerror(errno), errstr);
@@ -585,6 +599,7 @@ thread_read_nmea(GpsRcvrInfo *gri)
             }
             break;
         }
+#endif
         case GPS_RCVR_GPSD:
         {
             /* Set gpsd_host and gpsd_port. */
@@ -592,6 +607,7 @@ thread_read_nmea(GpsRcvrInfo *gri)
             gpsd_port = gri->gpsd_port;
             break;
         }
+#ifdef HAVE_LIBGPSMGR
         case GPS_RCVR_FILE:
         {
             /* Use gpsmgr to create a GPSD that uses the file. */
@@ -611,10 +627,10 @@ thread_read_nmea(GpsRcvrInfo *gri)
             if (!gpsd_ctrl_sock)
                 gpsd_ctrl_sock = "/tmp/.gpsd_ctrl_sock";
 
-            memset(&gps_context, 0, sizeof(gps_context));
+            memset(&gpsmgr_context, 0, sizeof(gpsmgr_context));
             errno = 0;
             if(gpsmgr_start(gpsd_prog, devs, gpsd_ctrl_sock,
-                        0, 0, &gps_context.mgr) < 0)
+                        0, 0, &gpsmgr_context) < 0)
             {
                 g_printerr("Error opening GPS device: (%d) %s\n",
                         errno, strerror(errno));
@@ -632,6 +648,7 @@ thread_read_nmea(GpsRcvrInfo *gri)
             }
             break;
         }
+#endif
         default:
             error = TRUE;
     }
@@ -765,13 +782,17 @@ thread_read_nmea(GpsRcvrInfo *gri)
     {
         switch(gri->type)
         {
+#ifdef HAVE_LIBGPSBT
             case GPS_RCVR_BT:
-                gpsbt_stop(&gps_context);
+                gpsbt_stop(&gpsbt_context);
                 break;
+#endif
 
+#ifdef HAVE_LIBGPSMGR
             case GPS_RCVR_FILE:
-                gpsmgr_stop(&gps_context.mgr);
+                gpsmgr_stop(&gpsmgr_context);
                 break;
+#endif
 
             default:
                 ;

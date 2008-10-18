@@ -79,6 +79,9 @@ GdkPixmap *_map_pixmap = NULL;
 /** The backing pixmap of _map_widget. */
 GdkPixbuf *_map_pixbuf = NULL;
 
+/** The context menu for the map. */
+GtkMenu *_map_cmenu = NULL;
+
 gint _map_offset_devx;
 gint _map_offset_devy;
 
@@ -155,6 +158,10 @@ GMutex *_mut_priority_mutex = NULL;
 /* NOMORE gint _dl_errors = 0; */
 GThreadPool *_mut_thread_pool = NULL;
 GThreadPool *_mrt_thread_pool = NULL;
+
+/* Need to refresh map after downloads finished. This is needed when during render task we find tile
+   to download and we have something to draw on top of it. */
+gboolean _refresh_map_after_download = FALSE;
 
 /** CONFIGURATION INFORMATION. */
 GpsRcvrInfo _gri = { 0, 0, 0, 0, 0 };
@@ -245,9 +252,11 @@ GtkWidget *_menu_poi_categories_item = NULL;
 
 /* Menu items for the "Maps" submenu. */
 GtkWidget *_menu_maps_submenu = NULL;
+GtkWidget *_menu_layers_submenu = NULL;
 GtkWidget *_menu_maps_mapman_item = NULL;
-GtkWidget *_menu_maps_repoman_item = NULL;
 GtkWidget *_menu_maps_auto_download_item = NULL;
+GtkWidget *_menu_maps_repoman_item = NULL;
+GtkWidget *_menu_maps_repodown_item = NULL;
 
 /* Menu items for the "View" submenu. */
 GtkWidget *_menu_view_zoom_in_item = NULL;
