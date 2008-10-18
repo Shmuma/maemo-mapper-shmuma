@@ -2225,6 +2225,7 @@ settings_init()
     /* Load the repositories. */
     {
         GSList *list, *curr;
+        RepoData *prev_repo = NULL, *curr_repo = NULL;
         gint curr_repo_index = gconf_client_get_int(gconf_client,
             GCONF_KEY_CURRREPO, NULL);
         list = gconf_client_get_list(gconf_client,
@@ -2233,19 +2234,30 @@ settings_init()
         for(curr = list; curr != NULL; curr = curr->next)
         {
             RepoData *rd = settings_parse_repo(curr->data);
-            _repo_list = g_list_append(_repo_list, rd);
-            if(!curr_repo_index--)
-                repo_set_curr(rd);
+
+            if (rd->layer_level == 0) {
+                _repo_list = g_list_append(_repo_list, rd);
+                if(!curr_repo_index--)
+                    curr_repo = rd;
+            }
+            else
+                prev_repo->layers = rd;
+            prev_repo = rd;
             g_free(curr->data);
         }
         g_slist_free(list);
-    }
 
+        if (curr_repo)
+            repo_set_curr(curr_repo);
+
+        /* this timer decrements layers' counters and frefresh map if needed */
+        g_timeout_add (60 * 1000, map_layer_refresh_cb, NULL);
+    }
 
     if(_repo_list == NULL)
     {
         /* We have no repositories - create a default one. */
-        RepoData *repo = g_new(RepoData, 1);
+        RepoData *repo = g_new0(RepoData, 1);
 
         repo->db_filename = gnome_vfs_expand_initial_tilde(
                 REPO_DEFAULT_CACHE_DIR);
@@ -2257,6 +2269,8 @@ settings_init()
         repo->nextable = TRUE;
         repo->min_zoom = REPO_DEFAULT_MIN_ZOOM;
         repo->max_zoom = REPO_DEFAULT_MAX_ZOOM;
+        repo->layers = NULL;
+        repo->layer_level = 0;
         set_repo_type(repo);
 
         _repo_list = g_list_append(_repo_list, repo);
@@ -2309,62 +2323,6 @@ settings_init()
     gdk_pixbuf_rotate_matrix_fill_for_rotation(
             _map_reverse_matrix,
             deg2rad(_map_rotate_angle - ROTATE_DIR_ENUM_DEGREES[_rotate_dir]));
-
-    /* Load the repositories. */
-    {
-        GSList *list, *curr;
-        RepoData *prev_repo = NULL, *curr_repo = NULL;
-        gint curr_repo_index = gconf_client_get_int(gconf_client,
-            GCONF_KEY_CURRREPO, NULL);
-        list = gconf_client_get_list(gconf_client,
-            GCONF_KEY_REPOSITORIES, GCONF_VALUE_STRING, NULL);
-
-        for(curr = list; curr != NULL; curr = curr->next)
-        {
-            RepoData *rd = settings_parse_repo(curr->data);
-
-            if (rd->layer_level == 0) {
-                _repo_list = g_list_append(_repo_list, rd);
-                if(!curr_repo_index--)
-                    curr_repo = rd;
-            }
-            else
-                prev_repo->layers = rd;
-            prev_repo = rd;
-            g_free(curr->data);
-        }
-        g_slist_free(list);
-
-        if (curr_repo)
-            repo_set_curr(curr_repo);
-
-        /* this timer decrements layers' counters and frefresh map if needed */
-        g_timeout_add (60 * 1000, map_layer_refresh_cb, NULL);
-    }
-
-
-    if(_repo_list == NULL)
-    {
-        /* We have no repositories - create a default one. */
-        RepoData *repo = g_new0(RepoData, 1);
-
-        repo->db_filename = gnome_vfs_expand_initial_tilde(
-                REPO_DEFAULT_CACHE_DIR);
-        repo->url=g_strdup(REPO_DEFAULT_MAP_URI);
-        repo->dl_zoom_steps = REPO_DEFAULT_DL_ZOOM_STEPS;
-        repo->name = g_strdup(REPO_DEFAULT_NAME);
-        repo->view_zoom_steps = REPO_DEFAULT_VIEW_ZOOM_STEPS;
-        repo->double_size = FALSE;
-        repo->nextable = TRUE;
-        repo->min_zoom = REPO_DEFAULT_MIN_ZOOM;
-        repo->max_zoom = REPO_DEFAULT_MAX_ZOOM;
-        repo->layers = NULL;
-        repo->layer_level = 0;
-        set_repo_type(repo);
-
-        _repo_list = g_list_append(_repo_list, repo);
-        repo_set_curr(repo);
-    }
 
     /* Get last Zoom Level.  Default is 16. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ZOOM, NULL);

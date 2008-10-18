@@ -1025,28 +1025,58 @@ repo_make_db(RepoData *rd)
     return g_file_test(rd->db_filename, G_FILE_TEST_EXISTS);
 }
 
+
+static void
+update_path_coords (UnitsType from, UnitsType to, Path* path)
+{
+    Point *curr = path->head;
+    gdouble lat, lon;
+
+    while (curr != path->tail) {
+        if (curr->unitx || curr->unity) {
+            unit2latlon (curr->unitx, curr->unity, &lat, &lon, from);
+            latlon2unit (lat, lon, &curr->unitx, &curr->unity, to);
+        }
+        curr++;
+    }
+}
+
+
 gboolean
 repo_set_curr(RepoData *rd)
 {
     RepoData* repo_p;
+    int new_zoom = _zoom;
 
     printf("%s()\n", __PRETTY_FUNCTION__);
     if(!rd->db_filename || !*rd->db_filename
             || repo_make_db(rd))
     {
+        /* if new repo coordinate system differs from current one,
+           recalculate map center, current track and route (if needed) */
+        if (_curr_repo && _curr_repo->units != rd->units) {
+            gdouble lat, lon;
+            unit2latlon (_center.unitx, _center.unity, &lat, &lon, _curr_repo->units);
+            latlon2unit (lat, lon, &_center.unitx, &_center.unity, rd->units);
+            _next_center = _center;
+
+            if((_show_paths & ROUTES_MASK) && _route.head != _route.tail)
+                update_path_coords (_curr_repo->units, rd->units, &_route);
+            if((_show_paths & TRACKS_MASK) && _track.head != _track.tail)
+                update_path_coords (_curr_repo->units, rd->units, &_track);
+        }
+
+        if (_curr_repo) {
+            if (rd->type == REPOTYPE_YANDEX && _curr_repo->type != rd->type)
+                new_zoom += 2;
+            if (_curr_repo->type == REPOTYPE_YANDEX && _curr_repo->type != rd->type)
+                new_zoom -= 2;
+        }
+
         repo_p = _curr_repo;
 
         while (repo_p)
         {
-            /* if new repo coordinate system differs from current one,
-               recalculate map center */
-            if (repo_p->units != rd->units) {
-                gdouble lat, lon;
-                unit2latlon (_center.unitx, _center.unity, &lat, &lon, repo_p->units);
-                latlon2unit (lat, lon, &_center.unitx, &_center.unity, rd->units);
-                _next_center = _center;
-            }
-
             if(repo_p->db)
             {
                 g_mutex_lock(_mapdb_mutex);
@@ -1064,6 +1094,8 @@ repo_set_curr(RepoData *rd)
 
         /* Set the current repository! */
         _curr_repo = rd;
+        if (new_zoom != _zoom)
+            map_set_zoom (new_zoom);
 
         /* Set up the database. */
         if(_curr_repo->db_filename && *_curr_repo->db_filename)
