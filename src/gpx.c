@@ -35,6 +35,50 @@
 #include "path.h"
 #include "util.h"
 
+/** This enum defines the states of the SAX parsing state machine. */
+typedef enum
+{
+    START,
+    INSIDE_GPX,
+    INSIDE_WPT,
+    INSIDE_WPT_NAME,
+    INSIDE_WPT_DESC,
+    INSIDE_WPT_CMT,
+    INSIDE_PATH,
+    INSIDE_PATH_SEGMENT,
+    INSIDE_PATH_POINT,
+    INSIDE_PATH_POINT_ELE,
+    INSIDE_PATH_POINT_TIME,
+    INSIDE_PATH_POINT_DESC,
+    INSIDE_PATH_POINT_CMT,
+    FINISH,
+    UNKNOWN,
+    ERROR,
+} SaxState;
+
+/** Data used during the SAX parsing operation. */
+typedef struct _SaxData SaxData;
+struct _SaxData {
+    SaxState state;
+    SaxState prev_state;
+    gint unknown_depth;
+    gboolean at_least_one_trkpt;
+    GString *chars;
+};
+
+typedef struct _PathSaxData PathSaxData;
+struct _PathSaxData {
+    SaxData sax_data;
+    Path path;
+};
+
+typedef struct _PoiSaxData PoiSaxData;
+struct _PoiSaxData {
+    SaxData sax_data;
+    GList *poi_list;
+    PoiInfo *curr_poi;
+};
+
 /**
  * Handle a start tag in the parsing of a GPX file.
  */
@@ -65,6 +109,7 @@ gpx_chars(SaxData *data, const xmlChar *ch, int len)
         case INSIDE_PATH_POINT_ELE:
         case INSIDE_PATH_POINT_TIME:
         case INSIDE_PATH_POINT_DESC:
+        case INSIDE_PATH_POINT_CMT:
             for(i = 0; i < len; i++)
                 data->chars = g_string_append_c(data->chars, ch[i]);
             vprintf("%s\n", data->chars->str);
@@ -193,13 +238,17 @@ gpx_path_start_element(PathSaxData *data,
             if(!strcmp((gchar*)name, "gpx"))
                 data->sax_data.state = INSIDE_GPX;
             else
+            {
                 MACRO_SET_UNKNOWN();
+            }
             break;
         case INSIDE_GPX:
             if(!strcmp((gchar*)name, "trk"))
                 data->sax_data.state = INSIDE_PATH;
             else
+            {
                 MACRO_SET_UNKNOWN();
+            }
             break;
         case INSIDE_PATH:
             if(!strcmp((gchar*)name, "trkseg"))
@@ -208,7 +257,9 @@ gpx_path_start_element(PathSaxData *data,
                 data->sax_data.at_least_one_trkpt = FALSE;
             }
             else
+            {
                 MACRO_SET_UNKNOWN();
+            }
             break;
         case INSIDE_PATH_SEGMENT:
             if(!strcmp((gchar*)name, "trkpt"))
@@ -250,7 +301,9 @@ gpx_path_start_element(PathSaxData *data,
                     data->sax_data.state = ERROR;
             }
             else
+            {
                 MACRO_SET_UNKNOWN();
+            }
             break;
         case INSIDE_PATH_POINT:
             if(!strcmp((gchar*)name, "time"))
@@ -259,9 +312,13 @@ gpx_path_start_element(PathSaxData *data,
                 data->sax_data.state = INSIDE_PATH_POINT_ELE;
             else if(!strcmp((gchar*)name, "desc"))
                 data->sax_data.state = INSIDE_PATH_POINT_DESC;
+            else if(!strcmp((gchar*)name, "cmt"))
+                data->sax_data.state = INSIDE_PATH_POINT_CMT;
 
             else
+            {
                 MACRO_SET_UNKNOWN();
+            }
             break;
         case UNKNOWN:
             data->sax_data.unknown_depth++;
@@ -402,11 +459,39 @@ gpx_path_end_element(PathSaxData *data, const xmlChar *name)
             else
                 data->sax_data.state = ERROR;
             break;
+        case INSIDE_PATH_POINT_CMT:
+            /* only parse description for routes */
+            if(!strcmp((gchar*)name, "cmt"))
+            {
+                if(data->path.wtail < data->path.whead
+                        || data->path.wtail->point != data->path.tail)
+                {
+                    MACRO_PATH_INCREMENT_WTAIL(data->path);
+                    data->path.wtail->point = data->path.tail;
+                    data->path.wtail->desc
+                        = g_string_free(data->sax_data.chars, FALSE);
+                }
+                else
+                    g_string_free(data->sax_data.chars, TRUE);
+
+                data->sax_data.chars = g_string_new("");
+                data->sax_data.state = INSIDE_PATH_POINT;
+            }
+            else
+                data->sax_data.state = ERROR;
+            break;
         case INSIDE_PATH_POINT_DESC:
             /* only parse description for routes */
             if(!strcmp((gchar*)name, "desc"))
             {
-                MACRO_PATH_INCREMENT_WTAIL(data->path);
+                /* If we already have a desc (e.g. from cmt), then overwrite */
+                if(data->path.wtail >= data->path.whead
+                        && data->path.wtail->point == data->path.tail)
+                    g_free(data->path.wtail->desc);
+                else
+                {
+                    MACRO_PATH_INCREMENT_WTAIL(data->path);
+                }
                 data->path.wtail->point = data->path.tail;
                 data->path.wtail->desc
                     = g_string_free(data->sax_data.chars, FALSE);
@@ -419,8 +504,6 @@ gpx_path_end_element(PathSaxData *data, const xmlChar *name)
         case UNKNOWN:
             if(!--data->sax_data.unknown_depth)
                 data->sax_data.state = data->sax_data.prev_state;
-            else
-                data->sax_data.state = ERROR;
             break;
         default:
             ;
@@ -684,7 +767,9 @@ gpx_poi_start_element(PoiSaxData *data,
             if(!strcmp((gchar*)name, "gpx"))
                 data->sax_data.state = INSIDE_GPX;
             else
+            {
                 MACRO_SET_UNKNOWN();
+            }
             break;
         case INSIDE_GPX:
             if(!strcmp((gchar*)name, "wpt"))
@@ -727,18 +812,23 @@ gpx_poi_start_element(PoiSaxData *data,
                     data->sax_data.state = ERROR;
             }
             else
+            {
                 MACRO_SET_UNKNOWN();
+            }
             break;
         case INSIDE_WPT:
             if(!strcmp((gchar*)name, "name"))
                 data->sax_data.state = INSIDE_WPT_NAME;
             else if(!strcmp((gchar*)name, "desc"))
                 data->sax_data.state = INSIDE_WPT_DESC;
+            else if(!strcmp((gchar*)name, "cmt"))
+                data->sax_data.state = INSIDE_WPT_CMT;
             else
+            {
                 MACRO_SET_UNKNOWN();
+            }
             break;
         case UNKNOWN:
-            printf("UNKNOWN!\n");
             data->sax_data.unknown_depth++;
             break;
         default:
@@ -789,9 +879,27 @@ gpx_poi_end_element(PoiSaxData *data, const xmlChar *name)
             else
                 data->sax_data.state = ERROR;
             break;
+        case INSIDE_WPT_CMT:
+            if(!strcmp((gchar*)name, "cmt"))
+            {
+                /* Only use if we don't already have a desc */
+                if(!data->curr_poi->desc)
+                {
+                    data->curr_poi->desc
+                        = g_string_free(data->sax_data.chars, FALSE);
+                    data->sax_data.chars = g_string_new("");
+                    data->sax_data.state = INSIDE_WPT;
+                }
+            }
+            else
+                data->sax_data.state = ERROR;
+            break;
         case INSIDE_WPT_DESC:
             if(!strcmp((gchar*)name, "desc"))
             {
+                /* If we already have a desc (e.g. from cmt), then overwrite */
+                if(data->curr_poi->desc)
+                    g_free(data->curr_poi->desc);
                 data->curr_poi->desc
                     = g_string_free(data->sax_data.chars, FALSE);
                 data->sax_data.chars = g_string_new("");
@@ -801,11 +909,8 @@ gpx_poi_end_element(PoiSaxData *data, const xmlChar *name)
                 data->sax_data.state = ERROR;
             break;
         case UNKNOWN:
-            printf("UNKNOWN!\n");
             if(!--data->sax_data.unknown_depth)
                 data->sax_data.state = data->sax_data.prev_state;
-            else
-                data->sax_data.state = ERROR;
             break;
         default:
             ;

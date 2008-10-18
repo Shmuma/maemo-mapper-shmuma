@@ -436,6 +436,10 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
             _speed_limit_on ^= 1;
             break;
 
+        case CUSTOM_ACTION_TOGGLE_LAYERS:
+            maps_toggle_visible_layers ();
+            break;
+
         default:
             vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
             return FALSE;
@@ -567,8 +571,14 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
 
     _mouse_is_down = FALSE;
 
+    if(event->button == 3) /* right-click */
+    {   
+        gtk_menu_popup(_map_cmenu, NULL, NULL, NULL, NULL,
+                       event->button, event->time);
+    }
+    else
 #ifdef DEBUG
-    if(event->button != 1)
+    if(event->button == 2) /* middle-click */
     {   
         screen2unit((gint)(event->x + 0.5), (gint)(event->y + 0.5),
                 _pos.unitx, _pos.unity);

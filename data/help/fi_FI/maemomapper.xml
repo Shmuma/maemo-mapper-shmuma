@@ -1,5 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="../tohtml.xsl?root=maemo-mapper"?>
+
+<!-- 
+ -
+ - Copyright (C) 2006, 2007 John Costigan. 
+ - 
+ - Tämä tiedosto on osa Maemo Mapper ohjelmaa.
+ -
+ - Tämä on vapaa ohjelma: tätä ohjelmaa saa levittää edelleen ja
+ - muuttaa Free Software Foundationin julkaiseman GNU General
+ - Public Licensen (GPL-lisenssi) version 3 tai (valinnan mukaan)
+ - myöhemmän version ehtojen mukaisesti
+ - 
+ - Tätä ohjelmaa levitetään siinä toivossa, että se olisi hyödyllinen
+ - mutta ilman mitään takuuta; edes hiljaista takuuta kaupallisesti
+ - hyväksyttävästä laadusta tai soveltuvuudesta tiettyyn tarkoitukseen.
+ - Katso GPL- lisenssistä lisää yksityiskohtia.
+ - 
+ - Tämän ohjelman mukana pitäisi tulla kopio GPL-lisenssistä. Jos näin
+ - ei ole, katso <http://www.gnu.org/licenses/>. 
+ - 
+--> 
 <ossohelpsource>
   <folder>
     <title>Maemo Mapper</title>
@@ -166,8 +187,7 @@
           pohjassa vierittääksesi
         </listitem>
         <listitem>
-          <graphic filename="2686KEY_scroll_center"/> - Valitse
-          <ref refid="Auto-Center" refdoc="Automaattinen keskitys"/>
+          <graphic filename="2686KEY_scroll_center"/> - Valitse automaattinen keskitys
         </listitem>
         <listitem>
           <graphic filename="2686KEY_esc"/> - Ohjelmoitavissa; oletuksena
@@ -313,6 +333,13 @@
         <listitem>
           <display_text>Tyhjennä</display_text> - Tyhjentää käytössä olevan 
 	  reittijäljen.
+        </listitem>
+       <listitem>
+	  <display_text>Reittijälki käytössä</display_text> - Tällä valinnalla
+	  hallitaan onko reittijälki käytössä Maemo Mapperissa. Mikäli 
+	  valittuna, reittijälki talletetaan tiedostoon joka voidaan tallettaa
+	  GPX-muodossa käyttäen valikon "Tallenna..." valintaa.  Maemo Mapper
+	  ei voi näyttää reittijälkeä, mikäli tämä valinta ei ole valittuna.
         </listitem>
       </list>
       <heading>Kartat</heading>
@@ -604,17 +631,16 @@
       </list>
       <note>
         Kartan korjaus on vähän käytetty ominaisuus, joka korjaa harvinaisen
-	kartta ongelman.  Joissakin paikoissa (kuten Brasiliassa ja Québecissä),
+	karttaongelman.  Joissakin paikoissa (kuten Brasiliassa ja Québecissä),
 	reittitiedot eivät välttämättä ole tarkat, vaikkakin ongelma on
-	systemaattinen.	 Virheen voi suomata liikkuessa, jolloin reittijälki
-	saattaa olla muutaman sata metriä syrjässä verrattuna käytetyn
-	karttavaraston tiehen.  Kartan korjaus korjaa tämän ongelman.  Kun
-	GPS-vastaanottin on saanut lukituksen ja Maemo Mapper näyttää sijantisi
-	väärin, niin kosketa ja pidä kohta jonka <i>luulet</i> olevan oikea
-	painettuna hetken aikaa ja valitse valikosta tämä valinta.  
-	Korjaustieto tallennetaan osana Maemo Mapperin pysyviä asetuksia,
-	joten se säilyy myös silloin, kun Maemo Mapper tai laite käynnistetään
-	uudelleen.
+	systemaattinen.	 Virheen voi huomata liikkuessa, jolloin reittijälki
+	saattaa olla muutaman sata metriä syrjässä verrattuna käytettyyn karttaan.
+ 	Kartan korjaus korjaa tämän ongelman.  Kun GPS-vastaanottin on saanut
+ 	lukituksen ja Maemo Mapper näyttää sijantisi väärin, niin kosketa ja pidä
+	kohta jonka <i>luulet</i> olevan oikea painettuna hetken aikaa ja valitse
+	valikosta tämä valinta.  Korjaustieto tallennetaan osana Maemo Mapperin
+	pysyviä asetuksia, joten se säilyy myös silloin, kun Maemo Mapper tai
+	laite käynnistetään uudelleen.
       </note>
       <heading>Kohdepiste</heading>
       <para>

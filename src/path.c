@@ -942,7 +942,7 @@ track_add(time_t time, gboolean newly_fixed)
 #               define _voice_synth_path "/usr/bin/flite"
                         printf("%s %s\n", _voice_synth_path,
                                 _last_spoken_phrase);
-                        execl(_voice_synth_path, _voice_synth_path,
+                        execl("/bin/sh", _voice_synth_path, _voice_synth_path,
                                 "-t", _last_spoken_phrase, (char *)NULL);
                         exit(0);
                     }
@@ -1277,11 +1277,13 @@ route_download(gchar *to)
                 oti.txt_from = gtk_entry_new(),
                 1, 4, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_from), 25);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(oti.txt_from), "hildon-input-mode",
                                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(oti.txt_from), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
 
         /* Destination. */
@@ -1293,11 +1295,13 @@ route_download(gchar *to)
                 oti.txt_to = gtk_entry_new(),
                 1, 4, 4, 5, GTK_EXPAND | GTK_FILL, 0, 2, 4);
         gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_to), 25);
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
         g_object_set(G_OBJECT(oti.txt_to), "hildon-input-mode",
                                 HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
         g_object_set(G_OBJECT(oti.txt_to), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
 
         /* Swap button. */

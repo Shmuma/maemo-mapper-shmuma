@@ -115,6 +115,7 @@
   </xsl:element>
 </xsl:template>
 
+<xsl:template match="context"></xsl:template>
 
 <!-- Headings (title = h1, topictitle = h2, heading = h3) -->
 
