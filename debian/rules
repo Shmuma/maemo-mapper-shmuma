@@ -40,6 +40,8 @@ endif
 
 configure: configure-stamp
 configure-stamp:
+	# Remove generated help files before building
+	rm -f data/help/*/maemomapper.xml
 	dh_testdir
 	./autogen.sh
 	# Add here commands to configure the package.

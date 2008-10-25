@@ -2100,6 +2100,16 @@ settings_init()
     else
         _enable_voice = TRUE;
 
+    if(_enable_voice)
+    {
+        /* Make sure we actually have voice capabilities. */
+        GnomeVFSFileInfo file_info;
+        _enable_voice = ((GNOME_VFS_OK == gnome_vfs_get_file_info(
+                    _voice_synth_path, &file_info,
+                    GNOME_VFS_FILE_INFO_GET_ACCESS_RIGHTS))
+            && (file_info.permissions & GNOME_VFS_PERM_ACCESS_EXECUTABLE));
+    }
+
     /* Get Fullscreen flag. Default is FALSE. */
     _fullscreen = gconf_client_get_bool(gconf_client,
             GCONF_KEY_FULLSCREEN, NULL);

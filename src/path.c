@@ -939,11 +939,14 @@ track_add(time_t time, gboolean newly_fixed)
                         hildon_play_system_sound(
                             "/usr/share/sounds/ui-information_note.wav");
                         sleep(1);
-#               define _voice_synth_path "/usr/bin/flite"
                         printf("%s %s\n", _voice_synth_path,
                                 _last_spoken_phrase);
-                        execl("/bin/sh", _voice_synth_path, _voice_synth_path,
+                        execl(_voice_synth_path, basename(_voice_synth_path),
                                 "-t", _last_spoken_phrase, (char *)NULL);
+                        /* No good?  Try to launch it with /bin/sh */
+                        execl("/bin/sh", "sh", _voice_synth_path,
+                                "-t", _last_spoken_phrase, (char *)NULL);
+                        /* Still no good? Oh well... */
                         exit(0);
                     }
                 }

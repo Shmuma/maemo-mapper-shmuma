@@ -22,8 +22,8 @@
 set -x
 glib-gettextize --copy --force
 libtoolize --automake --copy --force
+aclocal
 intltoolize --automake --copy --force
-aclocal-1.7
 autoconf --force
 autoheader --force
-automake-1.7 --add-missing --copy --force-missing --foreign
+automake --add-missing --copy --force-missing --foreign
