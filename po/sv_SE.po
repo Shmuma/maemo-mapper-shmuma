@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-11 23:01-0400\n"
+"POT-Creation-Date: 2008-10-16 03:44-0400\n"
 "PO-Revision-Date: 2008-01-16 22:56+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -39,7 +39,7 @@ msgstr "Lägg till PAI..."
 msgid "Add Route Point"
 msgstr "Lägg till ruttpunkt"
 
-#: ../src/path.c:1502
+#: ../src/path.c:1505
 msgid "Add Waypoint"
 msgstr "Lägg till vägpunkt"
 
@@ -67,7 +67,7 @@ msgstr "Adress..."
 msgid "Advance Notice"
 msgstr ""
 
-#: ../src/maps.c:3467
+#: ../src/maps.c:3479
 msgid "Along Route - Radius (tiles):"
 msgstr "Längs rutt - radie (rutor):"
 
@@ -79,7 +79,7 @@ msgstr "Höjd"
 msgid "An error occurred while attempting to scan for bluetooth devices."
 msgstr "Ett fel inträffade vid försök att söka efter blåtandsenheter."
 
-#: ../src/maps.c:2268
+#: ../src/maps.c:2280
 msgid ""
 "An error occurred while retrieving the repositories.  The web service may be "
 "temporarily down."
@@ -87,7 +87,7 @@ msgstr ""
 "Ett fel inträffade vid hämtning av förråden.  Webbtjänsten kan temporärt "
 "vara otillgänglig."
 
-#: ../src/maps.c:1795
+#: ../src/maps.c:1807
 #, fuzzy
 msgid "An error occurred while trying to compact the database."
 msgstr "Ett fel inträffade vid försök att söka efter blåtandsenheter."
@@ -112,7 +112,7 @@ msgstr ""
 msgid "Apply Map Correction"
 msgstr ""
 
-#: ../src/maps.c:3507
+#: ../src/maps.c:3519
 msgid "Area"
 msgstr "Område"
 
@@ -152,15 +152,15 @@ msgstr "Automatisk rotering inaktiverad"
 msgid "Auto-Rotate Enabled"
 msgstr "Automatisk rotering aktiverad"
 
-#: ../src/path.c:1261
+#: ../src/path.c:1264
 msgid "Auto-Update"
 msgstr "Automatisk uppdatering"
 
-#: ../src/maps.c:2447
+#: ../src/maps.c:2459
 msgid "Autofetch"
 msgstr ""
 
-#: ../src/path.c:1267
+#: ../src/path.c:1270
 msgid "Avoid Highways"
 msgstr "Undvik motorvägar"
 
@@ -176,7 +176,7 @@ msgstr "Bluetooth"
 msgid "Bottom-Left"
 msgstr "Nedre vänster"
 
-#: ../src/main.c:360 ../src/maps.c:3598
+#: ../src/main.c:360 ../src/maps.c:3610
 msgid "Bottom-Right"
 msgstr "Nedre höger"
 
@@ -188,7 +188,7 @@ msgstr "Bläddra i PAI..."
 msgid "Browse POIs"
 msgstr "Bläddra PAI:er"
 
-#: ../src/maps.c:2034 ../src/maps.c:2441 ../src/menu.c:1562
+#: ../src/maps.c:2046 ../src/maps.c:2453 ../src/menu.c:1562
 #: ../src/settings.c:1265 ../src/settings.c:1547
 msgid "Browse..."
 msgstr "Bläddra..."
@@ -201,15 +201,15 @@ msgstr "Busshållplatser, flygplatser, tågstationer etc."
 msgid "Business"
 msgstr "Företag"
 
-#: ../src/maps.c:3458
+#: ../src/maps.c:3470
 msgid "By Area (see tab)"
 msgstr "Efter område (se flik)"
 
-#: ../src/maps.c:2024 ../src/maps.c:2434
+#: ../src/maps.c:2036 ../src/maps.c:2446
 msgid "Cache DB"
 msgstr ""
 
-#: ../src/maps.c:1964
+#: ../src/maps.c:1976
 msgid ""
 "Cannot delete the last repository - there must be at lease one repository."
 msgstr ""
@@ -228,7 +228,7 @@ msgstr "Kategori"
 msgid "Checked POI Actions..."
 msgstr ""
 
-#: ../src/maps.c:3411 ../src/menu.c:1526 ../src/menu.c:1546
+#: ../src/maps.c:3423 ../src/menu.c:1526 ../src/menu.c:1546
 msgid "Clear"
 msgstr "Töm"
 
@@ -252,16 +252,16 @@ msgstr "Färger"
 msgid "Colors..."
 msgstr "Färger..."
 
-#: ../src/maps.c:1816
+#: ../src/maps.c:1828
 msgid "Compact Database"
 msgstr ""
 
-#: ../src/maps.c:2037
+#: ../src/maps.c:2049
 #, fuzzy
 msgid "Compact..."
 msgstr "Importera..."
 
-#: ../src/maps.c:1875
+#: ../src/maps.c:1887
 #, fuzzy
 msgid "Compacting database..."
 msgstr "Importera..."
@@ -270,11 +270,11 @@ msgstr "Importera..."
 msgid "Compass Rose"
 msgstr ""
 
-#: ../src/maps.c:3133 ../src/maps.c:3239
+#: ../src/maps.c:3145 ../src/maps.c:3251
 msgid "Confirm DELETION of"
 msgstr "Bekräfta BORTTAGNING av"
 
-#: ../src/maps.c:1971
+#: ../src/maps.c:1983
 msgid "Confirm delete of repository"
 msgstr "Bekräfta borttagning av förråd"
 
@@ -282,7 +282,7 @@ msgstr "Bekräfta borttagning av förråd"
 msgid "Confirm delete of waypoint"
 msgstr "Bekräfta borttagning av vägpunkt"
 
-#: ../src/maps.c:3139 ../src/maps.c:3245
+#: ../src/maps.c:3151 ../src/maps.c:3257
 msgid "Confirm download of"
 msgstr "Bekräfta hämtning av"
 
@@ -306,7 +306,7 @@ msgstr "Kopiera Lat/Long"
 msgid "Counter"
 msgstr "Motsols"
 
-#: ../src/path.c:1585
+#: ../src/path.c:1588
 msgid ""
 "Creating a \"waypoint\" with no description actually adds a break point.  Is "
 "that what you want?"
@@ -324,11 +324,11 @@ msgstr "Standardkategori"
 msgid "Degrees Format"
 msgstr "Format för grader"
 
-#: ../src/maps.c:2739
+#: ../src/maps.c:2751
 msgid "Del"
 msgstr ""
 
-#: ../src/maps.c:3448
+#: ../src/maps.c:3460
 msgid "Delete Maps"
 msgstr "Ta bort kartor"
 
@@ -344,17 +344,17 @@ msgstr "Ta bort kategori?"
 msgid "Delete selected POI?"
 msgstr "Ta bort markerad PAI?"
 
-#: ../src/cmenu.c:686 ../src/maps.c:2890 ../src/poi.c:640 ../src/poi.c:1399
+#: ../src/cmenu.c:686 ../src/maps.c:2902 ../src/poi.c:640 ../src/poi.c:1399
 #: ../src/poi.c:2120
 msgid "Delete..."
 msgstr "Ta bort..."
 
-#: ../src/menu.c:276 ../src/path.c:1527 ../src/poi.c:679 ../src/poi.c:976
+#: ../src/menu.c:276 ../src/path.c:1530 ../src/poi.c:679 ../src/poi.c:976
 #: ../src/poi.c:1199 ../src/poi.c:1449 ../src/settings.c:683
 msgid "Description"
 msgstr "Beskrivning"
 
-#: ../src/path.c:1291
+#: ../src/path.c:1294
 msgid "Destination"
 msgstr "Mål"
 
@@ -370,12 +370,12 @@ msgstr "Avst."
 msgid "Distance"
 msgstr "Avstånd"
 
-#: ../src/maps.c:2741
+#: ../src/maps.c:2753
 #, fuzzy
 msgid "Dn"
 msgstr "Ned"
 
-#: ../src/maps.c:2096
+#: ../src/maps.c:2108
 msgid "Double Pixels"
 msgstr ""
 
@@ -383,7 +383,7 @@ msgstr ""
 msgid "Down"
 msgstr "Ned"
 
-#: ../src/maps.c:3435
+#: ../src/maps.c:3447
 msgid "Download Maps"
 msgstr "Hämta kartor"
 
@@ -395,7 +395,7 @@ msgstr "Hämta PAI..."
 msgid "Download POIs"
 msgstr "Hämta PAI:er"
 
-#: ../src/path.c:1215
+#: ../src/path.c:1218
 msgid "Download Route"
 msgstr "Hämta rutt"
 
@@ -408,7 +408,7 @@ msgstr "Hämta rutt till..."
 msgid "Download Sample Repositories..."
 msgstr "Hantera förråd..."
 
-#: ../src/maps.c:2059
+#: ../src/maps.c:2071
 msgid "Download Zoom Steps"
 msgstr ""
 
@@ -416,11 +416,11 @@ msgstr ""
 msgid "Download..."
 msgstr "Hämta..."
 
-#: ../src/maps.c:2111
+#: ../src/maps.c:2123
 msgid "Downloadable Zooms:"
 msgstr ""
 
-#: ../src/maps.c:1133 ../src/maps.c:1154
+#: ../src/maps.c:1145 ../src/maps.c:1166
 msgid "Downloaded maps will not be cached."
 msgstr "Hämtade kartor kommer inte att mellanlagras."
 
@@ -562,12 +562,12 @@ msgstr "Misslyckades med att öppna fil för läsning"
 msgid "Failed to open file for writing"
 msgstr "Misslyckades med att öppna fil för skrivning"
 
-#: ../src/maps.c:1791
+#: ../src/maps.c:1803
 #, fuzzy
 msgid "Failed to open map database for compacting."
 msgstr "Misslyckades med att öppna kartdatabas för förråd"
 
-#: ../src/maps.c:1131 ../src/maps.c:1153
+#: ../src/maps.c:1143 ../src/maps.c:1165
 msgid "Failed to open map database for repository"
 msgstr "Misslyckades med att öppna kartdatabas för förråd"
 
@@ -575,7 +575,7 @@ msgstr "Misslyckades med att öppna kartdatabas för förråd"
 msgid "Failed to open or create database"
 msgstr "Misslyckades med att öppna eller skapa databas"
 
-#: ../src/path.c:1723
+#: ../src/path.c:1726
 msgid "Failed to open path database. Tracks and routes will not be saved."
 msgstr ""
 
@@ -633,7 +633,7 @@ msgstr "GPS-detaljer"
 msgid "GPS Information"
 msgstr "GPS-information"
 
-#: ../src/maps.c:3521 ../src/menu.c:1661
+#: ../src/maps.c:3533 ../src/menu.c:1661
 msgid "GPS Location"
 msgstr "GPS-plats"
 
@@ -653,7 +653,7 @@ msgstr "Allmänna landmärken."
 msgid "General places of business."
 msgstr ""
 
-#: ../src/maps.c:1836
+#: ../src/maps.c:1848
 msgid ""
 "Generally, deleted maps create an empty space in the database that is later "
 "reused when downloading new maps.  Compacting the database reorganizes it "
@@ -744,11 +744,11 @@ msgstr ""
 msgid "Insert Track Break"
 msgstr ""
 
-#: ../src/maps.c:3767
+#: ../src/maps.c:3779
 msgid "Invalid Bottom-Right Latitude"
 msgstr ""
 
-#: ../src/maps.c:3774
+#: ../src/maps.c:3786
 msgid "Invalid Bottom-Right Longitude"
 msgstr ""
 
@@ -764,11 +764,11 @@ msgstr "Ogiltig longitud"
 msgid "Invalid NMEA input from receiver!"
 msgstr "Ogiltig NMEA-inmatning från mottagare!"
 
-#: ../src/maps.c:3753
+#: ../src/maps.c:3765
 msgid "Invalid Top-Left Latitude"
 msgstr ""
 
-#: ../src/maps.c:3760
+#: ../src/maps.c:3772
 msgid "Invalid Top-Left Longitude"
 msgstr ""
 
@@ -805,7 +805,7 @@ msgstr "Landmärke"
 msgid "Lat"
 msgstr "Lat"
 
-#: ../src/menu.c:266 ../src/path.c:1512
+#: ../src/menu.c:266 ../src/path.c:1515
 msgid "Lat, Lon:"
 msgstr "Lat, Long:"
 
@@ -817,11 +817,11 @@ msgstr "Lat/Long"
 msgid "Lat/Lon..."
 msgstr "Lat/Long..."
 
-#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:3511 ../src/menu.c:812
+#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:3523 ../src/menu.c:812
 msgid "Latitude"
 msgstr "Latitud"
 
-#: ../src/maps.c:2458
+#: ../src/maps.c:2470
 msgid "Layer is visible"
 msgstr ""
 
@@ -829,7 +829,7 @@ msgstr ""
 msgid "Layers"
 msgstr ""
 
-#: ../src/maps.c:2871
+#: ../src/maps.c:2883
 #, fuzzy
 msgid "Layers..."
 msgstr "Kategorier..."
@@ -866,7 +866,7 @@ msgstr "Logi"
 msgid "Lon"
 msgstr "Long"
 
-#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:3515 ../src/menu.c:833
+#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:3527 ../src/menu.c:833
 msgid "Longitude"
 msgstr "Longitud"
 
@@ -874,7 +874,7 @@ msgstr "Longitud"
 msgid "MAC"
 msgstr "MAC"
 
-#: ../src/maps.c:2248
+#: ../src/maps.c:2260
 msgid ""
 "Maemo Mapper will now download and add a list of possibly-duplicate "
 "repositories from the internet.  Continue?"
@@ -882,7 +882,7 @@ msgstr ""
 "Maemo Mapper kommer nu att hämta och lägga till en lista över tänkbara "
 "dubbletter av förråd från Internet.  Fortsätt?"
 
-#: ../src/maps.c:3396
+#: ../src/maps.c:3408
 msgid "Manage Maps"
 msgstr "Hantera kartor"
 
@@ -890,7 +890,7 @@ msgstr "Hantera kartor"
 msgid "Manage Maps..."
 msgstr "Hantera kartor..."
 
-#: ../src/maps.c:2850
+#: ../src/maps.c:2862
 msgid "Manage Repositories"
 msgstr "Hantera förråd"
 
@@ -898,7 +898,7 @@ msgstr "Hantera förråd"
 msgid "Manage Repositories..."
 msgstr "Hantera förråd..."
 
-#: ../src/maps.c:2675
+#: ../src/maps.c:2687
 #, fuzzy, c-format
 msgid "Manage layers [%s]"
 msgstr "Hantera kartor"
@@ -923,11 +923,11 @@ msgstr "Kartor"
 msgid "Max speed"
 msgstr "Max hastighet"
 
-#: ../src/maps.c:2131
+#: ../src/maps.c:2143
 msgid "Max."
 msgstr "Max."
 
-#: ../src/maps.c:2120
+#: ../src/maps.c:2132
 msgid "Min."
 msgstr "Min."
 
@@ -935,7 +935,7 @@ msgstr "Min."
 msgid "Min. Speed"
 msgstr "Min. hastighet"
 
-#: ../src/maps.c:2985
+#: ../src/maps.c:2997
 msgid "Minimum Downloadable Zoom must be less than Maximum Downloadable Zoom."
 msgstr ""
 
@@ -951,13 +951,13 @@ msgstr "Div. 2"
 msgid "Miscellaneous category for everything else."
 msgstr "Blandad kategori för allting annat."
 
-#: ../src/maps.c:3719 ../src/menu.c:516
+#: ../src/maps.c:3731 ../src/menu.c:516
 msgid ""
 "NOTE: You must set a Map URI in the current repository in order to download "
 "maps."
 msgstr ""
 
-#: ../src/maps.c:1908 ../src/maps.c:2188 ../src/maps.c:2416 ../src/maps.c:2495
+#: ../src/maps.c:1920 ../src/maps.c:2200 ../src/maps.c:2428 ../src/maps.c:2507
 msgid "Name"
 msgstr "Namn"
 
@@ -969,25 +969,25 @@ msgstr "Närmsta PAI"
 msgid "Never"
 msgstr ""
 
-#: ../src/maps.c:2738
+#: ../src/maps.c:2750
 #, fuzzy
 msgid "New"
 msgstr "Ny..."
 
-#: ../src/maps.c:2485
+#: ../src/maps.c:2497
 #, fuzzy
 msgid "New Layer"
 msgstr "Nytt namn"
 
-#: ../src/maps.c:1898
+#: ../src/maps.c:1910
 msgid "New Name"
 msgstr "Nytt namn"
 
-#: ../src/maps.c:2178
+#: ../src/maps.c:2190
 msgid "New Repository"
 msgstr "Nytt förråd"
 
-#: ../src/maps.c:2893
+#: ../src/maps.c:2905
 msgid "New..."
 msgstr "Ny..."
 
@@ -995,7 +995,7 @@ msgstr "Ny..."
 msgid "Next Waypoint"
 msgstr "Nästa vägpunkt"
 
-#: ../src/maps.c:2104
+#: ../src/maps.c:2116
 msgid "Next-able"
 msgstr ""
 
@@ -1029,7 +1029,7 @@ msgstr ""
 "Du kan även hämta ner en exempeluppsättning förråd från Internet genom att "
 "använda knappen \"Hämta...\"."
 
-#: ../src/path.c:1274 ../src/poi.c:2596 ../src/poi.c:2917
+#: ../src/path.c:1277 ../src/poi.c:2596 ../src/poi.c:2917
 msgid "Origin"
 msgstr "Ursprung"
 
@@ -1037,7 +1037,7 @@ msgstr "Ursprung"
 msgid "Other"
 msgstr "Övrigt"
 
-#: ../src/maps.c:3442
+#: ../src/maps.c:3454
 msgid "Overwrite"
 msgstr "Skriv över"
 
@@ -1168,15 +1168,15 @@ msgstr "Ange ett namn."
 msgid "Please specify a query."
 msgstr "Ange en fråga."
 
-#: ../src/path.c:1382 ../src/poi.c:2712
+#: ../src/path.c:1385 ../src/poi.c:2712
 msgid "Please specify a source URL."
 msgstr ""
 
-#: ../src/path.c:1424
+#: ../src/path.c:1427
 msgid "Please specify a start location."
 msgstr ""
 
-#: ../src/path.c:1431
+#: ../src/path.c:1434
 msgid "Please specify an end location."
 msgstr ""
 
@@ -1192,7 +1192,7 @@ msgstr "Punkter"
 msgid "Port"
 msgstr "Port"
 
-#: ../src/maps.c:1367
+#: ../src/maps.c:1379
 msgid "Processing Maps"
 msgstr "Behandlar kartor"
 
@@ -1204,7 +1204,7 @@ msgstr "Fråga"
 msgid "Real Time Kinematic"
 msgstr ""
 
-#: ../src/path.c:1007
+#: ../src/path.c:1010
 msgid "Really clear the track?"
 msgstr "Verkligen ta bort spåret?"
 
@@ -1216,11 +1216,11 @@ msgstr "Räknar om..."
 msgid "Recreation"
 msgstr "Nöje"
 
-#: ../src/maps.c:2887
+#: ../src/maps.c:2899
 msgid "Rename..."
 msgstr "Byt namn..."
 
-#: ../src/maps.c:2219
+#: ../src/maps.c:2231
 msgid "Replace all repositories with the default repository?"
 msgstr "Ersätt alla förråd med standardförrådet?"
 
@@ -1244,7 +1244,7 @@ msgstr "Återställ alla färger till sina standardvärden?"
 msgid "Reset all hardware keys to their original defaults?"
 msgstr "Återställ alla hårdvarutangenter till sina standardvärden?"
 
-#: ../src/maps.c:2865 ../src/settings.c:810 ../src/settings.c:926
+#: ../src/maps.c:2877 ../src/settings.c:810 ../src/settings.c:926
 msgid "Reset..."
 msgstr "Återställ..."
 
@@ -1390,7 +1390,7 @@ msgstr "Inställningar"
 msgid "Settings..."
 msgstr "Inställningar..."
 
-#: ../src/maps.c:3425
+#: ../src/maps.c:3437
 msgid "Setup"
 msgstr "Konfiguration"
 
@@ -1450,7 +1450,7 @@ msgstr "Visa position"
 msgid "Simulation"
 msgstr "Simulering"
 
-#: ../src/path.c:1234 ../src/poi.c:2548
+#: ../src/path.c:1237 ../src/poi.c:2548
 msgid "Source URL"
 msgstr "Käll-url"
 
@@ -1470,7 +1470,7 @@ msgstr "Hastighetsgräns"
 msgid "Stations for purchasing fuel for vehicles."
 msgstr ""
 
-#: ../src/maps.c:1798
+#: ../src/maps.c:1810
 msgid "Successfully compacted database."
 msgstr ""
 
@@ -1478,7 +1478,7 @@ msgstr ""
 msgid "Tap Point"
 msgstr ""
 
-#: ../src/maps.c:977
+#: ../src/maps.c:989
 msgid ""
 "The current repository is in a legacy format and will be converted.  You "
 "should delete your old maps if you no longer plan to use them."
@@ -1558,7 +1558,7 @@ msgstr "Växla spår"
 msgid "Toggle Tracks/Routes"
 msgstr "Växla spår"
 
-#: ../src/main.c:358 ../src/maps.c:3556
+#: ../src/main.c:358 ../src/maps.c:3568
 msgid "Top-Left"
 msgstr "Övre vänster"
 
@@ -1600,15 +1600,15 @@ msgstr "Spår visas nu"
 msgid "Transportation"
 msgstr ""
 
-#: ../src/maps.c:2427
+#: ../src/maps.c:2439
 msgid "URL"
 msgstr ""
 
-#: ../src/maps.c:2015
+#: ../src/maps.c:2027
 msgid "URL Format"
 msgstr ""
 
-#: ../src/maps.c:1171
+#: ../src/maps.c:1183
 msgid "Unable to create map database for repository"
 msgstr "Kunde inte skapa kartdatabas för förråd"
 
@@ -1624,15 +1624,15 @@ msgstr "Enheter"
 msgid "Unknown error while locating address."
 msgstr "Okänt fel vid lokalisering av adress."
 
-#: ../src/main.c:249 ../src/maps.c:2740 ../src/menu.c:1634
+#: ../src/main.c:249 ../src/maps.c:2752 ../src/menu.c:1634
 msgid "Up"
 msgstr "Upp"
 
-#: ../src/path.c:1251 ../src/poi.c:2561 ../src/poi.c:2883
+#: ../src/path.c:1254 ../src/poi.c:2561 ../src/poi.c:2883
 msgid "Use End of Route"
 msgstr ""
 
-#: ../src/path.c:1245 ../src/poi.c:2555 ../src/poi.c:2877
+#: ../src/path.c:1248 ../src/poi.c:2555 ../src/poi.c:2877
 msgid "Use GPS Location"
 msgstr "Använd GPS-plats"
 
@@ -1644,11 +1644,11 @@ msgstr ""
 msgid "View"
 msgstr "Visa"
 
-#: ../src/maps.c:3537
+#: ../src/maps.c:3549
 msgid "View Center"
 msgstr ""
 
-#: ../src/maps.c:2075
+#: ../src/maps.c:2087
 msgid "View Zoom Steps"
 msgstr ""
 
@@ -1684,7 +1684,7 @@ msgstr ""
 msgid "When Receiving Any GPS Data"
 msgstr ""
 
-#: ../src/maps.c:2700
+#: ../src/maps.c:2712
 msgid ""
 "You cannot add layers to not saved repository,\n"
 "sorry. So, press ok in repository manager\n"
@@ -1701,7 +1701,7 @@ msgstr ""
 "menyobjektet \"Hantera kartor\" under menyn \"Kartor\".  Du kan även trycka "
 "OK nu för att aktivera automatisk hämtning."
 
-#: ../src/maps.c:3480 ../src/menu.c:1603
+#: ../src/maps.c:3492 ../src/menu.c:1603
 msgid "Zoom"
 msgstr "Zoom"
 
@@ -1713,7 +1713,7 @@ msgstr "Zooma in"
 msgid "Zoom Level"
 msgstr "Zoomnivå"
 
-#: ../src/maps.c:3486
+#: ../src/maps.c:3498
 msgid "Zoom Levels to Download: (0 = most detail)"
 msgstr "Zoomnivåer att hämta: (0 = flest detaljer)"
 
@@ -1725,7 +1725,7 @@ msgstr "Zooma ut"
 msgid "Zoom to Level"
 msgstr "Zooma till nivå"
 
-#: ../src/maps.c:3239 ../src/maps.c:3246
+#: ../src/maps.c:3251 ../src/maps.c:3258
 msgid "about"
 msgstr "ungefär"
 
@@ -1737,11 +1737,11 @@ msgstr "används"
 msgid "km"
 msgstr "km"
 
-#: ../src/maps.c:3140 ../src/maps.c:3247
+#: ../src/maps.c:3152 ../src/maps.c:3259
 msgid "maps"
 msgstr "kartor"
 
-#: ../src/maps.c:3134 ../src/maps.c:3240
+#: ../src/maps.c:3146 ../src/maps.c:3252
 msgid "maps "
 msgstr "kartor"
 
@@ -1753,7 +1753,7 @@ msgstr "kartor gick inte att hämta."
 msgid "mi."
 msgstr "mi."
 
-#: ../src/maps.c:2454
+#: ../src/maps.c:2466
 #, fuzzy
 msgid "min."
 msgstr "mi."
@@ -1770,6 +1770,6 @@ msgstr ""
 msgid "none"
 msgstr "ingen"
 
-#: ../src/maps.c:3140 ../src/maps.c:3247
+#: ../src/maps.c:3152 ../src/maps.c:3259
 msgid "up to about"
 msgstr "upp till ungefär"

@@ -312,4 +312,6 @@
     g_free(my_macro_buffer); \
 }
 
+#define _voice_synth_path "/usr/bin/flite"
+
 #endif /* ifndef MAEMO_MAPPER_DEFINES */

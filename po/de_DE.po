@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-10-11 23:01-0400\n"
+"POT-Creation-Date: 2008-10-16 03:44-0400\n"
 "PO-Revision-Date: 2008-04-09 23:17+0100\n"
 "Last-Translator: Claudius Henrichs <claudius.h@gmx.de>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
@@ -43,7 +43,7 @@ msgstr "POI hinzufügen..."
 msgid "Add Route Point"
 msgstr "Routenpunkt hinzufügen"
 
-#: ../src/path.c:1502
+#: ../src/path.c:1505
 msgid "Add Waypoint"
 msgstr "Wegpunkt hinzufügen"
 
@@ -71,7 +71,7 @@ msgstr "Adresse..."
 msgid "Advance Notice"
 msgstr "Vorankündigung"
 
-#: ../src/maps.c:3467
+#: ../src/maps.c:3479
 msgid "Along Route - Radius (tiles):"
 msgstr "Entlang der Route - Radius (Kacheln):"
 
@@ -83,7 +83,7 @@ msgstr "Höhe"
 msgid "An error occurred while attempting to scan for bluetooth devices."
 msgstr "Bei der Suche nach Bluetooth-Geräten ist ein Fehler aufgetreten."
 
-#: ../src/maps.c:2268
+#: ../src/maps.c:2280
 msgid ""
 "An error occurred while retrieving the repositories.  The web service may be "
 "temporarily down."
@@ -91,7 +91,7 @@ msgstr ""
 "Beim Empfang der Quellen ist ein Fehler aufgetreten. Möglicherweise ist der "
 "Webdienst vorübergehend nicht erreichbar."
 
-#: ../src/maps.c:1795
+#: ../src/maps.c:1807
 msgid "An error occurred while trying to compact the database."
 msgstr "Bei der Komprimierung der Datenbank ist ein Fehler aufgetreten."
 
@@ -115,7 +115,7 @@ msgstr "Ansage"
 msgid "Apply Map Correction"
 msgstr "Kartenkorrektur anwenden"
 
-#: ../src/maps.c:3507
+#: ../src/maps.c:3519
 msgid "Area"
 msgstr "Kartenausschnitt"
 
@@ -155,16 +155,16 @@ msgstr "Auto-Drehen deaktiviert"
 msgid "Auto-Rotate Enabled"
 msgstr "Auto-Drehen aktiviert"
 
-#: ../src/path.c:1261
+#: ../src/path.c:1264
 msgid "Auto-Update"
 msgstr "Auto-Aktualisierung"
 
-#: ../src/maps.c:2447
+#: ../src/maps.c:2459
 #, fuzzy
 msgid "Autofetch"
 msgstr "Auto-Zentrierung"
 
-#: ../src/path.c:1267
+#: ../src/path.c:1270
 msgid "Avoid Highways"
 msgstr "Autobahnen meiden"
 
@@ -180,7 +180,7 @@ msgstr "Bluetooth"
 msgid "Bottom-Left"
 msgstr "Unten links"
 
-#: ../src/main.c:360 ../src/maps.c:3598
+#: ../src/main.c:360 ../src/maps.c:3610
 msgid "Bottom-Right"
 msgstr "Unten rechts"
 
@@ -192,7 +192,7 @@ msgstr "POI durchsuchen..."
 msgid "Browse POIs"
 msgstr "POIs durchsuchen"
 
-#: ../src/maps.c:2034 ../src/maps.c:2441 ../src/menu.c:1562
+#: ../src/maps.c:2046 ../src/maps.c:2453 ../src/menu.c:1562
 #: ../src/settings.c:1265 ../src/settings.c:1547
 msgid "Browse..."
 msgstr "Durchsuchen..."
@@ -205,15 +205,15 @@ msgstr "Bushaltestellen, Flughäfen, Bahnhöfe, etc."
 msgid "Business"
 msgstr "Geschäft"
 
-#: ../src/maps.c:3458
+#: ../src/maps.c:3470
 msgid "By Area (see tab)"
 msgstr "Nach Ausschnitt (Siehe Reiter)"
 
-#: ../src/maps.c:2024 ../src/maps.c:2434
+#: ../src/maps.c:2036 ../src/maps.c:2446
 msgid "Cache DB"
 msgstr "Cache-DB"
 
-#: ../src/maps.c:1964
+#: ../src/maps.c:1976
 msgid ""
 "Cannot delete the last repository - there must be at lease one repository."
 msgstr ""
@@ -233,7 +233,7 @@ msgstr "Kategorie"
 msgid "Checked POI Actions..."
 msgstr "Gewählte POI-Aktionen..."
 
-#: ../src/maps.c:3411 ../src/menu.c:1526 ../src/menu.c:1546
+#: ../src/maps.c:3423 ../src/menu.c:1526 ../src/menu.c:1546
 msgid "Clear"
 msgstr "Leeren"
 
@@ -257,15 +257,15 @@ msgstr "Farben"
 msgid "Colors..."
 msgstr "Farben..."
 
-#: ../src/maps.c:1816
+#: ../src/maps.c:1828
 msgid "Compact Database"
 msgstr "Datenbank komprimieren"
 
-#: ../src/maps.c:2037
+#: ../src/maps.c:2049
 msgid "Compact..."
 msgstr "Komprimieren..."
 
-#: ../src/maps.c:1875
+#: ../src/maps.c:1887
 msgid "Compacting database..."
 msgstr "Komprimiere Datenbank..."
 
@@ -273,11 +273,11 @@ msgstr "Komprimiere Datenbank..."
 msgid "Compass Rose"
 msgstr "Kompassrose"
 
-#: ../src/maps.c:3133 ../src/maps.c:3239
+#: ../src/maps.c:3145 ../src/maps.c:3251
 msgid "Confirm DELETION of"
 msgstr "Bestätige ENTFERNEN von"
 
-#: ../src/maps.c:1971
+#: ../src/maps.c:1983
 msgid "Confirm delete of repository"
 msgstr "Bestätige Entfernen der Quelle"
 
@@ -285,7 +285,7 @@ msgstr "Bestätige Entfernen der Quelle"
 msgid "Confirm delete of waypoint"
 msgstr "Bestätige Entfernen des Wegpunkts"
 
-#: ../src/maps.c:3139 ../src/maps.c:3245
+#: ../src/maps.c:3151 ../src/maps.c:3257
 msgid "Confirm download of"
 msgstr "Bestätige Download von"
 
@@ -309,7 +309,7 @@ msgstr "Br/Län kopieren"
 msgid "Counter"
 msgstr "Gegen UZS"
 
-#: ../src/path.c:1585
+#: ../src/path.c:1588
 msgid ""
 "Creating a \"waypoint\" with no description actually adds a break point.  Is "
 "that what you want?"
@@ -329,11 +329,11 @@ msgstr "Standardkategorie"
 msgid "Degrees Format"
 msgstr "Gradformat"
 
-#: ../src/maps.c:2739
+#: ../src/maps.c:2751
 msgid "Del"
 msgstr ""
 
-#: ../src/maps.c:3448
+#: ../src/maps.c:3460
 msgid "Delete Maps"
 msgstr "Karten entfernen"
 
@@ -349,17 +349,17 @@ msgstr "Kategorie entfernen?"
 msgid "Delete selected POI?"
 msgstr "Ausgewählten POI entfernen?"
 
-#: ../src/cmenu.c:686 ../src/maps.c:2890 ../src/poi.c:640 ../src/poi.c:1399
+#: ../src/cmenu.c:686 ../src/maps.c:2902 ../src/poi.c:640 ../src/poi.c:1399
 #: ../src/poi.c:2120
 msgid "Delete..."
 msgstr "Entfernen..."
 
-#: ../src/menu.c:276 ../src/path.c:1527 ../src/poi.c:679 ../src/poi.c:976
+#: ../src/menu.c:276 ../src/path.c:1530 ../src/poi.c:679 ../src/poi.c:976
 #: ../src/poi.c:1199 ../src/poi.c:1449 ../src/settings.c:683
 msgid "Description"
 msgstr "Beschreibung"
 
-#: ../src/path.c:1291
+#: ../src/path.c:1294
 msgid "Destination"
 msgstr "Ziel"
 
@@ -375,12 +375,12 @@ msgstr "Entf."
 msgid "Distance"
 msgstr "Entfernung"
 
-#: ../src/maps.c:2741
+#: ../src/maps.c:2753
 #, fuzzy
 msgid "Dn"
 msgstr "Runter"
 
-#: ../src/maps.c:2096
+#: ../src/maps.c:2108
 msgid "Double Pixels"
 msgstr "Pixel verdopp."
 
@@ -388,7 +388,7 @@ msgstr "Pixel verdopp."
 msgid "Down"
 msgstr "Runter"
 
-#: ../src/maps.c:3435
+#: ../src/maps.c:3447
 msgid "Download Maps"
 msgstr "Karten herunterladen"
 
@@ -400,7 +400,7 @@ msgstr "POI herunterladen..."
 msgid "Download POIs"
 msgstr "POIs herunterladen"
 
-#: ../src/path.c:1215
+#: ../src/path.c:1218
 msgid "Download Route"
 msgstr "Route herunterladen"
 
@@ -413,7 +413,7 @@ msgstr "Route herunterladen nach..."
 msgid "Download Sample Repositories..."
 msgstr "Quellen verwalten..."
 
-#: ../src/maps.c:2059
+#: ../src/maps.c:2071
 msgid "Download Zoom Steps"
 msgstr "Zoomstufen herunterladen"
 
@@ -421,11 +421,11 @@ msgstr "Zoomstufen herunterladen"
 msgid "Download..."
 msgstr "Herunterladen..."
 
-#: ../src/maps.c:2111
+#: ../src/maps.c:2123
 msgid "Downloadable Zooms:"
 msgstr "Herunterladbare Zooms:"
 
-#: ../src/maps.c:1133 ../src/maps.c:1154
+#: ../src/maps.c:1145 ../src/maps.c:1166
 msgid "Downloaded maps will not be cached."
 msgstr "Heruntergeladene Karten werden nicht gecached."
 
@@ -567,11 +567,11 @@ msgstr "Datei konnte nicht zum Lesen geöffnet werden"
 msgid "Failed to open file for writing"
 msgstr "Datei konnte nicht zum Schreiben geöffnet werden"
 
-#: ../src/maps.c:1791
+#: ../src/maps.c:1803
 msgid "Failed to open map database for compacting."
 msgstr "Kartendatenbank konnte nicht für Komprimierung geöffnet werden."
 
-#: ../src/maps.c:1131 ../src/maps.c:1153
+#: ../src/maps.c:1143 ../src/maps.c:1165
 msgid "Failed to open map database for repository"
 msgstr "Kartendatenbank für Quelle konnte nicht geöffnet werden."
 
@@ -579,7 +579,7 @@ msgstr "Kartendatenbank für Quelle konnte nicht geöffnet werden."
 msgid "Failed to open or create database"
 msgstr "Datenbank konnte nicht geöffnet oder erstellt werden."
 
-#: ../src/path.c:1723
+#: ../src/path.c:1726
 msgid "Failed to open path database. Tracks and routes will not be saved."
 msgstr ""
 "Pfaddatenbank konnte nicht geöffnet werden. Tracks und Routen werden nicht "
@@ -639,7 +639,7 @@ msgstr "GPS-Details"
 msgid "GPS Information"
 msgstr "GPS-Informationen"
 
-#: ../src/maps.c:3521 ../src/menu.c:1661
+#: ../src/maps.c:3533 ../src/menu.c:1661
 msgid "GPS Location"
 msgstr "GPS-Standort"
 
@@ -659,7 +659,7 @@ msgstr "Allgemeine Sehenswürdigkeiten."
 msgid "General places of business."
 msgstr "Allgemeine Geschäftsstandorte."
 
-#: ../src/maps.c:1836
+#: ../src/maps.c:1848
 msgid ""
 "Generally, deleted maps create an empty space in the database that is later "
 "reused when downloading new maps.  Compacting the database reorganizes it "
@@ -765,11 +765,11 @@ msgstr "Markierung einfügen..."
 msgid "Insert Track Break"
 msgstr "Track-Unterbrechung einfügen"
 
-#: ../src/maps.c:3767
+#: ../src/maps.c:3779
 msgid "Invalid Bottom-Right Latitude"
 msgstr "Ungültiger Breitengrad unten rechts"
 
-#: ../src/maps.c:3774
+#: ../src/maps.c:3786
 msgid "Invalid Bottom-Right Longitude"
 msgstr "Ungültiger Längengrad unten rechts"
 
@@ -785,11 +785,11 @@ msgstr "Ungültiger Längengrad"
 msgid "Invalid NMEA input from receiver!"
 msgstr "Ungültige NMEA-Eingabe vom Empfänger!"
 
-#: ../src/maps.c:3753
+#: ../src/maps.c:3765
 msgid "Invalid Top-Left Latitude"
 msgstr "Ungültiger Breitengrad oben links"
 
-#: ../src/maps.c:3760
+#: ../src/maps.c:3772
 msgid "Invalid Top-Left Longitude"
 msgstr "Ungültiger Längengrad oben links"
 
@@ -826,7 +826,7 @@ msgstr "Sehenswürdigkeit"
 msgid "Lat"
 msgstr "Br"
 
-#: ../src/menu.c:266 ../src/path.c:1512
+#: ../src/menu.c:266 ../src/path.c:1515
 msgid "Lat, Lon:"
 msgstr "Br, Län:"
 
@@ -838,11 +838,11 @@ msgstr "Br/Län"
 msgid "Lat/Lon..."
 msgstr "Br/Län..."
 
-#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:3511 ../src/menu.c:812
+#: ../src/cmenu.c:69 ../src/display.c:793 ../src/maps.c:3523 ../src/menu.c:812
 msgid "Latitude"
 msgstr "Breitengrad"
 
-#: ../src/maps.c:2458
+#: ../src/maps.c:2470
 msgid "Layer is visible"
 msgstr ""
 
@@ -850,7 +850,7 @@ msgstr ""
 msgid "Layers"
 msgstr ""
 
-#: ../src/maps.c:2871
+#: ../src/maps.c:2883
 #, fuzzy
 msgid "Layers..."
 msgstr "Kategorien..."
@@ -887,7 +887,7 @@ msgstr "Unterkunft"
 msgid "Lon"
 msgstr "Län"
 
-#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:3515 ../src/menu.c:833
+#: ../src/cmenu.c:70 ../src/display.c:802 ../src/maps.c:3527 ../src/menu.c:833
 msgid "Longitude"
 msgstr "Längengrad"
 
@@ -895,7 +895,7 @@ msgstr "Längengrad"
 msgid "MAC"
 msgstr "MAC"
 
-#: ../src/maps.c:2248
+#: ../src/maps.c:2260
 msgid ""
 "Maemo Mapper will now download and add a list of possibly-duplicate "
 "repositories from the internet.  Continue?"
@@ -903,7 +903,7 @@ msgstr ""
 "Maemo Mapper lädt jetzt eine Liste von (möglicherweise bereits vorhandenen) "
 "Kartenquellen aus dem Internet und fügt diese hinzu. Fortfahren?"
 
-#: ../src/maps.c:3396
+#: ../src/maps.c:3408
 msgid "Manage Maps"
 msgstr "Karten verwalten"
 
@@ -911,7 +911,7 @@ msgstr "Karten verwalten"
 msgid "Manage Maps..."
 msgstr "Karten verwalten..."
 
-#: ../src/maps.c:2850
+#: ../src/maps.c:2862
 msgid "Manage Repositories"
 msgstr "Kartenquellen verwalten"
 
@@ -919,7 +919,7 @@ msgstr "Kartenquellen verwalten"
 msgid "Manage Repositories..."
 msgstr "Quellen verwalten..."
 
-#: ../src/maps.c:2675
+#: ../src/maps.c:2687
 #, fuzzy, c-format
 msgid "Manage layers [%s]"
 msgstr "Karten verwalten"
@@ -944,11 +944,11 @@ msgstr "Karten"
 msgid "Max speed"
 msgstr "Max. Geschw."
 
-#: ../src/maps.c:2131
+#: ../src/maps.c:2143
 msgid "Max."
 msgstr "Max."
 
-#: ../src/maps.c:2120
+#: ../src/maps.c:2132
 msgid "Min."
 msgstr "Min."
 
@@ -956,7 +956,7 @@ msgstr "Min."
 msgid "Min. Speed"
 msgstr "Min. Geschw."
 
-#: ../src/maps.c:2985
+#: ../src/maps.c:2997
 msgid "Minimum Downloadable Zoom must be less than Maximum Downloadable Zoom."
 msgstr "Minimaler downloadbarer Zoom muss geringer als der maximale sein."
 
@@ -972,7 +972,7 @@ msgstr "Versch. 2"
 msgid "Miscellaneous category for everything else."
 msgstr "Vermischte Kategorien für alles Übrige."
 
-#: ../src/maps.c:3719 ../src/menu.c:516
+#: ../src/maps.c:3731 ../src/menu.c:516
 msgid ""
 "NOTE: You must set a Map URI in the current repository in order to download "
 "maps."
@@ -980,7 +980,7 @@ msgstr ""
 "HINWEIS: Sie müssen eine Map-URI für die aktuelle Quelle angeben, um Karten "
 "herunterladen zu können."
 
-#: ../src/maps.c:1908 ../src/maps.c:2188 ../src/maps.c:2416 ../src/maps.c:2495
+#: ../src/maps.c:1920 ../src/maps.c:2200 ../src/maps.c:2428 ../src/maps.c:2507
 msgid "Name"
 msgstr "Name"
 
@@ -992,25 +992,25 @@ msgstr "Nächster POI"
 msgid "Never"
 msgstr "Nie"
 
-#: ../src/maps.c:2738
+#: ../src/maps.c:2750
 #, fuzzy
 msgid "New"
 msgstr "Neu..."
 
-#: ../src/maps.c:2485
+#: ../src/maps.c:2497
 #, fuzzy
 msgid "New Layer"
 msgstr "Neuer Name"
 
-#: ../src/maps.c:1898
+#: ../src/maps.c:1910
 msgid "New Name"
 msgstr "Neuer Name"
 
-#: ../src/maps.c:2178
+#: ../src/maps.c:2190
 msgid "New Repository"
 msgstr "Neue Quelle"
 
-#: ../src/maps.c:2893
+#: ../src/maps.c:2905
 msgid "New..."
 msgstr "Neu..."
 
@@ -1018,7 +1018,7 @@ msgstr "Neu..."
 msgid "Next Waypoint"
 msgstr "Nächster Wegpunkt"
 
-#: ../src/maps.c:2104
+#: ../src/maps.c:2116
 msgid "Next-able"
 msgstr "Durchschaltb."
 
@@ -1052,7 +1052,7 @@ msgstr ""
 "Beispielsatz von Kartenquellen aus dem Internet herunterladen, indem Sie auf "
 "den Knopf \"Download...\" klicken."
 
-#: ../src/path.c:1274 ../src/poi.c:2596 ../src/poi.c:2917
+#: ../src/path.c:1277 ../src/poi.c:2596 ../src/poi.c:2917
 msgid "Origin"
 msgstr "Start"
 
@@ -1060,7 +1060,7 @@ msgstr "Start"
 msgid "Other"
 msgstr "Anderes"
 
-#: ../src/maps.c:3442
+#: ../src/maps.c:3454
 msgid "Overwrite"
 msgstr "Überschreiben"
 
@@ -1193,15 +1193,15 @@ msgstr "Bitte einen Namen angeben."
 msgid "Please specify a query."
 msgstr "Bitte eine Anfrage angeben."
 
-#: ../src/path.c:1382 ../src/poi.c:2712
+#: ../src/path.c:1385 ../src/poi.c:2712
 msgid "Please specify a source URL."
 msgstr "Bitte Quell-URL angeben."
 
-#: ../src/path.c:1424
+#: ../src/path.c:1427
 msgid "Please specify a start location."
 msgstr "Bitte einen Startort angeben."
 
-#: ../src/path.c:1431
+#: ../src/path.c:1434
 msgid "Please specify an end location."
 msgstr "Bitte einen Endort angeben."
 
@@ -1217,7 +1217,7 @@ msgstr "Punkte"
 msgid "Port"
 msgstr "Port"
 
-#: ../src/maps.c:1367
+#: ../src/maps.c:1379
 msgid "Processing Maps"
 msgstr "Verarbeite Karten"
 
@@ -1229,7 +1229,7 @@ msgstr "Anfrage"
 msgid "Real Time Kinematic"
 msgstr "Echtzeitkinematik"
 
-#: ../src/path.c:1007
+#: ../src/path.c:1010
 msgid "Really clear the track?"
 msgstr "Track wirklich entfernen?"
 
@@ -1241,11 +1241,11 @@ msgstr "Wegbeschreibung wird berechnet..."
 msgid "Recreation"
 msgstr "Erholung"
 
-#: ../src/maps.c:2887
+#: ../src/maps.c:2899
 msgid "Rename..."
 msgstr "Umbenennen..."
 
-#: ../src/maps.c:2219
+#: ../src/maps.c:2231
 msgid "Replace all repositories with the default repository?"
 msgstr "Alle Quellen durch die Standardquelle ersetzen?"
 
@@ -1269,7 +1269,7 @@ msgstr "Alle Farben auf Standardwerte zurücksetzen?"
 msgid "Reset all hardware keys to their original defaults?"
 msgstr "Gesamte Tastaturbelegung auf die Standardwerte zurücksetzen?"
 
-#: ../src/maps.c:2865 ../src/settings.c:810 ../src/settings.c:926
+#: ../src/maps.c:2877 ../src/settings.c:810 ../src/settings.c:926
 msgid "Reset..."
 msgstr "Standard..."
 
@@ -1415,7 +1415,7 @@ msgstr "Einstellungen"
 msgid "Settings..."
 msgstr "Einstellungen..."
 
-#: ../src/maps.c:3425
+#: ../src/maps.c:3437
 msgid "Setup"
 msgstr "Einrichtung"
 
@@ -1475,7 +1475,7 @@ msgstr "Position anzeigen"
 msgid "Simulation"
 msgstr "Simulation"
 
-#: ../src/path.c:1234 ../src/poi.c:2548
+#: ../src/path.c:1237 ../src/poi.c:2548
 msgid "Source URL"
 msgstr "Quelle (URL)"
 
@@ -1495,7 +1495,7 @@ msgstr "Geschwindigkeitsbegrenzung"
 msgid "Stations for purchasing fuel for vehicles."
 msgstr "Verkauf von Fahrzeugbenzin."
 
-#: ../src/maps.c:1798
+#: ../src/maps.c:1810
 msgid "Successfully compacted database."
 msgstr "Datenbank erfolgreich komprimiert."
 
@@ -1503,7 +1503,7 @@ msgstr "Datenbank erfolgreich komprimiert."
 msgid "Tap Point"
 msgstr "Punkt antippen"
 
-#: ../src/maps.c:977
+#: ../src/maps.c:989
 msgid ""
 "The current repository is in a legacy format and will be converted.  You "
 "should delete your old maps if you no longer plan to use them."
@@ -1582,7 +1582,7 @@ msgstr "Tracking umschalten"
 msgid "Toggle Tracks/Routes"
 msgstr "Tracks/Routen umschalten"
 
-#: ../src/main.c:358 ../src/maps.c:3556
+#: ../src/main.c:358 ../src/maps.c:3568
 msgid "Top-Left"
 msgstr "Oben links"
 
@@ -1622,15 +1622,15 @@ msgstr "Tracks werden angezeigt"
 msgid "Transportation"
 msgstr "Transport"
 
-#: ../src/maps.c:2427
+#: ../src/maps.c:2439
 msgid "URL"
 msgstr ""
 
-#: ../src/maps.c:2015
+#: ../src/maps.c:2027
 msgid "URL Format"
 msgstr "URL-Format"
 
-#: ../src/maps.c:1171
+#: ../src/maps.c:1183
 msgid "Unable to create map database for repository"
 msgstr "Kartendatenbank für die Quelle konnte nicht erstellt werden."
 
@@ -1646,15 +1646,15 @@ msgstr "Einheiten"
 msgid "Unknown error while locating address."
 msgstr "Unbekannter Fehler bei Ermittlung der Adresse."
 
-#: ../src/main.c:249 ../src/maps.c:2740 ../src/menu.c:1634
+#: ../src/main.c:249 ../src/maps.c:2752 ../src/menu.c:1634
 msgid "Up"
 msgstr "Hoch"
 
-#: ../src/path.c:1251 ../src/poi.c:2561 ../src/poi.c:2883
+#: ../src/path.c:1254 ../src/poi.c:2561 ../src/poi.c:2883
 msgid "Use End of Route"
 msgstr "Ende der Route verwenden"
 
-#: ../src/path.c:1245 ../src/poi.c:2555 ../src/poi.c:2877
+#: ../src/path.c:1248 ../src/poi.c:2555 ../src/poi.c:2877
 msgid "Use GPS Location"
 msgstr "GPS-Standort verwenden"
 
@@ -1666,11 +1666,11 @@ msgstr "Geschwindigkeitsvektor"
 msgid "View"
 msgstr "Anzeige"
 
-#: ../src/maps.c:3537
+#: ../src/maps.c:3549
 msgid "View Center"
 msgstr "Zentrum"
 
-#: ../src/maps.c:2075
+#: ../src/maps.c:2087
 msgid "View Zoom Steps"
 msgstr "Zoomschritte anzeigen"
 
@@ -1706,7 +1706,7 @@ msgstr "Bei Bewegung (Nur im Vollbild)"
 msgid "When Receiving Any GPS Data"
 msgstr "Beim Empfang von GPS-Daten"
 
-#: ../src/maps.c:2700
+#: ../src/maps.c:2712
 msgid ""
 "You cannot add layers to not saved repository,\n"
 "sorry. So, press ok in repository manager\n"
@@ -1723,7 +1723,7 @@ msgstr ""
 "\"Karten verwalten\" im Menü \"Karten\" herunterladen. Drücken Sie OK, um "
 "den automatischen Download zu aktivieren."
 
-#: ../src/maps.c:3480 ../src/menu.c:1603
+#: ../src/maps.c:3492 ../src/menu.c:1603
 msgid "Zoom"
 msgstr "Zoom"
 
@@ -1735,7 +1735,7 @@ msgstr "Hereinzoomen"
 msgid "Zoom Level"
 msgstr "Zoomstufe"
 
-#: ../src/maps.c:3486
+#: ../src/maps.c:3498
 msgid "Zoom Levels to Download: (0 = most detail)"
 msgstr "Herunterzul. Zoomstufen: (0 = meiste Details)"
 
@@ -1747,7 +1747,7 @@ msgstr "Herauszoomen"
 msgid "Zoom to Level"
 msgstr "Zoom auf Stufe"
 
-#: ../src/maps.c:3239 ../src/maps.c:3246
+#: ../src/maps.c:3251 ../src/maps.c:3258
 msgid "about"
 msgstr "über"
 
@@ -1759,11 +1759,11 @@ msgstr "in Verwendung"
 msgid "km"
 msgstr "km"
 
-#: ../src/maps.c:3140 ../src/maps.c:3247
+#: ../src/maps.c:3152 ../src/maps.c:3259
 msgid "maps"
 msgstr "Karten"
 
-#: ../src/maps.c:3134 ../src/maps.c:3240
+#: ../src/maps.c:3146 ../src/maps.c:3252
 msgid "maps "
 msgstr "Karten"
 
@@ -1775,7 +1775,7 @@ msgstr "Karten konnten nicht heruntergeladen werden."
 msgid "mi."
 msgstr "mi."
 
-#: ../src/maps.c:2454
+#: ../src/maps.c:2466
 #, fuzzy
 msgid "min."
 msgstr "mi."
@@ -1792,7 +1792,7 @@ msgstr "Kein Fix"
 msgid "none"
 msgstr "Kein"
 
-#: ../src/maps.c:3140 ../src/maps.c:3247
+#: ../src/maps.c:3152 ../src/maps.c:3259
 msgid "up to about"
 msgstr "bis zu etwa"
 
