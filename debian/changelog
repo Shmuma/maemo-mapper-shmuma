@@ -1,6 +1,24 @@
+maemo-mapper (2.5.3) unstable; urgency=low
+
+  * Improved performance when running without an on-disk map cache.
+  * Fixed the localization issue, hopefully.
+
+ -- John Costigan <gnuite@gmail.com>  Sat, 13 Dec 2008 20:56:00 -0800
+
+maemo-mapper (2.5.2) unstable; urgency=low
+
+  * Absolutely no changes at all.  Just need to appease Maemo Extras Builder.
+
+ -- John Costigan <gnuite@gmail.com>  Fri, 21 Nov 2008 21:31:00 -0800
+
 maemo-mapper (2.5.1) unstable; urgency=low
 
   * Fixed bug with invocation of flite.
+  * Fixed localization issues (sort of).
+  * Updated Spanish translations.
+  * Added ability to manually set/override AGPS with "Set GPS Position" menu
+    item (accessibility via the tap-and-hold menu).
+  * Fixed indeterminant seg fault with "Add POI" button from context menu.
 
  -- John Costigan <gnuite@gmail.com>  Thu, 16 Oct 2008 02:00:00 -0700
 
