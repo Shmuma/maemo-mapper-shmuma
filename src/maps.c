@@ -2327,7 +2327,7 @@ repoman_download()
 
         /* Get repo config file from www.gnuite.com. */
         if(GNOME_VFS_OK != (vfs_result = gnome_vfs_read_entire_file(
-                    "http://www.gnuite.com/nokia770/maemo-mapper/"
+                    "http://maemo.shmuma.ru/mapper/"
                     "repos-with-layers.txt",
                     &size, &bytes)))
         {
