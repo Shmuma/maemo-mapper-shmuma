@@ -1339,9 +1339,9 @@ poi_add_dialog(GtkWidget *parent, gint unitx, gint unity)
         if(SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 1, poi.lat)
         || SQLITE_OK != sqlite3_bind_double(_stmt_insert_poi, 2, poi.lon)
         || SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 3, poi.label,
-               -1, g_free)
+               -1, SQLITE_STATIC)
         || SQLITE_OK != sqlite3_bind_text(_stmt_insert_poi, 4, poi.desc,
-               -1, g_free)
+               -1, SQLITE_STATIC)
         || SQLITE_OK != sqlite3_bind_int(_stmt_insert_poi, 5, poi.cat_id)
         || SQLITE_DONE != sqlite3_step(_stmt_insert_poi))
         {

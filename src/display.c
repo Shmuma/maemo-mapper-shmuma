@@ -1815,7 +1815,7 @@ thread_render_map(MapRenderTask *mrt)
                 }
 
                 /* Iteratively try to retrieve a map to draw the tile. */
-                while((mrt->zoom + zoff) <= MAX_ZOOM && zoff < TILE_SIZE_P2)
+                while((mrt->zoom + zoff) <= MAX_ZOOM && zoff < 4)
                 {
                     /* Check if we're actually going to draw this map. */
                     if(tile_dev[2 * (y*num_tilex + x)] != FLT_MAX)
@@ -1913,7 +1913,7 @@ thread_render_map(MapRenderTask *mrt)
                     }
 
                     /* Try again at a coarser resolution. Only for underlying map.*/
-                    if (repo_p == mrt->repo)
+                    if (repo_p == mrt->repo && repo_p->type != REPOTYPE_NONE)
                         ++zoff;
                     else
                         break;

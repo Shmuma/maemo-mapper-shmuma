@@ -30,6 +30,7 @@
 #include <string.h>
 #include <math.h>
 #include <gtk/gtk.h>
+#include <gconf/gconf-client.h>
 
 #ifndef LEGACY
 #    include <hildon/hildon-note.h>
@@ -51,6 +52,10 @@
 #include "poi.h"
 #include "util.h"
 
+#define GCONF_SUPL_KEY_PREFIX "/system/osso/supl"
+#define GCONF_KEY_SUPL_LAT GCONF_SUPL_KEY_PREFIX"/pos_latitude"
+#define GCONF_KEY_SUPL_LON GCONF_SUPL_KEY_PREFIX"/pos_longitude"
+#define GCONF_KEY_SUPL_TIME GCONF_SUPL_KEY_PREFIX"/pos_timestamp"
 
 static void
 cmenu_show_latlon(gint unitx, gint unity)
@@ -258,6 +263,16 @@ cmenu_cb_loc_set_gps(GtkMenuItem *item)
 
     /* Move mark to new location. */
     map_refresh_mark(_center_mode > 0);
+
+    GConfClient *gconf_client = gconf_client_get_default();
+    GTimeVal curtime;
+
+    gconf_client_set_float(gconf_client, GCONF_KEY_SUPL_LON, _gps.lon, NULL);
+    gconf_client_set_float(gconf_client, GCONF_KEY_SUPL_LAT, _gps.lat, NULL);
+    g_get_current_time(&curtime);
+    gconf_client_set_float(gconf_client, GCONF_KEY_SUPL_TIME, curtime.tv_sec, NULL);
+
+    g_object_unref(gconf_client);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;

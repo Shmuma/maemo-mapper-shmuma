@@ -2,7 +2,7 @@ Source: maemo-mapper
 Section: user/other
 Priority: optional
 Maintainer: John Costigan <gnuite@gmail.com>
-Build-Depends: debhelper (>= 4.0.0), intltool, hildon-libs-dev | libhildon1-dev, hildon-fm-dev | libhildonfm2-dev, libhildonhelp-dev | libosso-help-dev, libgtk2.0-dev, libosso-gnomevfs2-dev, libglib2.0-dev, libdbus-glib-1-dev, libosso-dev, libsqlite3-dev, libconic0-dev, libgdbm-dev, osso-gpsd-dev, libgpsmgr-dev, libgpsbt-dev
+Build-Depends: debhelper (>= 4.0.0), intltool, hildon-libs-dev | libhildon1-dev, hildon-fm-dev | libhildonfm2-dev, libhildonhelp-dev | libosso-help-dev, libgtk2.0-dev, libosso-gnomevfs2-dev, libglib2.0-dev, libdbus-glib-1-dev, libosso-dev, libsqlite3-dev, libconic0-dev, libgdbm-dev, osso-gpsd-dev, libgpsmgr-dev, libgpsbt-dev, osso-af-settings
 Standards-Version: 3.6.0
 
 Package: maemo-mapper
