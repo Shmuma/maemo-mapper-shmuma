@@ -40,6 +40,13 @@ maemo_mapper_SOURCES = \
 	path.c \
 	poi.c \
 	settings.c \
-	util.c
+	util.c \
+	aprs_decode.c \
+	aprs.c \
+	hashtable.c \
+	hashtable_itr.c \
+	aprs_display.c \
+	aprs_message.c \
+	aprs_kiss.c
 
 # bin_SCRIPTS = maemo-mapper.sh

@@ -29,6 +29,8 @@ typedef struct {
     GtkWidget *fmt_combo;
     GtkWidget *lat;
     GtkWidget *lon;
+    GtkWidget *lat_title;
+    GtkWidget *lon_title;
 } LatlonDialog;
 
 
@@ -73,5 +75,9 @@ gboolean display_open_file(GtkWindow *parent, gchar **bytes_out,
         GtkFileChooserAction chooser_action);
 
 void display_init(void);
+
+#ifdef INCLUDE_APRS
+void plot_aprs_station(AprsDataRow *p_station, gboolean single );
+#endif // INCLUDE_APRS
 
 #endif /* ifndef MAEMO_MAPPER_DISPLAY_H */

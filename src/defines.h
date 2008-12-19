@@ -50,6 +50,33 @@
 
 #define EARTH_RADIUS (3443.91847)
 
+/* BT dbus service location */
+#define BASE_PATH                "/org/bluez"
+#define BASE_INTERFACE           "org.bluez"
+//#define ADAPTER_PATH             BASE_PATH
+#define ADAPTER_INTERFACE        BASE_INTERFACE ".Adapter"
+#define MANAGER_PATH             BASE_PATH
+#define MANAGER_INTERFACE        BASE_INTERFACE ".Manager"
+#define ERROR_INTERFACE          BASE_INTERFACE ".Error"
+#define SECURITY_INTERFACE       BASE_INTERFACE ".Security"
+#define RFCOMM_INTERFACE         BASE_INTERFACE ".RFCOMM"
+#define BLUEZ_DBUS               BASE_INTERFACE
+
+#define LIST_ADAPTERS            "ListAdapters"
+#define LIST_BONDINGS            "ListBondings"
+//#define CREATE_BONDING           "CreateBonding"
+#define GET_REMOTE_NAME          "GetRemoteName"
+#define GET_REMOTE_SERVICE_CLASSES "GetRemoteServiceClasses"
+
+#define BTCOND_PATH              "/com/nokia/btcond/request"
+#define BTCOND_BASE              "com.nokia.btcond"
+#define BTCOND_INTERFACE         BTCOND_BASE ".request"
+#define BTCOND_REQUEST           BTCOND_INTERFACE
+#define BTCOND_CONNECT           "rfcomm_connect"
+#define BTCOND_DISCONNECT        "rfcomm_disconnect"
+#define BTCOND_DBUS              BTCOND_BASE
+
+
 /** MAX_ZOOM defines the largest map zoom level we will download.
  * (MAX_ZOOM - 1) is the largest map zoom level that the user can zoom to.
  */
@@ -63,6 +90,9 @@
 #define ARRAY_CHUNK_SIZE (1024)
 
 #define BUFFER_SIZE (2048)
+#define APRS_BUFFER_SIZE (4096)
+#define APRS_MAX_COMMENT  80
+#define APRS_CONVERSE_MODE "k"
 
 #define GPSD_PORT_DEFAULT (2947)
 
@@ -264,12 +294,23 @@
             _view_height_pixels)
 
 /* Render all on-map metadata an annotations, including POI and paths. */
+#ifdef INCLUDE_APRS
+#define MACRO_MAP_RENDER_DATA() { \
+    if(_show_poi) \
+        map_render_poi(); \
+    if(_show_paths > 0) \
+        map_render_paths(); \
+    if(_aprs_enable) \
+    	map_render_aprs(); \
+}
+#else
 #define MACRO_MAP_RENDER_DATA() { \
     if(_show_poi) \
         map_render_poi(); \
     if(_show_paths > 0) \
         map_render_paths(); \
 }
+#endif //INCLUDE_APRS
 
 #define UNBLANK_SCREEN(MOVING, APPROACHING_WAYPOINT) { \
     /* Check if we need to unblank the screen. */ \

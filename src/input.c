@@ -643,7 +643,22 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
         Point clkpt;
         screen2unit(event->x, event->y, clkpt.unitx, clkpt.unity);
 
+#ifdef INCLUDE_APRS        
+        gboolean aprs_found = FALSE;
+
+        if(_aprs_enable &&  (_poi_zoom > _zoom) )
+        {
+            AprsDisplayData poi;
+            selected_point = select_aprs(
+                    clkpt.unitx, clkpt.unity, TRUE);
+            
+            aprs_found = selected_point;
+        }
+
+        if(!aprs_found && _show_poi && (_poi_zoom > _zoom))
+#else
         if(_show_poi && (_poi_zoom > _zoom))
+#endif // INCLUDE_APRS
         {
             PoiInfo poi;
             selected_point = select_poi(

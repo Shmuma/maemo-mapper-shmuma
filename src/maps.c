@@ -3389,9 +3389,16 @@ mapman_dialog()
     static GtkWidget *lbl_center_lat = NULL;
     static GtkWidget *lbl_center_lon = NULL;
     static MapmanInfo mapman_info;
+    static gint last_deg_format = 0;
+    
     gchar buffer[80];
     gdouble lat, lon;
     gint z;
+    gint prev_degformat = _degformat;
+    gint fallback_deg_format = _degformat;
+    gdouble top_left_lat, top_left_lon, bottom_right_lat, bottom_right_lon;
+
+    
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(!_curr_repo->db)
@@ -3400,6 +3407,52 @@ mapman_dialog()
                 "database filename in the \"Manage Repositories\" dialog.");
         vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
         return TRUE;
+    }
+
+    // - If the coord system has changed then we need to update certain values
+    
+    /* Initialize to the bounds of the screen. */
+    unit2latlon(
+            _center.unitx - pixel2unit(MAX(_view_width_pixels,
+                    _view_height_pixels) / 2),
+            _center.unity - pixel2unit(MAX(_view_width_pixels,
+                    _view_height_pixels) / 2), top_left_lat, top_left_lon);
+    
+    BOUND(top_left_lat, -90.f, 90.f);
+    BOUND(top_left_lon, -180.f, 180.f);
+
+        
+    unit2latlon(
+            _center.unitx + pixel2unit(MAX(_view_width_pixels,
+                    _view_height_pixels) / 2),
+            _center.unity + pixel2unit(MAX(_view_width_pixels,
+                    _view_height_pixels) / 2), bottom_right_lat, bottom_right_lon);
+    BOUND(bottom_right_lat, -90.f, 90.f);
+    BOUND(bottom_right_lon, -180.f, 180.f);
+    
+    
+
+    
+    if(!coord_system_check_lat_lon (top_left_lat, top_left_lon, &fallback_deg_format))
+    {
+    	_degformat = fallback_deg_format;
+    }
+    else
+    {
+    	// top left is valid, also check bottom right
+        if(!coord_system_check_lat_lon (bottom_right_lat, bottom_right_lon, &fallback_deg_format))
+        {
+        	_degformat = fallback_deg_format;
+        }
+    }
+    
+    
+    if(_degformat != last_deg_format)
+    {
+    	last_deg_format = _degformat;
+    	
+		if(dialog != NULL) gtk_widget_destroy(dialog);
+    	dialog = NULL;
     }
 
     if(dialog == NULL)
@@ -3520,14 +3573,18 @@ mapman_dialog()
 
         /* Label Columns. */
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
-                label = gtk_label_new(_("Latitude")),
+        		label = gtk_label_new(DEG_FORMAT_ENUM_TEXT[_degformat].long_field_1),
                 1, 2, 0, 1, GTK_FILL, 0, 4, 0);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
-                label = gtk_label_new(_("Longitude")),
-                2, 3, 0, 1, GTK_FILL, 0, 4, 0);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-
+        gtk_misc_set_alignment(GTK_MISC(label), 0.5f, 0.5f);
+        
+        if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+        {
+	        gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+	        		label = gtk_label_new(DEG_FORMAT_ENUM_TEXT[_degformat].long_field_2),
+	                2, 3, 0, 1, GTK_FILL, 0, 4, 0);
+	        gtk_misc_set_alignment(GTK_MISC(label), 0.5f, 0.5f);
+        }
+        
         /* GPS. */
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 label = gtk_label_new(_("GPS Location")),
@@ -3538,12 +3595,16 @@ mapman_dialog()
                 1, 2, 1, 2, GTK_FILL, 0, 4, 0);
         gtk_label_set_selectable(GTK_LABEL(lbl_gps_lat), TRUE);
         gtk_misc_set_alignment(GTK_MISC(lbl_gps_lat), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
-                lbl_gps_lon = gtk_label_new(""),
-                2, 3, 1, 2, GTK_FILL, 0, 4, 0);
-        gtk_label_set_selectable(GTK_LABEL(lbl_gps_lon), TRUE);
-        gtk_misc_set_alignment(GTK_MISC(lbl_gps_lon), 1.f, 0.5f);
-
+        
+        if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+        {
+	        gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+	                lbl_gps_lon = gtk_label_new(""),
+	                2, 3, 1, 2, GTK_FILL, 0, 4, 0);
+	        gtk_label_set_selectable(GTK_LABEL(lbl_gps_lon), TRUE);
+	        gtk_misc_set_alignment(GTK_MISC(lbl_gps_lon), 1.f, 0.5f);
+        }
+        
         /* Center. */
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 label = gtk_label_new(_("View Center")),
@@ -3554,11 +3615,16 @@ mapman_dialog()
                 1, 2, 2, 3, GTK_FILL, 0, 4, 0);
         gtk_label_set_selectable(GTK_LABEL(lbl_center_lat), TRUE);
         gtk_misc_set_alignment(GTK_MISC(lbl_center_lat), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
-                lbl_center_lon = gtk_label_new(""),
-                2, 3, 2, 3, GTK_FILL, 0, 4, 0);
-        gtk_label_set_selectable(GTK_LABEL(lbl_center_lon), TRUE);
-        gtk_misc_set_alignment(GTK_MISC(lbl_center_lon), 1.f, 0.5f);
+        
+    
+        if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+        {
+	        gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+	                lbl_center_lon = gtk_label_new(""),
+	                2, 3, 2, 3, GTK_FILL, 0, 4, 0);
+	        gtk_label_set_selectable(GTK_LABEL(lbl_center_lon), TRUE);
+	        gtk_misc_set_alignment(GTK_MISC(lbl_center_lon), 1.f, 0.5f);
+        }
 
         /* default values for Top Left and Bottom Right are defined by the
          * rectangle of the current and the previous Center */
@@ -3586,25 +3652,30 @@ mapman_dialog()
                 FALSE, NULL);
 #endif
 #endif
-        gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
-                mapman_info.txt_topleft_lon = gtk_entry_new(),
-                2, 3, 3, 4, GTK_FILL, 0, 4, 0);
-        gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_topleft_lon), 12);
-        gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lon), 1.f);
+        
+        if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+        {
+	        gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+	                mapman_info.txt_topleft_lon = gtk_entry_new(),
+	                2, 3, 3, 4, GTK_FILL, 0, 4, 0);
+	        gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_topleft_lon), 12);
+	        gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_topleft_lon), 1.f);
 #ifdef MAEMO_CHANGES
-        g_object_set(G_OBJECT(mapman_info.txt_topleft_lon),
+		    g_object_set(G_OBJECT(mapman_info.txt_topleft_lon),
 #ifndef LEGACY
-                "hildon-input-mode",
-                HILDON_GTK_INPUT_MODE_FULL, NULL);
+	                "hildon-input-mode",
+	                HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
-                HILDON_INPUT_MODE_HINT,
-                HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
-        g_object_set(G_OBJECT(mapman_info.txt_topleft_lon),
-                HILDON_AUTOCAP,
-                FALSE, NULL);
+	                HILDON_INPUT_MODE_HINT,
+	                HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
+	        g_object_set(G_OBJECT(mapman_info.txt_topleft_lon),
+	                HILDON_AUTOCAP,
+	                FALSE, NULL);
 #endif
 #endif
 
+        }
+        
         /* Bottom Right. */
         gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
                 label = gtk_label_new(_("Bottom-Right")),
@@ -3628,25 +3699,30 @@ mapman_dialog()
                 FALSE, NULL);
 #endif
 #endif
-        gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
-                mapman_info.txt_botright_lon = gtk_entry_new(),
-                2, 3, 4, 5, GTK_FILL, 0, 4, 0);
-        gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_botright_lat), 12);
-        gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lon), 1.f);
+        
+        if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+        {
+	        gtk_table_attach(GTK_TABLE(mapman_info.tbl_area),
+	                mapman_info.txt_botright_lon = gtk_entry_new(),
+	                2, 3, 4, 5, GTK_FILL, 0, 4, 0);
+	        gtk_entry_set_width_chars(GTK_ENTRY(mapman_info.txt_botright_lon), 12);
+	        gtk_entry_set_alignment(GTK_ENTRY(mapman_info.txt_botright_lon), 1.f);
 #ifdef MAEMO_CHANGES
-        g_object_set(G_OBJECT(mapman_info.txt_botright_lon),
+	        g_object_set(G_OBJECT(mapman_info.txt_botright_lon),
 #ifndef LEGACY
-                "hildon-input-mode",
-                HILDON_GTK_INPUT_MODE_FULL, NULL);
+	                "hildon-input-mode",
+	                HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
-                HILDON_INPUT_MODE_HINT,
-                HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
-        g_object_set(G_OBJECT(mapman_info.txt_botright_lon),
-                HILDON_AUTOCAP,
-                FALSE, NULL);
+	            	HILDON_INPUT_MODE_HINT,
+	                HILDON_INPUT_MODE_HINT_ALPHANUMERICSPECIAL, NULL);
+	        g_object_set(G_OBJECT(mapman_info.txt_botright_lon),
+	                HILDON_AUTOCAP,
+	                FALSE, NULL);
 #endif
 #endif
 
+        }
+        
         /* Default action is to download by area. */
         gtk_toggle_button_set_active(
                 GTK_TOGGLE_BUTTON(mapman_info.rad_by_area), TRUE);
@@ -3667,41 +3743,38 @@ mapman_dialog()
     gtk_widget_set_sensitive(mapman_info.rad_by_route,
             _route.head != _route.tail);
 
-    lat_format(_gps.lat, buffer);
-    gtk_label_set_text(GTK_LABEL(lbl_gps_lat), buffer);
-    lon_format(_gps.lon, buffer);
-    gtk_label_set_text(GTK_LABEL(lbl_gps_lon), buffer);
-
+    
+    gchar buffer1[15];
+    gchar buffer2[15];
+    format_lat_lon(_gps.lat, _gps.lon, buffer1, buffer2);
+    //lat_format(_gps.lat, buffer);
+    gtk_label_set_text(GTK_LABEL(lbl_gps_lat), buffer1);
+    //lon_format(_gps.lon, buffer);
+    if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+    	gtk_label_set_text(GTK_LABEL(lbl_gps_lon), buffer2);
+    
     unit2latlon(_center.unitx, _center.unity, lat, lon);
-    lat_format(lat, buffer);
-    gtk_label_set_text(GTK_LABEL(lbl_center_lat), buffer);
-    lon_format(lon, buffer);
-    gtk_label_set_text(GTK_LABEL(lbl_center_lon), buffer);
+    
+    format_lat_lon(lat, lon, buffer1, buffer2);
+    //lat_format(lat, buffer);
+    gtk_label_set_text(GTK_LABEL(lbl_center_lat), buffer1);
+    //lon_format(lon, buffer);
+    if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+    	gtk_label_set_text(GTK_LABEL(lbl_center_lon), buffer2);
 
-    /* Initialize to the bounds of the screen. */
-    unit2latlon(
-            _center.unitx - pixel2unit(MAX(_view_width_pixels,
-                    _view_height_pixels) / 2),
-            _center.unity - pixel2unit(MAX(_view_width_pixels,
-                    _view_height_pixels) / 2), lat, lon);
-    BOUND(lat, -90.f, 90.f);
-    BOUND(lon, -180.f, 180.f);
-    lat_format(lat, buffer);
-    gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_topleft_lat), buffer);
-    lon_format(lon, buffer);
-    gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_topleft_lon), buffer);
-
-    unit2latlon(
-            _center.unitx + pixel2unit(MAX(_view_width_pixels,
-                    _view_height_pixels) / 2),
-            _center.unity + pixel2unit(MAX(_view_width_pixels,
-                    _view_height_pixels) / 2), lat, lon);
-    BOUND(lat, -90.f, 90.f);
-    BOUND(lon, -180.f, 180.f);
-    lat_format(lat, buffer);
-    gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_botright_lat), buffer);
-    lon_format(lon, buffer);
-    gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_botright_lon), buffer);
+    format_lat_lon(top_left_lat, top_left_lon, buffer1, buffer2);
+    
+    gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_topleft_lat), buffer1);
+    
+    if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+    	gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_topleft_lon), buffer2);
+    
+    format_lat_lon(bottom_right_lat, bottom_right_lon, buffer1, buffer2);
+    //lat_format(lat, buffer);
+    gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_botright_lat), buffer1);
+    //lon_format(lon, buffer);
+    if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+    	gtk_entry_set_text(GTK_ENTRY(mapman_info.txt_botright_lon), buffer2);
 
     /* Initialize zoom levels. */
     {
@@ -3755,37 +3828,29 @@ mapman_dialog()
         }
         else
         {
-            const gchar *text;
-            gchar *error_check;
+            const gchar *text_lon, *text_lat;
+            //gchar *error_check;
             gdouble start_lat, start_lon, end_lat, end_lon;
 
-            text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lat));
-            start_lat = strdmstod(text, &error_check);
-            if(text == error_check || start_lat < -90. || start_lat > 90.) {
-                popup_error(dialog, _("Invalid Top-Left Latitude"));
-                continue;
+            text_lat = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lat));
+            text_lon = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lon));
+            
+            if(!parse_coords(text_lat, text_lon, &start_lat, &start_lon))
+            {
+            	popup_error(dialog, _("Invalid Top-Left coordinate specified"));
+            	continue;
+            }
+            
+            text_lat = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_botright_lat));
+            text_lon = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_botright_lon));
+
+            if(!parse_coords(text_lat, text_lon, &end_lat, &end_lon))
+            {
+            	popup_error(dialog, _("Invalid Bottom-Right coordinate specified"));
+            	continue;
             }
 
-            text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_topleft_lon));
-            start_lon = strdmstod(text, &error_check);
-            if(text == error_check || start_lon < -180. || start_lon>180.) {
-                popup_error(dialog, _("Invalid Top-Left Longitude"));
-                continue;
-            }
-
-            text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_botright_lat));
-            end_lat = strdmstod(text, &error_check);
-            if(text == error_check || end_lat < -90. || end_lat > 90.) {
-                popup_error(dialog, _("Invalid Bottom-Right Latitude"));
-                continue;
-            }
-
-            text = gtk_entry_get_text(GTK_ENTRY(mapman_info.txt_botright_lon));
-            end_lon = strdmstod(text, &error_check);
-            if(text == error_check || end_lon < -180. || end_lon > 180.) {
-                popup_error(dialog,_("Invalid Bottom-Right Longitude"));
-                continue;
-            }
+  
 
             if(mapman_by_area(start_lat, start_lon, end_lat, end_lon,
                         &mapman_info, update_type, download_batch_id))
@@ -3794,6 +3859,8 @@ mapman_dialog()
     }
 
     gtk_widget_hide(dialog);
+    
+    _degformat = prev_degformat;
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;

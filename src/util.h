@@ -51,4 +51,9 @@ void deg_format(gdouble coor, gchar *scoor, gchar neg_char, gchar pos_char);
 
 gdouble strdmstod(const gchar *nptr, gchar **endptr);
 
+gboolean parse_coords(const gchar* txt_lat, const gchar* txt_lon, gdouble* lat, gdouble* lon);
+void format_lat_lon(gdouble d_lat, gdouble d_lon, gchar* lat, gchar* lon);
+
+gboolean coord_system_check_lat_lon (gdouble lat, gdouble lon, gint *fallback_deg_format);
+
 #endif /* ifndef MAEMO_MAPPER_UTIL_H */
