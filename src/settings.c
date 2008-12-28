@@ -126,7 +126,7 @@
 #define GCONF_KEY_REPOSITORIES GCONF_KEY_PREFIX"/repositories" 
 #define GCONF_KEY_CURRREPO GCONF_KEY_PREFIX"/curr_repo" 
 #define GCONF_KEY_GPS_INFO GCONF_KEY_PREFIX"/gps_info" 
-#define GCONF_KEY_ROUTE_DL_URL GCONF_KEY_PREFIX"/route_dl_url" 
+#define GCONF_KEY_ROUTE_DL_URL_INDEX GCONF_KEY_PREFIX"/route_dl_url_index"
 #define GCONF_KEY_ROUTE_DL_RADIUS GCONF_KEY_PREFIX"/route_dl_radius" 
 #define GCONF_KEY_POI_DL_URL GCONF_KEY_PREFIX"/poi_dl_url" 
 #define GCONF_KEY_DEG_FORMAT GCONF_KEY_PREFIX"/deg_format" 
@@ -486,8 +486,8 @@ settings_save()
             GCONF_KEY_GPS_INFO, _gps_info, NULL);
 
     /* Save Route Download URL Format. */
-    gconf_client_set_string(gconf_client,
-            GCONF_KEY_ROUTE_DL_URL, _route_dl_url, NULL);
+    gconf_client_set_int(gconf_client,
+            GCONF_KEY_ROUTE_DL_URL_INDEX, _route_dl_index, NULL);
 
     /* Save Route Download Radius. */
     gconf_client_set_int(gconf_client,
@@ -2500,13 +2500,9 @@ settings_init()
     /* Get GPS Info flag.  Default is FALSE. */
     _gps_info = gconf_client_get_bool(gconf_client, GCONF_KEY_GPS_INFO, NULL);
 
-    /* Get Route Download URL.  Default is:
+    /* Get Route Download URL index in presdefined table.  Default is:
      * "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s&daddr=%s" */
-    _route_dl_url = gconf_client_get_string(gconf_client,
-            GCONF_KEY_ROUTE_DL_URL, NULL);
-    if(_route_dl_url == NULL)
-        _route_dl_url = g_strdup(
-                "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s&daddr=%s");
+    _route_dl_index = gconf_client_get_int (gconf_client, GCONF_KEY_ROUTE_DL_URL_INDEX, NULL);
 
     /* Get Route Download Radius.  Default is 4. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ROUTE_DL_RADIUS, NULL);

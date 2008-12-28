@@ -174,7 +174,13 @@ gboolean _fullscreen = FALSE;
 gboolean _enable_gps = TRUE;
 gboolean _enable_tracking = TRUE;
 gboolean _gps_info = FALSE;
-gchar *_route_dl_url = NULL;
+
+route_dl_table_entry_t _route_dl_url_table[] = {
+    { title: "Yandex", url: "http://maemo.shmuma.ru/proxy/yaroute?from=%s&to=%s" },
+    { title: "Google", url: "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s&daddr=%s" },
+};
+
+gint _route_dl_index = 0;
 gint _route_dl_radius = 4;
 gchar *_poi_dl_url = NULL;
 gint _show_paths = 0;

@@ -1337,8 +1337,8 @@ route_download(gchar *to)
     }
 
     /* Initialize fields. */
-
-    gtk_entry_set_text(GTK_ENTRY(txt_source_url), _route_dl_url);
+            /* TODO */
+/*     gtk_entry_set_text(GTK_ENTRY(txt_source_url), _route_dl_url); */
     if(to)
         gtk_entry_set_text(GTK_ENTRY(oti.txt_to), to);
 
@@ -1384,11 +1384,6 @@ route_download(gchar *to)
         {
             popup_error(dialog, _("Please specify a source URL."));
             continue;
-        }
-        else
-        {
-            g_free(_route_dl_url);
-            _route_dl_url = g_strdup(source_url);
         }
 
         if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(oti.rad_use_gps)))

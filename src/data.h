@@ -150,7 +150,14 @@ extern gboolean _fullscreen;
 extern gboolean _enable_gps;
 extern gboolean _enable_tracking;
 extern gboolean _gps_info;
-extern gchar *_route_dl_url;
+
+typedef struct {
+    gchar* title;
+    gchar* url;
+} route_dl_table_entry_t;
+
+extern route_dl_table_entry_t _route_dl_url_table[];
+extern gint _route_dl_index;
 extern gint _route_dl_radius;
 extern gchar *_poi_dl_url;
 extern gint _show_paths;

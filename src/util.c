@@ -135,7 +135,7 @@ Point locate_address(GtkWidget *parent, const gchar *addr)
     printf("%s(%s)\n", __PRETTY_FUNCTION__, addr);
 
     addr_escaped = gnome_vfs_escape_string(addr);
-    buffer = g_strdup_printf(_route_dl_url, addr_escaped, addr_escaped);
+    buffer = g_strdup_printf(_route_dl_url_table[_route_dl_index].url, addr_escaped, addr_escaped);
     g_free(addr_escaped);
 
     /* Attempt to download the route from the server. */
