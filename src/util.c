@@ -602,13 +602,9 @@ gboolean convert_os_grid_to_bng(gint easting, gint northing, gchar* bng)
 	snprintf(eing, 12, "%u", easting);
 	snprintf(ning, 12, "%u", northing);
 	
-	gint lnth = strlen(eing);
-	// Note - we only want 4 numbers
-	snprintf(eing, 5, "%s", eing+(lnth-5));
-	
-	lnth = strlen(ning);
-	snprintf(ning, 5, "%s", ning+(lnth-5));
-	
+	snprintf(eing, 5, "%s", eing+1);
+	snprintf(ning, 5, "%s", ning+1);
+		
 	sprintf(bng, "%c%c%s%s", 
 			(char)(tmp + 65), 
 			(char)(eX + 65),
