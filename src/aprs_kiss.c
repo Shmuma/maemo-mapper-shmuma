@@ -683,7 +683,6 @@ int filethere(char *fn) {
  * Close the serial port
  * */
 gint serial_detach() {
-//    char fn[600];
     int ok;
     ok = -1;
 
@@ -709,15 +708,6 @@ gint serial_detach() {
 
         }
 
-        //update_interface_list();
-  /*      
-        // Delete lockfile
-        snprintf(fn, sizeof(fn), "/var/lock/LCK..%s", get_device_name_only(port_data.device_name));
-
-        ENABLE_SETUID_PRIVILEGE;
-        (void)unlink(fn);
-        DISABLE_SETUID_PRIVILEGE;
-*/
     }
 
     return(ok);
@@ -729,25 +719,75 @@ typedef struct {
   char *bonding;  /* allocated from heap, you must free this */
 } bonding_t;
 
+static inline DBusGConnection *get_dbus_gconn(GError **error)
+{
+  DBusGConnection *conn;
+
+  conn = dbus_g_bus_get(DBUS_BUS_SYSTEM, error);
+  return conn;
+}
+
+
+
+void close_tnc_port()
+{
+
+	if (port_data.device_name != NULL) {
+		fprintf(stderr, "in close_tnc_port()\n");
+		serial_detach();
+		
+	    int skip_dbus = 0;
+	    DBusGConnection *bus = NULL;
+	    DBusGProxy *proxy = NULL;
+	    GError *error = NULL;
+
+	    bus = get_dbus_gconn(&error);
+	    if (!bus) {
+	      errno = ECONNREFUSED; /* close enough :) */
+	      skip_dbus = 1;
+	    }
+
+
+	    if (!skip_dbus) {
+	        /* Disconnect the device */
+	        proxy = dbus_g_proxy_new_for_name(bus,
+	            BTCOND_DBUS, BTCOND_PATH, BTCOND_INTERFACE);
+	        error = NULL;
+	        if(!dbus_g_proxy_call(proxy, BTCOND_DISCONNECT, &error,
+	              G_TYPE_STRING, port_data.device_name, G_TYPE_INVALID, G_TYPE_INVALID)
+	            || error){
+//	        	PDEBUG("Cannot send msg (service=%s, object=%s, interface=%s, "
+//	        			"method=%s) [%s]\n",
+//	                 BTCOND_DBUS,
+//	                 BTCOND_PATH,
+//	                 BTCOND_INTERFACE,
+//	                 BTCOND_DISCONNECT,
+//	                 error->message ? error->message : "<no error msg>");
+	        }
+	        g_object_unref(proxy);
+	    }
+
+	    free(port_data.device_name);
+	    port_data.device_name[0]=0;
+	    
+
+	    if (bus) {
+	      dbus_g_connection_unref(bus);
+	    }
+	}
+}
+
 gboolean open_bluetooth_tty_connection(gchar *bda, gchar **aprs_bt_port)
 {
-	gint i, st, num_bondings = 0, num_rfcomms = 0, num_posdev = 0;
-	//gint j, k, num_classes = 0, bonding_cnt = 0,  
+	gint i, st, num_bondings = 0, num_rfcomms = 0, num_posdev = 0;  
 	GError *error = NULL;
 	DBusGConnection *bus = NULL;
 	DBusGProxy *proxy = NULL;
-	//char **str_iter = NULL;
-	//char **tmp_bondings = 0, **tmp_classes = 0;
-	//char **adapters = 0;
 	gchar **rfcomms = 0;
 	bonding_t *bondings = 0; /* points to array of bonding_t */
 	bonding_t *posdev = 0; /* bondings with positioning bit on */
 	gchar *tmp;
-	//gchar *onoff;
 	const gchar const *spp="SPP";
-	//gint timeout;
-//	gchar *gpsd_prog;
-//	gchar *gpsd_ctrl_sock;
   
 	/* Use the dbus interface to get the BT information */
 	
@@ -843,14 +883,7 @@ gboolean open_bluetooth_tty_connection(gchar *bda, gchar **aprs_bt_port)
 	    					BTCOND_INTERFACE,
 	    					BTCOND_CONNECT,
 	    					error->message ? error->message : "<no error msg>");
-/*	    			ERRSTR("Cannot send msg (service=%s, object=%s, interface=%s, "
-	    					"method=%s) [%s]\n",
-	    					BTCOND_DBUS,
-	    					BTCOND_PATH,
-	    					BTCOND_INTERFACE,
-	    					BTCOND_CONNECT,
-	    					error->message ? error->message : "<no error msg>");
-*/
+
 	    			continue;
 	    	} 
 	    	else if(!tmp || !*tmp) 
@@ -987,46 +1020,45 @@ OUT:
 //***********************************************************
 // Serial port INIT
 //***********************************************************
+void update_aprs_tty_status()
+{
+	/*
+	_aprs_tty_enable = (_aprs_tty_state == RCVR_UP);
+	
+	gtk_check_menu_item_set_active(
+	    GTK_CHECK_MENU_ITEM(_menu_enable_aprs_tty_item), _aprs_tty_enable);
+	    */
+}
+
 int serial_init () {
-//    FILE *lock;
     int speed;
-//    pid_t mypid = 0;
-//    int myintpid;
-//    char fn[600];
-//    uid_t user_id;
-//    struct passwd *user_info;
-//    char temp[100];
-//    char temp1[100];
-//    pid_t status;
-
-//    status = -9999;
-
     
     euid = geteuid();
     egid = getegid();
 
+    fprintf(stderr, "in serial_init\n");
 
     // clear port_channel
     port_data.channel = -1;
 
     // clear port active
     port_data.active = DEVICE_NOT_IN_USE;
-
+    
     // clear port status
     port_data.status = DEVICE_DOWN;
-
-    // Show the latest status in the interface control dialog
-//    update_interface_list();
-
+    //set_aprs_tty_conn_state(RCVR_DOWN);
     
-    
+    update_aprs_tty_status();
+
     //gw-obex.h
     if(_aprs_tnc_method == TNC_CONNECTION_BT)
     {
     	// Bluetooth connection
     	gchar * aprs_bt_port = NULL;
     	
-    	if(!open_bluetooth_tty_connection(_aprs_tnc_bt_mac, &aprs_bt_port))
+    	//fprintf(stderr, "Connecting to BT device...\n");
+    	
+    	if(!open_bluetooth_tty_connection(_aprs_tnc_bt_mac, &aprs_bt_port) || aprs_bt_port == NULL)
     	{
     		fprintf(stderr, "Failed to connect to BT device\n");
     		// Failed to connect
@@ -1045,6 +1077,7 @@ int serial_init () {
     }
     
     
+    // TODO - make these configurable
     port_data.device_type = DEVICE_SERIAL_KISS_TNC;
     port_data.sp = B9600; 
     
@@ -1061,35 +1094,6 @@ int serial_init () {
 
         return (-1);
     }
-
-    // Attempt to create the lock file
-/*    snprintf(fn, sizeof(fn), "/var/lock/LCK..%s", get_device_name_only(port_data.device_name));
-
-    ENABLE_SETUID_PRIVILEGE;
-    lock = fopen(fn,"w");
-    DISABLE_SETUID_PRIVILEGE;
-    if (lock != NULL) {
-        // get my process id for lock file
-        mypid = getpid();
-
-        // get user info
-        user_id = getuid();
-        user_info = getpwuid(user_id);
-        snprintf(temp,
-            sizeof(temp),
-            "%s",
-            user_info->pw_name);
-
-        fprintf(lock,"%9d %s %s",(int)mypid,"xastir",temp);
-        (void)fclose(lock);
-        // We've successfully created our own lock file
-    }
-    else {
-        // lock failed
-        fprintf(stderr,"Warning:  Failed opening LCK file!  Continuing on...\n");
-
-    }
-*/
     
     // get port attributes for new and old
     if (tcgetattr(port_data.channel, &port_data.t) != 0) {
@@ -1112,8 +1116,8 @@ int serial_init () {
     }
 
     // set time outs
-    port_data.t.c_cc[VMIN] = (cc_t)1;
-    port_data.t.c_cc[VTIME] = (cc_t)2;
+    port_data.t.c_cc[VMIN] = (cc_t)0;
+    port_data.t.c_cc[VTIME] = (cc_t)20;
 
     // set port flags
     port_data.t.c_iflag &= ~(BRKINT | IGNPAR | PARMRK | INPCK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
@@ -1205,9 +1209,10 @@ int serial_init () {
 
     // clear port status
     port_data.status = DEVICE_UP;
-
+    set_aprs_tty_conn_state(RCVR_UP);
+    
     // Show the latest status in the interface control dialog
-//    update_interface_list();
+    update_aprs_tty_status();
 
     // Ensure we are in KISS mode
     if(port_data.device_type == DEVICE_SERIAL_KISS_TNC)
@@ -1221,314 +1226,185 @@ int serial_init () {
     return (1);
 }
 
-
-//***********************************************************
-// port_read()
-//
-//
-// This function becomes the long-running thread that snags
-// characters from an interface and passes them off to the
-// decoding routines.  One copy of this is run for each read
-// thread for each interface.
-//***********************************************************
-
-void port_read() {
+gboolean read_port_data()
+{
     unsigned char cin, last;
-//    unsigned char buffer[MAX_DEVICE_BUFFER];    // Only used for AX.25 packets
     gint i;
-    struct timeval tmv;
-    fd_set rd;
-//    gint group;
-//    gint max;
-    /*
-    * Some local variables used for checking AX.25 data - PE1DNN
-    *
-    * "from"     is used to look up where the data comes from
-    * "from_len" is used to keep the size of sockaddr structure
-    * "dev"      is used to keep the name of the interface that
-    *            belongs to our port/device_name
-    */
-//    struct sockaddr from;
-//    socklen_t from_len;
+//    struct timeval tmv;
+//    fd_set rd;
 
- //   group = 0;
-//    max = MAX_DEVICE_BUFFER - 1;
     cin = (unsigned char)0;
     last = (unsigned char)0;
-    
-    
 
-    // We stay in this read loop until the port is shut down
-    while(port_data.active == DEVICE_IN_USE){
-
-        if (port_data.status == DEVICE_UP){
-
-            port_data.read_in_pos = 0;
-            port_data.scan = 1;
-
-            while (port_data.scan
-                    && (port_data.read_in_pos < (MAX_DEVICE_BUFFER - 1) )
-                    && (port_data.status == DEVICE_UP) ) {
-
-                int skip = 0;
-
-//                pthread_testcancel();   // Check for thread termination request
- 
-                // Handle all EXCEPT AX25_TNC interfaces here
-                // Get one character
-                port_data.scan = (int)read(port_data.channel,&cin,1);
-//fprintf(stderr,"tty in:%02x ",cin);
+	int skip = 0;
+	
+    // Handle all EXCEPT AX25_TNC interfaces here
+    // Get one character
+//fprintf(stderr,"waiting for tty in... ");
+	port_data.scan = (int)read(port_data.channel,&cin,1);
+  
+	if(port_data.scan == 0) return TRUE;
+	else if(port_data.scan < 0) return FALSE;
+	
+//fprintf(stderr,"%02x \n",cin);
 
 
-                // Below is code for ALL types of interfaces
-                if (port_data.scan > 0 && port_data.status == DEVICE_UP ) {
+    // Below is code for ALL types of interfaces
+    if (port_data.scan > 0 && port_data.status == DEVICE_UP ) {
 
-                    if (port_data.device_type != DEVICE_AX25_TNC)
-                        port_data.bytes_input += port_data.scan;      // Add character to read buffer
+        if (port_data.device_type != DEVICE_AX25_TNC)
+            port_data.bytes_input += port_data.scan;      // Add character to read buffer
 
 
 
-                    // Handle all EXCEPT AX25_TNC interfaces here
-                    if (port_data.device_type != DEVICE_AX25_TNC){
+        // Handle all EXCEPT AX25_TNC interfaces here
+        if (port_data.device_type != DEVICE_AX25_TNC){
 
 
-                        // Do special KISS packet processing here.
-                        // We save the last character in
-                        // port_data.channel2, as it is
-                        // otherwise only used for AX.25 ports.
+            // Do special KISS packet processing here.
+            // We save the last character in
+            // port_data.channel2, as it is
+            // otherwise only used for AX.25 ports.
 
-                        if ( (port_data.device_type == DEVICE_SERIAL_KISS_TNC)
-                                || (port_data.device_type == DEVICE_SERIAL_MKISS_TNC) ) {
+            if ( (port_data.device_type == DEVICE_SERIAL_KISS_TNC)
+                    || (port_data.device_type == DEVICE_SERIAL_MKISS_TNC) ) {
 
 
-                            if (port_data.channel2 == KISS_FESC) { // Frame Escape char
-                                if (cin == KISS_TFEND) { // Transposed Frame End char
+                if (port_data.channel2 == KISS_FESC) { // Frame Escape char
+                    if (cin == KISS_TFEND) { // Transposed Frame End char
 
-                                    // Save this char for next time
-                                    // around
-                                	port_data.channel2 = cin;
+                        // Save this char for next time
+                        // around
+                    	port_data.channel2 = cin;
 
-                                    cin = KISS_FEND;
-                                }
-                                else if (cin == KISS_TFESC) { // Transposed Frame Escape char
+                        cin = KISS_FEND;
+                    }
+                    else if (cin == KISS_TFESC) { // Transposed Frame Escape char
 
-                                    // Save this char for next time
-                                    // around
-                                	port_data.channel2 = cin;
+                        // Save this char for next time
+                        // around
+                    	port_data.channel2 = cin;
 
-                                    cin = KISS_FESC;
-                                }
-                                else {
-                                	port_data.channel2 = cin;
-                                }
-                            }
-                            else if (port_data.channel2 == KISS_FEND) { // Frame End char
-                                // Frame start or frame end.  Drop
-                                // the next character which should
-                                // either be another frame end or a
-                                // type byte.
+                        cin = KISS_FESC;
+                    }
+                    else {
+                    	port_data.channel2 = cin;
+                    }
+                }
+                else if (port_data.channel2 == KISS_FEND) { // Frame End char
+                    // Frame start or frame end.  Drop
+                    // the next character which should
+                    // either be another frame end or a
+                    // type byte.
 
 // Note this "type" byte is where it specifies which KISS interface
 // the packet came from.  We may want to use this later for
 // multi-drop KISS or other types of KISS protocols.
 
-                                // Save this char for next time
-                                // around
-                            	port_data.channel2 = cin;
+                    // Save this char for next time
+                    // around
+                	port_data.channel2 = cin;
 
-                                skip++;
-                            }
-                            else if (cin == KISS_FESC) { // Frame Escape char
-                            	port_data.channel2 = cin;
-                                skip++;
-                            }
-                            else {
-                            	port_data.channel2 = cin;
-                            }
-                        }   // End of first special KISS processing
-
-
-                        // We shouldn't see any AX.25 flag
-                        // characters on a KISS interface because
-                        // they are stripped out by the KISS code.
-                        // What we should see though are KISS_FEND
-                        // characters at the beginning of each
-                        // packet.  These characters are where we
-                        // should break the data apart in order to
-                        // send strings to the decode routines.  It
-                        // may be just fine to still break it on \r
-                        // or \n chars, as the KISS_FEND should
-                        // appear immediately afterwards in
-                        // properly formed packets.
+                    skip++;
+                }
+                else if (cin == KISS_FESC) { // Frame Escape char
+                	port_data.channel2 = cin;
+                    skip++;
+                }
+                else {
+                	port_data.channel2 = cin;
+                }
+            }   // End of first special KISS processing
 
 
-                        if ( (!skip)
-                                && (cin == (unsigned char)'\r'
-                                    || cin == (unsigned char)'\n'
-                                    || port_data.read_in_pos >= (MAX_DEVICE_BUFFER - 1)
-                                    || ( (cin == KISS_FEND) && (port_data.device_type == DEVICE_SERIAL_KISS_TNC) )
-                                    || ( (cin == KISS_FEND) && (port_data.device_type == DEVICE_SERIAL_MKISS_TNC) ) )
-                               && port_data.data_type == 0) {     // If end-of-line
+            // We shouldn't see any AX.25 flag
+            // characters on a KISS interface because
+            // they are stripped out by the KISS code.
+            // What we should see though are KISS_FEND
+            // characters at the beginning of each
+            // packet.  These characters are where we
+            // should break the data apart in order to
+            // send strings to the decode routines.  It
+            // may be just fine to still break it on \r
+            // or \n chars, as the KISS_FEND should
+            // appear immediately afterwards in
+            // properly formed packets.
+
+
+            if ( (!skip)
+                    && (cin == (unsigned char)'\r'
+                        || cin == (unsigned char)'\n'
+                        || port_data.read_in_pos >= (MAX_DEVICE_BUFFER - 1)
+                        || ( (cin == KISS_FEND) && (port_data.device_type == DEVICE_SERIAL_KISS_TNC) )
+                        || ( (cin == KISS_FEND) && (port_data.device_type == DEVICE_SERIAL_MKISS_TNC) ) )
+                   && port_data.data_type == 0) {     // If end-of-line
 
 // End serial/net type data send it to the decoder Put a terminating
 // zero at the end of the read-in data
 
-                        	port_data.device_read_buffer[port_data.read_in_pos] = (char)0;
+            	port_data.device_read_buffer[port_data.read_in_pos] = (char)0;
 
-                            if (port_data.status == DEVICE_UP && port_data.read_in_pos > 0) {
-                                int length;
+                if (port_data.status == DEVICE_UP && port_data.read_in_pos > 0) {
+                    int length;
 
-                                // Compute length of string in
-                                // circular queue
+                    // Compute length of string in
+                    // circular queue
 
-                                //fprintf(stderr,"%d\t%d\n",port_data.read_in_pos,port_data.read_out_pos);
+                    //fprintf(stderr,"%d\t%d\n",port_data.read_in_pos,port_data.read_out_pos);
 
-                                // KISS TNC sends binary data
-                                if ( (port_data.device_type == DEVICE_SERIAL_KISS_TNC)
-                                        || (port_data.device_type == DEVICE_SERIAL_MKISS_TNC) ) {
- 
-                                    length = port_data.read_in_pos - port_data.read_out_pos;
-                                    if (length < 0)
-                                        length = (length + MAX_DEVICE_BUFFER) % MAX_DEVICE_BUFFER;
+                    // KISS TNC sends binary data
+                    if ( (port_data.device_type == DEVICE_SERIAL_KISS_TNC)
+                            || (port_data.device_type == DEVICE_SERIAL_MKISS_TNC) ) {
 
-                                    length++;
-                                }
-                                else {  // ASCII data
-                                    length = 0;
-                                }
+                        length = port_data.read_in_pos - port_data.read_out_pos;
+                        if (length < 0)
+                            length = (length + MAX_DEVICE_BUFFER) % MAX_DEVICE_BUFFER;
 
-                                channel_data(
-                                    (unsigned char *)port_data.device_read_buffer,
-                                    length);   // Length of string
-                            }
-
-                            for (i = 0; i <= port_data.read_in_pos; i++)
-                                port_data.device_read_buffer[i] = (char)0;
-
-                            port_data.read_in_pos = 0;
-                        }
-                        else if (!skip) {
-
-                            // Check for binary WX station data
-                            if (cin == '\0')    // OWW WX daemon sends 0x00's!
-                                cin = '\n';
-
-                            if (port_data.read_in_pos < (MAX_DEVICE_BUFFER - 1) ) {
-                                port_data.device_read_buffer[port_data.read_in_pos] = (char)cin;
-                                port_data.read_in_pos++;
-                                port_data.device_read_buffer[port_data.read_in_pos] = (char)0;
-                            }
-                            else {
-                                port_data.read_in_pos = 0;
-                            }
-                        }
-
-                    }   // End of non-AX.25 interface code block
-
-
-                }
-                else if (port_data.status == DEVICE_UP) {    /* error or close on read */
-                    port_data.errors++;
-                    if (port_data.scan == 0) {
-                        // Should not get this unless the device is down.  NOT TRUE!
-                        // We seem to also be able to get here if we're closing/restarting
-                        // another interface.  For that reason I commented out the below
-                        // statement so that this interface won't go down.  The inactivity
-                        // timer solves that issue now anyway.  --we7u.
-                        port_data.status = DEVICE_ERROR;
-
-                        // If the below statement is enabled, it causes an immediate reconnect
-                        // after one time-period of inactivity, currently 7.5 minutes, as set in
-                        // main.c:UpdateTime().  This means the symbol will never change from green
-                        // to red on the status bar, so the operator might not know about a
-                        // connection that is being constantly reconnected.  By leaving it commented
-                        // out we get one time period of red, and then it will reconnect at the 2nd
-                        // time period.  This means we can reconnect within 15 minutes if a line
-                        // goes dead.
-                        //
-                        port_data.reconnects = -1;     // Causes an immediate reconnect
- 
-                        // Show the latest status in the interface control dialog
-//                        update_interface_list();
-
-                    } else {
-                        if (port_data.scan == -1) {
-                            /* Should only get this if an real error occurs */
-                            port_data.status = DEVICE_ERROR;
-
-                            // If the below statement is enabled, it causes an immediate reconnect
-                            // after one time-period of inactivity, currently 7.5 minutes, as set in
-                            // main.c:UpdateTime().  This means the symbol will never change from green
-                            // to red on the status bar, so the operator might not know about a
-                            // connection that is being constantly reconnected.  By leaving it commented
-                            // out we get one time period of red, and then it will reconnect at the 2nd
-                            // time period.  This means we can reconnect within 15 minutes if a line
-                            // goes dead.
-                            //
-                            port_data.reconnects = -1;     // Causes an immediate reconnect
- 
-                            // Show the latest status in the
-                            // interface control dialog
-//                            update_interface_list();
-
-                        }
+                        length++;
                     }
-                }
-                
-                
-                /*
-                
-                // Send any packets queued
-    			// try to get lock, otherwise try next time
-    			if(g_mutex_trylock (_write_buffer[APRS_PORT_TTY].write_lock))
-    			{
-    	            	// Store the current end pointer as it may change
-    				
-                    while (_write_buffer[APRS_PORT_TTY].write_in_pos != _write_buffer[APRS_PORT_TTY].write_out_pos) {
-
-                    	port_write_string(
-                    		_write_buffer[APRS_PORT_TTY].device_write_buffer[_write_buffer[APRS_PORT_TTY].write_out_pos],
-                    		APRS_PORT_TTY);
-
-                    	_write_buffer[APRS_PORT_TTY].write_out_pos++;
-                        if (_write_buffer[APRS_PORT_TTY].write_out_pos >= MAX_DEVICE_BUFFER)
-                        	_write_buffer[APRS_PORT_TTY].write_out_pos = 0;
-
+                    else {  // ASCII data
+                        length = 0;
                     }
 
-                  	            	
-    	            g_mutex_unlock(_write_buffer[APRS_PORT_TTY].write_lock);
-    			}            
-*/
+                    channel_data(
+                        (unsigned char *)port_data.device_read_buffer,
+                        length);   // Length of string
+                }
+
+                for (i = 0; i <= port_data.read_in_pos; i++)
+                    port_data.device_read_buffer[i] = (char)0;
+
+                port_data.read_in_pos = 0;
             }
-        }
-        if (port_data.active == DEVICE_IN_USE)  {
+            else if (!skip) {
 
-            // We need to delay here so that the thread doesn't use
-            // high amounts of CPU doing nothing.
+                // Check for binary WX station data
+                if (cin == '\0')    // OWW WX daemon sends 0x00's!
+                    cin = '\n';
 
-// This select that waits on data and a timeout, so that if data
-// doesn't come in within a certain period of time, we wake up to
-// check whether the socket has gone down.  Else, we go back into
-// the select to wait for more data or a timeout.  FreeBSD has a
-// problem if this is less than 1ms.  Linux works ok down to 100us.
-// We don't need it anywhere near that short though.  We just need
-// to check whether the main thread has requested the interface be
-// closed, and so need to have this short enough to have reasonable
-// response time to the user.
+                if (port_data.read_in_pos < (MAX_DEVICE_BUFFER - 1) ) {
+                    port_data.device_read_buffer[port_data.read_in_pos] = (char)cin;
+                    port_data.read_in_pos++;
+                    port_data.device_read_buffer[port_data.read_in_pos] = (char)0;
+                }
+                else {
+                    port_data.read_in_pos = 0;
+                }
+            }
 
-//sched_yield();  // Yield to other threads
+        }   // End of non-AX.25 interface code block
 
-            // Set up the select to block until data ready or 100ms
-            // timeout, whichever occurs first.
-            FD_ZERO(&rd);
-            FD_SET(port_data.channel, &rd);
-            tmv.tv_sec = 0;
-            tmv.tv_usec = 100000;    // 100 ms
-            (void)select(0,&rd,NULL,NULL,&tmv);
-        }
+
+        return TRUE;
     }
-
+//    else if (port_data.status == DEVICE_UP) {    /* error or close on read */
+//    	// cause re-connect
+//
+//
+//    }
+	
+    return TRUE;
 }
+
 
 #endif //INCLUDE_APRS
