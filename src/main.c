@@ -233,72 +233,6 @@ maemo_mapper_destroy()
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
-// Called once per second
-gboolean timer_callback (gpointer data) {
-	
-#ifdef INCLUDE_APRS
-	static int inet_beacon_count = 0;
-	static int inet_aprs_filter = 0;
-	static int tty_beacon_count = 0;
-	
-	if(_aprs_enable)
-	{
-		// Check if we need to resent the filter every 5 minutes
-		// Note - this should really be dependent on speed and/or range
-		if(_aprs_inet_enable && inet_aprs_filter > (60*5))
-		{
-			// Currently this only needs to be sent on connection
-			//update_aprs_inet_options(FALSE);
-			inet_aprs_filter = 0;
-		}
-		
-		if(_aprs_inet_enable && _aprs_enable_inet_tx && _aprs_inet_beacon_interval > 0 && _aprs_inet_state	== RCVR_UP)
-		{
-			
-			
-			if(inet_beacon_count >= _aprs_inet_beacon_interval)
-			{
-				// Send inet APRS beacon
-				aprs_send_beacon(APRS_PORT_INET);
-				//g_idle_add((GSourceFunc)aprs_send_beacon, APRS_PORT_INET);
-				//fprintf(stderr, "timer %u, %u\n", inet_beacon_count, _aprs_inet_beacon_interval);
-				inet_beacon_count = 0;
-			}
-			
-		}
-		
-		if(_aprs_tty_enable && _aprs_enable_tty_tx )
-		{
-			// Send tty APRS beacon
-			
-			if(tty_beacon_count >= _aprs_tty_beacon_interval && _aprs_tty_beacon_interval > 0)
-			{
-				// Send inet APRS beacon
-				aprs_send_beacon(APRS_PORT_TTY);
-				
-				//g_idle_add((GSourceFunc)aprs_send_beacon_inet, NULL);
-				
-				tty_beacon_count = 0;
-			}
-
-		}
-		
-
-		inet_aprs_filter++;
-		inet_beacon_count++;
-		tty_beacon_count++;
-	}
-#endif //INCLUDE_APRS
-	
-	return TRUE; // Continue timer
-}
-
-// Start a one second timer - this can be used to execute any periodic tasks 
-void timer_init()
-{
-	g_timeout_add(1000 , timer_callback, NULL);
-}
-
 /**
  * Initialize everything required in preparation for calling gtk_main().
  */
@@ -478,7 +412,7 @@ maemo_mapper_init(gint argc, gchar **argv)
     // Used by Radio Amateurs
     DEG_FORMAT_ENUM_TEXT[IARU_LOC].name = "IARU Locator";
     DEG_FORMAT_ENUM_TEXT[IARU_LOC].short_field_1 = "Locator";
-    DEG_FORMAT_ENUM_TEXT[IARU_LOC].long_field_1 = "Lacator";
+    DEG_FORMAT_ENUM_TEXT[IARU_LOC].long_field_1 = "Locator";
     DEG_FORMAT_ENUM_TEXT[IARU_LOC].short_field_2 = "";
     DEG_FORMAT_ENUM_TEXT[IARU_LOC].long_field_2 = "";
     DEG_FORMAT_ENUM_TEXT[IARU_LOC].field_2_in_use = FALSE;
@@ -491,13 +425,20 @@ maemo_mapper_init(gint argc, gchar **argv)
     DEG_FORMAT_ENUM_TEXT[UK_OSGB].long_field_2 = "OS Y";
     DEG_FORMAT_ENUM_TEXT[UK_OSGB].field_2_in_use = TRUE;
     
-    DEG_FORMAT_ENUM_TEXT[UK_NGR].name = "OSGB Landranger Grid";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR].name = "OSGB Landranger Grid (8)";
     DEG_FORMAT_ENUM_TEXT[UK_NGR].short_field_1 = "GR";
     DEG_FORMAT_ENUM_TEXT[UK_NGR].long_field_1 = "OS Grid";
     DEG_FORMAT_ENUM_TEXT[UK_NGR].short_field_2 = "";
     DEG_FORMAT_ENUM_TEXT[UK_NGR].long_field_2 = "";
     DEG_FORMAT_ENUM_TEXT[UK_NGR].field_2_in_use = FALSE;
     
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].name = "OSGB Landranger Grid (6)";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].short_field_1 = "GR";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].long_field_1 = "OS Grid";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].short_field_2 = "";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].long_field_2 = "";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].field_2_in_use = FALSE;
+        
     SPEED_LOCATION_ENUM_TEXT[SPEED_LOCATION_TOP_LEFT] = _("Top-Left");
     SPEED_LOCATION_ENUM_TEXT[SPEED_LOCATION_TOP_RIGHT] = _("Top-Right");
     SPEED_LOCATION_ENUM_TEXT[SPEED_LOCATION_BOTTOM_RIGHT] = _("Bottom-Right");
@@ -659,7 +600,6 @@ maemo_mapper_init(gint argc, gchar **argv)
     
 #ifdef INCLUDE_APRS
     aprs_init();
-    timer_init();
 #endif //INCLUDE_APRS
     
     /* If present, attempt to load the file specified on the command line. */
