@@ -178,6 +178,7 @@ gboolean _gps_info = FALSE;
 route_dl_table_entry_t _route_dl_url_table[] = {
     { title: "Yandex", url: "http://maemo.shmuma.ru/proxy/yaroute?from=%s&to=%s" },
     { title: "Google", url: "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s&daddr=%s" },
+    { title: NULL }
 };
 
 gint _route_dl_index = 0;

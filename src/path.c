@@ -1204,9 +1204,10 @@ route_download(gchar *to)
     static GtkWidget *dialog = NULL;
     static GtkWidget *table = NULL;
     static GtkWidget *label = NULL;
-    static GtkWidget *txt_source_url = NULL;
+    static GtkWidget *cmb_source_url = NULL;
     static GtkWidget *btn_swap = NULL;
     static RouteDownloadInfo oti;
+    gint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     conic_recommend_connected();
@@ -1234,13 +1235,12 @@ route_download(gchar *to)
 
         /* Source URL. */
         gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Source URL")),
+                label = gtk_label_new(_("Router")),
                 0, 1, 0, 1, GTK_FILL, 0, 2, 4);
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
-                txt_source_url = gtk_entry_new(),
+                cmb_source_url = gtk_combo_box_new_text(),
                 1, 5, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-        gtk_entry_set_width_chars(GTK_ENTRY(txt_source_url), 25);
 
         /* Use GPS Location. */
         gtk_table_attach(GTK_TABLE(table),
@@ -1337,8 +1337,12 @@ route_download(gchar *to)
     }
 
     /* Initialize fields. */
-            /* TODO */
-/*     gtk_entry_set_text(GTK_ENTRY(txt_source_url), _route_dl_url); */
+    /* Populate combobox with available routers */
+    i = 0;
+    while (_route_dl_url_table[i].title)
+        gtk_combo_box_append_text (GTK_COMBO_BOX (cmb_source_url), _route_dl_url_table[i++].title);
+    gtk_combo_box_set_active (GTK_COMBO_BOX (cmb_source_url), _route_dl_index);
+
     if(to)
         gtk_entry_set_text(GTK_ENTRY(oti.txt_to), to);
 
@@ -1377,9 +1381,14 @@ route_download(gchar *to)
     {
         gchar buffer[BUFFER_SIZE];
         const gchar *source_url, *from, *to;
+        gint router_idx;
         gboolean avoid_highways;
 
-        source_url = gtk_entry_get_text(GTK_ENTRY(txt_source_url));
+        router_idx = gtk_combo_box_get_active (GTK_COMBO_BOX (cmb_source_url));
+        if (router_idx >= 0) {
+            source_url = _route_dl_url_table[router_idx].url;
+            _route_dl_index = router_idx;
+        }
         if(!strlen(source_url))
         {
             popup_error(dialog, _("Please specify a source URL."));
