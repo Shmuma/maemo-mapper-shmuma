@@ -158,6 +158,11 @@ gboolean aprs_send_beacon_inet();
 void update_aprs_inet_options(gboolean force);
 void port_write_string(gchar *data, gint len, TAprsPort port);
 
+void aprs_timer_init();
+
+gboolean timer_callback_aprs_inet (gpointer data);
+gboolean timer_callback_aprs_tty (gpointer data);
+
 extern AprsDataRow *station_shortcuts[16384];
 
 #endif /* ifndef MAEMO_MAPPER_APRS_H */

@@ -73,6 +73,10 @@ static GMutex*				_aprs_tty_init_mutex = NULL;
 
 static gint 				_aprs_rcvr_retry_count = 0;
 
+static guint _aprs_inet_beacon_timer;
+static guint _aprs_tty_beacon_timer;
+
+
 #define VERSIONFRM 	"APRS"
 extern AprsDataRow*			n_first;  // pointer to first element in name sorted station list
 
@@ -81,6 +85,8 @@ extern AprsDataRow*			n_first;  // pointer to first element in name sorted stati
 TWriteBuffer _write_buffer[APRS_PORT_COUNT];
 
 gboolean send_line(gchar* text, gint text_len, TAprsPort port);
+void port_read() ;
+void aprs_tty_disconnect();
 
 static gboolean aprs_handle_error_idle(gchar *error)
 {
@@ -145,11 +151,25 @@ void set_aprs_tty_conn_state(ConnState new_conn_state)
                 gtk_widget_destroy(_connect_banner);
                 _connect_banner = NULL;
             }
+          
+          
+          	if(_aprs_tty_beacon_timer>0) g_source_remove(_aprs_tty_beacon_timer);
+          	
+          	if(_aprs_enable && _aprs_tty_enable 
+          			&& _aprs_enable_tty_tx && _aprs_tty_beacon_interval>0)
+          			_aprs_tty_beacon_timer = g_timeout_add(_aprs_tty_beacon_interval*1000 , timer_callback_aprs_tty, NULL);
+          	
+          	
+          	_aprs_rcvr_retry_count = 0;
             break;
         case RCVR_DOWN:
             if(!_connect_banner)
                 _connect_banner = hildon_banner_show_animation(
                         _window, NULL, _("Attempting to connect to TNC"));
+            
+            if(_aprs_tty_beacon_timer>0) g_source_remove(_aprs_tty_beacon_timer);
+            	
+            	
             break;
 
         default: ; /* to quell warning. */
@@ -181,6 +201,14 @@ void set_aprs_inet_conn_state(ConnState new_conn_state)
                 gtk_widget_destroy(_fix_banner);
                 _fix_banner = NULL;
             }
+            
+            if(_aprs_inet_beacon_timer>0) g_source_remove(_aprs_inet_beacon_timer);
+            	
+            if(_aprs_enable && _aprs_inet_enable 
+            		&& _aprs_enable_inet_tx && _aprs_inet_beacon_interval>0)
+            	_aprs_inet_beacon_timer = g_timeout_add(_aprs_inet_beacon_interval*1000 , timer_callback_aprs_inet, NULL);
+            		
+            	
             break;
         case RCVR_DOWN:
             if(_fix_banner)
@@ -191,6 +219,8 @@ void set_aprs_inet_conn_state(ConnState new_conn_state)
             if(!_connect_banner)
                 _connect_banner = hildon_banner_show_animation(
                         _window, NULL, _("Attempting to connect to APRS server"));
+            
+            if(_aprs_inet_beacon_timer>0) g_source_remove(_aprs_inet_beacon_timer);
             break;
 
         default: ; /* to quell warning. */
@@ -642,7 +672,7 @@ gboolean select_aprs(gint unitx, gint unity, gboolean quick)
     	
 	    if(dialog == NULL)
 	    {
-	        dialog = gtk_dialog_new_with_buttons(_("Select POI"),
+	        dialog = gtk_dialog_new_with_buttons(_("Select APRS Station"),
 	                GTK_WINDOW(_window), GTK_DIALOG_MODAL,
 	                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
 	                GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
@@ -1882,20 +1912,19 @@ void create_output_pos_packet(TAprsPort port, gchar **packet, int *length)
 		gchar slat[10];
 		gchar slon[10];
 		
-		gdouble pos = (_gps.lat > 0 ? _gps.lat : _gps.lat*-1);
+		gdouble pos = (_gps.lat > 0 ? _gps.lat : 0-_gps.lat);
 		
 		gdouble min = (pos - (int)pos)*60.0;
 		sprintf(slat, "%02d%02d.%02.0f", (int)pos, (int)min,
 		                    ((min - (int)min)*100.0) );
 		            
-		pos = (_gps.lon > 0 ? _gps.lon : _gps.lon*-1);
+		pos = (_gps.lon > 0 ? _gps.lon : 0-_gps.lon);
 		
 		min = (pos - (int)pos)*60.0;
 		sprintf(slon, "%03d%02d.%02.0f", (int)pos, (int)min,
 				                    ((min - (int)min)*100.0) );
 		
 		*packet = g_strdup_printf(
-		//snprintf(encodedPos, MAX_LINE_SIZE,
 			"%c%s%c%c%s%c%c%s%c",
 			'=',
 			slat, 
@@ -1909,13 +1938,6 @@ void create_output_pos_packet(TAprsPort port, gchar **packet, int *length)
 			);
 	}
 	
-/*	*packet = g_strdup_printf(
-        "%s>%s,%s:%s\r\n",
-        _aprs_mycall,
-        VERSIONFRM,
-        _aprs_unproto_path,
-        encodedPos);
-*/
 	*length = strlen(*packet);
 }
 
@@ -1958,19 +1980,105 @@ void output_my_aprs_data(TAprsPort port) {
 	
 	send_packet(port, VERSIONFRM, _aprs_unproto_path, packet, length);
 	
+	if(packet != NULL) g_free(packet);
 }
 
 /////////// TTY functionality
 
 int serial_init();
+int _aprs_tnc_retry_count = 0;
+
+static gboolean aprs_tnc_handle_error_idle (gchar *error)
+{
+	printf("%s(%s)\n", __PRETTY_FUNCTION__, error);
+	
+	/* Ask for re-try. */
+    if(++_aprs_tnc_retry_count > 2)
+    {
+        GtkWidget *confirm;
+        gchar buffer[BUFFER_SIZE];
+
+        /* Reset retry count. */
+        _aprs_tnc_retry_count = 0;
+
+        snprintf(buffer, sizeof(buffer), "%s\nRetry?", error);
+        confirm = hildon_note_new_confirmation(GTK_WINDOW(_window), buffer);
+
+        aprs_tty_disconnect();
+
+        if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
+            aprs_tty_connect(); /* Try again. */
+        else
+        {
+            /* Disable GPS. */
+            gtk_check_menu_item_set_active(
+                    GTK_CHECK_MENU_ITEM(_menu_enable_aprs_tty_item), FALSE);
+        }
+
+        /* Ask user to re-connect. */
+        gtk_widget_destroy(confirm);
+    }
+    else
+    {
+        aprs_tty_disconnect();
+        aprs_tty_connect(); /* Try again. */
+    }
+
+    g_free(error);
+
+    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
+    return FALSE;
+
+}
+
+void close_tnc_port();
 
 static void thread_read_tty()
 {
-	set_aprs_tty_conn_state(RCVR_UP);
+//	gint max_retries = 5;
+	GThread *my_thread = g_thread_self();
 	
-	serial_init ();
+	//fprintf(stderr, "in thread_read_tty\n");
 	
-    port_read();
+	if(/*max_retries>0 &&*/ _aprs_tty_thread == my_thread )
+	{
+		if( serial_init() >= 0 )
+		{
+			// Success
+			//fprintf(stderr, "TTY port open \n");
+			port_read();
+			
+			if(_aprs_tty_thread == my_thread)
+			{
+	            g_idle_add((GSourceFunc)aprs_tnc_handle_error_idle,
+	                    g_strdup_printf("%s",
+	                    _("Error reading data from TNC Port.")));
+
+			}
+		}
+		else
+		{
+			// Failed
+			fprintf(stderr, "Failed to init serial port\n");
+			
+            g_idle_add((GSourceFunc)aprs_tnc_handle_error_idle,
+                    g_strdup_printf("%s",
+                    _("Error connecting to TNC Port.")));
+
+		}
+
+		close_tnc_port();
+//		max_retries--;
+//		sleep(50);
+	}
+	
+//	if(max_retries==0)
+//	{
+		// Failed
+//		set_aprs_tty_conn_state(RCVR_OFF);
+//		MACRO_BANNER_SHOW_INFO(_window, _("Failed to connect to TNC!")); \
+//	}
+
 }
 
 gboolean aprs_tty_connect()
@@ -2007,6 +2115,7 @@ void aprs_tty_disconnect()
     if(my_thread == _aprs_tty_thread)
     {
         exit_now = TRUE;
+        close_tnc_port();
     }
 
     _aprs_tty_thread = NULL;
@@ -2028,8 +2137,9 @@ void aprs_tty_disconnect()
 //***********************************************************
 
 void port_write_string(gchar *data, gint len, TAprsPort port) {
-    int i,erd, retval;
-    int write_in_pos_hold;
+//    int i,erd, 
+    int retval;
+//    int write_in_pos_hold;
 
     if (data == NULL)
         return;
@@ -2101,11 +2211,94 @@ gboolean send_line(gchar* text, gint text_len, TAprsPort port)
 }
 
 
+//***********************************************************
+// port_read()
+//
+//
+// This function becomes the long-running thread that snags
+// characters from an interface and passes them off to the
+// decoding routines.  One copy of this is run for each read
+// thread for each interface.
+//***********************************************************
+gboolean read_port_data();
+
+void port_read() {
+//    unsigned char cin, last;
+//    gint i;
+    struct timeval tmv;
+    fd_set rd;
+
+//    cin = (unsigned char)0;
+//    last = (unsigned char)0;
+    gboolean success = TRUE;
+    GThread *my_thread = g_thread_self();
+
+    fprintf(stderr, "Enter port_read\n");
+    
+    // We stay in this read loop until the port is shut down
+    while(port_data.active == DEVICE_IN_USE && _aprs_tty_thread == my_thread
+    		&& RCVR_UP == _aprs_tty_state && success == TRUE){
+
+        if (port_data.status == DEVICE_UP){
+
+            port_data.read_in_pos = 0;
+            port_data.scan = 1;
+            
+            
+            while (port_data.scan >= 0
+            		&& success == TRUE
+            		//&& RCVR_UP == _aprs_tty_state
+                    && (port_data.read_in_pos < (MAX_DEVICE_BUFFER - 1) )
+                    && (port_data.status == DEVICE_UP)
+                    && (_aprs_tty_thread == my_thread) 
+                ) 
+            {
+    
+                success = read_port_data();
+            }
+            
+        }
+        if (port_data.active == DEVICE_IN_USE)  {
+
+            
+        	
+        	// We need to delay here so that the thread doesn't use
+            // high amounts of CPU doing nothing.
+
+// This select that waits on data and a timeout, so that if data
+// doesn't come in within a certain period of time, we wake up to
+// check whether the socket has gone down.  Else, we go back into
+// the select to wait for more data or a timeout.  FreeBSD has a
+// problem if this is less than 1ms.  Linux works ok down to 100us.
+// We don't need it anywhere near that short though.  We just need
+// to check whether the main thread has requested the interface be
+// closed, and so need to have this short enough to have reasonable
+// response time to the user.
+
+//sched_yield();  // Yield to other threads
+
+            // Set up the select to block until data ready or 100ms
+            // timeout, whichever occurs first.
+            FD_ZERO(&rd);
+            FD_SET(port_data.channel, &rd);
+            tmv.tv_sec = 0;
+            tmv.tv_usec = 100000;    // 100 ms
+            (void)select(0,&rd,NULL,NULL,&tmv);
+        }
+    }
+
+    fprintf(stderr, "End of port_read\n");
+}
+
+
 gboolean aprs_send_beacon_inet()
 {
+
 	aprs_send_beacon(APRS_PORT_INET);
 
+	return TRUE;
 }
+
 gboolean aprs_send_beacon(TAprsPort port)
 {
 	if(_aprs_enable)
@@ -2116,6 +2309,49 @@ gboolean aprs_send_beacon(TAprsPort port)
 	}
 	
 	return TRUE;
+}
+
+
+gboolean timer_callback_aprs_inet (gpointer data) {
+
+	if(_aprs_inet_enable && _aprs_enable_inet_tx && _aprs_inet_beacon_interval>0)
+	{
+		aprs_send_beacon(APRS_PORT_INET);
+		return TRUE; // Continue timer
+	}
+	
+	return FALSE; // Stop timer
+}
+
+
+
+gboolean timer_callback_aprs_tty (gpointer data) {
+
+	if(_aprs_tty_enable && _aprs_enable_tty_tx && _aprs_tty_beacon_interval>0)
+	{
+		fprintf(stderr, "Sending beacon for TNC...\n");
+		aprs_send_beacon(APRS_PORT_TTY);
+		return TRUE; // Continue timer
+	}
+	
+	return FALSE; // Stop timer
+}
+
+
+void aprs_timer_init()
+{
+	// disable timer if exists
+	if(_aprs_inet_beacon_timer>0) g_source_remove(_aprs_inet_beacon_timer);
+	if(_aprs_tty_beacon_timer>0) g_source_remove(_aprs_tty_beacon_timer);
+	
+	if(_aprs_enable)
+	{
+		if(_aprs_inet_enable && _aprs_enable_inet_tx && _aprs_inet_beacon_interval>0)
+			_aprs_inet_beacon_timer = g_timeout_add(_aprs_inet_beacon_interval*1000 , timer_callback_aprs_inet, NULL);
+		
+		if(_aprs_tty_enable && _aprs_enable_tty_tx && _aprs_tty_beacon_interval>0)
+			_aprs_tty_beacon_timer = g_timeout_add(_aprs_tty_beacon_interval*1000 , timer_callback_aprs_tty, NULL);
+	}
 }
 
 #endif //INCLUDE_APRS
