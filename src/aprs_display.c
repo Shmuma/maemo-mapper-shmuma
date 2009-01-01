@@ -345,12 +345,13 @@ void setup_aprs_moving_display_page(GtkWidget *notebook, AprsDataRow *p_station)
     		label = gtk_label_new( p_station->bearing ),
             1, 2, 3, 4, GTK_FILL, 0, 2, 4);
     
-    /*
+    /*   
     GdkPixmap *pixmap=gdk_pixmap_new(table->window,100,100,16);
-    gdk_drawable_set_colormap (pixmap,gdk_colormap_get_system ());
+    //gdk_drawable_set_colormap (pixmap,gdk_colormap_get_system ());
 
 
     GtkWidget *image = NULL;
+ 
     GdkColor color;
     GdkGC * gc;
     gc = gdk_gc_new(pixmap);
@@ -388,13 +389,16 @@ void setup_aprs_moving_display_page(GtkWidget *notebook, AprsDataRow *p_station)
 			50+x, 50-y);
 	  
     gtk_table_attach(GTK_TABLE(table),
-    		image = gtk_image_new_from_pixmap(pixmap, NULL), 
-      		2, 3, 0, 4, GTK_SHRINK, GTK_SHRINK, 2, 4);
+    		image = gtk_image_new_from_pixmap(pixmap, NULL),
+    		2, 3, 0, 4, GTK_FILL, 0, 2, 4);
+      		//2, 3, 0, 4, GTK_SHRINK, GTK_SHRINK, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(image), 1.0f, 0.5f);
-     */ 
+     
     
 //    g_object_unref(image);
 //    gdk_pixmap_unref(pixmap);
+ 
+ * */
 }
 
 
@@ -521,7 +525,7 @@ void setup_aprs_basic_display_page(GtkWidget *notebook, AprsDataRow *p_station)
     GtkWidget *label;
 
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-        table = gtk_table_new(5/*rows*/, 4/*columns*/, FALSE/*All cells same size*/),
+        table = gtk_table_new(5/*rows*/, 5/*columns*/, FALSE/*All cells same size*/),
         label = gtk_label_new(_("Basic")));
 
     /* Callsign. */
@@ -535,15 +539,49 @@ void setup_aprs_basic_display_page(GtkWidget *notebook, AprsDataRow *p_station)
     
     
     gtk_table_attach(GTK_TABLE(table),
-
     		label = gtk_label_new( p_station->call_sign ),
             1, 2, 0, 1, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
 
     
+    GdkPixbuf *pixbuf = NULL;
+    
+    gint symbol_column = 0;
+    gint symbol_row    = 0;
+    gint symbol_size = 0;
+
+    extract_aprs_symbol(p_station->aprs_symbol.aprs_symbol, p_station->aprs_symbol.aprs_type, &pixbuf, 
+    		&symbol_size, 
+    		&symbol_column, 
+    		&symbol_row);
+    
+    
+
+    GdkPixmap *pixmap=gdk_pixmap_new(table->window,symbol_size,symbol_size,16);
+    
+    	
+    // We found an icon to draw. 
+    gdk_draw_pixbuf(
+        pixmap,
+        _gc[COLORABLE_POI],
+        pixbuf,
+        symbol_size*symbol_column, symbol_size*symbol_row,
+        0,
+        0,
+        symbol_size, symbol_size,
+        GDK_RGB_DITHER_NONE, 0, 0);
+    g_object_unref(pixbuf);
+
+    GtkWidget *image;
+
+    gtk_table_attach(GTK_TABLE(table),
+		image = gtk_image_new_from_pixmap(pixmap, NULL),
+        2, 3, 0, 1, GTK_FILL, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
+
     gtk_table_attach(GTK_TABLE(table),
         label = gtk_label_new("Packets:"),
-            2, 3, 0, 1, GTK_FILL, 0, 2, 4);
+            3, 4, 0, 1, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
 
     
@@ -552,7 +590,7 @@ void setup_aprs_basic_display_page(GtkWidget *notebook, AprsDataRow *p_station)
     
     gtk_table_attach(GTK_TABLE(table),
     		label = gtk_label_new( packets ),
-            3, 4, 0, 1, GTK_FILL, 0, 2, 4);
+            4, 5, 0, 1, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 0.f, 0.5f);
     
     gtk_table_attach(GTK_TABLE(table),
@@ -574,7 +612,7 @@ void setup_aprs_basic_display_page(GtkWidget *notebook, AprsDataRow *p_station)
     
     gtk_table_attach(GTK_TABLE(table),
     		label  = gtk_label_new(comment),
-            1, 4, 1, 3, GTK_EXPAND |GTK_FILL, 0, 2, 4);
+            1, 5, 1, 3, GTK_EXPAND |GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label ), 0.f, 0.5f);
     gtk_label_set_width_chars(label, 30);
     
@@ -601,7 +639,7 @@ void setup_aprs_basic_display_page(GtkWidget *notebook, AprsDataRow *p_station)
     
     gtk_table_attach(GTK_TABLE(table),
     		label  = gtk_label_new(status),
-            1, 4, 3, 4, GTK_FILL, 0, 2, 4);
+            1, 5, 3, 4, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label ), 0.f, 0.5f);
     
     
@@ -625,7 +663,7 @@ void setup_aprs_basic_display_page(GtkWidget *notebook, AprsDataRow *p_station)
     
     gtk_table_attach(GTK_TABLE(table),
     		label  = gtk_label_new(path),
-            1, 4, 4, 5, GTK_FILL, 0, 2, 4);
+            1, 5, 4, 5, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label ), 0.f, 0.5f);
         
     
