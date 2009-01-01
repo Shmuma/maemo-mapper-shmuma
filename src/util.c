@@ -44,6 +44,7 @@
 #include "gpx.h"
 #include "util.h"
 
+gboolean convert_iaru_loc_to_lat_lon(const gchar* txt_lon, gdouble* lat, gdouble* lon);
 
 /**
  * Pop up a modal dialog box with simple error information in it.
@@ -74,6 +75,7 @@ deg_format(gdouble coor, gchar *scoor, gchar neg_char, gchar pos_char)
 	    case IARU_LOC:
     	case UK_OSGB:
     	case UK_NGR:
+    	case UK_NGR6:
     		// These formats should not be formatted in the same way
     		// - they need to be converted first, therefore if we reach 
     		// this bit of code use the first available format - drop through.
@@ -522,6 +524,7 @@ gboolean coord_system_check_lat_lon (gdouble lat, gdouble lon, gint *fallback_de
 	{
 	case UK_OSGB:
 	case UK_NGR:
+	case UK_NGR6:
 		valid = os_grid_check_lat_lon(lat, lon);
 		if(fallback_deg_format != NULL) *fallback_deg_format = DDPDDDDD; 
 		break;
@@ -602,8 +605,8 @@ gboolean convert_os_grid_to_bng(gint easting, gint northing, gchar* bng)
 	snprintf(eing, 12, "%u", easting);
 	snprintf(ning, 12, "%u", northing);
 	
-	snprintf(eing, 5, "%s", eing+1);
-	snprintf(ning, 5, "%s", ning+1);
+	snprintf(eing, (_degformat == UK_NGR ? 5 : 4), "%s", eing+1);
+	snprintf(ning, (_degformat == UK_NGR ? 5 : 4), "%s", ning+1);
 		
 	sprintf(bng, "%c%c%s%s", 
 			(char)(tmp + 65), 
@@ -758,7 +761,7 @@ gboolean parse_coords(const gchar* txt_lat, const gchar* txt_lon, gdouble* lat, 
 	gboolean valid = FALSE;
 	
 	// UK_NGR starts with two letters, and then all numbers - it may contain spaces - no lon will be entered
-	if( _degformat == UK_NGR)
+	if( _degformat == UK_NGR || _degformat == UK_NGR6 )
 	{
 		valid = convert_os_ngr_to_latlon(txt_lat, lat, lon);
 
@@ -932,6 +935,7 @@ void format_lat_lon(gdouble d_lat, gdouble d_lon, gchar* lat, gchar* lon)
 		}
 		break;
 	case UK_NGR:
+	case UK_NGR6:
 		
 		if(convert_lat_lon_to_bng(d_lat, d_lon, lat))
 		{

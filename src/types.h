@@ -269,9 +269,10 @@ typedef enum
     NSEW_DDPDDDDD,
     NSEW_DD_MMPMMM,
     NSEW_DD_MM_SSPS,
-    IARU_LOC,
     UK_OSGB,
-    UK_NGR,
+    UK_NGR, // 8 char grid ref
+    UK_NGR6,// 6 char grid ref
+    IARU_LOC,
     DEG_FORMAT_ENUM_COUNT
 } DegFormat;
 
