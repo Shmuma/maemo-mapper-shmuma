@@ -311,8 +311,8 @@ void add_edit_box(GtkWidget *table, gint xmin, gint xmax, gint ymin, gint ymax, 
     g_object_set(G_OBJECT(*ctrl), HILDON_AUTOCAP, FALSE, NULL);
 #endif
 
-    set_ctrl_alignment(*ctrl, alignment);
-    set_ctrl_width(*ctrl, width);    
+    //set_ctrl_alignment(*ctrl, alignment);
+    //set_ctrl_width(*ctrl, width);    
     
     // Set the initial value
     if(initial_value)
@@ -328,8 +328,8 @@ void add_check_box(GtkWidget *table, gint xmin, gint xmax, gint ymin, gint ymax,
 			*ctrl = gtk_check_button_new_with_label(caption),
         xmin, xmax, ymin, ymax, GTK_FILL, 0, 2, 4);
 	
-    set_ctrl_alignment(*ctrl, alignment);
-    set_ctrl_width(*ctrl, width);
+    //set_ctrl_alignment(*ctrl, alignment);
+    //set_ctrl_width(*ctrl, width);
     
     gtk_toggle_button_set_active( GTK_TOGGLE_BUTTON(*ctrl), initial_value);
 }
@@ -341,7 +341,9 @@ void add_label_box(GtkWidget *table, gint xmin, gint xmax, gint ymin, gint ymax,
     gtk_table_attach(GTK_TABLE(table),
             *ctrl = gtk_label_new(initial_value),
             xmin, xmax, ymin, ymax, GTK_FILL, 0, 2, 4);
-//        gtk_misc_set_alignment(GTK_MISC(ctrl), 1.f, 0.5f);
+    
+    gtk_misc_set_alignment(GTK_MISC(*ctrl), 1.f, 0.5f);
+    
 
     set_ctrl_alignment(*ctrl, alignment);
     set_ctrl_width(*ctrl, width);
@@ -1403,6 +1405,10 @@ void load_aprs_options(GConfClient *gconf_client)
                 		GCONF_KEY_APRS_BEACON_SYMBOL, NULL);
     if(tmp && strlen(tmp)>0) _aprs_beacon_symbol  = tmp[0];
     else _aprs_beacon_symbol = 'l';
+    
+    
+    
+    aprs_timer_init();
 }
 #endif // INCLUDE_APRS
 
@@ -3423,6 +3429,7 @@ void aprs_settings_dialog(gboolean *aprs_inet_config_changed, gboolean *aprs_tty
 
         save_aprs_options();
 
+        aprs_timer_init();
     }
 
     gtk_widget_hide(dialog);
