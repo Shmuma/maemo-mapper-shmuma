@@ -57,6 +57,7 @@
 #include "main.h"
 #include "poi.h"
 #include "util.h"
+#include "maps.h"
 
 static sqlite3 *_poi_db = NULL;
 static sqlite3_stmt *_stmt_browse_poi = NULL;
