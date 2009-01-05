@@ -3956,7 +3956,21 @@ map_layer_refresh_cb (gpointer data)
 {
     RepoData* rd = _curr_repo;
     gboolean refresh = FALSE;
+    FILE* log;
+    size_t total;
+
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    /* Dump current cache size to log file */
+    log = fopen ("/home/user/mapper-cache.log", "a");
+    if (log) {
+        g_mutex_lock(_mapdb_mutex);
+        total = _map_cache.lists[0].size+_map_cache.lists[1].data_sz
+            +_map_cache.lists[2].size+_map_cache.lists[3].data_sz;
+        fprintf (log, "%u,%u,%u\n", time (NULL), _map_cache.cache_size, total);
+        g_mutex_unlock(_mapdb_mutex);
+        fclose (log);
+    }
 
     if (rd) {
         rd = rd->layers;
