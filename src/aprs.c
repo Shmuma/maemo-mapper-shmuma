@@ -59,7 +59,11 @@
 #include "display.h"
 #include "aprs.h"
 #include "gps.h"
-#include "gpsbt.h"
+
+#ifdef HAVE_LIBGPSBT
+#    include "gpsbt.h"
+#endif
+
 #include "path.h"
 #include "util.h"
 

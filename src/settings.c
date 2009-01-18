@@ -304,11 +304,13 @@ void add_edit_box(GtkWidget *table, gint xmin, gint xmax, gint ymin, gint ymax, 
     		*ctrl = gtk_entry_new(),
         TRUE, TRUE, 0);
 
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
     g_object_set(G_OBJECT(*ctrl), "hildon-input-mode",
         HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
     g_object_set(G_OBJECT(*ctrl), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
 
     //set_ctrl_alignment(*ctrl, alignment);
@@ -3307,11 +3309,13 @@ void setup_aprs_inet2_options_page(GtkWidget *notebook, TAprsSettings *aprsSetti
         aprsSettings->txt_aprs_inet_beacon_interval = gtk_entry_new(),
         TRUE, TRUE, 0);
 
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
     g_object_set(G_OBJECT(aprsSettings->txt_aprs_inet_beacon_interval), "hildon-input-mode",
         HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
     g_object_set(G_OBJECT(aprsSettings->txt_aprs_inet_beacon_interval), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
 
     gtk_table_attach(GTK_TABLE(table),
@@ -3334,11 +3338,13 @@ void setup_aprs_inet2_options_page(GtkWidget *notebook, TAprsSettings *aprsSetti
         aprsSettings->txt_aprs_inet_beacon_comment = gtk_entry_new(),
         TRUE, TRUE, 0);
 
+#ifdef MAEMO_CHANGES
 #ifndef LEGACY
     g_object_set(G_OBJECT(aprsSettings->txt_aprs_inet_beacon_comment), "hildon-input-mode",
         HILDON_GTK_INPUT_MODE_FULL, NULL);
 #else
     g_object_set(G_OBJECT(aprsSettings->txt_aprs_inet_beacon_comment), HILDON_AUTOCAP, FALSE, NULL);
+#endif
 #endif
     
     // Init values
