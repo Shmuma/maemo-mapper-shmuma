@@ -456,7 +456,7 @@ window_cb_key_release(GtkWidget* widget, GdkEventKey *event)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     custom_key = get_custom_key_from_keyval(event->keyval);
-    if(custom_key < 0)
+    if(custom_key == -1)
         return FALSE; /* Not our event. */
 
     switch(_action[custom_key])
