@@ -938,7 +938,7 @@ void list_stations()
 
     gtk_widget_hide(dialog);
 
-    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, selected);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
 
@@ -1137,7 +1137,7 @@ void list_messages()
 
 	    gtk_widget_hide(dialog);
 
-	    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, selected);
+	    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 	
 }
 

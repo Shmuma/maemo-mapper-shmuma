@@ -3440,7 +3440,7 @@ void aprs_settings_dialog(gboolean *aprs_inet_config_changed, gboolean *aprs_tty
 
     gtk_widget_hide(dialog);
 
-    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, rcvr_changed);
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 
 }
 #endif // INCLUDE_APRS
