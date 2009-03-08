@@ -44,11 +44,7 @@
 
 #define _(String) gettext(String)
 
-/* #define MAPDB_SQLITE */
-
-#ifdef MAPDB_SQLITE
 #include "sqlite3.h"
-#endif
 
 // Latitude and longitude string formats.
 #define CONVERT_HP_NORMAL       0
@@ -372,25 +368,13 @@ struct _RepoData {
     gboolean layer_was_enabled; /* needed for ability to temporarily toggle layers on and off */
     gint layer_refresh_interval;
     gint layer_refresh_countdown;
-#ifdef MAPDB_SQLITE
-    sqlite3 *db;
+    gboolean is_sqlite;
+    sqlite3 *sqlite_db;
     sqlite3_stmt *stmt_map_select;
     sqlite3_stmt *stmt_map_exists;
     sqlite3_stmt *stmt_map_update;
-    sqlite3_stmt *stmt_map_insert;
     sqlite3_stmt *stmt_map_delete;
-    sqlite3_stmt *stmt_dup_select;
-    sqlite3_stmt *stmt_dup_exists;
-    sqlite3_stmt *stmt_dup_insert;
-    sqlite3_stmt *stmt_dup_increm;
-    sqlite3_stmt *stmt_dup_decrem;
-    sqlite3_stmt *stmt_dup_delete;
-    sqlite3_stmt *stmt_trans_begin;
-    sqlite3_stmt *stmt_trans_commit;
-    sqlite3_stmt *stmt_trans_rollback;
-#else
-    GDBM_FILE db;
-#endif
+    GDBM_FILE gdbm_db;
     GtkWidget *menu_item;
 };
 

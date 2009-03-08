@@ -1552,7 +1552,7 @@ route_add_way_dialog(gint unitx, gint unity)
         g_free(p_latlon);
         
         gtk_table_attach(GTK_TABLE(table),
-                label_lat_lon = gtk_label_new(_("") ),
+                label_lat_lon = gtk_label_new(""),
                 1, 2, 0, 1, GTK_FILL, 0, 2, 4);
         gtk_misc_set_alignment(GTK_MISC(label_lat_lon), 0.0f, 0.5f);
         

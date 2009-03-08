@@ -202,29 +202,32 @@ maemo_mapper_destroy()
 #endif
     g_thread_pool_free(_mut_thread_pool, TRUE, TRUE);
 
-    if(_curr_repo->db)
+    if(MAPDB_EXISTS(_curr_repo))
     {
         RepoData* repo_p;
-#ifdef MAPDB_SQLITE
-        g_mutex_lock(_mapdb_mutex);
-        sqlite3_close(_curr_repo->db);
-        _curr_repo->db = NULL;
-        g_mutex_unlock(_mapdb_mutex);
-#else
-        g_mutex_lock(_mapdb_mutex);
-        repo_p = _curr_repo;
-        while (repo_p) {
-            if (repo_p->db) {
+        if(_curr_repo->is_sqlite)
+        {
+            g_mutex_lock(_mapdb_mutex);
+            sqlite3_close(_curr_repo->sqlite_db);
+            _curr_repo->sqlite_db = NULL;
+            g_mutex_unlock(_mapdb_mutex);
+        }
+        else
+        {
+            g_mutex_lock(_mapdb_mutex);
+            repo_p = _curr_repo;
+            while (repo_p) {
+                if (repo_p->gdbm_db) {
 /*                 /\* perform reorganization for layers which are auto refreshed *\/ */
 /*                 if (repo_p->layer_level && repo_p->layer_refresh_interval) */
-/*                     gdbm_reorganize (repo_p->db); */
-                gdbm_close(repo_p->db);
+/*                     gdbm_reorganize (repo_p->gdbm_db); */
+                    gdbm_close(repo_p->gdbm_db);
+                }
+                repo_p->gdbm_db = NULL;
+                repo_p = repo_p->layers;
             }
-            repo_p->db = NULL;
-            repo_p = repo_p->layers;
+            g_mutex_unlock(_mapdb_mutex);
         }
-        g_mutex_unlock(_mapdb_mutex);
-#endif
     }
     map_cache_destroy();
 
@@ -475,11 +478,6 @@ maemo_mapper_init(gint argc, gchar **argv)
 
     gtk_window_set_default_size(GTK_WINDOW(_window), 800, 480);
 
-    /* Lets go fullscreen if so requested in saved config */
-    if (_fullscreen) {
-      gtk_window_fullscreen(GTK_WINDOW(_window));
-    }
-
     /* Create and add widgets and supporting data. */
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(_window), hbox);
@@ -650,6 +648,11 @@ maemo_mapper_init(gint argc, gchar **argv)
 
 
     osso_hw_set_event_cb(_osso, NULL, osso_cb_hw_state, NULL);
+
+    /* Lets go fullscreen if so requested in saved config */
+    if (_fullscreen) {
+      gtk_window_fullscreen(GTK_WINDOW(_window));
+    }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }

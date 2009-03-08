@@ -576,10 +576,10 @@ settings_save()
              * 4. dl_zoom_steps
              * 5. view_zoom_steps
              * 6. layer_level
-             *
-             * If layer_level > 0, have additional fields:
-             * 7. layer_enabled
-             * 8. layer_refresh_interval
+             *     If layer_level > 0, have additional fields:
+             *     8. layer_enabled
+             *     9. layer_refresh_interval
+             * 7/9. is_sqlite
              */
             RepoData *rd = curr->data;
             gchar buffer[BUFFER_SIZE];
@@ -587,7 +587,7 @@ settings_save()
             while (rd) {
                 if (!rd->layer_level)
                     snprintf(buffer, sizeof(buffer),
-                             "%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
+                             "%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
                              rd->name,
                              rd->url,
                              rd->db_filename,
@@ -597,10 +597,11 @@ settings_save()
                              rd->nextable,
                              rd->min_zoom,
                              rd->max_zoom,
-                             rd->layer_level);
+                             rd->layer_level,
+                             rd->is_sqlite);
                 else
                     snprintf(buffer, sizeof(buffer),
-                             "%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
+                             "%s\t%s\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d",
                              rd->name,
                              rd->url,
                              rd->db_filename,
@@ -612,8 +613,8 @@ settings_save()
                              rd->max_zoom,
                              rd->layer_level,
                              rd->layer_enabled,
-                             rd->layer_refresh_interval
-                             );
+                             rd->layer_refresh_interval,
+                             rd->is_sqlite);
                 temp_list = g_slist_append(temp_list, g_strdup(buffer));
                 if(rd == _curr_repo)
                     gconf_client_set_int(gconf_client,
@@ -2131,10 +2132,10 @@ settings_parse_repo(gchar *str)
      * 4. dl_zoom_steps
      * 5. view_zoom_steps
      * 6. layer_level
-     *
-     * If layer_level > 0, have additional fields:
-     * 7. layer_enabled
-     * 8. layer_refresh_interval
+     *     If layer_level > 0, have additional fields:
+     *     8. layer_enabled
+     *     9. layer_refresh_interval
+     * 7/9. is_sqlite
      */
     gchar *token, *error_check;
     printf("%s(%s)\n", __PRETTY_FUNCTION__, str);
@@ -2208,6 +2209,13 @@ settings_parse_repo(gchar *str)
 
         rd->layer_refresh_countdown = rd->layer_refresh_interval;
     }
+
+    /* Parse is_sqlite. */
+    token = strsep(&str, "\n\t");
+    if(!token || !*token
+            || (rd->is_sqlite = strtol(token, &error_check, 10), token == str))
+        /* If the bool is not present, then this is a gdbm database. */
+        rd->is_sqlite = FALSE;
 
     set_repo_type(rd);
 
@@ -2624,6 +2632,7 @@ settings_init()
         repo->max_zoom = REPO_DEFAULT_MAX_ZOOM;
         repo->layers = NULL;
         repo->layer_level = 0;
+        repo->is_sqlite = TRUE;
         set_repo_type(repo);
 
         _repo_list = g_list_append(_repo_list, repo);

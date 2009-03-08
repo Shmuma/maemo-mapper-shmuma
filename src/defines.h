@@ -97,7 +97,6 @@
 #define GPSD_PORT_DEFAULT (2947)
 
 #define NUM_DOWNLOAD_THREADS (4)
-#define MAX_PIXBUF_DUP_SIZE (137)
 #define WORLD_SIZE_UNITS (2 << (MAX_ZOOM + TILE_SIZE_P2))
 
 #define HOURGLASS_SEPARATION (7)
@@ -228,6 +227,7 @@
 #define HELP_ID_GETSTARTED HELP_ID_PREFIX"getstarted"
 #define HELP_ID_ABOUT HELP_ID_PREFIX"about"
 #define HELP_ID_SETTINGS HELP_ID_PREFIX"settings"
+#define HELP_ID_NEWREPO HELP_ID_PREFIX"newrepo"
 #define HELP_ID_REPOMAN HELP_ID_PREFIX"repoman"
 #define HELP_ID_MAPMAN HELP_ID_PREFIX"mapman"
 #define HELP_ID_DOWNROUTE HELP_ID_PREFIX"downroute"
@@ -355,6 +355,9 @@
     g_free(my_macro_buffer); \
 }
 
+#define MAPDB_EXISTS(map_repo) ( ((map_repo)->is_sqlite) \
+    ? ((map_repo)->sqlite_db != NULL) \
+    : ((map_repo)->gdbm_db != NULL) )
 #define _voice_synth_path "/usr/bin/flite"
 
 #endif /* ifndef MAEMO_MAPPER_DEFINES */

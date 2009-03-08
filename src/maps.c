@@ -74,6 +74,7 @@ struct _RepoManInfo {
 typedef struct _RepoEditInfo RepoEditInfo;
 struct _RepoEditInfo {
     gchar *name;
+    gboolean is_sqlite;
     GtkWidget *txt_url;
     GtkWidget *txt_db_filename;
     GtkWidget *num_dl_zoom_steps;
@@ -144,6 +145,7 @@ struct _CompactInfo {
     GtkWidget *txt;
     GtkWidget *banner;
     const gchar *db_filename;
+    gboolean is_sqlite;
     gchar *status_msg;
 };
 
@@ -200,70 +202,34 @@ mapdb_get_data(RepoData *repo, gint zoom, gint tilex, gint tiley, gchar **data)
     *data = NULL;
     size = 0;
 
-    if(!repo->db)
+    if(!MAPDB_EXISTS(repo))
     {
         /* There is no cache.  Return NULL. */
         vprintf("%s(): return %u\n", __PRETTY_FUNCTION__,size);
         return size;
     }
 
-#ifdef MAPDB_SQLITE
-    /* Attempt to retrieve map from database. */
-    if(SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 1, zoom)
-    && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 2, tilex)
-    && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 3, tiley)
-    && SQLITE_ROW == sqlite3_step(repo->stmt_map_select))
+    if(repo->is_sqlite)
     {
-        const gchar *bytes = NULL;
-        size = sqlite3_column_bytes(repo->stmt_map_select, 0);
-
-        /* "Pixbufs" of size less than or equal to MAX_PIXBUF_DUP_SIZE are
-         * actually keys into the dups table. */
-        if(size <= MAX_PIXBUF_DUP_SIZE)
+        /* Attempt to retrieve map from database. */
+        if(SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 1, zoom)
+        && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 2, tilex)
+        && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 3, tiley)
+        && SQLITE_ROW == sqlite3_step(repo->stmt_map_select))
         {
-            gint hash = sqlite3_column_int(repo->stmt_map_select, 0);
-            if(SQLITE_OK == sqlite3_bind_int(repo->stmt_dup_select, 1, hash)
-            && SQLITE_ROW == sqlite3_step(repo->stmt_dup_select))
-            {
-                bytes = sqlite3_column_blob(repo->stmt_dup_select, 0);
-                size = sqlite3_column_bytes(repo->stmt_dup_select, 0);
-            }
-            else
-            {
-                /* Not there?  Delete the entry, then. */
-                if(SQLITE_OK != sqlite3_bind_int(
-                            repo->stmt_map_delete, 1, zoom)
-                || SQLITE_OK != sqlite3_bind_int(
-                    repo->stmt_map_delete, 2, tilex)
-                || SQLITE_OK != sqlite3_bind_int(
-                    repo->stmt_map_delete, 3, tiley)
-                || SQLITE_DONE != sqlite3_step(repo->stmt_map_delete))
-                {
-                    printf("Error in stmt_map_delete: %s\n", 
-                                sqlite3_errmsg(repo->db));
-                }
-                sqlite3_reset(repo->stmt_map_delete);
+            const gchar *bytes = NULL;
+            size = sqlite3_column_bytes(repo->stmt_map_select, 0);
 
-                /* We have no bytes to return to the caller. */
-                bytes = NULL;
-                size = 0;
-            }
-            /* Don't reset the statement yet - we need the blob. */
-        }
-        else
-        {
             bytes = sqlite3_column_blob(repo->stmt_map_select, 0);
+            if(bytes)
+            {
+                *data = g_slice_alloc(size);
+                memcpy(*data, bytes, size);
+            }
         }
-        if(bytes)
-        {
-            *data = g_slice_alloc(size);
-            memcpy(*data, bytes, size);
-        }
-        if(size <= MAX_PIXBUF_DUP_SIZE)
-            sqlite3_reset(repo->stmt_dup_select);
+        sqlite3_reset(repo->stmt_map_select);
     }
-    sqlite3_reset(repo->stmt_map_select);
-#else
+    else
     {
         datum d;
         gint32 key[] = {
@@ -273,7 +239,7 @@ mapdb_get_data(RepoData *repo, gint zoom, gint tilex, gint tiley, gchar **data)
         };
         d.dptr = (gchar*)&key;
         d.dsize = sizeof(key);
-        d = gdbm_fetch(repo->db, d);
+        d = gdbm_fetch(repo->gdbm_db, d);
         if(d.dptr)
         {
             size = d.dsize;
@@ -282,7 +248,6 @@ mapdb_get_data(RepoData *repo, gint zoom, gint tilex, gint tiley, gchar **data)
             free(d.dptr);
         }
     }
-#endif
 
     vprintf("%s(): return %u\n", __PRETTY_FUNCTION__, size);
     return size;
@@ -621,7 +586,7 @@ mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
 
     g_mutex_lock(_mapdb_mutex);
 
-    if(!repo->db)
+    if(!MAPDB_EXISTS(repo))
     {
         /* There is no cache.  Return FALSE. */
         g_mutex_unlock(_mapdb_mutex);
@@ -647,22 +612,24 @@ mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
         }
     }
 
-#ifdef MAPDB_SQLITE
-    /* Attempt to retrieve map from database. */
-    if(SQLITE_OK == sqlite3_bind_int(repo->stmt_map_exists, 1, zoom)
-    && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_exists, 2, tilex)
-    && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_exists, 3, tiley)
-    && SQLITE_ROW == sqlite3_step(repo->stmt_map_exists)
-    && sqlite3_column_int(repo->stmt_map_exists, 0) > 0)
+    if(repo->is_sqlite)
     {
-        exists = TRUE;
+        /* Attempt to retrieve map from database. */
+        if(SQLITE_OK == sqlite3_bind_int(repo->stmt_map_exists, 1, zoom)
+        && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_exists, 2, tilex)
+        && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_exists, 3, tiley)
+        && SQLITE_ROW == sqlite3_step(repo->stmt_map_exists)
+        && sqlite3_column_int(repo->stmt_map_exists, 0) > 0)
+        {
+            exists = TRUE;
+        }
+        else
+        {
+            exists = FALSE;
+        }
+        sqlite3_reset(repo->stmt_map_exists);
     }
     else
-    {
-        exists = FALSE;
-    }
-    sqlite3_reset(repo->stmt_map_exists);
-#else
     {
         datum d;
         gint32 key[] = {
@@ -672,9 +639,8 @@ mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
         };
         d.dptr = (gchar*)&key;
         d.dsize = sizeof(key);
-        exists = gdbm_exists(repo->db, d);
+        exists = gdbm_exists(repo->gdbm_db, d);
     }
-#endif
 
     g_mutex_unlock(_mapdb_mutex);
 
@@ -695,53 +661,10 @@ mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley)
     return pixbuf;
 }
 
-#ifdef MAPDB_SQLITE
 static gboolean
-mapdb_checkdec(RepoData *repo, gint zoom, gint tilex, gint tiley)
+mapdb_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
+        void *bytes, gint size)
 {
-    gboolean success = TRUE;
-    vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
-            repo->name, zoom, tilex, tiley);
-
-    /* First, we have to check if the old map was a dup. */
-    if(SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 1, zoom)
-    && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 2, tilex)
-    && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_select, 3, tiley)
-    && SQLITE_ROW == sqlite3_step(repo->stmt_map_select)
-    && sqlite3_column_bytes(repo->stmt_map_select, 0)
-            <= MAX_PIXBUF_DUP_SIZE)
-    {
-        /* Old map was indeed a dup. Decrement the reference count. */
-        gint hash = sqlite3_column_int(repo->stmt_map_select, 0);
-        if(SQLITE_OK != sqlite3_bind_int(
-                    repo->stmt_dup_decrem, 1, hash)
-        || SQLITE_DONE != sqlite3_step(repo->stmt_dup_decrem)
-        || SQLITE_OK != sqlite3_bind_int(
-                    repo->stmt_dup_delete, 1, hash)
-        || SQLITE_DONE != sqlite3_step(repo->stmt_dup_delete))
-        {
-            success = FALSE;
-            printf("Error in stmt_dup_decrem: %s\n",
-                    sqlite3_errmsg(repo->db));
-        }
-        sqlite3_reset(repo->stmt_dup_delete);
-        sqlite3_reset(repo->stmt_dup_decrem);
-    }
-    sqlite3_reset(repo->stmt_map_select);
-
-    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, success);
-    return success;
-}
-#endif
-
-static gboolean
-mapdb_update(gboolean exists, RepoData *repo,
-        gint zoom, gint tilex, gint tiley, void *bytes, gint size)
-{
-#ifdef MAPDB_SQLITE
-    sqlite3_stmt *stmt;
-    gint hash = 0;
-#endif
     gint success = TRUE;
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
@@ -749,7 +672,7 @@ mapdb_update(gboolean exists, RepoData *repo,
     g_mutex_lock(_mapdb_mutex);
     map_cache_update(repo, zoom, tilex, tiley, bytes, size);
 
-    if(!repo->db)
+    if(!MAPDB_EXISTS(repo))
     {
         /* There is no cache.  Return FALSE. */
         g_mutex_unlock(_mapdb_mutex);
@@ -757,98 +680,23 @@ mapdb_update(gboolean exists, RepoData *repo,
         return FALSE;
     }
 
-#ifdef MAPDB_SQLITE
-    /* At least try to open a transaction. */
-    sqlite3_step(repo->stmt_trans_begin);
-    sqlite3_reset(repo->stmt_trans_begin);
-
-    /* Pixbufs of size MAX_PIXBUF_DUP_SIZE or less are special.  They are
-     * probably PNGs of a single color (like blue for water or beige for empty
-     * land).  To reduce redundancy in the database, we will store them in a
-     * separate table and, in the maps table, only refer to them. */
-    if(size <= MAX_PIXBUF_DUP_SIZE)
+    if (repo->is_sqlite)
     {
-        /* Duplicate pixbuf. */
-        if(exists)
-        {
-            /* First, check if we need to remove a count from the dups table.*/
-            mapdb_checkdec(repo, zoom, tilex, tiley);
-        }
-        if(success)
-        {
-            /* Compute hash of the bytes. */
-            gchar *cur = bytes, *end = bytes + size;
-            hash = *cur;
-            while(cur < end)
-                hash = (hash << 5) - hash + *(++cur);
-
-            /* Check if dup already exists. */
-            if(SQLITE_OK == sqlite3_bind_int(repo->stmt_dup_exists, 1, hash)
-            && SQLITE_ROW == sqlite3_step(repo->stmt_dup_exists)
-            && sqlite3_column_int(repo->stmt_dup_exists, 0) > 0)
-            {
-                /* Dup already exists - increment existing entry. */
-                if(SQLITE_OK != sqlite3_bind_int(repo->stmt_dup_increm,1, hash)
-                || SQLITE_DONE != sqlite3_step(repo->stmt_dup_increm))
-                {
-                    success = FALSE;
-                    printf("Error in stmt_dup_increm: %s\n",
-                            sqlite3_errmsg(repo->db));
-                }
-                sqlite3_reset(repo->stmt_dup_increm);
-            }
-            else
-            {
-                /* Dup doesn't exist - add new entry. */
-                if(SQLITE_OK != sqlite3_bind_int(repo->stmt_dup_insert,1, hash)
-                || SQLITE_OK != sqlite3_bind_blob(repo->stmt_dup_insert,
-                    2, bytes, size, NULL)
-                || SQLITE_DONE != sqlite3_step(repo->stmt_dup_insert))
-                {
-                    success = FALSE;
-                    printf("Error in stmt_dup_insert: %s\n",
-                            sqlite3_errmsg(repo->db));
-                }
-                sqlite3_reset(repo->stmt_dup_insert);
-            }
-            sqlite3_reset(repo->stmt_dup_exists);
-        }
-        /* Now, if successful so far, we fall through the end of this if
-         * statement and insert the hash as the blob.  Setting bytes to NULL
-         * is the signal to do this. */
-        bytes = NULL;
-    }
-
-    if(success)
-    {
-        stmt = exists ? repo->stmt_map_update : repo->stmt_map_insert;
-
-        /* Attempt to insert map from database. */
-        if(SQLITE_OK != (bytes ? sqlite3_bind_blob(stmt, 1, bytes, size, NULL)
-                    : sqlite3_bind_int(stmt, 1, hash))
-        || SQLITE_OK != sqlite3_bind_int(stmt, 2, zoom)
-        || SQLITE_OK != sqlite3_bind_int(stmt, 3, tilex)
-        || SQLITE_OK != sqlite3_bind_int(stmt, 4, tiley)
-        || SQLITE_DONE != sqlite3_step(stmt))
+        /* Attempt to insert/update map in database. */
+        if(SQLITE_OK != sqlite3_bind_blob(repo->stmt_map_update, 1,
+                    bytes, size, NULL)
+        || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_update, 2, zoom)
+        || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_update, 3, tilex)
+        || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_update, 4, tiley)
+        || SQLITE_DONE != sqlite3_step(repo->stmt_map_update))
         {
             success = FALSE;
-            printf("Error in mapdb_update: %s\n", sqlite3_errmsg(repo->db));
+            printf("Error in mapdb_update: %s\n",
+                    sqlite3_errmsg(repo->sqlite_db));
         }
-        sqlite3_reset(stmt);
-    }
-
-    if(success)
-    {
-        sqlite3_step(repo->stmt_trans_commit);
-        sqlite3_reset(repo->stmt_trans_commit);
+        sqlite3_reset(repo->stmt_map_update);
     }
     else
-    {
-        sqlite3_step(repo->stmt_trans_rollback);
-        sqlite3_reset(repo->stmt_trans_rollback);
-    }
-
-#else
     {
         datum dkey, dcon;
         gint32 key[] = {
@@ -860,9 +708,8 @@ mapdb_update(gboolean exists, RepoData *repo,
         dkey.dsize = sizeof(key);
         dcon.dptr = bytes;
         dcon.dsize = size;
-        success = !gdbm_store(repo->db, dkey, dcon, GDBM_REPLACE);
+        success = !gdbm_store(repo->gdbm_db, dkey, dcon, GDBM_REPLACE);
     }
-#endif
     g_mutex_unlock(_mapdb_mutex);
 
     vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, success);
@@ -879,7 +726,7 @@ mapdb_delete(RepoData *repo, gint zoom, gint tilex, gint tiley)
     g_mutex_lock(_mapdb_mutex);
     map_cache_remove(repo, zoom, tilex, tiley);
 
-    if(!repo->db)
+    if(!MAPDB_EXISTS(repo))
     {
         /* There is no cache.  Return FALSE. */
         g_mutex_unlock(_mapdb_mutex);
@@ -887,36 +734,20 @@ mapdb_delete(RepoData *repo, gint zoom, gint tilex, gint tiley)
         return FALSE;
     }
 
-#ifdef MAPDB_SQLITE
-    /* At least try to open a transaction. */
-    sqlite3_step(repo->stmt_trans_begin);
-    sqlite3_reset(repo->stmt_trans_begin);
-
-    /* First, check if we need to remove a count from the dups table. */
-    /* Then, attempt to delete map from database. */
-    if(!mapdb_checkdec(repo, zoom, tilex, tiley)
-    || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_delete, 1, zoom)
-    || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_delete, 2, tilex)
-    || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_delete, 3, tiley)
-    || SQLITE_DONE != sqlite3_step(repo->stmt_map_delete))
+    if(repo->is_sqlite)
     {
-        success = FALSE;
-        printf("Error in stmt_map_delete: %s\n", 
-                    sqlite3_errmsg(repo->db));
-    }
-    sqlite3_reset(repo->stmt_map_delete);
-
-    if(success)
-    {
-        sqlite3_step(repo->stmt_trans_commit);
-        sqlite3_reset(repo->stmt_trans_commit);
+        if(SQLITE_OK != sqlite3_bind_int(repo->stmt_map_delete, 1, zoom)
+        || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_delete, 2, tilex)
+        || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_delete, 3, tiley)
+        || SQLITE_DONE != sqlite3_step(repo->stmt_map_delete))
+        {
+            success = FALSE;
+            printf("Error in stmt_map_delete: %s\n", 
+                        sqlite3_errmsg(repo->sqlite_db));
+        }
+        sqlite3_reset(repo->stmt_map_delete);
     }
     else
-    {
-        sqlite3_step(repo->stmt_trans_rollback);
-        sqlite3_reset(repo->stmt_trans_rollback);
-    }
-#else
     {
         datum d;
         gint32 key[] = {
@@ -926,9 +757,9 @@ mapdb_delete(RepoData *repo, gint zoom, gint tilex, gint tiley)
         };
         d.dptr = (gchar*)&key;
         d.dsize = sizeof(key);
-        success = !gdbm_delete(repo->db, d);
+        success = !gdbm_delete(repo->gdbm_db, d);
     }
-#endif
+
     g_mutex_unlock(_mapdb_mutex);
 
     vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, success);
@@ -981,9 +812,10 @@ repo_make_db(RepoData *rd)
     if(g_file_test(rd->db_filename, G_FILE_TEST_IS_DIR))
     {
         gchar buffer[BUFFER_SIZE];
-        gchar *new_name = g_strdup_printf("%s.db", rd->db_filename);
+        gchar *new_name = g_strdup_printf("%s.sqlite", rd->db_filename);
         g_free(rd->db_filename);
         rd->db_filename = new_name;
+        rd->is_sqlite = TRUE;
 
         snprintf(buffer, sizeof(buffer), "%s",
                 _("The current repository is in a legacy format and will "
@@ -1019,164 +851,9 @@ gboolean
 repo_set_curr(RepoData *rd)
 {
     RepoData* repo_p;
-
     printf("%s()\n", __PRETTY_FUNCTION__);
-    if(!rd->db_filename || !*rd->db_filename
-            || repo_make_db(rd))
-    {
-        repo_p = _curr_repo;
 
-        while (repo_p)
-        {
-            if(repo_p->db)
-            {
-                g_mutex_lock(_mapdb_mutex);
-#ifdef MAPDB_SQLITE
-                sqlite3_close(repo_p->db);
-                repo_p->db = NULL;
-#else
-                gdbm_close(repo_p->db);
-                repo_p->db = NULL;
-#endif
-                g_mutex_unlock(_mapdb_mutex);
-            }
-            repo_p = repo_p->layers;
-        }
-
-        /* Set the current repository! */
-        _curr_repo = rd;
-
-        /* Set up the database. */
-        if(_curr_repo->db_filename && *_curr_repo->db_filename)
-        {
-
-#ifdef MAPDB_SQLITE
-            if(SQLITE_OK != (sqlite3_open(_curr_repo->db_filename,
-                            &(_curr_repo->db)))
-            /* Open worked. Now create tables, failing if they already exist.*/
-            || (sqlite3_exec(_curr_repo->db,
-                        "create table maps ("
-                        "zoom integer, "
-                        "tilex integer, "
-                        "tiley integer, "
-                        "pixbuf blob, "
-                        "primary key (zoom, tilex, tiley))"
-                        ";"
-                        "create table dups ("
-                        "hash integer primary key, "
-                        "uses integer, "
-                        "pixbuf blob)",
-                        NULL, NULL, NULL), FALSE) /* !! Comma operator !! */
-                /* Prepare select map statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                        "select pixbuf from maps "
-                        "where zoom = ? and tilex = ? and tiley = ?",
-                        -1, &_curr_repo->stmt_map_select, NULL)
-                /* Prepare exists map statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                        "select count(*) from maps "
-                        "where zoom = ? and tilex = ? and tiley = ?",
-                        -1, &_curr_repo->stmt_map_exists, NULL)
-                /* Prepare insert map statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                        "insert into maps (pixbuf, zoom, tilex, tiley)"
-                        " values (?, ?, ?, ?)",
-                        -1, &_curr_repo->stmt_map_insert, NULL)
-                /* Prepare update map statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                        "update maps set pixbuf = ? "
-                        "where zoom = ? and tilex = ? and tiley = ?",
-                        -1, &_curr_repo->stmt_map_update, NULL)
-                /* Prepare delete map statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                        "delete from maps "
-                        "where zoom = ? and tilex = ? and tiley = ?",
-                        -1, &_curr_repo->stmt_map_delete, NULL)
-
-                /* Prepare select-by-map dup statement. */
-                /* Prepare select-by-hash dup statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                        "select pixbuf from dups "
-                        "where hash = ?",
-                        -1, &_curr_repo->stmt_dup_select, NULL)
-                /* Prepare exists map statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                        "select count(*) from dups "
-                        "where hash = ?",
-                        -1, &_curr_repo->stmt_dup_exists, NULL)
-                /* Prepare insert dup statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                        "insert into dups (hash, pixbuf, uses) "
-                        "values (?, ?, 1)",
-                        -1, &_curr_repo->stmt_dup_insert, NULL)
-                /* Prepare increment dup statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                        "update dups "
-                        "set uses = uses + 1 "
-                        "where hash = ?",
-                        -1, &_curr_repo->stmt_dup_increm, NULL)
-                /* Prepare decrement dup statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                        "update dups "
-                        "set uses = uses - 1 "
-                        "where hash = ? ",
-                        -1, &_curr_repo->stmt_dup_decrem, NULL)
-                /* Prepare delete dup statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                        "delete from dups "
-                        "where hash = ? and uses <= 0",
-                        -1, &_curr_repo->stmt_dup_delete, NULL)
-
-                /* Prepare begin-transaction statement. */
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                     "begin transaction",
-                        -1, &_curr_repo->stmt_trans_begin, NULL)
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                     "commit transaction",
-                        -1, &_curr_repo->stmt_trans_commit, NULL)
-             || SQLITE_OK != sqlite3_prepare(_curr_repo->db,
-                     "rollback transaction", -1,
-                     &_curr_repo->stmt_trans_rollback, NULL))
-            {
-                gchar buffer[BUFFER_SIZE];
-                snprintf(buffer, sizeof(buffer), "%s: %s\n%s",
-                        _("Failed to open map database for repository"),
-                        sqlite3_errmsg(_curr_repo->db),
-                        _("Downloaded maps will not be cached."));
-                sqlite3_close(_curr_repo->db);
-                _curr_repo->db = NULL;
-                popup_error(_window, buffer);
-            }
-#else
-            /* initialize all databases for all layers */
-            repo_p = _curr_repo;
-            while (repo_p) {
-                if (repo_p->db_filename && *repo_p->db_filename
-                        && repo_make_db (repo_p))
-                    repo_p->db = gdbm_open(repo_p->db_filename,
-                            0, GDBM_WRCREAT | GDBM_FAST, 0644, NULL);
-                repo_p = repo_p->layers;
-            }
-
-            if(!_curr_repo->db)
-            {
-                gchar buffer[BUFFER_SIZE];
-                snprintf(buffer, sizeof(buffer), "%s\n%s",
-                        _("Failed to open map database for repository"),
-                        _("Downloaded maps will not be cached."));
-                _curr_repo->db = NULL;
-                popup_error(_window, buffer);
-            }
-#endif
-        }
-        else
-        {
-            _curr_repo->db = NULL;
-        }
-        vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-        return TRUE;
-    }
-    else
+    if(rd->db_filename && *rd->db_filename && !repo_make_db(rd))
     {
         gchar buffer[BUFFER_SIZE];
         snprintf(buffer, sizeof(buffer), "%s: %s",
@@ -1186,6 +863,106 @@ repo_set_curr(RepoData *rd)
         vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
         return FALSE;
     }
+
+    /* Disconnect the previous repository. */
+    for(repo_p = _curr_repo; repo_p; repo_p = repo_p->layers)
+    {
+        if(MAPDB_EXISTS(repo_p))
+        {
+            g_mutex_lock(_mapdb_mutex);
+            if(repo_p->is_sqlite)
+            {
+                sqlite3_close(repo_p->sqlite_db);
+                repo_p->sqlite_db = NULL;
+            }
+            else
+            {
+                gdbm_close(repo_p->gdbm_db);
+                repo_p->gdbm_db = NULL;
+            }
+            g_mutex_unlock(_mapdb_mutex);
+        }
+    }
+
+    /* Set the current repository! */
+    _curr_repo = rd;
+
+    /* initialize all databases for all layers */
+    for(repo_p = _curr_repo; repo_p; repo_p = repo_p->layers)
+    {
+        /* Check if the repository or layer has a backing database. (This is a
+         * redundant check in the case of the base, non-layer repository.) */
+        if (repo_p->db_filename && *repo_p->db_filename
+                && repo_make_db (repo_p))
+        {
+            if(repo_p->is_sqlite)
+            {
+                printf("Building SQLite3 database: %s\n",
+                        repo_p->db_filename);
+                if(SQLITE_OK != (sqlite3_open(repo_p->db_filename,
+                                &(repo_p->sqlite_db)))
+                /* Open worked. Now create tables, failing if they already
+                 * exist.*/
+                || (sqlite3_exec(repo_p->sqlite_db,
+                            "create table maps ("
+                            "zoom integer, "
+                            "tilex integer, "
+                            "tiley integer, "
+                            "pixbuf blob, "
+                            "primary key (zoom, tilex, tiley))",
+                            NULL, NULL, NULL), FALSE) /* Comma operator! */
+                    /* Prepare select map statement. */
+                 || SQLITE_OK != sqlite3_prepare(repo_p->sqlite_db,
+                            "select pixbuf from maps "
+                            "where zoom = ? and tilex = ? and tiley = ?",
+                            -1, &repo_p->stmt_map_select, NULL)
+                    /* Prepare exists map statement. */
+                 || SQLITE_OK != sqlite3_prepare(repo_p->sqlite_db,
+                            "select count(*) from maps "
+                            "where zoom = ? and tilex = ? and tiley = ?",
+                            -1, &repo_p->stmt_map_exists, NULL)
+                    /* Prepare insert map statement. */
+                 || SQLITE_OK != sqlite3_prepare(repo_p->sqlite_db,
+                            "insert or replace into maps"
+                            " (pixbuf, zoom, tilex, tiley)"
+                            " values (?, ?, ?, ?)",
+                            -1, &repo_p->stmt_map_update, NULL)
+                    /* Prepare delete map statement. */
+                 || SQLITE_OK != sqlite3_prepare(repo_p->sqlite_db,
+                            "delete from maps "
+                            "where zoom = ? and tilex = ? and tiley = ?",
+                            -1, &repo_p->stmt_map_delete, NULL))
+                {
+                    gchar buffer[BUFFER_SIZE];
+                    snprintf(buffer, sizeof(buffer), "%s: %s\n%s",
+                            _("Failed to open map database for repository"),
+                            sqlite3_errmsg(repo_p->sqlite_db),
+                            _("Downloaded maps will not be cached."));
+                    sqlite3_close(repo_p->sqlite_db);
+                    repo_p->sqlite_db = NULL;
+                    popup_error(_window, buffer);
+                }
+            }
+            else
+            {
+                printf("Building GDBM database: %s\n",
+                        repo_p->db_filename);
+                repo_p->gdbm_db = gdbm_open(repo_p->db_filename,
+                        0, GDBM_WRCREAT | GDBM_FAST, 0644, NULL);
+            }
+        }
+    }
+
+    if(!MAPDB_EXISTS(_curr_repo))
+    {
+        gchar buffer[BUFFER_SIZE];
+        snprintf(buffer, sizeof(buffer), "%s\n%s",
+                _("Failed to open map database for repository"),
+                _("Downloaded maps will not be cached."));
+        popup_error(_window, buffer);
+    }
+    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
+    return TRUE;
 }
 
 
@@ -1481,6 +1258,13 @@ get_next_mut(gpointer key, gpointer value, MapUpdateTask **data)
     return TRUE;
 }
 
+static gboolean
+map_handle_error(gchar *error)
+{
+    MACRO_BANNER_SHOW_INFO(_window, error);
+    return FALSE;
+}
+
 gboolean
 thread_proc_mut()
 {
@@ -1523,15 +1307,15 @@ thread_proc_mut()
         {
             /* Easy - just delete the entry from the database.  We don't care
              * about failures (sorry). */
-            if(mut->repo->db)
+            if(MAPDB_EXISTS(mut->repo))
                 mapdb_delete(mut->repo, mut->zoom, mut->tilex, mut->tiley);
 
             /* Report that there is no error. */
             mut->vfs_result = GNOME_VFS_OK;
         }
-        else for(retries = mut->repo->layer_level ? 1 : INITIAL_DOWNLOAD_RETRIES; retries > 0; --retries)
+        else for(retries = mut->repo->layer_level
+                ? 1 : INITIAL_DOWNLOAD_RETRIES; retries > 0; --retries)
         {
-            gboolean exists = FALSE;
             gchar *src_url;
             gchar *bytes;
             gint size;
@@ -1540,20 +1324,6 @@ thread_proc_mut()
             gint zoom, tilex, tiley;
             GError *error = NULL;
 
-#ifdef MAPDB_SQLITE
-            /* First check for existence. */
-            exists = mut->repo->db
-                ? mapdb_exists(mut->repo, mut->zoom,
-                        mut->tilex, mut->tiley)
-                : FALSE;
-            if(exists && mut->update_type == MAP_UPDATE_ADD)
-            {
-                /* Map already exists, and we're not going to overwrite. */
-                /* Report that there is no error. */
-                mut->vfs_result = GNOME_VFS_OK;
-                break;
-            }
-#else
             /* First check for existence. */
             if(mut->update_type == MAP_UPDATE_ADD)
             {
@@ -1567,7 +1337,6 @@ thread_proc_mut()
                     break;
                 }
             }
-#endif
 
             /* First, construct the URL from which we will get the data. */
             src_url = map_construct_url(mut->repo, mut->zoom,
@@ -1673,8 +1442,11 @@ thread_proc_mut()
             /* DO NOT USE mut FROM THIS POINT ON. */
 
             /* Also attempt to add to the database. */
-            mapdb_update(exists, repo, zoom,
-                    tilex, tiley, bytes, size);
+            if(MAPDB_EXISTS(repo) && !mapdb_update(repo, zoom,
+                    tilex, tiley, bytes, size)) {
+                g_idle_add((GSourceFunc)map_handle_error,
+                        _("Error saving map to disk - disk full?"));
+            }
 
             /* Success! */
             g_free(bytes);
@@ -1795,20 +1567,38 @@ repoman_compact_complete_idle(CompactInfo *ci)
 static void
 thread_repoman_compact(CompactInfo *ci)
 {
-    GDBM_FILE db;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(!(db = gdbm_open((gchar*)ci->db_filename, 0, GDBM_WRITER | GDBM_FAST,
-                    0644, NULL)))
-        ci->status_msg = _("Failed to open map database for compacting.");
+    if(ci->is_sqlite)
+    {
+        sqlite3 *db;
+        if(SQLITE_OK != (sqlite3_open(ci->db_filename, &db)))
+            ci->status_msg = _("Failed to open map database for compacting.");
+        else
+        {
+            if(SQLITE_OK != sqlite3_exec(db, "VACUUM;", NULL, NULL, NULL))
+                ci->status_msg = _("An error occurred while trying to "
+                            "compact the database.");
+            else
+                ci->status_msg = _("Successfully compacted database.");
+            sqlite3_close(db);
+        }
+    }
     else
     {
-        if(gdbm_reorganize(db))
-            ci->status_msg = _("An error occurred while trying to "
-                        "compact the database.");
+        GDBM_FILE db;
+        if(!(db = gdbm_open((gchar*)ci->db_filename, 0, GDBM_WRITER | GDBM_FAST,
+                        0644, NULL)))
+            ci->status_msg = _("Failed to open map database for compacting.");
         else
-            ci->status_msg = _("Successfully compacted database.");
-        gdbm_close(db);
+        {
+            if(gdbm_reorganize(db))
+                ci->status_msg = _("An error occurred while trying to "
+                            "compact the database.");
+            else
+                ci->status_msg = _("Successfully compacted database.");
+            gdbm_close(db);
+        }
     }
 
     g_idle_add((GSourceFunc)repoman_compact_complete_idle, ci);
@@ -1817,7 +1607,7 @@ thread_repoman_compact(CompactInfo *ci)
 }
 
 static void
-repoman_dialog_compact(GtkWidget *widget, BrowseInfo *browse_info)
+repoman_dialog_compact(GtkWidget *widget, RepoEditInfo *rei)
 {
     CompactInfo *ci;
     GtkWidget *sw;
@@ -1826,7 +1616,7 @@ repoman_dialog_compact(GtkWidget *widget, BrowseInfo *browse_info)
     ci = g_new0(CompactInfo, 1);
 
     ci->dialog = gtk_dialog_new_with_buttons(_("Compact Database"),
-            GTK_WINDOW(browse_info->dialog), GTK_DIALOG_MODAL,
+            GTK_WINDOW(rei->browse_info.dialog), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
             GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
             NULL);
@@ -1882,7 +1672,8 @@ repoman_dialog_compact(GtkWidget *widget, BrowseInfo *browse_info)
     if(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(ci->dialog)))
     {
         gtk_widget_set_sensitive(GTK_DIALOG(ci->dialog)->action_area, FALSE);
-        ci->db_filename = gtk_entry_get_text(GTK_ENTRY(browse_info->txt));
+        ci->db_filename = gtk_entry_get_text(GTK_ENTRY(rei->txt_db_filename));
+        ci->is_sqlite = rei->is_sqlite;
         ci->banner = hildon_banner_show_animation(ci->dialog, NULL,
                 _("Compacting database..."));
 
@@ -1999,16 +1790,17 @@ repoman_dialog_delete(GtkWidget *widget, RepoManInfo *rmi, gint index)
 }
 
 static RepoEditInfo*
-repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
+repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name, gboolean is_sqlite)
 {
     GtkWidget *vbox;
     GtkWidget *table;
     GtkWidget *label;
     GtkWidget *hbox;
-    RepoEditInfo *rei = g_new(RepoEditInfo, 1);
-    printf("%s(%s)\n", __PRETTY_FUNCTION__, name);
+    RepoEditInfo *rei = g_new0(RepoEditInfo, 1);
+    printf("%s(%s, %d)\n", __PRETTY_FUNCTION__, name, is_sqlite);
 
     rei->name = name;
+    rei->is_sqlite = is_sqlite;
 
     /* Maps page. */
     gtk_notebook_append_page(GTK_NOTEBOOK(rmi->notebook),
@@ -2052,7 +1844,8 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
     /* Initialize cache dir */
     {
         gchar buffer[BUFFER_SIZE];
-        snprintf(buffer, sizeof(buffer), "%s.db", name);
+        snprintf(buffer, sizeof(buffer), "%s.%s", name,
+                is_sqlite ? "sqlite" : "gdbm");
         gchar *db_base = gnome_vfs_expand_initial_tilde(
                 REPO_DEFAULT_CACHE_BASE);
         gchar *db_filename = gnome_vfs_uri_make_full_from_relative(
@@ -2158,7 +1951,7 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
                       &rei->browse_info);
     g_signal_connect(G_OBJECT(rei->btn_compact), "clicked",
                       G_CALLBACK(repoman_dialog_compact),
-                      &rei->browse_info);
+                      rei);
 
     gtk_widget_show_all(vbox);
 
@@ -2179,9 +1972,10 @@ repoman_dialog_add_repo(RepoManInfo *rmi, gchar *name)
 static gboolean
 repoman_dialog_new(GtkWidget *widget, RepoManInfo *rmi)
 {
-    static GtkWidget *hbox = NULL;
+    static GtkWidget *table = NULL;
     static GtkWidget *label = NULL;
     static GtkWidget *txt_name = NULL;
+    static GtkWidget *cmb_type = NULL;
     static GtkWidget *dialog = NULL;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -2193,15 +1987,42 @@ repoman_dialog_new(GtkWidget *widget, RepoManInfo *rmi)
                 GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                 NULL);
 
-        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                hbox = gtk_hbox_new(FALSE, 4), FALSE, FALSE, 4);
+        /* Enable the help button. */
+#ifndef LEGACY
+        hildon_help_dialog_help_enable(
+#else
+        ossohelp_dialog_help_enable(
+#endif
+                GTK_DIALOG(dialog), HELP_ID_NEWREPO, _osso);
 
-        gtk_box_pack_start(GTK_BOX(hbox),
-                label = gtk_label_new(_("Name")),
+        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+                table = gtk_table_new(2, 2, FALSE),
                 FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox),
+
+        /* Download Zoom Steps. */
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Name")),
+                0, 1, 0, 1, GTK_FILL, 2, 4, 2);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+        gtk_table_attach(GTK_TABLE(table),
                 txt_name = gtk_entry_new(),
-                TRUE, TRUE, 0);
+                1, 2, 0, 1, GTK_FILL, 2, 4, 2);
+
+        gtk_table_attach(GTK_TABLE(table),
+                label = gtk_label_new(_("Type")),
+                0, 1, 1, 2, GTK_FILL, 2, 4, 2);
+        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+
+        gtk_table_attach(GTK_TABLE(table),
+                cmb_type = gtk_combo_box_new_text(),
+                1, 2, 1, 2, GTK_FILL, 2, 4, 2);
+
+        gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_type),
+                _("SQLite 3 (default)"));
+        gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_type),
+                _("GDBM (legacy)"));
+        gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_type), 0);
     }
 
     gtk_entry_set_text(GTK_ENTRY(txt_name), "");
@@ -2211,7 +2032,8 @@ repoman_dialog_new(GtkWidget *widget, RepoManInfo *rmi)
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
         repoman_dialog_add_repo(rmi,
-                g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_name))));
+                g_strdup(gtk_entry_get_text(GTK_ENTRY(txt_name))),
+                gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_type)) == 0);
         break;
     }
 
@@ -2237,7 +2059,7 @@ repoman_reset(GtkWidget *widget, RepoManInfo *rmi)
             repoman_delete(rmi, 0);
 
         /* Now, add the default repository. */
-        repoman_dialog_add_repo(rmi, REPO_DEFAULT_NAME);
+        repoman_dialog_add_repo(rmi, REPO_DEFAULT_NAME, TRUE);
         gtk_entry_set_text(
                 GTK_ENTRY(((RepoEditInfo*)rmi->repo_edits->data)->txt_url),
                 REPO_DEFAULT_MAP_URI);
@@ -2933,7 +2755,8 @@ repoman_dialog()
     for(i = 0, curr = _repo_list; curr; curr = curr->next, i++)
     {
         RepoData *rd = (RepoData*)curr->data;
-        RepoEditInfo *rei = repoman_dialog_add_repo(&rmi, g_strdup(rd->name));
+        RepoEditInfo *rei = repoman_dialog_add_repo(&rmi, g_strdup(rd->name),
+                rd->is_sqlite);
 
         /* store this to be able to walk through layers attached to repo */
         rei->repo = rd;
@@ -3014,6 +2837,7 @@ repoman_dialog()
             RepoData *rd = g_new0(RepoData, 1);
             RepoData *rd0, **rd1;
             rd->name = g_strdup(rei->name);
+            rd->is_sqlite = rei->is_sqlite;
             rd->url = g_strdup(gtk_entry_get_text(GTK_ENTRY(rei->txt_url)));
             rd->db_filename = gnome_vfs_expand_initial_tilde(
                     gtk_entry_get_text(GTK_ENTRY(rei->txt_db_filename)));
@@ -3038,6 +2862,7 @@ repoman_dialog()
                 while (rd0) {
                     *rd1 = g_new0 (RepoData, 1);
                     (*rd1)->name = rd0->name;
+                    (*rd1)->is_sqlite = rd0->is_sqlite;
                     (*rd1)->url = rd0->url;
                     (*rd1)->db_filename = rd0->db_filename;
                     (*rd1)->layer_enabled = rd0->layer_enabled;
@@ -3185,12 +3010,13 @@ mapman_by_area(gdouble start_lat, gdouble start_lon,
                         RepoData* rd = _curr_repo;
 
                         while (rd) {
-                            if (rd == _curr_repo || (rd->layer_enabled && rd->db))
+                            if (rd == _curr_repo
+                                    || (rd->layer_enabled && MAPDB_EXISTS(rd)))
                                 mapdb_initiate_update(rd, z, tilex, tiley,
-                                                      update_type, download_batch_id,
-                                                      (abs(tilex - unit2tile(_next_center.unitx))
-                                                       + abs(tiley - unit2tile(_next_center.unity))),
-                                                      NULL);
+                                  update_type, download_batch_id,
+                                  (abs(tilex - unit2tile(_next_center.unitx))
+                                   +abs(tiley - unit2tile(_next_center.unity))),
+                                  NULL);
                             rd = rd->layers;
                         }
                     }
@@ -3401,7 +3227,7 @@ mapman_dialog()
     
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(!_curr_repo->db)
+    if(!MAPDB_EXISTS(_curr_repo))
     {
         popup_error(_window, "To manage maps, you must set a valid repository "
                 "database filename in the \"Manage Repositories\" dialog.");

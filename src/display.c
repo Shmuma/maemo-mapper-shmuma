@@ -1698,10 +1698,10 @@ map_download_refresh_idle(MapUpdateTask *mut)
         }
         _num_downloads = _curr_download = 0;
         g_thread_pool_stop_unused_threads();
-#ifndef MAPDB_SQLITE
-        if(_curr_repo->db)
-            gdbm_sync(_curr_repo->db);
-#endif
+
+        if(_curr_repo->gdbm_db && !_curr_repo->is_sqlite)
+            gdbm_sync(_curr_repo->gdbm_db);
+
         if(_dl_errors)
         {
             if (mut->repo->layer_level == 0) {
@@ -1911,7 +1911,7 @@ thread_render_map(MapRenderTask *mrt)
 
     mrt->zoom = _next_zoom;
 
-    if(mrt->repo->type != REPOTYPE_NONE && mrt->repo->db)
+    if(mrt->repo->type != REPOTYPE_NONE && MAPDB_EXISTS(mrt->repo))
         cache_amount = _auto_download_precache;
     else
         cache_amount = 1; /* No cache. */
@@ -2078,7 +2078,7 @@ thread_render_map(MapRenderTask *mrt)
                            <= (mrt->repo->max_zoom - mrt->repo->min_zoom))
                        /* Make sure this map matches the dl_zoom_steps,
                         * or that there currently is no cache. */
-                       && (!repo_p->db || !((mrt->zoom + zoff
+                       && (!MAPDB_EXISTS(repo_p) || !((mrt->zoom + zoff
                                              - (mrt->repo->double_size ? 1 : 0))
                                             % mrt->repo->dl_zoom_steps))
                        /* Make sure this tile is even possible. */
@@ -2117,7 +2117,7 @@ thread_render_map(MapRenderTask *mrt)
                     }
 
                     /* Try again at a coarser resolution. Only for underlying map.*/
-                    if (repo_p == mrt->repo && repo_p->type != REPOTYPE_NONE)
+                    if (repo_p == mrt->repo && MAPDB_EXISTS(repo_p))
                         ++zoff;
                     else
                         break;
