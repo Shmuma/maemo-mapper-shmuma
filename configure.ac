@@ -18,7 +18,7 @@
 #
 
 AC_INIT(Makefile.am)
-AM_INIT_AUTOMAKE(maemo-mapper, 2.5.3)
+AM_INIT_AUTOMAKE(maemo-mapper, 2.6)
 
 AC_PROG_CPP
 AC_CONFIG_HEADERS(src/config.h)
@@ -113,6 +113,7 @@ icon_34x34dir=$datadir/icons/hicolor/34x34/hildon
 icon_40x40dir=$datadir/icons/hicolor/40x40/hildon
 icon_50x50dir=$datadir/icons/hicolor/50x50/hildon
 icon_scalabledir=$datadir/icons/hicolor/scalable/hildon
+icon_aprsdir=$datadir/icons/hicolor/scalable/hildon
 
 # Help file install directory
 helpfile_enusdir=$datadir/osso-help/en_US
@@ -135,12 +136,15 @@ AC_SUBST(icon_26x26dir)
 AC_SUBST(icon_34x34dir)
 AC_SUBST(icon_40x40dir)
 AC_SUBST(icon_50x50dir)
+AC_SUBST(icon_aprsdir)
 AC_SUBST(icon_scalabledir)
 AC_SUBST(pluginlibdir)
 AC_SUBST(plugindesktopentrydir)
 
 AC_DEFINE_UNQUOTED([LOCALEDIR], "${localedir}", [Runtime locale catalog files path])
 AC_DEFINE_UNQUOTED([PIXMAPDIR], "${pixmapdir}", [Runtime pixmap files path])
+AC_DEFINE([INCLUDE_APRS], [1], [Include APRS functionality])
+
 
 # Produce output files
 AC_OUTPUT(

@@ -21,6 +21,10 @@
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
+
 #define _GNU_SOURCE
 
 #include "types.h"
@@ -58,9 +62,10 @@ GdkColor COLORABLE_DEFAULT[COLORABLE_ENUM_COUNT] =
     {0, 0x0000, 0xa000, 0x0000}, /* COLORABLE_ROUTE */
     {0, 0x0000, 0x8000, 0x0000}, /* COLORABLE_ROUTE_WAY */
     {0, 0x0000, 0x6000, 0x0000}, /* COLORABLE_ROUTE_BREAK */
-    {0, 0xa000, 0x0000, 0xa000}  /* COLORABLE_POI */
+    {0, 0xa000, 0x0000, 0xa000}, /* COLORABLE_POI */
+    {0, 0xa000, 0x0000, 0xa000}  /* COLORABLE_APRS_STATION */
 };
-gchar *DEG_FORMAT_ENUM_TEXT[DEG_FORMAT_ENUM_COUNT];
+CoordFormatSetup DEG_FORMAT_ENUM_TEXT[DEG_FORMAT_ENUM_COUNT];
 gchar *SPEED_LOCATION_ENUM_TEXT[SPEED_LOCATION_ENUM_COUNT];
 gchar *GPS_RCVR_ENUM_TEXT[GPS_RCVR_ENUM_COUNT];
 
@@ -217,6 +222,47 @@ InfoFontSize _info_font_size = INFO_FONT_MEDIUM;
 GList *_repo_list = NULL;
 RepoData *_curr_repo = NULL;
 
+// APRS config
+#ifdef INCLUDE_APRS
+
+gboolean _aprs_enable = FALSE;     // APRS support is enabled
+gboolean _aprs_inet_enable = FALSE; // Connection to APRS server is enabled
+gboolean _aprs_tty_enable = FALSE;
+
+gchar *  _aprs_tnc_bt_mac = NULL;
+TTncConnection _aprs_tnc_method = TNC_CONNECTION_BT;
+
+gchar *  _aprs_tty_port = NULL;
+gchar *  _aprs_server = NULL;      // Server address
+guint    _aprs_server_port = 23;   // Server port
+gint     _aprs_std_pos_hist = 1;   // Not currently implemented, so fix as 1
+gint     _aprs_max_stations = 200; // 0 - no limit
+gchar *  _aprs_inet_server_validation = NULL; // -1 if not known
+
+gboolean _aprs_enable_inet_tx = FALSE;
+gboolean _aprs_enable_tty_tx = FALSE;
+gchar *  _aprs_mycall = NULL;      // My APRS call
+gchar *  _aprs_beacon_comment = NULL;  // My TNC Aprs Beacon comment
+
+gint     _aprs_inet_beacon_interval = 0; // 0 = disabled
+gint     _aprs_tty_beacon_interval = 0;  // 0 = disabled
+gchar *  _aprs_inet_beacon_comment = NULL;
+gboolean _aprs_transmit_compressed_posit = TRUE;
+gboolean _aprs_show_new_station_alert = TRUE;
+time_t   _aprs_sec_remove;              /* Station removed after */
+ConnState _aprs_inet_state;             // State of APRS iNet connection
+ConnState _aprs_tty_state;
+gint     _aprs_server_auto_filter_km = 100;
+gboolean _aprs_server_auto_filter_on = FALSE;
+//GtkWidget *_aprs_connect_banner = NULL;
+gchar *  _aprs_unproto_path = NULL;
+gchar    _aprs_beacon_group;
+gchar    _aprs_beacon_symbol;
+
+#endif // INCLUDE_APRS
+//----------------------
+
+
 /** POI */
 gchar *_poi_db_filename = NULL;
 gchar *_poi_db_dirname = NULL;
@@ -308,6 +354,15 @@ GtkWidget *_menu_gps_enable_item = NULL;
 GtkWidget *_menu_gps_show_info_item = NULL;
 GtkWidget *_menu_gps_details_item = NULL;
 GtkWidget *_menu_gps_reset_item = NULL;
+
+#ifdef INCLUDE_APRS
+/* Menu items for the "APRS" menu items. */
+GtkWidget *_menu_aprs_settings_item = NULL;
+GtkWidget *_menu_enable_aprs_inet_item = NULL;
+GtkWidget *_menu_enable_aprs_tty_item = NULL;
+GtkWidget *_menu_list_aprs_stations_item = NULL;
+GtkWidget *_menu_list_aprs_messages_item = NULL;
+#endif // INCLUDE_APRS
 
 /* Menu items for the other menu items. */
 GtkWidget *_menu_settings_item = NULL;
