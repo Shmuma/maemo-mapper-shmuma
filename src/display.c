@@ -1822,6 +1822,7 @@ combine_tiles (GdkPixbuf *dst_pixbuf, GdkPixbuf *src_pixbuf)
     gint bps = gdk_pixbuf_get_bits_per_sample (dst_pixbuf);
     gint width, height, x, y, d_delta, s_delta;
     guchar *d_p, *s_p;
+    printf("combine_tiles()\n");
 
     if (gdk_pixbuf_get_colorspace (dst_pixbuf) != gdk_pixbuf_get_colorspace (src_pixbuf)) {
         printf ("combine return (1)\n");
@@ -2029,35 +2030,22 @@ thread_render_map(MapRenderTask *mrt)
                                         tilex >> zoff,
                                         tiley >> zoff)))
                         {
-                            /* Found a map. Check for it's age. */
-                            gint age = get_tile_age (layer_pixbuf);
-                            printf ("Tile age (%d)\n", age);
-
-                            /* throw away tile only if we can download something */
-                            if (!repo_p->layer_refresh_interval ||
-                                age < repo_p->layer_refresh_interval * 60 ||
-                                !_auto_download)
+                            /* if this is a layer's tile, join with main tile */
+                            if (repo_p != mrt->repo)
                             {
-                                /* if this is a layer's tile, join with main tile */
-                                if (repo_p != mrt->repo)
-                                {
-                                    /* but only if main layer is exists */
-                                    if (tile_pixbuf)
-                                        combine_tiles (tile_pixbuf, layer_pixbuf);
-                                    g_object_unref (layer_pixbuf);
-                                }
-                                else {
-                                    tile_pixbuf = layer_pixbuf;
-                                    zoff_base = zoff;
-                                }
-                                break;
-                            }
-                            else
+                                /* but only if main layer is exists */
+                                if (tile_pixbuf)
+                                    combine_tiles (tile_pixbuf, layer_pixbuf);
                                 g_object_unref (layer_pixbuf);
+                            }
+                            else {
+                                tile_pixbuf = layer_pixbuf;
+                                zoff_base = zoff;
+                            }
+                            break;
                         }
-                        else
-                            if (repo_p->layers)
-                                _refresh_map_after_download = TRUE;
+                        else if (repo_p->layers)
+                            _refresh_map_after_download = TRUE;
                     }
                     /* Else we're not going to be drawing this map, so just check
                      * if it's in the database. */

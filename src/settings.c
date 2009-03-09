@@ -2609,34 +2609,6 @@ settings_init()
 
         if (curr_repo)
             repo_set_curr(curr_repo);
-
-        /* this timer decrements layers' counters and frefresh map if needed */
-        g_timeout_add (60 * 1000, map_layer_refresh_cb, NULL);
-    }
-
-
-    if(_repo_list == NULL)
-    {
-        /* We have no repositories - create a default one. */
-        RepoData *repo = g_new0(RepoData, 1);
-
-        repo->db_filename = gnome_vfs_expand_initial_tilde(
-                REPO_DEFAULT_CACHE_DIR);
-        repo->url=g_strdup(REPO_DEFAULT_MAP_URI);
-        repo->dl_zoom_steps = REPO_DEFAULT_DL_ZOOM_STEPS;
-        repo->name = g_strdup(REPO_DEFAULT_NAME);
-        repo->view_zoom_steps = REPO_DEFAULT_VIEW_ZOOM_STEPS;
-        repo->double_size = FALSE;
-        repo->nextable = TRUE;
-        repo->min_zoom = REPO_DEFAULT_MIN_ZOOM;
-        repo->max_zoom = REPO_DEFAULT_MAX_ZOOM;
-        repo->layers = NULL;
-        repo->layer_level = 0;
-        repo->is_sqlite = TRUE;
-        set_repo_type(repo);
-
-        _repo_list = g_list_append(_repo_list, repo);
-        repo_set_curr(repo);
     }
 
     /* Get last Zoom Level.  Default is 16. */

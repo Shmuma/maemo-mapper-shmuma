@@ -520,7 +520,7 @@ map_cache_init_unlocked(size_t cache_size)
     map_cache_evict(0);
 }
 
-void
+static void
 map_cache_init(size_t cache_size)
 {
     g_mutex_lock(_mapdb_mutex);
@@ -557,7 +557,8 @@ map_cache_destroy_unlocked(void)
          _map_cache.thits+_map_cache.bhits+_map_cache.misses));
     }
 }
-void
+
+static void
 map_cache_destroy(void)
 {
     g_mutex_lock(_mapdb_mutex);
@@ -565,17 +566,46 @@ map_cache_destroy(void)
     g_mutex_unlock(_mapdb_mutex);
 }
 
+static void 
+clean_layers_from_cache(MapCacheKey *key, MapCacheEntry *value, RepoData *repo)
+{
+    if(key->repo == repo)
+        map_cache_entry_free_pixbuf(value);
+}
 
 void
 map_cache_clean (void)
 {
     g_mutex_lock(_mapdb_mutex);
-    gint old_size = _map_cache.cache_size;
-    map_cache_destroy_unlocked();
-    map_cache_init_unlocked(old_size);
+    g_hash_table_foreach(_map_cache.entries,
+            (GHFunc)clean_layers_from_cache, _curr_repo);
     g_mutex_unlock(_mapdb_mutex);
 }
 
+
+static gboolean 
+remove_repo_from_cache(MapCacheKey *key, MapCacheEntry *value, RepoData *repo)
+{
+    if (key->repo == repo)
+        printf("REMOVING ENTRY AT (%d, %d, %d)\n",
+                key->zoom, key->tilex, key->tiley);
+    return key->repo == repo;
+}
+
+/**
+ * This method "refreshes" a layer by both removing the layer from the cache
+ * and removing the layer-applied pixbufs from the base repo's cache entries.
+ */
+static void
+map_cache_clean_layer(RepoData *layer)
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    g_hash_table_foreach_remove(_map_cache.entries,
+            (GHRFunc)remove_repo_from_cache, layer);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
 
 gboolean
 mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
@@ -691,7 +721,7 @@ mapdb_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
         || SQLITE_DONE != sqlite3_step(repo->stmt_map_update))
         {
             success = FALSE;
-            printf("Error in mapdb_update: %s\n",
+            fprintf(stderr, "Error in mapdb_update: %s\n",
                     sqlite3_errmsg(repo->sqlite_db));
         }
         sqlite3_reset(repo->stmt_map_update);
@@ -1375,24 +1405,6 @@ thread_proc_mut()
             }
             g_object_unref(loader);
 
-            /* attach timestamp with loaded pixbuf */
-            {
-                gchar* new_bytes;
-                gsize new_size;
-                GError* error = NULL;
-                char ts_val[12];
-
-                sprintf (ts_val, "%u", (unsigned int)time (NULL));
-
-                /* update bytes with new, timestamped pixbuf */
-                if (gdk_pixbuf_save_to_buffer (mut->pixbuf, &new_bytes, &new_size, "png", &error, layer_timestamp_key, ts_val, NULL))
-                {
-                    g_free (bytes);
-                    bytes = new_bytes;
-                    size = new_size;
-                }
-            }
-
             /* Copy database-relevant mut data before we release it. */
             repo = mut->repo;
             zoom = mut->zoom;
@@ -1576,7 +1588,7 @@ thread_repoman_compact(CompactInfo *ci)
             ci->status_msg = _("Failed to open map database for compacting.");
         else
         {
-            if(SQLITE_OK != sqlite3_exec(db, "VACUUM;", NULL, NULL, NULL))
+            if(SQLITE_OK != sqlite3_exec(db, "vacuum;", NULL, NULL, NULL))
                 ci->status_msg = _("An error occurred while trying to "
                             "compact the database.");
             else
@@ -2630,6 +2642,7 @@ repoman_layers(GtkWidget *widget, RepoManInfo *rmi)
             *rdp = rd;
 
             rd->name = g_strdup (gtk_entry_get_text (GTK_ENTRY (lei->txt_name)));
+            rd->is_sqlite = rei->repo->is_sqlite;
             rd->url = g_strdup (gtk_entry_get_text (GTK_ENTRY (lei->txt_url)));
             rd->db_filename = g_strdup (gtk_entry_get_text (GTK_ENTRY (lei->txt_db)));
             rd->layer_enabled = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (lei->chk_visible));
@@ -3734,8 +3747,6 @@ void maps_toggle_visible_layers ()
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
-
-
 /* this routine fired by timer every minute and decrements refetch counter of every active layer of
    current repository. If one of layer is expired, it forces map redraw. Redraw routine checks every
    layer's tile download timestamp and desides performs refetch if needed */
@@ -3747,46 +3758,145 @@ map_layer_refresh_cb (gpointer data)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if (rd) {
-        rd = rd->layers;
-
-        while (rd) {
+        for(rd = rd->layers; rd; rd = rd->layers)
+        {
             if (rd->layer_enabled && rd->layer_refresh_interval) {
                 rd->layer_refresh_countdown--;
                 if (rd->layer_refresh_countdown <= 0) {
                     rd->layer_refresh_countdown = rd->layer_refresh_interval;
                     refresh = TRUE;
+
+                    printf("Refreshing layer: %s\n", rd->name);
+                    g_mutex_lock(_mapdb_mutex);
+                    if(MAPDB_EXISTS(rd))
+                    {
+                        /* Clear the database. */
+                        if(rd->is_sqlite)
+                            sqlite3_exec(rd->sqlite_db, "delete from maps;",
+                                    NULL, NULL, NULL);
+                        else
+                        {
+                            gdbm_close(rd->gdbm_db);
+                            g_remove(rd->db_filename);
+                            rd->gdbm_db = gdbm_open(rd->db_filename,
+                                    0, GDBM_WRCREAT | GDBM_FAST, 0644, NULL);
+                        }
+                    }
+                    map_cache_clean_layer(rd);
+                    g_mutex_unlock(_mapdb_mutex);
                 }
             }
-
-            rd = rd->layers;
         }
     }
 
     if (refresh)
+    {
+        map_cache_clean();
         map_refresh_mark (TRUE);
+    }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
-
-
-/*
-   Returns amount of seconds since tile downloaded or 0 if tile
-   have no such information.
-*/
-gint get_tile_age (GdkPixbuf* pixbuf)
+void
+maps_init(gint map_cache_size)
 {
-    const char* ts;
-    guint val;
+    printf("%s()\n", __PRETTY_FUNCTION__);
 
-    ts = gdk_pixbuf_get_option (pixbuf, layer_timestamp_key);
+    map_cache_init(map_cache_size);
 
-    if (!ts)
-        return 0;
+    if(_repo_list == NULL)
+    {
+        /* We have no repositories - create a default one. */
+        RepoData *repo = g_new0(RepoData, 1);
 
-    if (sscanf (ts, "%u", &val))
-        return time (NULL) - val;
-    else
-        return 0;
+        repo->db_filename = gnome_vfs_expand_initial_tilde(
+                REPO_DEFAULT_CACHE_DIR);
+        repo->url=g_strdup(REPO_DEFAULT_MAP_URI);
+        repo->dl_zoom_steps = REPO_DEFAULT_DL_ZOOM_STEPS;
+        repo->name = g_strdup(REPO_DEFAULT_NAME);
+        repo->view_zoom_steps = REPO_DEFAULT_VIEW_ZOOM_STEPS;
+        repo->double_size = FALSE;
+        repo->nextable = TRUE;
+        repo->min_zoom = REPO_DEFAULT_MIN_ZOOM;
+        repo->max_zoom = REPO_DEFAULT_MAX_ZOOM;
+        repo->layers = NULL;
+        repo->layer_level = 0;
+        repo->is_sqlite = TRUE;
+        set_repo_type(repo);
+
+        _repo_list = g_list_append(_repo_list, repo);
+        repo_set_curr(repo);
+    }
+
+    /* this timer decrements layers' counters, clears layer databases, and
+     * frefresh map if needed */
+    g_timeout_add (60 * 1000, map_layer_refresh_cb, NULL);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+void
+maps_destroy()
+{
+    GList *curr;
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    map_cache_destroy();
+
+    g_mutex_lock(_mapdb_mutex);
+
+    if(MAPDB_EXISTS(_curr_repo))
+    {   
+        RepoData* repo_p;
+        for(repo_p = _curr_repo; repo_p; repo_p = repo_p->layers)
+        {
+            if(repo_p->is_sqlite)
+            {
+                if(repo_p->sqlite_db)
+                {
+                    sqlite3_close(repo_p->sqlite_db);
+                    repo_p->sqlite_db = NULL;
+                }
+            }
+            else
+            {   
+                if (repo_p->gdbm_db) {
+                    gdbm_close(repo_p->gdbm_db);
+                    repo_p->gdbm_db = NULL;
+                }
+            }
+        }
+    }
+
+    /* Go through layer repos and empty ephemeral ones. */
+    for(curr = _repo_list; curr; curr = curr->next)
+    {
+        RepoData *repo;
+        for(repo = ((RepoData*)curr->data)->layers; repo; repo = repo->layers)
+        {
+            if(repo->layer_refresh_interval != 0)
+            {
+                printf("Clearing database: %s\n", repo->name);
+                if(repo->is_sqlite)
+                {
+                    sqlite3 *db;
+                    if(SQLITE_OK == sqlite3_open(repo->db_filename, &db))
+                        sqlite3_exec(db, "delete from maps;", NULL, NULL, NULL);
+                        sqlite3_exec(db, "vacuum;", NULL, NULL, NULL);
+                }
+                else
+                {
+                    /* Just delete the file and re-create. */
+                    g_remove(repo->db_filename);
+                    close(g_creat(repo->db_filename, 0644));
+                }
+            }
+        }
+    }
+
+    g_mutex_unlock(_mapdb_mutex);
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }

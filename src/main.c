@@ -202,34 +202,7 @@ maemo_mapper_destroy()
 #endif
     g_thread_pool_free(_mut_thread_pool, TRUE, TRUE);
 
-    if(MAPDB_EXISTS(_curr_repo))
-    {
-        RepoData* repo_p;
-        if(_curr_repo->is_sqlite)
-        {
-            g_mutex_lock(_mapdb_mutex);
-            sqlite3_close(_curr_repo->sqlite_db);
-            _curr_repo->sqlite_db = NULL;
-            g_mutex_unlock(_mapdb_mutex);
-        }
-        else
-        {
-            g_mutex_lock(_mapdb_mutex);
-            repo_p = _curr_repo;
-            while (repo_p) {
-                if (repo_p->gdbm_db) {
-/*                 /\* perform reorganization for layers which are auto refreshed *\/ */
-/*                 if (repo_p->layer_level && repo_p->layer_refresh_interval) */
-/*                     gdbm_reorganize (repo_p->gdbm_db); */
-                    gdbm_close(repo_p->gdbm_db);
-                }
-                repo_p->gdbm_db = NULL;
-                repo_p = repo_p->layers;
-            }
-            g_mutex_unlock(_mapdb_mutex);
-        }
-    }
-    map_cache_destroy();
+    maps_destroy();
 
     gps_destroy(TRUE);
 
@@ -466,7 +439,8 @@ maemo_mapper_init(gint argc, gchar **argv)
 #endif
 
     settings_init();
-    map_cache_init(_map_cache_size);
+
+    maps_init(_map_cache_size);
 
     /* Initialize _program. */
     _program = HILDON_PROGRAM(hildon_program_get_instance());
