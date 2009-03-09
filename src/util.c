@@ -967,7 +967,7 @@ void format_lat_lon(gdouble d_lat, gdouble d_lon, gchar* lat, gchar* lon)
 gint64
 g_ascii_strtoll(const gchar *nptr, gchar **endptr, guint base)
 {
-    gchar *minus = g_strstr_len(nptr, "-", -1);
+    gchar *minus = g_strstr_len(nptr, -1, "");
     if(minus)
         return -g_ascii_strtoull(minus + 1, endptr, base);
     else

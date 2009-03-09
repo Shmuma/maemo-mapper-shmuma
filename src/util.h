@@ -56,6 +56,6 @@ void format_lat_lon(gdouble d_lat, gdouble d_lon, gchar* lat, gchar* lon);
 
 gboolean coord_system_check_lat_lon (gdouble lat, gdouble lon, gint *fallback_deg_format);
 
-guint64 g_ascii_strtoll(const gchar *nptr, gchar **endptr, guint base);
+gint64 g_ascii_strtoll(const gchar *nptr, gchar **endptr, guint base);
 
 #endif /* ifndef MAEMO_MAPPER_UTIL_H */
