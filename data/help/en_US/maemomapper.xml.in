@@ -844,7 +844,8 @@
           selected repository.
         </listitem>
         <listitem>
-          <display_text>New...</display_text> - Adds a new repository.
+          <display_text>New...</display_text> - Adds a new repository.  See
+          <ref refid="help_maemomapper_newrepo" refdoc="New Repositories"/>.
         </listitem>
         <listitem>
           <display_text>Reset...</display_text> - Resets your repository
@@ -871,6 +872,34 @@
         The authors of Maemo Mapper cannot be held responsible for your
         use of a particular repository.
       </note>
+    </topic>
+    <topic>
+      <topictitle>Repository Types</topictitle>
+      <context contextUID="help_maemomapper_newrepo"/>
+      <para>
+        Over the years, Maemo Mapper has used several different types of
+        backing databases to store downloaded maps.  Currently, Maemo Mapper
+        supports two different types of backing map databases.
+      </para>
+      <list>
+        <listitem>
+          <display_text>SQLite 3 (default)</display_text> - The new default
+          backing database format since Maemo Mapper v2.6, SQLite 3 provides
+	  better reliability. It also scales somewhat better than GDBM and is
+	  not subject to file size limitations, making it the only choice for
+	  large map databases.  This is the preferred format, and should
+	  generally be used for all new databases.
+        </listitem>
+        <listitem>
+          <display_text>GDBM (legacy)</display_text> - The database format
+          of versions of Maemo Mapper prior to v2.6.  It is slightly less
+          reliable than SQLite, and GDBM files are limited to 2 gigabytes.
+          These limitations, however, allow it to perform slightly faster
+	  than SQLite for small map databases.  If you are unsatisfied with
+	  SQLite's performance in Maemo Mapper, you can take your chances with
+	  GDBM.
+        </listitem>
+      </list>
     </topic>
     <topic>
       <topictitle>Managing Maps</topictitle>

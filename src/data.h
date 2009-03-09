@@ -24,7 +24,12 @@
 #ifndef MAEMO_MAPPER_DATA_H
 #define MAEMO_MAPPER_DATA_H
 
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
+
 #include <libosso.h>
+#include "types.h"
 
 /* Constants regarding enums and defaults. */
 extern gchar *UNITS_ENUM_TEXT[UNITS_ENUM_COUNT];
@@ -39,7 +44,7 @@ extern gchar *CUSTOM_KEY_ICON[CUSTOM_KEY_ENUM_COUNT];
 extern CustomAction CUSTOM_KEY_DEFAULT[CUSTOM_KEY_ENUM_COUNT];
 extern gchar *COLORABLE_GCONF[COLORABLE_ENUM_COUNT];
 extern GdkColor COLORABLE_DEFAULT[COLORABLE_ENUM_COUNT];
-extern gchar *DEG_FORMAT_ENUM_TEXT[DEG_FORMAT_ENUM_COUNT];
+extern CoordFormatSetup DEG_FORMAT_ENUM_TEXT[DEG_FORMAT_ENUM_COUNT];
 extern gchar *SPEED_LOCATION_ENUM_TEXT[SPEED_LOCATION_ENUM_COUNT];
 extern gchar *GPS_RCVR_ENUM_TEXT[GPS_RCVR_ENUM_COUNT];
 
@@ -333,6 +338,48 @@ extern GtkWidget *_cmenu_poi_goto_nearpoi_item;
 /*****************************
  * ABOVE: CONTEXT MENU ITEMS *
  *****************************/
+
+#ifdef INCLUDE_APRS
+
+extern gboolean _aprs_enable;
+extern gboolean _aprs_inet_enable;
+extern gboolean _aprs_tty_enable;
+extern gchar *  _aprs_server;
+extern gchar *  _aprs_tty_port;
+extern guint     _aprs_server_port;
+extern gint     _aprs_std_pos_hist;
+extern gint     _aprs_max_stations;
+extern gchar *  _aprs_inet_server_validation;
+extern gchar *  _aprs_beacon_comment;
+extern gboolean _aprs_transmit_compressed_posit;
+extern gint     _aprs_inet_beacon_interval;
+extern gint     _aprs_tty_beacon_interval;
+extern gchar *  _aprs_inet_beacon_comment;
+extern gchar    _aprs_beacon_group;
+extern gchar    _aprs_beacon_symbol;
+
+extern gboolean _aprs_enable_inet_tx;
+extern gboolean _aprs_enable_tty_tx;
+extern gchar *  _aprs_mycall;
+extern gchar *  _aprs_beacon_comment;
+
+extern gboolean _aprs_show_new_station_alert;
+extern time_t   _aprs_sec_remove;
+extern GtkWidget *_menu_enable_aprs_inet_item;
+extern GtkWidget *_menu_enable_aprs_tty_item;
+extern GtkWidget *_menu_list_aprs_stations_item;
+extern GtkWidget *_menu_list_aprs_messages_item;
+extern GtkWidget *_menu_aprs_settings_item;
+extern ConnState _aprs_inet_state;
+extern ConnState _aprs_tty_state;
+extern gchar *  _aprs_tnc_bt_mac;
+extern TTncConnection _aprs_tnc_method;
+extern gint     _aprs_server_auto_filter_km;
+extern gboolean _aprs_server_auto_filter_on;
+//extern GtkWidget *_aprs_connect_banner;
+extern gchar *  _aprs_unproto_path;
+
+#endif // INCLUDE_APRS
 
 #endif /* ifndef MAEMO_MAPPER_DATA_H */
 

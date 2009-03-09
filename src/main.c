@@ -60,6 +60,7 @@
 #include "dbus-ifc.h"
 #include "display.h"
 #include "gps.h"
+#include "aprs.h"
 #include "gpx.h"
 #include "input.h"
 #include "main.h"
@@ -201,31 +202,7 @@ maemo_mapper_destroy()
 #endif
     g_thread_pool_free(_mut_thread_pool, TRUE, TRUE);
 
-    if(_curr_repo->db)
-    {
-        RepoData* repo_p;
-#ifdef MAPDB_SQLITE
-        g_mutex_lock(_mapdb_mutex);
-        sqlite3_close(_curr_repo->db);
-        _curr_repo->db = NULL;
-        g_mutex_unlock(_mapdb_mutex);
-#else
-        g_mutex_lock(_mapdb_mutex);
-        repo_p = _curr_repo;
-        while (repo_p) {
-            if (repo_p->db) {
-/*                 /\* perform reorganization for layers which are auto refreshed *\/ */
-/*                 if (repo_p->layer_level && repo_p->layer_refresh_interval) */
-/*                     gdbm_reorganize (repo_p->db); */
-                gdbm_close(repo_p->db);
-            }
-            repo_p->db = NULL;
-            repo_p = repo_p->layers;
-        }
-        g_mutex_unlock(_mapdb_mutex);
-#endif
-    }
-    map_cache_destroy();
+    maps_destroy();
 
     gps_destroy(TRUE);
 
@@ -345,16 +322,99 @@ maemo_mapper_init(gint argc, gchar **argv)
         = _("Reset Bluetooth");
     CUSTOM_ACTION_ENUM_TEXT[CUSTOM_ACTION_TOGGLE_LAYERS] = _("Toggle Layers");
 
-    DEG_FORMAT_ENUM_TEXT[DDPDDDDD] = "-dd.ddddd°";
-    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM] = "-dd°mm.mmm'";
-    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS] = "-dd°mm'ss.s\"";
-    DEG_FORMAT_ENUM_TEXT[DDPDDDDD_NSEW] = "dd.ddddd° S";
-    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM_NSEW] = "dd°mm.mmm' S";
-    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS_NSEW] = "dd°mm'ss.s\" S";
-    DEG_FORMAT_ENUM_TEXT[NSEW_DDPDDDDD] = "S dd.ddddd°";
-    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MMPMMM] = "S dd° mm.mmm'";
-    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MM_SSPS] = "S dd° mm' ss.s\"";
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD].name = "-dd.ddddd°";
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD].short_field_1 = "Lat";
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD].long_field_1 = "Latitude";
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD].short_field_2 = "Lon";
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD].long_field_2 = "Longitude";
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD].field_2_in_use = TRUE;
+    
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM].name = "-dd°mm.mmm'";
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM].short_field_1 = "Lat";
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM].long_field_1 = "Latitude";
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM].short_field_2 = "Lon";
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM].long_field_2 = "Longitude";
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM].field_2_in_use = TRUE;
+    
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS].name = "-dd°mm'ss.s\"";
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS].short_field_1 = "Lat";
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS].long_field_1 = "Latitude";
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS].short_field_2 = "Lon";
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS].long_field_2 = "Longitude";
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS].field_2_in_use = TRUE;
+    
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD_NSEW].name = "dd.ddddd° S";
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD_NSEW].short_field_1 = "Lat";
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD_NSEW].long_field_1 = "Latitude";
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD_NSEW].short_field_2 = "Lon";
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD_NSEW].long_field_2 = "Longitude";
+    DEG_FORMAT_ENUM_TEXT[DDPDDDDD_NSEW].field_2_in_use = TRUE;
+    
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM_NSEW].name = "dd°mm.mmm' S";
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM_NSEW].short_field_1 = "Lat";
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM_NSEW].long_field_1 = "Latitude";
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM_NSEW].short_field_2 = "Lon";
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM_NSEW].long_field_2 = "Longitude";
+    DEG_FORMAT_ENUM_TEXT[DD_MMPMMM_NSEW].field_2_in_use = TRUE;
+    
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS_NSEW].name = "dd°mm'ss.s\" S";
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS_NSEW].short_field_1 = "Lat";
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS_NSEW].long_field_1 = "Latitude";
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS_NSEW].short_field_2 = "Lon";
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS_NSEW].long_field_2 = "Longitude";
+    DEG_FORMAT_ENUM_TEXT[DD_MM_SSPS_NSEW].field_2_in_use = TRUE;
+    
+    DEG_FORMAT_ENUM_TEXT[NSEW_DDPDDDDD].name = "S dd.ddddd°";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DDPDDDDD].short_field_1 = "Lat";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DDPDDDDD].long_field_1 = "Latitude";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DDPDDDDD].short_field_2 = "Lon";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DDPDDDDD].long_field_2 = "Longitude";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DDPDDDDD].field_2_in_use = TRUE;
+    
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MMPMMM].name = "S dd° mm.mmm'";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MMPMMM].short_field_1 = "Lat";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MMPMMM].long_field_1 = "Latitude";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MMPMMM].short_field_2 = "Lon";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MMPMMM].long_field_2 = "Longitude";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MMPMMM].field_2_in_use = TRUE;
+    
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MM_SSPS].name = "S dd° mm' ss.s\"";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MM_SSPS].short_field_1 = "Lat";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MM_SSPS].long_field_1 = "Latitude";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MM_SSPS].short_field_2 = "Lon";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MM_SSPS].long_field_2 = "Longitude";
+    DEG_FORMAT_ENUM_TEXT[NSEW_DD_MM_SSPS].field_2_in_use = TRUE;
 
+    // Used by Radio Amateurs
+    DEG_FORMAT_ENUM_TEXT[IARU_LOC].name = "IARU Locator";
+    DEG_FORMAT_ENUM_TEXT[IARU_LOC].short_field_1 = "Locator";
+    DEG_FORMAT_ENUM_TEXT[IARU_LOC].long_field_1 = "Locator";
+    DEG_FORMAT_ENUM_TEXT[IARU_LOC].short_field_2 = "";
+    DEG_FORMAT_ENUM_TEXT[IARU_LOC].long_field_2 = "";
+    DEG_FORMAT_ENUM_TEXT[IARU_LOC].field_2_in_use = FALSE;
+
+    
+    DEG_FORMAT_ENUM_TEXT[UK_OSGB].name = "OSGB X,Y Grid";
+    DEG_FORMAT_ENUM_TEXT[UK_OSGB].short_field_1 = "X";
+    DEG_FORMAT_ENUM_TEXT[UK_OSGB].long_field_1 = "OS X";
+    DEG_FORMAT_ENUM_TEXT[UK_OSGB].short_field_2 = "Y";
+    DEG_FORMAT_ENUM_TEXT[UK_OSGB].long_field_2 = "OS Y";
+    DEG_FORMAT_ENUM_TEXT[UK_OSGB].field_2_in_use = TRUE;
+    
+    DEG_FORMAT_ENUM_TEXT[UK_NGR].name = "OSGB Landranger Grid (8)";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR].short_field_1 = "GR";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR].long_field_1 = "OS Grid";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR].short_field_2 = "";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR].long_field_2 = "";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR].field_2_in_use = FALSE;
+    
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].name = "OSGB Landranger Grid (6)";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].short_field_1 = "GR";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].long_field_1 = "OS Grid";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].short_field_2 = "";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].long_field_2 = "";
+    DEG_FORMAT_ENUM_TEXT[UK_NGR6].field_2_in_use = FALSE;
+        
     SPEED_LOCATION_ENUM_TEXT[SPEED_LOCATION_TOP_LEFT] = _("Top-Left");
     SPEED_LOCATION_ENUM_TEXT[SPEED_LOCATION_TOP_RIGHT] = _("Top-Right");
     SPEED_LOCATION_ENUM_TEXT[SPEED_LOCATION_BOTTOM_RIGHT] = _("Bottom-Right");
@@ -379,7 +439,8 @@ maemo_mapper_init(gint argc, gchar **argv)
 #endif
 
     settings_init();
-    map_cache_init(_map_cache_size);
+
+    maps_init(_map_cache_size);
 
     /* Initialize _program. */
     _program = HILDON_PROGRAM(hildon_program_get_instance());
@@ -390,11 +451,6 @@ maemo_mapper_init(gint argc, gchar **argv)
     hildon_program_add_window(_program, HILDON_WINDOW(_window));
 
     gtk_window_set_default_size(GTK_WINDOW(_window), 800, 480);
-
-    /* Lets go fullscreen if so requested in saved config */
-    if (_fullscreen) {
-      gtk_window_fullscreen(GTK_WINDOW(_window));
-    }
 
     /* Create and add widgets and supporting data. */
     hbox = gtk_hbox_new(FALSE, 0);
@@ -513,7 +569,11 @@ maemo_mapper_init(gint argc, gchar **argv)
     poi_db_connect();
     display_init();
     dbus_ifc_init();
-
+    
+#ifdef INCLUDE_APRS
+    aprs_init();
+#endif //INCLUDE_APRS
+    
     /* If present, attempt to load the file specified on the command line. */
     if(argc > 1)
     {
@@ -562,6 +622,11 @@ maemo_mapper_init(gint argc, gchar **argv)
 
 
     osso_hw_set_event_cb(_osso, NULL, osso_cb_hw_state, NULL);
+
+    /* Lets go fullscreen if so requested in saved config */
+    if (_fullscreen) {
+      gtk_window_fullscreen(GTK_WINDOW(_window));
+    }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }

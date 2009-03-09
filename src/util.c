@@ -44,6 +44,7 @@
 #include "gpx.h"
 #include "util.h"
 
+gboolean convert_iaru_loc_to_lat_lon(const gchar* txt_lon, gdouble* lat, gdouble* lon);
 
 /**
  * Pop up a modal dialog box with simple error information in it.
@@ -71,9 +72,17 @@ deg_format(gdouble coor, gchar *scoor, gchar neg_char, gchar pos_char)
 
     switch(_degformat)
     {
+	    case IARU_LOC:
+    	case UK_OSGB:
+    	case UK_NGR:
+    	case UK_NGR6:
+    		// These formats should not be formatted in the same way
+    		// - they need to be converted first, therefore if we reach 
+    		// this bit of code use the first available format - drop through.
         case DDPDDDDD:
             sprintf(scoor, "%.5f°", coor);
             break;
+
         case DDPDDDDD_NSEW:
             sprintf(scoor, "%.5f° %c", acoor,
                     coor < 0.0 ? neg_char : pos_char);
@@ -483,6 +492,486 @@ strdmstod(const gchar *nptr, gchar **endptr)
 
     if(endptr) *endptr = p;
     return s * d;
+}
+
+double marc(double bf0, double n, double phi0, double phi)
+{
+	return bf0 * (((1 + n + ((5 / 4) * (n * n)) + ((5 / 4) * (n * n * n))) * (phi - phi0))
+	    - (((3 * n) + (3 * (n * n)) + ((21 / 8) * (n * n * n))) * (sin(phi - phi0)) * (cos(phi + phi0)))
+	    + ((((15 / 8) * (n * n)) + ((15 / 8) * (n * n * n))) * (sin(2 * (phi - phi0))) * (cos(2 * (phi + phi0))))
+	    - (((35 / 24) * (n * n * n)) * (sin(3 * (phi - phi0))) * (cos(3 * (phi + phi0)))));
+}
+
+gboolean os_grid_check_lat_lon(double lat, double lon)
+{
+	// TODO - Check exact OS Grid range
+	if(lat < 50.0 || lat > 62 || lon < -7.5 || lon > 2.2 )
+	{
+		return FALSE;
+	}
+	else
+	{
+		return TRUE;
+	}
+}
+
+gboolean coord_system_check_lat_lon (gdouble lat, gdouble lon, gint *fallback_deg_format)
+{
+	// Is the current coordinate system applicable to the provided lat and lon?
+	gboolean valid = FALSE;
+	
+	switch(_degformat)
+	{
+	case UK_OSGB:
+	case UK_NGR:
+	case UK_NGR6:
+		valid = os_grid_check_lat_lon(lat, lon);
+		if(fallback_deg_format != NULL) *fallback_deg_format = DDPDDDDD; 
+		break;
+	default:
+		valid = TRUE;
+		break;
+	}
+	
+	return valid;
+}
+
+gboolean convert_lat_long_to_os_grid(double lat, double lon, int *easting, int *northing)
+{
+	if(!os_grid_check_lat_lon(lat, lon))
+	{
+		return FALSE;
+	}
+	
+	const double deg2rad = (2 * PI / 360);
+	
+	const double phi = lat * deg2rad;          // convert latitude to radians
+	const double lam = lon * deg2rad;          // convert longitude to radians
+	const double a = 6377563.396;              // OSGB semi-major axis
+	const double b = 6356256.91;               // OSGB semi-minor axis
+	const double e0 = 400000;                  // easting of false origin
+	const double n0 = -100000;                 // northing of false origin
+	const double f0 = 0.9996012717;            // OSGB scale factor on central meridian
+	const double e2 = 0.0066705397616;         // OSGB eccentricity squared
+	const double lam0 = -0.034906585039886591; // OSGB false east
+	const double phi0 = 0.85521133347722145;   // OSGB false north
+	const double af0 = a * f0;
+	const double bf0 = b * f0;
+
+	// easting
+	double slat2 = sin(phi) * sin(phi);
+	double nu = af0 / (sqrt(1 - (e2 * (slat2))));
+	double rho = (nu * (1 - e2)) / (1 - (e2 * slat2));
+	double eta2 = (nu / rho) - 1;
+	double p = lam - lam0;
+	double IV = nu * cos(phi);
+	double clat3 = pow(cos(phi), 3);
+	double tlat2 = tan(phi) * tan(phi);
+	double V = (nu / 6) * clat3 * ((nu / rho) - tlat2);
+	double clat5 = pow(cos(phi), 5);
+	double tlat4 = pow(tan(phi), 4);
+	double VI = (nu / 120) * clat5 * ((5 - (18 * tlat2)) + tlat4 + (14 * eta2) - (58 * tlat2 * eta2));
+	double east = e0 + (p * IV) + (pow(p, 3) * V) + (pow(p, 5) * VI);
+		
+	// northing
+	double n = (af0 - bf0) / (af0 + bf0);
+	double M = marc(bf0, n, phi0, phi);
+	double I = M + (n0);
+	double II = (nu / 2) * sin(phi) * cos(phi);
+	double III = ((nu / 24) * sin(phi) * pow(cos(phi), 3)) * (5 - pow(tan(phi), 2) + (9 * eta2));
+	double IIIA = ((nu / 720) * sin(phi) * clat5) * (61 - (58 * tlat2) + tlat4);
+	double north = I + ((p * p) * II) + (pow(p, 4) * III) + (pow(p, 6) * IIIA);
+
+	 // make whole number values
+	 *easting = round(east);   // round to whole number
+	 *northing = round(north); // round to whole number
+
+	 return TRUE;
+}
+
+gboolean convert_os_grid_to_bng(gint easting, gint northing, gchar* bng)
+{
+	gdouble eX = (gdouble)easting / 500000.0;
+	gdouble nX = (gdouble)northing / 500000.0;
+	gdouble tmp = floor(eX) - 5.0 * floor(nX) + 17.0;
+	gchar eing[12];
+	gchar ning[12];
+	
+	nX = 5.0 * (nX - floor(nX));
+	eX = 20.0 - 5.0 * floor(nX) + floor(5.0 * (eX - floor(eX)));
+	if (eX > 7.5) eX = eX + 1;    // I is not used
+	if (tmp > 7.5) tmp = tmp + 1; // I is not used
+	
+	snprintf(eing, 12, "%u", easting);
+	snprintf(ning, 12, "%u", northing);
+	
+	snprintf(eing, (_degformat == UK_NGR ? 5 : 4), "%s", eing+1);
+	snprintf(ning, (_degformat == UK_NGR ? 5 : 4), "%s", ning+1);
+		
+	sprintf(bng, "%c%c%s%s", 
+			(char)(tmp + 65), 
+			(char)(eX + 65),
+			eing, ning
+		);
+ 
+		
+	return TRUE;
+}
+
+gboolean convert_os_xy_to_latlon(const gchar *easting, const gchar *northing, gdouble *d_lat, gdouble *d_lon)
+{
+    gint64 i64_n = g_ascii_strtoll (northing, NULL, 10);
+    gint64 i64_e = g_ascii_strtoll (easting, NULL, 10);
+    
+    const double deg2rad = (2 * PI / 360);
+    
+	const gdouble N =  (gdouble)i64_n;
+	const gdouble E = (gdouble)i64_e;
+
+	const gdouble a = 6377563.396, b = 6356256.910;              // Airy 1830 major & minor semi-axes
+	const gdouble F0 = 0.9996012717;                             // NatGrid scale factor on central meridian
+	const gdouble lat0 = 49*PI/180, lon0 = -2*PI/180;  // NatGrid true origin
+	const gdouble N0 = -100000, E0 = 400000;                     // northing & easting of true origin, metres
+	const gdouble e2 = 1 - (b*b)/(a*a);                          // eccentricity squared
+	const gdouble n = (a-b)/(a+b), n2 = n*n, n3 = n*n*n;
+
+	gdouble lat=lat0, M=0;
+	do {
+		lat = (N-N0-M)/(a*F0) + lat;
+
+		const gdouble Ma = (1 + n + (5/4)*n2 + (5/4)*n3) * (lat-lat0);
+		const gdouble Mb = (3*n + 3*n*n + (21/8)*n3) * sin(lat-lat0) * cos(lat+lat0);
+		const gdouble Mc = ((15/8)*n2 + (15/8)*n3) * sin(2*(lat-lat0)) * cos(2*(lat+lat0));
+		const gdouble Md = (35/24)*n3 * sin(3*(lat-lat0)) * cos(3*(lat+lat0));
+	    M = b * F0 * (Ma - Mb + Mc - Md);                // meridional arc
+
+	} while (N-N0-M >= 0.00001);  // ie until < 0.01mm
+
+	const gdouble cosLat = cos(lat), sinLat = sin(lat);
+	const gdouble nu = a*F0/sqrt(1-e2*sinLat*sinLat);              // transverse radius of curvature
+	const gdouble rho = a*F0*(1-e2)/pow(1-e2*sinLat*sinLat, 1.5);  // meridional radius of curvature
+	const gdouble eta2 = nu/rho-1;
+
+	const gdouble tanLat = tan(lat);
+	const gdouble tan2lat = tanLat*tanLat, tan4lat = tan2lat*tan2lat, tan6lat = tan4lat*tan2lat;
+	const gdouble secLat = 1/cosLat;
+	const gdouble nu3 = nu*nu*nu, nu5 = nu3*nu*nu, nu7 = nu5*nu*nu;
+	const gdouble VII = tanLat/(2*rho*nu);
+	const gdouble VIII = tanLat/(24*rho*nu3)*(5+3*tan2lat+eta2-9*tan2lat*eta2);
+	const gdouble IX = tanLat/(720*rho*nu5)*(61+90*tan2lat+45*tan4lat);
+	const gdouble X = secLat/nu;
+	const gdouble XI = secLat/(6*nu3)*(nu/rho+2*tan2lat);
+	const gdouble XII = secLat/(120*nu5)*(5+28*tan2lat+24*tan4lat);
+	const gdouble XIIA = secLat/(5040*nu7)*(61+662*tan2lat+1320*tan4lat+720*tan6lat);
+
+	const gdouble dE = (E-E0), dE2 = dE*dE, dE3 = dE2*dE, dE4 = dE2*dE2, dE5 = dE3*dE2;
+	const gdouble dE6 = dE4*dE2, dE7 = dE5*dE2;
+	lat = lat - VII*dE2 + VIII*dE4 - IX*dE6;
+	const gdouble lon = lon0 + X*dE - XI*dE3 + XII*dE5 - XIIA*dE7;
+	
+	*d_lon = lon / deg2rad;
+	*d_lat = lat / deg2rad;
+	
+	return TRUE;
+}
+
+gboolean convert_os_ngr_to_latlon(const gchar *text, gdouble *d_lat, gdouble *d_lon)
+{
+	// get numeric values of letter references, mapping A->0, B->1, C->2, etc:
+	gint l1;
+	gint l2;
+
+	gchar s_e[6], s_n[6];
+	gchar easting[7], northing[7];
+	gint64 i64_e = 0;
+	gint64 i64_n = 0;
+	
+	
+	if( ((gchar)text[0])>='a' && ((gchar)text[0]) <= 'z' ) 
+		l1 = text[0] - (gint)'a'; // lower case
+	else if( ((gchar)text[0])>='A' && ((gchar)text[0]) <= 'Z' )
+		l1 = text[0] - (gint)'A'; // upper case
+	else
+		return FALSE; // Not a letter - invalid grid ref
+	
+	if( ((gchar)text[1])>='a' && ((gchar)text[1]) <= 'z' ) 
+		l2 = text[1] - (gint)'a'; // lower case
+	else if( ((gchar)text[1])>='A' && ((gchar)text[1]) <= 'Z' )
+		l2 = text[1] - (gint)'A'; // upper case
+	else
+		return FALSE; // Not a letter - invalid grid ref
+
+	
+	// shuffle down letters after 'I' since 'I' is not used in grid:
+	if (l1 > 7) l1--;
+	if (l2 > 7) l2--;
+
+	// convert grid letters into 100km-square indexes from false origin (grid square SV):
+	gdouble e = ((l1-2)%5)*5 + (l2%5);
+	gdouble n = (19-floor(l1/5)*5) - floor(l2/5);
+
+	// skip grid letters to get numeric part of ref, stripping any spaces:
+	gchar *gridref = (gchar*)(text+2); 
+	
+	// user may have entered a space, so remove any spaces
+	while(gridref[0] == ' ')
+	{
+		gridref = (gchar*)(text+1);
+	}
+
+	
+	// floor the length incase a space has been added
+	const gint len = (gint)floor((gdouble)strlen(gridref)/2.00); // normally this will be 4, often 3
+	if(len>5) return FALSE; 
+	
+	if(len >0)
+	{
+		snprintf(s_e, len+1, "%s", gridref);
+		
+		while( (gchar)((gint)gridref+len) == ' ' ) 
+			gridref = (gchar*)(gridref+1); // Allow for a space
+		
+		snprintf(s_n, len+1, "%s", gridref+len);
+		
+		i64_e = g_ascii_strtoll (s_e, NULL, 10);
+		i64_n = g_ascii_strtoll (s_n, NULL, 10);
+		
+		// Move to most significate values
+		i64_e *= pow(10, 5-len);
+		i64_n *= pow(10, 5-len);
+	}
+	
+	// append numeric part of references to grid index:
+	e = (e*100000) + (gdouble)i64_e;
+	n = (n*100000) + (gdouble)i64_n;
+
+	snprintf(easting, 7, "%06u", (gint)e);
+	snprintf(northing, 7, "%06u", (gint)n);
+	
+	convert_os_xy_to_latlon(easting, northing, d_lat, d_lon);
+	
+	return TRUE;
+}
+
+
+// Attempt to convert any user entered grid reference to a double lat/lon
+// return TRUE on valid
+gboolean parse_coords(const gchar* txt_lat, const gchar* txt_lon, gdouble* lat, gdouble* lon)
+{
+	gboolean valid = FALSE;
+	
+	// UK_NGR starts with two letters, and then all numbers - it may contain spaces - no lon will be entered
+	if( _degformat == UK_NGR || _degformat == UK_NGR6 )
+	{
+		valid = convert_os_ngr_to_latlon(txt_lat, lat, lon);
+
+        if(!valid || *lat < -90. || *lat > 90.) { valid = FALSE; }
+        else   if(*lon < -180. || *lon > 180.)  { valid = FALSE; }
+	}
+	// UK_OSGB contains two 6 digit integers
+	else if( _degformat == UK_OSGB)
+	{
+		valid = convert_os_xy_to_latlon(txt_lat, txt_lon, lat, lon);
+		
+        if(!valid || *lat < -90. || *lat > 90.) { valid = FALSE; }
+        else   if(*lon < -180. || *lon > 180.)  { valid = FALSE; }
+
+	}
+	else if( _degformat == IARU_LOC)
+	{
+		valid = convert_iaru_loc_to_lat_lon(txt_lat, lat, lon);
+
+        if(!valid || *lat < -90. || *lat > 90.) { valid = FALSE; }
+        else   if(*lon < -180. || *lon > 180.)  { valid = FALSE; }
+	}
+	// It must either be invalid, or a lat/lon format
+	else
+	{
+		gchar* error_check;
+		*lat = strdmstod(txt_lat, &error_check);
+		
+        if(txt_lat == error_check || *lat < -90. || *lat > 90.) { valid = FALSE; }
+        else { valid = TRUE; }
+
+        if(valid == TRUE)
+        {
+        	*lon = strdmstod(txt_lon, &error_check);
+        	
+            if(txt_lon == error_check || *lon < -180. || *lon > 180.)  { valid = FALSE; }
+        }
+	}
+	
+	
+	
+	return valid;
+}
+
+gboolean convert_iaru_loc_to_lat_lon(const gchar* txt_lon, gdouble* lat, gdouble* lon)
+{
+	gint u_first = 0;
+	gint u_second = 0;
+	gint u_third = 0;
+	gint u_fourth = 0;
+	gint u_fifth = 0;
+	gint u_sixth = 0;
+	gint u_seventh = 0;
+	gint u_eighth = 0;
+	
+	if(strlen(txt_lon) >= 1)
+	{
+		if( ((gchar)txt_lon[0])>='a' && ((gchar)txt_lon[0]) <= 'z' ) 
+			u_first = txt_lon[0] - (gint)'a'; // lower case
+		else if( ((gchar)txt_lon[0])>='A' && ((gchar)txt_lon[0]) <= 'Z' )
+			u_first = txt_lon[0] - (gint)'A'; // upper case
+	}
+	
+	if(strlen(txt_lon) >= 2)
+	{
+		if( ((gchar)txt_lon[1])>='a' && ((gchar)txt_lon[1]) <= 'z' ) 
+			u_second = txt_lon[1] - (gint)'a'; // lower case
+		else if( ((gchar)txt_lon[1])>='A' && ((gchar)txt_lon[1]) <= 'Z' )
+			u_second = txt_lon[1] - (gint)'A'; // upper case
+	}
+	
+	if(strlen(txt_lon) >= 3)
+		u_third = txt_lon[2] - (gint)'0';
+	
+	if(strlen(txt_lon) >= 4)
+		u_fourth = txt_lon[3] - (gint)'0';
+
+	if(strlen(txt_lon) >= 5)
+	{
+		if( ((gchar)txt_lon[4])>='a' && ((gchar)txt_lon[4]) <= 'z' ) 
+			u_fifth = txt_lon[4] - (gint)'a'; // lower case
+		else if( ((gchar)txt_lon[4])>='A' && ((gchar)txt_lon[4]) <= 'Z' )
+			u_fifth = txt_lon[4] - (gint)'A'; // upper case
+	}
+
+	if(strlen(txt_lon) >= 6)
+	{
+		if( ((gchar)txt_lon[5])>='a' && ((gchar)txt_lon[5]) <= 'z' ) 
+			u_sixth = txt_lon[5] - (gint)'a'; // lower case
+		else if( ((gchar)txt_lon[5])>='A' && ((gchar)txt_lon[5]) <= 'Z' )
+			u_sixth = txt_lon[5] - (gint)'A'; // upper case
+	}
+	
+
+	if(strlen(txt_lon) >= 7)
+		u_seventh= txt_lon[6] - (gint)'0';
+
+	if(strlen(txt_lon) >= 8)
+		u_eighth = txt_lon[7] - (gint)'0';
+	
+	*lat = ((gdouble)u_first * 20.0) + ((gdouble)u_third * 2.0) + ((gdouble)u_fifth * (2.0/24.0)) + ((gdouble)u_seventh * (2.0/240.0)) - 90.0;
+	*lon = ((gdouble)u_second * 10.0) + ((gdouble)u_fourth) + ((gdouble)u_sixth * (1.0/24.0)) + ((gdouble)u_eighth * (1.0/240.0)) - 180.0;
+	
+	return TRUE;
+}
+
+void convert_lat_lon_to_iaru_loc(gdouble d_lat, gdouble d_lon, gchar *loc)
+{
+	const gdouble d_a_lat = (d_lat+90.0);
+	const gdouble d_a_lon = (d_lon+180.0);
+		
+	const gint i_first  = (gint)floor(d_a_lon/20.0);
+	const gint i_second = (gint)floor(d_a_lat/10.0);
+	const gint i_third  = (gint)floor((d_a_lon - (20.0*i_first))/2.0);
+	const gint i_fourth = (gint)floor((d_a_lat - (10.0*i_second)));
+	const gint i_fifth  = (gint)floor((d_a_lon - (20.0*i_first) - (2.0*i_third))/(5.0/60.0));
+	const gint i_sixth  = (gint)floor((d_a_lat - (10.0*i_second) - (i_fourth))/(2.5/60.0));
+	
+	const gint i_seventh  = (gint)floor((d_a_lon - (20.0*i_first) - (2.0*i_third) 
+			- ((2.0/24.0)*i_fifth))/(2.0/240.0)  );
+	const gint i_eighth = (gint)floor((d_a_lat - (10.0*i_second) - (i_fourth) 
+			- ((1.0/24.0)*i_sixth))/(1.0/240.0));
+	
+	
+	sprintf(loc, "%c%c%u%u%c%c%u%u",
+			'A'+i_first,
+			'A'+i_second,
+			i_third,
+			i_fourth,
+			'a' + i_fifth,
+			'a' + i_sixth,
+			i_seventh,
+			i_eighth);
+}
+
+gboolean convert_lat_lon_to_bng(gdouble lat, gdouble lon, gchar* bng)
+{
+	gint easting, northing;
+
+	if( convert_lat_long_to_os_grid(lat, lon, &easting, &northing) )
+	{
+		if( convert_os_grid_to_bng(easting, northing, bng) )
+		{
+			return TRUE;
+		}
+	}
+	
+	return FALSE;
+}
+
+
+void format_lat_lon(gdouble d_lat, gdouble d_lon, gchar* lat, gchar* lon)
+{
+	gint east = 0;
+	gint north = 0;
+
+	switch (_degformat)
+	{
+	case UK_OSGB:
+		
+		if(convert_lat_long_to_os_grid(d_lat, d_lon, &east, &north))
+		{
+			sprintf(lat, "%06d", east);
+			sprintf(lon, "%06d", north);
+		}
+		else
+		{
+			// Failed (possibly out of range), so use defaults
+			lat_format(d_lat, lat);
+			lon_format(d_lon, lon);				
+		}
+		break;
+	case UK_NGR:
+	case UK_NGR6:
+		
+		if(convert_lat_lon_to_bng(d_lat, d_lon, lat))
+		{
+			lon[0] = 0;
+		}
+		else
+		{
+			// Failed (possibly out of range), so use defaults
+			lat_format(d_lat, lat);
+			lat_format(d_lon, lon);				
+		}
+		break;
+		
+	case IARU_LOC:
+		convert_lat_lon_to_iaru_loc(d_lat, d_lon, lat);
+
+		break;
+		
+	default:
+		lat_format(d_lat, lat);
+		lon_format(d_lon, lon);
+
+		break;
+	}
+}
+
+/* Custom version of g_ascii_strtoll, since Gregale does not support
+ * GLIB 2.12. */
+gint64
+g_ascii_strtoll(const gchar *nptr, gchar **endptr, guint base)
+{
+    gchar *minus = g_strstr_len(nptr, -1, "");
+    if(minus)
+        return -g_ascii_strtoull(minus + 1, endptr, base);
+    else
+        return g_ascii_strtoull(nptr, endptr, base);
 }
 
 #if 0

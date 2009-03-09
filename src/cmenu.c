@@ -61,21 +61,42 @@ static void
 cmenu_show_latlon(gint unitx, gint unity)
 {
   gdouble lat, lon;
+  gint tmp_degformat = _degformat;
+  gint fallback_deg_format = _degformat;
   gchar buffer[80], tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN];
+  
   printf("%s()\n", __PRETTY_FUNCTION__);
 
   unit2latlon(unitx, unity, lat, lon);
-  lat_format(lat, tmp1);
-  lon_format(lon, tmp2);
+  
+  // Check that the current coord system supports the select position
+  if(!coord_system_check_lat_lon (lat, lon, &fallback_deg_format))
+  {
+  	_degformat = fallback_deg_format;
+  }
+      
+  format_lat_lon(lat, lon, tmp1, tmp2);
+  
 
-  snprintf(buffer, sizeof(buffer),
-            "%s: %s\n"
-          "%s: %s",
-          _("Latitude"), tmp1,
-          _("Longitude"), tmp2);
-
+  if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+  {
+	  snprintf(buffer, sizeof(buffer),
+	            "%s: %s\n"
+	          "%s: %s",
+	          DEG_FORMAT_ENUM_TEXT[_degformat].long_field_1, tmp1,
+	          DEG_FORMAT_ENUM_TEXT[_degformat].long_field_2, tmp2);
+  }
+  else
+  {
+	  snprintf(buffer, sizeof(buffer),
+  	            "%s: %s",
+  	          DEG_FORMAT_ENUM_TEXT[_degformat].long_field_1, tmp1);
+  }
+  
   MACRO_BANNER_SHOW_INFO(_window, buffer);
 
+  _degformat = tmp_degformat;
+  
   vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
@@ -651,7 +672,7 @@ void cmenu_init()
 
     /* Setup the map context menu. */
     gtk_menu_append(submenu, _cmenu_loc_show_latlon_item
-            = gtk_menu_item_new_with_label(_("Show Lat/Lon")));
+            = gtk_menu_item_new_with_label(_("Show Position")));
     gtk_menu_append(submenu, gtk_separator_menu_item_new());
     gtk_menu_append(submenu, _cmenu_loc_distance_to_item
             = gtk_menu_item_new_with_label(_("Show Distance to")));
@@ -685,11 +706,11 @@ void cmenu_init()
             submenu = gtk_menu_new());
 
     gtk_menu_append(submenu, _cmenu_way_show_latlon_item
-            = gtk_menu_item_new_with_label(_("Show Lat/Lon")));
+            = gtk_menu_item_new_with_label(_("Show Position")));
     gtk_menu_append(submenu, _cmenu_way_show_desc_item
             = gtk_menu_item_new_with_label(_("Show Description")));
     gtk_menu_append(submenu, _cmenu_way_clip_latlon_item
-            = gtk_menu_item_new_with_label(_("Copy Lat/Lon")));
+            = gtk_menu_item_new_with_label(_("Copy Position")));
     gtk_menu_append(submenu, _cmenu_way_clip_desc_item
             = gtk_menu_item_new_with_label(_("Copy Description")));
     gtk_menu_append(submenu, gtk_separator_menu_item_new());

@@ -420,8 +420,10 @@ select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick)
         gdouble lat, lon;
         lat = sqlite3_column_double(_stmt_select_poi, 0);
         lon = sqlite3_column_double(_stmt_select_poi, 1);
-        lat_format(lat, tmp1);
-        lon_format(lon, tmp2);
+        
+        format_lat_lon(lat, lon, tmp1, tmp2);
+        //lat_format(lat, tmp1);
+        //lon_format(lon, tmp2);
         gtk_list_store_append(store, &iter);
         gtk_list_store_set(store, &iter,
                 POI_POIID, sqlite3_column_int(_stmt_select_poi, 2),
@@ -1141,7 +1143,33 @@ poi_add_dialog(GtkWidget *parent, gint unitx, gint unity)
     static GtkTextIter begin, end;
     static DeletePOI dpoi = {NULL, NULL, 0};
     static PoiCategoryEditInfo pcedit;
+    static int last_deg_format = 0;
+    
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    unit2latlon(unitx, unity, poi.lat, poi.lon);
+
+    
+    gint fallback_deg_format = _degformat;
+    
+    if(!coord_system_check_lat_lon (poi.lat, poi.lon, &fallback_deg_format))
+    {
+    	last_deg_format = _degformat;
+    	_degformat = fallback_deg_format;
+    	
+    	if(dialog != NULL) gtk_widget_destroy(dialog);
+    	dialog = NULL;
+    }
+    else if(_degformat != last_deg_format)
+    {
+    	last_deg_format = _degformat;
+    	
+		if(dialog != NULL) gtk_widget_destroy(dialog);
+    	dialog = NULL;
+    }
+    
+    
+
 
     if(dialog == NULL)
     {
@@ -1156,21 +1184,25 @@ poi_add_dialog(GtkWidget *parent, gint unitx, gint unity)
                 table = gtk_table_new(6, 4, FALSE), TRUE, TRUE, 0);
 
         gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Lat")),
+                label = gtk_label_new(DEG_FORMAT_ENUM_TEXT[_degformat].short_field_1),
                 0, 1, 0, 1, GTK_FILL, 0, 2, 0);
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
                 txt_lat = gtk_entry_new(),
-                1, 2, 0, 1, GTK_FILL, 0, 2, 0);
+                1, (DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use ? 2 : 4), 
+                0, 1, GTK_FILL, 0, 2, 0);
 
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Lon")),
-                2, 3, 0, 1, GTK_FILL, 0, 2, 0);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                txt_lon = gtk_entry_new(),
-                3, 4, 0, 1, GTK_FILL, 0, 2, 0);
-
+        if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use )
+        {
+	        gtk_table_attach(GTK_TABLE(table),
+	                label = gtk_label_new(DEG_FORMAT_ENUM_TEXT[_degformat].short_field_2),
+	                2, 3, 0, 1, GTK_FILL, 0, 2, 0);
+	        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+	        gtk_table_attach(GTK_TABLE(table),
+	                txt_lon = gtk_entry_new(),
+	                3, 4, 0, 1, GTK_FILL, 0, 2, 0);
+        }
+        
         gtk_table_attach(GTK_TABLE(table),
                 label = gtk_label_new(_("Label")),
                 0, 1, 1, 2, GTK_FILL, 0, 2, 0);
@@ -1226,17 +1258,19 @@ poi_add_dialog(GtkWidget *parent, gint unitx, gint unity)
     poi.cat_id = -1;
     poi.clabel = NULL;
     poi.desc = g_strdup("");
-    unit2latlon(unitx, unity, poi.lat, poi.lon);
 
     /* Lat/Lon */
     {
         gchar tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN];
 
-        lat_format(poi.lat, tmp1);
-        lon_format(poi.lon, tmp2);
+        format_lat_lon(poi.lat, poi.lon, tmp1, tmp2);
+        //lat_format(poi.lat, tmp1);
+        //lon_format(poi.lon, tmp2);
 
         gtk_entry_set_text(GTK_ENTRY(txt_lat), tmp1);
-        gtk_entry_set_text(GTK_ENTRY(txt_lon), tmp2);
+        
+        if(txt_lon != NULL)
+        	gtk_entry_set_text(GTK_ENTRY(txt_lon), tmp2);
     }
 
     /* Label */
@@ -1285,23 +1319,19 @@ poi_add_dialog(GtkWidget *parent, gint unitx, gint unity)
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
         GtkTreeIter iter;
-        const gchar *text;
-        gchar *error_check;
+        const gchar *lat, *lon = NULL;
 
-        text = gtk_entry_get_text(GTK_ENTRY(txt_lat));
-        poi.lat = strdmstod(text, &error_check);
-        if(text == error_check || poi.lat < -90. || poi.lat > 90.) {
-            popup_error(dialog, _("Invalid Latitude"));
-            continue;
+        lat = gtk_entry_get_text(GTK_ENTRY(txt_lat));
+        
+        if(txt_lon != NULL)
+        	lon = gtk_entry_get_text(GTK_ENTRY(txt_lon));
+        
+        if(!parse_coords(lat, lon, &poi.lat, &poi.lon))
+        {
+        	popup_error(dialog, _("Invalid Coordinate specified"));
+        	continue;
         }
-
-        text = gtk_entry_get_text(GTK_ENTRY(txt_lon));
-        poi.lon = strdmstod(text, &error_check);
-        if(text == error_check || poi.lon < -180. || poi.lon > 180.) {
-            popup_error(dialog, _("Invalid Longitude"));
-            continue;
-        }
-
+        
         if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_label))))
         {
             if(poi.label)
@@ -1362,6 +1392,8 @@ poi_add_dialog(GtkWidget *parent, gint unitx, gint unity)
 
     gtk_widget_hide(dialog);
 
+    _degformat = last_deg_format;
+    	
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return !dpoi.deleted;
 }
@@ -1386,7 +1418,27 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi)
     static GtkTextIter begin, end;
     static DeletePOI dpoi = {NULL, NULL, 0};
     static PoiCategoryEditInfo pcedit;
+    static int last_deg_format = 0;
+    
     printf("%s()\n", __PRETTY_FUNCTION__);
+    
+    gint fallback_deg_format = _degformat;
+    
+    if(!coord_system_check_lat_lon (poi->lat, poi->lon, &fallback_deg_format))
+    {
+    	last_deg_format = _degformat;
+    	_degformat = fallback_deg_format;
+    	
+    	if(dialog != NULL) gtk_widget_destroy(dialog);
+    	dialog = NULL;
+    }
+    else if(_degformat != last_deg_format)
+    {
+    	last_deg_format = _degformat;
+    	
+		if(dialog != NULL) gtk_widget_destroy(dialog);
+    	dialog = NULL;
+    }
 
     if(dialog == NULL)
     {
@@ -1406,21 +1458,24 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi)
                 table = gtk_table_new(6, 4, FALSE), TRUE, TRUE, 0);
 
         gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Lat")),
+                label = gtk_label_new(DEG_FORMAT_ENUM_TEXT[_degformat].short_field_1),
                 0, 1, 0, 1, GTK_FILL, 0, 2, 0);
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
         gtk_table_attach(GTK_TABLE(table),
                 txt_lat = gtk_entry_new(),
                 1, 2, 0, 1, GTK_FILL, 0, 2, 0);
 
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Lon")),
-                2, 3, 0, 1, GTK_FILL, 0, 2, 0);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                txt_lon = gtk_entry_new(),
-                3, 4, 0, 1, GTK_FILL, 0, 2, 0);
-
+        if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+        {
+	        gtk_table_attach(GTK_TABLE(table),
+	                label = gtk_label_new(DEG_FORMAT_ENUM_TEXT[_degformat].short_field_2),
+	                2, 3, 0, 1, GTK_FILL, 0, 2, 0);
+	        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
+	        gtk_table_attach(GTK_TABLE(table),
+	                txt_lon = gtk_entry_new(),
+	                3, 4, 0, 1, GTK_FILL, 0, 2, 0);
+        }
+        
         gtk_table_attach(GTK_TABLE(table),
                 label = gtk_label_new(_("Label")),
                 0, 1, 1, 2, GTK_FILL, 0, 2, 0);
@@ -1484,11 +1539,16 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi)
     {
         gchar tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN];
 
-        lat_format(poi->lat, tmp1);
-        lon_format(poi->lon, tmp2);
+        format_lat_lon(poi->lat, poi->lon, tmp1, tmp2);
+        //lat_format(poi->lat, tmp1);
+        //lon_format(poi->lon, tmp2);
 
         gtk_entry_set_text(GTK_ENTRY(txt_lat), tmp1);
-        gtk_entry_set_text(GTK_ENTRY(txt_lon), tmp2);
+        
+        if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+        	gtk_entry_set_text(GTK_ENTRY(txt_lon), tmp2);
+        else
+        	gtk_entry_set_text(GTK_ENTRY(txt_lon), g_strdup(""));
     }
 
     /* label */
@@ -1513,23 +1573,18 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi)
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
-        const gchar *text;
-        gchar *error_check;
+        const gchar *text_lat, *text_lon;
 
-        text = gtk_entry_get_text(GTK_ENTRY(txt_lat));
-        poi->lat = strdmstod(text, &error_check);
-        if(text == error_check || poi->lat < -90. || poi->lat > 90.) {
-            popup_error(dialog, _("Invalid Latitude"));
-            continue;
+        text_lat = gtk_entry_get_text(GTK_ENTRY(txt_lat));
+        text_lon = gtk_entry_get_text(GTK_ENTRY(txt_lon));
+        
+        if(!parse_coords(text_lat, text_lon, &poi->lat, &poi->lon))
+        {
+        	popup_error(dialog, _("Invalid coordinate specified"));
+        	continue;
         }
 
-        text = gtk_entry_get_text(GTK_ENTRY(txt_lon));
-        poi->lon = strdmstod(text, &error_check);
-        if(text == error_check || poi->lon < -180. || poi->lon > 180.) {
-            popup_error(dialog, _("Invalid Longitude"));
-            continue;
-        }
-
+        
         if(strlen(gtk_entry_get_text(GTK_ENTRY(txt_label))))
         {
             if(poi->label)
@@ -1593,6 +1648,8 @@ poi_view_dialog(GtkWidget *parent, PoiInfo *poi)
 
     gtk_widget_hide(dialog); /* Destroying causes a crash.... ??? */
 
+    _degformat = last_deg_format;
+    
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return !dpoi.deleted;
 }
@@ -2307,8 +2364,9 @@ poi_list_dialog(GtkWidget *parent, gint unitx, gint unity, GList *poi_list)
                 poi_info->lat, poi_info->lon,
                 poi_info->label, poi_info->desc);
 
-        lat_format(poi_info->lat, tmp1);
-        lon_format(poi_info->lon, tmp2);
+        format_lat_lon(poi_info->lat, poi_info->lon, tmp1, tmp2);
+        //lat_format(poi_info->lat, tmp1);
+        //lon_format(poi_info->lon, tmp2);
 
         gtk_list_store_append(store, &iter);
         gtk_list_store_set(store, &iter,
@@ -3261,3 +3319,42 @@ poi_destroy()
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
+
+#ifdef INCLUDE_APRS
+extern AprsDataRow *n_first;               // pointer to first element in name sorted station list
+
+
+/////////////////////
+
+/**
+ * Render all the APRS data.
+ */
+void
+map_render_aprs()
+{
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if(_poi_zoom > _zoom)
+    {
+
+        AprsDataRow *p_station = n_first;
+
+        while ( (p_station) != NULL) 
+        {
+            if( p_station->coord_lat != 0.0f 
+                || p_station->coord_lon != 0.0f  ) 
+            {
+            		plot_aprs_station( p_station, FALSE);
+            } // If valid data
+
+            (p_station) = (p_station)->n_next;  // Next element in list
+        } // End of while loop
+
+
+    } // check for zoom level
+
+    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+#endif // INCLUDE_APRS
+

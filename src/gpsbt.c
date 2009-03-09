@@ -94,32 +94,6 @@ THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED WAR
 #define DEFAULT_TIMEOUT (1000*60) /* 60 second timeout (in ms) */
 #endif
 
-/* BT dbus service location */
-#define BASE_PATH                "/org/bluez"
-#define BASE_INTERFACE           "org.bluez"
-#define ADAPTER_PATH             BASE_PATH
-#define ADAPTER_INTERFACE        BASE_INTERFACE ".Adapter"
-#define MANAGER_PATH             BASE_PATH
-#define MANAGER_INTERFACE        BASE_INTERFACE ".Manager"
-#define ERROR_INTERFACE          BASE_INTERFACE ".Error"
-#define SECURITY_INTERFACE       BASE_INTERFACE ".Security"
-#define RFCOMM_INTERFACE         BASE_INTERFACE ".RFCOMM"
-#define BLUEZ_DBUS               BASE_INTERFACE
-
-#define LIST_ADAPTERS            "ListAdapters"
-#define LIST_BONDINGS            "ListBondings"
-#define CREATE_BONDING           "CreateBonding"
-#define GET_REMOTE_NAME          "GetRemoteName"
-#define GET_REMOTE_SERVICE_CLASSES "GetRemoteServiceClasses"
-
-#define BTCOND_PATH              "/com/nokia/btcond/request"
-#define BTCOND_BASE              "com.nokia.btcond"
-#define BTCOND_INTERFACE         BTCOND_BASE ".request"
-#define BTCOND_REQUEST           BTCOND_INTERFACE
-#define BTCOND_CONNECT           "rfcomm_connect"
-#define BTCOND_DISCONNECT        "rfcomm_disconnect"
-#define BTCOND_DBUS              BTCOND_BASE
-
 #define GPS_SERVICE_CLASS_STR "positioning"
 
 typedef struct {

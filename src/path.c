@@ -1496,10 +1496,34 @@ route_add_way_dialog(gint unitx, gint unity)
     static GtkWidget *dialog = NULL;
     static GtkWidget *table = NULL;
     static GtkWidget *label = NULL;
+    static GtkWidget *label_lat_lon = NULL;
     static GtkWidget *txt_scroll = NULL;
     static GtkWidget *txt_desc = NULL;
+    static int last_deg_format = 0;
+    
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    unit2latlon(unitx, unity, lat, lon);
+    
+    gint fallback_deg_format = _degformat;
+    
+    if(!coord_system_check_lat_lon (lat, lon, &fallback_deg_format))
+    {
+    	last_deg_format = _degformat;
+    	_degformat = fallback_deg_format;
+    	
+    	if(dialog != NULL) gtk_widget_destroy(dialog);
+    	dialog = NULL;
+    }
+    else if(_degformat != last_deg_format)
+    {
+    	last_deg_format = _degformat;
+    	
+		if(dialog != NULL) gtk_widget_destroy(dialog);
+    	dialog = NULL;
+    }
+    
+    
     if(dialog == NULL)
     {
         dialog = gtk_dialog_new_with_buttons(_("Add Waypoint"),
@@ -1511,20 +1535,27 @@ route_add_way_dialog(gint unitx, gint unity)
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                 table = gtk_table_new(2, 2, FALSE), TRUE, TRUE, 0);
 
+        
+        
+        if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+        	p_latlon = g_strdup_printf("%s, %s",
+        			DEG_FORMAT_ENUM_TEXT[_degformat].short_field_1,
+        			DEG_FORMAT_ENUM_TEXT[_degformat].short_field_2);
+        else
+        	p_latlon = g_strdup_printf("%s", DEG_FORMAT_ENUM_TEXT[_degformat].short_field_1);
+        
         gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Lat, Lon:")),
+                label = gtk_label_new(p_latlon),
                 0, 1, 0, 1, GTK_FILL, 0, 2, 4);
         gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
 
-        unit2latlon(unitx, unity, lat, lon);
-        lat_format(lat, tmp1);
-        lon_format(lon, tmp2);
-        p_latlon = g_strdup_printf("%s, %s", tmp1, tmp2);
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(p_latlon),
-                1, 2, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
         g_free(p_latlon);
+        
+        gtk_table_attach(GTK_TABLE(table),
+                label_lat_lon = gtk_label_new(""),
+                1, 2, 0, 1, GTK_FILL, 0, 2, 4);
+        gtk_misc_set_alignment(GTK_MISC(label_lat_lon), 0.0f, 0.5f);
+        
 
         gtk_table_attach(GTK_TABLE(table),
                 label = gtk_label_new(_("Description")),
@@ -1548,6 +1579,17 @@ route_add_way_dialog(gint unitx, gint unity)
         gtk_widget_set_size_request(GTK_WIDGET(txt_scroll), 400, 60);
     }
 
+    format_lat_lon(lat, lon, tmp1, tmp2);
+    
+    if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
+    	p_latlon = g_strdup_printf("%s, %s", tmp1, tmp2);
+    else
+    	p_latlon = g_strdup_printf("%s", tmp1);
+    
+    
+    gtk_label_set_text(GTK_LABEL(label_lat_lon), p_latlon);
+    g_free(p_latlon);
+    
     gtk_text_buffer_set_text(
             gtk_text_view_get_buffer(GTK_TEXT_VIEW(txt_desc)), "", 0);
 
@@ -1620,6 +1662,9 @@ route_add_way_dialog(gint unitx, gint unity)
         break;
     }
     gtk_widget_hide(dialog);
+    
+    _degformat = last_deg_format;
+    
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 

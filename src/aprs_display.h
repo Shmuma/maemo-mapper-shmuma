@@ -1,10 +1,7 @@
+
 /*
- * Copyright (C) 2006, 2007 John Costigan.
- *
- * POI and GPS-Info code originally written by Cezary Jackiewicz.
- *
- * Default map data provided by http://www.openstreetmap.org/
- *
+ * Created by Rob Williams - 10 Aug 2008
+ * 
  * This file is part of Maemo Mapper.
  *
  * Maemo Mapper is free software: you can redistribute it and/or modify
@@ -19,20 +16,26 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Maemo Mapper.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 
-#ifndef MAEMO_MAPPER_SETTINGS_H
-#define MAEMO_MAPPER_SETTINGS_H
 
-RepoData* settings_parse_repo(gchar *str);
-
-void settings_init(void);
-void settings_save(void);
-
-gboolean settings_dialog(void);
+#ifdef HAVE_CONFIG_H
+#    include "config.h"
+#endif
 
 #ifdef INCLUDE_APRS
-void aprs_settings_dialog(gboolean *aprs_inet_config_changed, gboolean *aprs_tty_config_changed);
-#endif // INCLUDE_APRS
 
-#endif /* ifndef MAEMO_MAPPER_SETTINGS_H */
+#ifndef MAEMO_MAPPER_APRS_DISPLAY_H
+#define MAEMO_MAPPER_APRS_DISPLAY_H
+
+
+#include "types.h"
+
+void ShowAprsStationPopup(AprsDataRow *p_station);
+void list_stations();
+void list_messages();
+
+#endif
+
+#endif //INCLUDE_APRS
