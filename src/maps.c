@@ -3313,7 +3313,7 @@ mapman_dialog()
             _center.unitx - pixel2unit(MAX(_view_width_pixels,
                     _view_height_pixels) / 2),
             _center.unity - pixel2unit(MAX(_view_width_pixels,
-                    _view_height_pixels) / 2), top_left_lat, top_left_lon);
+                    _view_height_pixels) / 2), &top_left_lat, &top_left_lon, _curr_repo->units);
     
     BOUND(top_left_lat, -90.f, 90.f);
     BOUND(top_left_lon, -180.f, 180.f);
@@ -3323,7 +3323,7 @@ mapman_dialog()
             _center.unitx + pixel2unit(MAX(_view_width_pixels,
                     _view_height_pixels) / 2),
             _center.unity + pixel2unit(MAX(_view_width_pixels,
-                    _view_height_pixels) / 2), bottom_right_lat, bottom_right_lon);
+                    _view_height_pixels) / 2), &bottom_right_lat, &bottom_right_lon, _curr_repo->units);
     BOUND(bottom_right_lat, -90.f, 90.f);
     BOUND(bottom_right_lon, -180.f, 180.f);
     

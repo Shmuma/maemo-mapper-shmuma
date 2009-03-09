@@ -179,11 +179,6 @@ msgstr "Авто-загрузка"
 msgid "Avoid Highways"
 msgstr "Избегать магистрали"
 
-<<<<<<< HEAD:po/ru_RU.po
-#: ../src/poi.c:2230
-msgid "Bear."
-msgstr "Медвед."
-=======
 #: ../src/settings.c:3310
 msgid "Beacon Comment"
 msgstr ""
@@ -191,7 +186,6 @@ msgstr ""
 #: ../src/settings.c:3281
 msgid "Beacon interval"
 msgstr ""
->>>>>>> master:po/ru_RU.po
 
 #: ../src/poi.c:2287
 msgid "Bear."
@@ -334,16 +328,14 @@ msgstr "Копировать"
 msgid "Copy Description"
 msgstr "Копировать описание"
 
-<<<<<<< HEAD:po/ru_RU.po
 #: ../src/cmenu.c:677
 msgid "Copy Lat/Lon"
 msgstr "Копировать коорд."
-=======
+
 #: ../src/cmenu.c:713
 #, fuzzy
 msgid "Copy Position"
 msgstr "Показывать положение"
->>>>>>> master:po/ru_RU.po
 
 #: ../src/menu.c:1745
 msgid "Counter"
@@ -722,12 +714,7 @@ msgid ""
 "operation is in progress."
 msgstr ""
 
-<<<<<<< HEAD:po/ru_RU.po
-
-#: ../src/menu.c:1653 ../src/poi.c:2259
-=======
 #: ../src/menu.c:1779 ../src/poi.c:2316
->>>>>>> master:po/ru_RU.po
 msgid "Go to"
 msgstr "Перейти к"
 
@@ -798,8 +785,6 @@ msgstr "Вставить метку..."
 #: ../src/main.c:311
 msgid "Insert Track Break"
 msgstr "Вставить разрыв маршрута"
-<<<<<<< HEAD:po/ru_RU.po
-=======
 
 #: ../src/settings.c:3235
 msgid "Internet"
@@ -808,7 +793,6 @@ msgstr ""
 #: ../src/settings.c:3275
 msgid "Internet 2"
 msgstr ""
->>>>>>> master:po/ru_RU.po
 
 #: ../src/maps.c:3688
 #, fuzzy
@@ -868,13 +852,10 @@ msgstr "Ярлык"
 #: ../src/poi.c:196
 msgid "Landmark"
 msgstr "Точка"
-<<<<<<< HEAD:po/ru_RU.po
 
 #: ../src/display.c:2507 ../src/poi.c:1159 ../src/poi.c:1409
 msgid "Lat"
 msgstr "Шир."
-=======
->>>>>>> master:po/ru_RU.po
 
 #: ../src/menu.c:269
 msgid "Lat, Lon:"
@@ -1108,13 +1089,8 @@ msgid ""
 "button."
 msgstr ""
 "OpenStreetMap.org предоставляет открытые, свободные для использования карты. "
-<<<<<<< HEAD:po/ru_RU.po
-"Вы также можете загрузить доступный список репозиториев из интернета с помощью "
-"кнопки \"Загрузить...\"."
-=======
 "Вы также можете загрузить доступный список репозиториев из интернета с "
 "помощью кнопки \"Загрузить...\"."
->>>>>>> master:po/ru_RU.po
 
 #: ../src/path.c:1277 ../src/poi.c:2654 ../src/poi.c:2975
 msgid "Origin"
@@ -1158,13 +1134,8 @@ msgid ""
 "POIs were added to the POI database.  The following screen will allow you to "
 "modify or delete any of the new POIs."
 msgstr ""
-<<<<<<< HEAD:po/ru_RU.po
-"Метки были добавлены в базу данных. Следующий экран позволит "
-"вам изменять или удалять любой из новых объектов."
-=======
 "Метки были добавлены в базу данных. Следующий экран позволит вам изменять "
 "или удалять любой из новых объектов."
->>>>>>> master:po/ru_RU.po
 
 #: ../src/display.c:499
 msgid "PPS"
@@ -1879,17 +1850,8 @@ msgstr "секунд"
 msgid "up to about"
 msgstr ""
 
-#~ msgid "Copy Lat/Lon"
-#~ msgstr "Копировать коорд."
-
-#~ msgid "Invalid Bottom-Right Longitude"
-#~ msgstr "Неверная нижняя-правая долгота"
-
 #~ msgid "Invalid Top-Left Longitude"
 #~ msgstr "Неверная верхняя-левая долгота"
-
-#~ msgid "Lat"
-#~ msgstr "Шир."
 
 #~ msgid "Lon"
 #~ msgstr "Долг."

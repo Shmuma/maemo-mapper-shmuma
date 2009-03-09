@@ -999,7 +999,7 @@ panto_station(GtkWidget *widget, AprsStationSelectInfo *aprs_station_selected)
 	    		Point unit;
 	
 	        	
-	            latlon2unit(d_lat, d_lon, unit.unitx, unit.unity);
+                        latlon2unit(d_lat, d_lon, &unit.unitx, &unit.unity, _curr_repo->units);
 	
 	            if(_center_mode > 0)
 	                gtk_check_menu_item_set_active(

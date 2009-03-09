@@ -271,7 +271,7 @@ void plot_aprs_station(AprsDataRow *p_station, gboolean single )
     lat1 = convert_lat_l2d(p_station->coord_lat);
     lon1 = convert_lon_l2d(p_station->coord_lon);
 
-    latlon2unit(lat1, lon1, unitx, unity);
+    latlon2unit(lat1, lon1, &unitx, &unity, _curr_repo->units);
     unit2buf(unitx, unity, poix, poiy);
 
     // Ignore this station if it's position is not on the screen
