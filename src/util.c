@@ -962,6 +962,18 @@ void format_lat_lon(gdouble d_lat, gdouble d_lon, gchar* lat, gchar* lon)
 	}
 }
 
+/* Custom version of g_ascii_strtoll, since Gregale does not support
+ * GLIB 2.12. */
+gint64
+g_ascii_strtoll(const gchar *nptr, gchar **endptr, guint base)
+{
+    gchar *minus = g_strstr_len(nptr, "-", -1);
+    if(minus)
+        return -g_ascii_strtoull(minus + 1, endptr, base);
+    else
+        return g_ascii_strtoull(nptr, endptr, base);
+}
+
 #if 0
 struct t_case {
     gchar *fmt;
