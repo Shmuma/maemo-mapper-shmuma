@@ -2611,6 +2611,13 @@ settings_init()
             repo_set_curr(curr_repo);
     }
 
+    if(_repo_list == NULL)
+    {
+        RepoData *repo = create_default_repo();
+        _repo_list = g_list_append(_repo_list, repo);
+        repo_set_curr(repo);
+    }
+
     /* Get last Zoom Level.  Default is 16. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ZOOM, NULL);
     if(value)
