@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.0.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-03-08 19:22-0700\n"
+"POT-Creation-Date: 2009-03-09 22:04-0700\n"
 "PO-Revision-Date: 2006-07-04 09:56+0200\n"
 "Last-Translator: Mischa Molhoek <mischamolhoek@gmail.com>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
@@ -23,11 +23,11 @@ msgstr ""
 msgid "# POIs"
 msgstr ""
 
-#: ../src/menu.c:1889 ../src/settings.c:3217
+#: ../src/menu.c:1889 ../src/settings.c:3224
 msgid "APRS"
 msgstr ""
 
-#: ../src/settings.c:3360
+#: ../src/settings.c:3367
 #, fuzzy
 msgid "APRS Settings"
 msgstr "Instellingen..."
@@ -182,11 +182,11 @@ msgstr "Automatisch-Centreren"
 msgid "Avoid Highways"
 msgstr ""
 
-#: ../src/settings.c:3310
+#: ../src/settings.c:3317
 msgid "Beacon Comment"
 msgstr ""
 
-#: ../src/settings.c:3281
+#: ../src/settings.c:3288
 msgid "Beacon interval"
 msgstr ""
 
@@ -195,7 +195,7 @@ msgstr ""
 msgid "Bear."
 msgstr "Opschonen"
 
-#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3108
+#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3115
 msgid "Bluetooth"
 msgstr ""
 
@@ -618,7 +618,7 @@ msgstr ""
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "initialiseren GConf mislukt.  Programma wordt afgesloten."
 
-#: ../src/settings.c:378 ../src/settings.c:2940
+#: ../src/settings.c:378 ../src/settings.c:2947
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "initialiseren GConf mislukt.  Instellingen niet opgeslagen."
 
@@ -654,7 +654,7 @@ msgstr ""
 msgid "File"
 msgstr ""
 
-#: ../src/settings.c:1534 ../src/settings.c:3139
+#: ../src/settings.c:1534 ../src/settings.c:3146
 msgid "File Path"
 msgstr ""
 
@@ -823,11 +823,11 @@ msgstr "Insert Breakpoint"
 msgid "Insert Track Break"
 msgstr "Insert Breakpoint"
 
-#: ../src/settings.c:3235
+#: ../src/settings.c:3242
 msgid "Internet"
 msgstr ""
 
-#: ../src/settings.c:3275
+#: ../src/settings.c:3282
 msgid "Internet 2"
 msgstr ""
 
@@ -1118,7 +1118,7 @@ msgstr "Geen"
 msgid "North"
 msgstr "URI Formaat"
 
-#: ../src/settings.c:3163
+#: ../src/settings.c:3170
 msgid "Only KISS TNC's are supported (9600 8N1)"
 msgstr ""
 
@@ -1459,7 +1459,7 @@ msgstr "Opslaan..."
 msgid "Scale"
 msgstr ""
 
-#: ../src/settings.c:1523 ../src/settings.c:3127
+#: ../src/settings.c:1523 ../src/settings.c:3134
 #, fuzzy
 msgid "Scan..."
 msgstr "Opslaan..."
@@ -1606,7 +1606,7 @@ msgstr "Snelheid"
 msgid "Speed Limit"
 msgstr "Snelheid"
 
-#: ../src/settings.c:3057
+#: ../src/settings.c:3064
 #, fuzzy
 msgid "Station"
 msgstr "Instellingen..."
@@ -1619,11 +1619,11 @@ msgstr ""
 msgid "Successfully compacted database."
 msgstr ""
 
-#: ../src/settings.c:3102
+#: ../src/settings.c:3109
 msgid "TNC 1"
 msgstr ""
 
-#: ../src/settings.c:3194
+#: ../src/settings.c:3201
 msgid "TNC 2"
 msgstr ""
 
@@ -1937,7 +1937,7 @@ msgstr ""
 msgid "none"
 msgstr "Geen"
 
-#: ../src/settings.c:3303
+#: ../src/settings.c:3310
 msgid "seconds"
 msgstr ""
 

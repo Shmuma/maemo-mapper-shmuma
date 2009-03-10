@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-03-08 19:22-0700\n"
+"POT-Creation-Date: 2009-03-09 22:04-0700\n"
 "PO-Revision-Date: 2008-10-12 22:36+0200\n"
 "Last-Translator: Marko Vertainen <marko.vertainen@iki.fi>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
@@ -23,11 +23,11 @@ msgstr ""
 msgid "# POIs"
 msgstr "# POI:t"
 
-#: ../src/menu.c:1889 ../src/settings.c:3217
+#: ../src/menu.c:1889 ../src/settings.c:3224
 msgid "APRS"
 msgstr ""
 
-#: ../src/settings.c:3360
+#: ../src/settings.c:3367
 #, fuzzy
 msgid "APRS Settings"
 msgstr "Asetukset"
@@ -181,11 +181,11 @@ msgstr "Autom. nouto"
 msgid "Avoid Highways"
 msgstr "Vältä valtateitä"
 
-#: ../src/settings.c:3310
+#: ../src/settings.c:3317
 msgid "Beacon Comment"
 msgstr ""
 
-#: ../src/settings.c:3281
+#: ../src/settings.c:3288
 msgid "Beacon interval"
 msgstr ""
 
@@ -193,7 +193,7 @@ msgstr ""
 msgid "Bear."
 msgstr "Suunt."
 
-#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3108
+#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3115
 msgid "Bluetooth"
 msgstr "Bluetooth"
 
@@ -587,7 +587,7 @@ msgstr "Yhteyden muodostus GPX-reittipalvelimeen epäonnistui"
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "GConf alustus epäonnistui.  Lopetetaan."
 
-#: ../src/settings.c:378 ../src/settings.c:2940
+#: ../src/settings.c:378 ../src/settings.c:2947
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "GConf alustus epäonnistui.  Asetuksia ei tallennettu."
 
@@ -627,7 +627,7 @@ msgstr ""
 msgid "File"
 msgstr "Tiedosto"
 
-#: ../src/settings.c:1534 ../src/settings.c:3139
+#: ../src/settings.c:1534 ../src/settings.c:3146
 msgid "File Path"
 msgstr "Tiedostopolku"
 
@@ -801,11 +801,11 @@ msgstr "Lisää merkki..."
 msgid "Insert Track Break"
 msgstr "Lisää katkaisupiste reittijälkeen"
 
-#: ../src/settings.c:3235
+#: ../src/settings.c:3242
 msgid "Internet"
 msgstr ""
 
-#: ../src/settings.c:3275
+#: ../src/settings.c:3282
 msgid "Internet 2"
 msgstr ""
 
@@ -1082,7 +1082,7 @@ msgstr "Ei keskitystä"
 msgid "North"
 msgstr "Pohjoiseen"
 
-#: ../src/settings.c:3163
+#: ../src/settings.c:3170
 msgid "Only KISS TNC's are supported (9600 8N1)"
 msgstr ""
 
@@ -1405,7 +1405,7 @@ msgstr "Tallenna..."
 msgid "Scale"
 msgstr "Asteikko"
 
-#: ../src/settings.c:1523 ../src/settings.c:3127
+#: ../src/settings.c:1523 ../src/settings.c:3134
 msgid "Scan..."
 msgstr "Etsi..."
 
@@ -1538,7 +1538,7 @@ msgstr "Nopeus"
 msgid "Speed Limit"
 msgstr "Nopeusrajoitus"
 
-#: ../src/settings.c:3057
+#: ../src/settings.c:3064
 #, fuzzy
 msgid "Station"
 msgstr "Simulaatio"
@@ -1551,11 +1551,11 @@ msgstr "Huoltoasemat ja autokorjaamot."
 msgid "Successfully compacted database."
 msgstr "Karttavaraston tiivistys onnistui."
 
-#: ../src/settings.c:3102
+#: ../src/settings.c:3109
 msgid "TNC 1"
 msgstr ""
 
-#: ../src/settings.c:3194
+#: ../src/settings.c:3201
 msgid "TNC 2"
 msgstr ""
 
@@ -1856,7 +1856,7 @@ msgstr "nofix"
 msgid "none"
 msgstr "ei lainkaan"
 
-#: ../src/settings.c:3303
+#: ../src/settings.c:3310
 msgid "seconds"
 msgstr ""
 
