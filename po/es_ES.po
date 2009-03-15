@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: es_ES\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-03-09 22:04-0700\n"
+"POT-Creation-Date: 2009-03-14 17:55-0700\n"
 "PO-Revision-Date: 2008-11-10 22:11+0100\n"
 "Last-Translator: Miguel Angel Alvarez <maacruz@gmail.com>\n"
 "Language-Team:  <opensuse-translation-es@opensuse.org>\n"
@@ -28,11 +28,11 @@ msgstr ""
 msgid "# POIs"
 msgstr "nº de puntos de interés"
 
-#: ../src/menu.c:1889 ../src/settings.c:3224
+#: ../src/menu.c:1889 ../src/settings.c:3219
 msgid "APRS"
 msgstr ""
 
-#: ../src/settings.c:3367
+#: ../src/settings.c:3362
 #, fuzzy
 msgid "APRS Settings"
 msgstr "Preferencias"
@@ -187,11 +187,11 @@ msgstr ""
 msgid "Avoid Highways"
 msgstr "Evitar autopistas"
 
-#: ../src/settings.c:3317
+#: ../src/settings.c:3312
 msgid "Beacon Comment"
 msgstr ""
 
-#: ../src/settings.c:3288
+#: ../src/settings.c:3283
 msgid "Beacon interval"
 msgstr ""
 
@@ -199,7 +199,7 @@ msgstr ""
 msgid "Bear."
 msgstr "Llevar"
 
-#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3115
+#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3110
 msgid "Bluetooth"
 msgstr "Bluetooth"
 
@@ -593,7 +593,7 @@ msgstr "Ha fallado la conexión al servidor de direcciones GPX"
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "Ha fallado la inicialización de GConf. Saliendo."
 
-#: ../src/settings.c:378 ../src/settings.c:2947
+#: ../src/settings.c:378 ../src/settings.c:2942
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr ""
 "Ha fallado la inicialización de GConf. No se han grabado las preferencias."
@@ -632,7 +632,7 @@ msgstr ""
 msgid "File"
 msgstr "Archivo"
 
-#: ../src/settings.c:1534 ../src/settings.c:3146
+#: ../src/settings.c:1534 ../src/settings.c:3141
 msgid "File Path"
 msgstr "Ruta del archivo"
 
@@ -805,11 +805,11 @@ msgstr "Insertar marca..."
 msgid "Insert Track Break"
 msgstr "Insertar parada en la traza"
 
-#: ../src/settings.c:3242
+#: ../src/settings.c:3237
 msgid "Internet"
 msgstr ""
 
-#: ../src/settings.c:3282
+#: ../src/settings.c:3277
 msgid "Internet 2"
 msgstr ""
 
@@ -1087,7 +1087,7 @@ msgstr "Ninguno"
 msgid "North"
 msgstr "Norte"
 
-#: ../src/settings.c:3170
+#: ../src/settings.c:3165
 msgid "Only KISS TNC's are supported (9600 8N1)"
 msgstr ""
 
@@ -1411,7 +1411,7 @@ msgstr "Guardar..."
 msgid "Scale"
 msgstr "Escala"
 
-#: ../src/settings.c:1523 ../src/settings.c:3134
+#: ../src/settings.c:1523 ../src/settings.c:3129
 msgid "Scan..."
 msgstr "Buscar..."
 
@@ -1545,7 +1545,7 @@ msgstr "Velocidad"
 msgid "Speed Limit"
 msgstr "Límite de velocidad"
 
-#: ../src/settings.c:3064
+#: ../src/settings.c:3059
 #, fuzzy
 msgid "Station"
 msgstr "Simulación"
@@ -1558,11 +1558,11 @@ msgstr "Estaciones de servicio para repostar gasolina."
 msgid "Successfully compacted database."
 msgstr "Base de datos compactada con éxito."
 
-#: ../src/settings.c:3109
+#: ../src/settings.c:3104
 msgid "TNC 1"
 msgstr ""
 
-#: ../src/settings.c:3201
+#: ../src/settings.c:3196
 msgid "TNC 2"
 msgstr ""
 
@@ -1867,7 +1867,7 @@ msgstr "nofix"
 msgid "none"
 msgstr "ninguno"
 
-#: ../src/settings.c:3310
+#: ../src/settings.c:3305
 msgid "seconds"
 msgstr ""
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-03-09 22:04-0700\n"
+"POT-Creation-Date: 2009-03-14 17:55-0700\n"
 "PO-Revision-Date: 2008-01-16 22:56+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -19,11 +19,11 @@ msgstr ""
 msgid "# POIs"
 msgstr "# PAI:er"
 
-#: ../src/menu.c:1889 ../src/settings.c:3224
+#: ../src/menu.c:1889 ../src/settings.c:3219
 msgid "APRS"
 msgstr ""
 
-#: ../src/settings.c:3367
+#: ../src/settings.c:3362
 #, fuzzy
 msgid "APRS Settings"
 msgstr "Inställningar"
@@ -178,11 +178,11 @@ msgstr ""
 msgid "Avoid Highways"
 msgstr "Undvik motorvägar"
 
-#: ../src/settings.c:3317
+#: ../src/settings.c:3312
 msgid "Beacon Comment"
 msgstr ""
 
-#: ../src/settings.c:3288
+#: ../src/settings.c:3283
 msgid "Beacon interval"
 msgstr ""
 
@@ -190,7 +190,7 @@ msgstr ""
 msgid "Bear."
 msgstr "Rikt."
 
-#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3115
+#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3110
 msgid "Bluetooth"
 msgstr "Bluetooth"
 
@@ -586,7 +586,7 @@ msgstr ""
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "Misslyckades med att initiera GConf.  Avslutar."
 
-#: ../src/settings.c:378 ../src/settings.c:2947
+#: ../src/settings.c:378 ../src/settings.c:2942
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "Misslyckades med att initiera GConf.  Inställningarna sparades inte."
 
@@ -625,7 +625,7 @@ msgstr ""
 msgid "File"
 msgstr "Arkiv"
 
-#: ../src/settings.c:1534 ../src/settings.c:3146
+#: ../src/settings.c:1534 ../src/settings.c:3141
 msgid "File Path"
 msgstr "Filsökväg"
 
@@ -784,11 +784,11 @@ msgstr ""
 msgid "Insert Track Break"
 msgstr ""
 
-#: ../src/settings.c:3242
+#: ../src/settings.c:3237
 msgid "Internet"
 msgstr ""
 
-#: ../src/settings.c:3282
+#: ../src/settings.c:3277
 msgid "Internet 2"
 msgstr ""
 
@@ -1064,7 +1064,7 @@ msgstr "Ingen"
 msgid "North"
 msgstr "Nord"
 
-#: ../src/settings.c:3170
+#: ../src/settings.c:3165
 msgid "Only KISS TNC's are supported (9600 8N1)"
 msgstr ""
 
@@ -1385,7 +1385,7 @@ msgstr "Spara..."
 msgid "Scale"
 msgstr "Skala"
 
-#: ../src/settings.c:1523 ../src/settings.c:3134
+#: ../src/settings.c:1523 ../src/settings.c:3129
 msgid "Scan..."
 msgstr "Sök av..."
 
@@ -1519,7 +1519,7 @@ msgstr "Hastighet"
 msgid "Speed Limit"
 msgstr "Hastighetsgräns"
 
-#: ../src/settings.c:3064
+#: ../src/settings.c:3059
 #, fuzzy
 msgid "Station"
 msgstr "Simulering"
@@ -1532,11 +1532,11 @@ msgstr ""
 msgid "Successfully compacted database."
 msgstr ""
 
-#: ../src/settings.c:3109
+#: ../src/settings.c:3104
 msgid "TNC 1"
 msgstr ""
 
-#: ../src/settings.c:3201
+#: ../src/settings.c:3196
 msgid "TNC 2"
 msgstr ""
 
@@ -1840,7 +1840,7 @@ msgstr ""
 msgid "none"
 msgstr "ingen"
 
-#: ../src/settings.c:3310
+#: ../src/settings.c:3305
 msgid "seconds"
 msgstr ""
 

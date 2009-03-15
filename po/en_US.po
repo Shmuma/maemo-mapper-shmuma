@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-03-09 22:04-0700\n"
+"POT-Creation-Date: 2009-03-14 17:55-0700\n"
 "PO-Revision-Date: 2006-10-28 22:19-0400\n"
 "Last-Translator: John Costigan <gnuite@gmail.com>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
@@ -23,11 +23,11 @@ msgstr ""
 msgid "# POIs"
 msgstr ""
 
-#: ../src/menu.c:1889 ../src/settings.c:3224
+#: ../src/menu.c:1889 ../src/settings.c:3219
 msgid "APRS"
 msgstr ""
 
-#: ../src/settings.c:3367
+#: ../src/settings.c:3362
 msgid "APRS Settings"
 msgstr ""
 
@@ -173,11 +173,11 @@ msgstr ""
 msgid "Avoid Highways"
 msgstr ""
 
-#: ../src/settings.c:3317
+#: ../src/settings.c:3312
 msgid "Beacon Comment"
 msgstr ""
 
-#: ../src/settings.c:3288
+#: ../src/settings.c:3283
 msgid "Beacon interval"
 msgstr ""
 
@@ -185,7 +185,7 @@ msgstr ""
 msgid "Bear."
 msgstr ""
 
-#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3115
+#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3110
 msgid "Bluetooth"
 msgstr ""
 
@@ -573,7 +573,7 @@ msgstr ""
 msgid "Failed to initialize GConf.  Quitting."
 msgstr ""
 
-#: ../src/settings.c:378 ../src/settings.c:2947
+#: ../src/settings.c:378 ../src/settings.c:2942
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr ""
 
@@ -609,7 +609,7 @@ msgstr ""
 msgid "File"
 msgstr ""
 
-#: ../src/settings.c:1534 ../src/settings.c:3146
+#: ../src/settings.c:1534 ../src/settings.c:3141
 msgid "File Path"
 msgstr ""
 
@@ -768,11 +768,11 @@ msgstr ""
 msgid "Insert Track Break"
 msgstr ""
 
-#: ../src/settings.c:3242
+#: ../src/settings.c:3237
 msgid "Internet"
 msgstr ""
 
-#: ../src/settings.c:3282
+#: ../src/settings.c:3277
 msgid "Internet 2"
 msgstr ""
 
@@ -1040,7 +1040,7 @@ msgstr ""
 msgid "North"
 msgstr ""
 
-#: ../src/settings.c:3170
+#: ../src/settings.c:3165
 msgid "Only KISS TNC's are supported (9600 8N1)"
 msgstr ""
 
@@ -1358,7 +1358,7 @@ msgstr ""
 msgid "Scale"
 msgstr ""
 
-#: ../src/settings.c:1523 ../src/settings.c:3134
+#: ../src/settings.c:1523 ../src/settings.c:3129
 msgid "Scan..."
 msgstr ""
 
@@ -1489,7 +1489,7 @@ msgstr ""
 msgid "Speed Limit"
 msgstr ""
 
-#: ../src/settings.c:3064
+#: ../src/settings.c:3059
 msgid "Station"
 msgstr ""
 
@@ -1501,11 +1501,11 @@ msgstr ""
 msgid "Successfully compacted database."
 msgstr ""
 
-#: ../src/settings.c:3109
+#: ../src/settings.c:3104
 msgid "TNC 1"
 msgstr ""
 
-#: ../src/settings.c:3201
+#: ../src/settings.c:3196
 msgid "TNC 2"
 msgstr ""
 
@@ -1798,7 +1798,7 @@ msgstr ""
 msgid "none"
 msgstr ""
 
-#: ../src/settings.c:3310
+#: ../src/settings.c:3305
 msgid "seconds"
 msgstr ""
 
