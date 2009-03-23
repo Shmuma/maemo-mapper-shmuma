@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-03-08 19:22-0700\n"
+"POT-Creation-Date: 2009-03-14 17:55-0700\n"
 "PO-Revision-Date: 2008-10-06 14:33+0200\n"
 "Last-Translator: Sergey Fialko <zero984@gmail.com>\n"
 "Language-Team: Sergey Fialko <zero984@gmail.com>\n"
@@ -25,11 +25,11 @@ msgstr ""
 msgid "# POIs"
 msgstr "# Метки"
 
-#: ../src/menu.c:1889 ../src/settings.c:3217
+#: ../src/menu.c:1889 ../src/settings.c:3219
 msgid "APRS"
 msgstr ""
 
-#: ../src/settings.c:3360
+#: ../src/settings.c:3362
 #, fuzzy
 msgid "APRS Settings"
 msgstr "Настройки"
@@ -179,11 +179,11 @@ msgstr "Авто-загрузка"
 msgid "Avoid Highways"
 msgstr "Избегать магистрали"
 
-#: ../src/settings.c:3310
+#: ../src/settings.c:3312
 msgid "Beacon Comment"
 msgstr ""
 
-#: ../src/settings.c:3281
+#: ../src/settings.c:3283
 msgid "Beacon interval"
 msgstr ""
 
@@ -191,7 +191,7 @@ msgstr ""
 msgid "Bear."
 msgstr "Медвед."
 
-#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3108
+#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3110
 msgid "Bluetooth"
 msgstr "Bluetooth"
 
@@ -584,7 +584,7 @@ msgstr "Потеря связи с GPXD сервером"
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "Сбой при инициализации GConf. Выход."
 
-#: ../src/settings.c:378 ../src/settings.c:2940
+#: ../src/settings.c:378 ../src/settings.c:2942
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "Сбой при инициализации GConf. Настройки не были сохранены."
 
@@ -623,7 +623,7 @@ msgstr ""
 msgid "File"
 msgstr "Файл"
 
-#: ../src/settings.c:1534 ../src/settings.c:3139
+#: ../src/settings.c:1534 ../src/settings.c:3141
 msgid "File Path"
 msgstr "Путь"
 
@@ -782,11 +782,11 @@ msgstr "Вставить метку..."
 msgid "Insert Track Break"
 msgstr "Вставить разрыв маршрута"
 
-#: ../src/settings.c:3235
+#: ../src/settings.c:3237
 msgid "Internet"
 msgstr ""
 
-#: ../src/settings.c:3275
+#: ../src/settings.c:3277
 msgid "Internet 2"
 msgstr ""
 
@@ -1066,7 +1066,7 @@ msgstr "Нет"
 msgid "North"
 msgstr "Север"
 
-#: ../src/settings.c:3163
+#: ../src/settings.c:3165
 msgid "Only KISS TNC's are supported (9600 8N1)"
 msgstr ""
 
@@ -1389,7 +1389,7 @@ msgstr "Сохранить..."
 msgid "Scale"
 msgstr "Шкала"
 
-#: ../src/settings.c:1523 ../src/settings.c:3127
+#: ../src/settings.c:1523 ../src/settings.c:3129
 msgid "Scan..."
 msgstr "Сканировать..."
 
@@ -1520,7 +1520,7 @@ msgstr "Скорость"
 msgid "Speed Limit"
 msgstr "Ограничение скорости"
 
-#: ../src/settings.c:3057
+#: ../src/settings.c:3059
 #, fuzzy
 msgid "Station"
 msgstr "Эмуляция"
@@ -1533,11 +1533,11 @@ msgstr "Заправочные станции."
 msgid "Successfully compacted database."
 msgstr "База успешно сжата."
 
-#: ../src/settings.c:3102
+#: ../src/settings.c:3104
 msgid "TNC 1"
 msgstr ""
 
-#: ../src/settings.c:3194
+#: ../src/settings.c:3196
 msgid "TNC 2"
 msgstr ""
 
@@ -1834,7 +1834,7 @@ msgstr "не установлено"
 msgid "none"
 msgstr "нет"
 
-#: ../src/settings.c:3303
+#: ../src/settings.c:3305
 msgid "seconds"
 msgstr ""
 

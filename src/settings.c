@@ -2611,6 +2611,13 @@ settings_init()
             repo_set_curr(curr_repo);
     }
 
+    if(_repo_list == NULL)
+    {
+        RepoData *repo = create_default_repo();
+        _repo_list = g_list_append(_repo_list, repo);
+        repo_set_curr(repo);
+    }
+
     /* Get last Zoom Level.  Default is 16. */
     value = gconf_client_get(gconf_client, GCONF_KEY_ZOOM, NULL);
     if(value)
@@ -2844,11 +2851,10 @@ void read_aprs_options(TAprsSettings *aprsSettings )
     	                GTK_TOGGLE_BUTTON(aprsSettings->chk_aprs_show_new_station_alert ));
 
     
-    gchar * s_max_stations = g_strdup(gtk_entry_get_text(
-            GTK_ENTRY(aprsSettings->txt_aprs_max_stations)));
-    gint64 i64_max_stations = g_ascii_strtoll (s_max_stations, NULL, 10);
-    _aprs_max_stations = (gint)i64_max_stations;
-        
+    //gchar * s_max_stations = g_strdup(gtk_entry_get_text(
+     //       GTK_ENTRY(aprsSettings->txt_aprs_max_stations)));
+    //_aprs_max_stations = convert_str_to_int(s_max_stations);
+    //g_free(s_max_stations);    
 
     // Inet options
     _aprs_server = g_strdup(gtk_entry_get_text(
@@ -2860,24 +2866,22 @@ void read_aprs_options(TAprsSettings *aprsSettings )
     
     _aprs_inet_server_validation = g_strdup(gtk_entry_get_text(
         GTK_ENTRY(aprsSettings->txt_aprs_inet_server_validation)));
-
+    
     gchar * s_port = g_strdup(gtk_entry_get_text(
         GTK_ENTRY(aprsSettings->num_aprs_server_port)));
-    gint64 i64_port = g_ascii_strtoll (s_port, NULL, 10);
-    _aprs_server_port = (gint)i64_port;
+    _aprs_server_port = convert_str_to_int(s_port);
+    g_free(s_port);
 
     
     gchar * s_beacon_interval = g_strdup(gtk_entry_get_text(
         GTK_ENTRY(aprsSettings->txt_aprs_inet_beacon_interval )));
-    gint64 i64_beacon_interval = g_ascii_strtoll (s_beacon_interval, NULL, 10);
+    _aprs_inet_beacon_interval = convert_str_to_int(s_beacon_interval);
     g_free(s_beacon_interval);
-    _aprs_inet_beacon_interval = (gint)i64_beacon_interval;
 
     s_beacon_interval = g_strdup(gtk_entry_get_text(
         GTK_ENTRY(aprsSettings->txt_tty_beacon_interval )));
-    i64_beacon_interval = g_ascii_strtoll (s_beacon_interval, NULL, 10);
+    _aprs_tty_beacon_interval = convert_str_to_int(s_beacon_interval);
     g_free(s_beacon_interval);
-    _aprs_tty_beacon_interval = (gint)i64_beacon_interval;
     
     
     _aprs_inet_beacon_comment = g_strdup(gtk_entry_get_text(
@@ -2898,9 +2902,7 @@ void read_aprs_options(TAprsSettings *aprsSettings )
    
    gchar * s_server_auto_filter_km = g_strdup(gtk_entry_get_text(
        GTK_ENTRY(aprsSettings->txt_auto_filter_range )));
-   gint64 i64_server_auto_filter_km = g_ascii_strtoll (s_server_auto_filter_km, NULL, 10);
-   _aprs_server_auto_filter_km = (gint)i64_server_auto_filter_km;
-
+   _aprs_server_auto_filter_km = convert_str_to_int(s_server_auto_filter_km);
 
    _aprs_enable_inet_tx = gtk_toggle_button_get_active(
            GTK_TOGGLE_BUTTON(aprsSettings->chk_enable_inet_tx ));
