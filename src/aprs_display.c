@@ -880,18 +880,18 @@ void list_stations()
                 _("Comment"), renderer, "text", STATION_COMMENT, NULL);
         gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
         
-        
 
-        selected_station.dialog = dialog;
-        selected_station.tree_view = list;
-        selected_station.call_sign = NULL;
-        selected_station.column_index = STATION_CALLSIGN;
-        
-        g_signal_connect(G_OBJECT(btn_panto), "clicked",
-        		G_CALLBACK(panto_station), &selected_station);
                 
     }
 
+    selected_station.dialog = dialog;
+    selected_station.tree_view = list;
+    selected_station.call_sign = NULL;
+    selected_station.column_index = STATION_CALLSIGN;
+    
+    g_signal_connect(G_OBJECT(btn_panto), "clicked",
+    		G_CALLBACK(panto_station), &selected_station);
+            
     gtk_tree_view_set_model(GTK_TREE_VIEW(list), GTK_TREE_MODEL(store));
     g_object_unref(G_OBJECT(store));
 
@@ -910,15 +910,15 @@ void list_stations()
                 gtk_tree_view_get_selection(GTK_TREE_VIEW(list)),
                 NULL, &iter))
         {
+    		gchar * callsign = NULL;
+            gtk_tree_model_get(GTK_TREE_MODEL(store), &iter,
+                STATION_CALLSIGN, &(callsign),
+                -1);
+            
     		// Find the callsign
     		p_station = n_first;
 	    	while(p_station != NULL)
 	    	{
-	    		gchar * callsign = NULL;
-	            gtk_tree_model_get(GTK_TREE_MODEL(store), &iter,
-	                STATION_CALLSIGN, &(callsign),
-	                -1);
-
 	            if(strcmp(p_station->call_sign,callsign) == 0)
 	    		{
 	    			ShowAprsStationPopup(p_station);
@@ -931,6 +931,16 @@ void list_stations()
 	    	}
 
         }
+    	
+
+    	// Setup event again
+        selected_station.dialog = dialog;
+        selected_station.tree_view = list;
+        selected_station.call_sign = NULL;
+        selected_station.column_index = STATION_CALLSIGN;
+        
+        g_signal_connect(G_OBJECT(btn_panto), "clicked",
+        		G_CALLBACK(panto_station), &selected_station);
 
 
 

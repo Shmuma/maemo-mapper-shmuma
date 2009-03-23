@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-03-08 19:22-0700\n"
+"POT-Creation-Date: 2009-03-14 17:55-0700\n"
 "PO-Revision-Date: 2008-04-09 23:17+0100\n"
 "Last-Translator: Claudius Henrichs <claudius.h@gmx.de>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
@@ -23,11 +23,11 @@ msgstr ""
 msgid "# POIs"
 msgstr "# POIs"
 
-#: ../src/menu.c:1889 ../src/settings.c:3217
+#: ../src/menu.c:1889 ../src/settings.c:3219
 msgid "APRS"
 msgstr ""
 
-#: ../src/settings.c:3360
+#: ../src/settings.c:3362
 #, fuzzy
 msgid "APRS Settings"
 msgstr "Einstellungen"
@@ -182,11 +182,11 @@ msgstr "Auto-Zentrierung"
 msgid "Avoid Highways"
 msgstr "Autobahnen meiden"
 
-#: ../src/settings.c:3310
+#: ../src/settings.c:3312
 msgid "Beacon Comment"
 msgstr ""
 
-#: ../src/settings.c:3281
+#: ../src/settings.c:3283
 msgid "Beacon interval"
 msgstr ""
 
@@ -194,7 +194,7 @@ msgstr ""
 msgid "Bear."
 msgstr "Richt."
 
-#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3108
+#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3110
 msgid "Bluetooth"
 msgstr "Bluetooth"
 
@@ -590,7 +590,7 @@ msgstr "Fehler bei Verbindung zum GPX-Wegbeschreibungs-Server"
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "Fehler bei Initialisierung von GConf. Programmende."
 
-#: ../src/settings.c:378 ../src/settings.c:2940
+#: ../src/settings.c:378 ../src/settings.c:2942
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr ""
 "Fehler bei Initialisierung von GConf. Einstellungen wurden nicht gespeichert."
@@ -631,7 +631,7 @@ msgstr ""
 msgid "File"
 msgstr "Datei"
 
-#: ../src/settings.c:1534 ../src/settings.c:3139
+#: ../src/settings.c:1534 ../src/settings.c:3141
 msgid "File Path"
 msgstr "Dateipfad"
 
@@ -805,11 +805,11 @@ msgstr "Markierung einfügen..."
 msgid "Insert Track Break"
 msgstr "Track-Unterbrechung einfügen"
 
-#: ../src/settings.c:3235
+#: ../src/settings.c:3237
 msgid "Internet"
 msgstr ""
 
-#: ../src/settings.c:3275
+#: ../src/settings.c:3277
 msgid "Internet 2"
 msgstr ""
 
@@ -1089,7 +1089,7 @@ msgstr "Kein"
 msgid "North"
 msgstr "Nord"
 
-#: ../src/settings.c:3163
+#: ../src/settings.c:3165
 msgid "Only KISS TNC's are supported (9600 8N1)"
 msgstr ""
 
@@ -1412,7 +1412,7 @@ msgstr "Speichern..."
 msgid "Scale"
 msgstr "Maßstab"
 
-#: ../src/settings.c:1523 ../src/settings.c:3127
+#: ../src/settings.c:1523 ../src/settings.c:3129
 msgid "Scan..."
 msgstr "Scannen..."
 
@@ -1546,7 +1546,7 @@ msgstr "Geschwindigkeit"
 msgid "Speed Limit"
 msgstr "Geschwindigkeitsbegrenzung"
 
-#: ../src/settings.c:3057
+#: ../src/settings.c:3059
 #, fuzzy
 msgid "Station"
 msgstr "Simulation"
@@ -1559,11 +1559,11 @@ msgstr "Verkauf von Fahrzeugbenzin."
 msgid "Successfully compacted database."
 msgstr "Datenbank erfolgreich komprimiert."
 
-#: ../src/settings.c:3102
+#: ../src/settings.c:3104
 msgid "TNC 1"
 msgstr ""
 
-#: ../src/settings.c:3194
+#: ../src/settings.c:3196
 msgid "TNC 2"
 msgstr ""
 
@@ -1864,7 +1864,7 @@ msgstr "Kein Fix"
 msgid "none"
 msgstr "Kein"
 
-#: ../src/settings.c:3303
+#: ../src/settings.c:3305
 msgid "seconds"
 msgstr ""
 

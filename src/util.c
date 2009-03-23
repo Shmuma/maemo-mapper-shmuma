@@ -543,10 +543,10 @@ gboolean convert_lat_long_to_os_grid(double lat, double lon, int *easting, int *
 		return FALSE;
 	}
 	
-	const double deg2rad = (2 * PI / 360);
+	const double deg2rad_multi = (2 * PI / 360);
 	
-	const double phi = lat * deg2rad;          // convert latitude to radians
-	const double lam = lon * deg2rad;          // convert longitude to radians
+	const double phi = lat * deg2rad_multi;          // convert latitude to radians
+	const double lam = lon * deg2rad_multi;          // convert longitude to radians
 	const double a = 6377563.396;              // OSGB semi-major axis
 	const double b = 6356256.91;               // OSGB semi-minor axis
 	const double e0 = 400000;                  // easting of false origin
@@ -618,15 +618,27 @@ gboolean convert_os_grid_to_bng(gint easting, gint northing, gchar* bng)
 	return TRUE;
 }
 
+gint convert_str_to_int(const gchar *str)
+{
+	gint i=0;
+	gint result = 0;
+	while(str[i] >= '0' && str[i] <= '9')
+	{
+		gint v = str[i] - '0';
+		
+		result = (result * 10) + v;
+		
+		i++;
+	}
+	
+	return result;
+}
 gboolean convert_os_xy_to_latlon(const gchar *easting, const gchar *northing, gdouble *d_lat, gdouble *d_lon)
 {
-    gint64 i64_n = g_ascii_strtoll (northing, NULL, 10);
-    gint64 i64_e = g_ascii_strtoll (easting, NULL, 10);
+    const double deg2rad_multi = (2 * PI / 360);
     
-    const double deg2rad = (2 * PI / 360);
-    
-	const gdouble N =  (gdouble)i64_n;
-	const gdouble E = (gdouble)i64_e;
+	const gdouble N = (gdouble)convert_str_to_int(northing);
+	const gdouble E = (gdouble)convert_str_to_int(easting);
 
 	const gdouble a = 6377563.396, b = 6356256.910;              // Airy 1830 major & minor semi-axes
 	const gdouble F0 = 0.9996012717;                             // NatGrid scale factor on central meridian
@@ -669,8 +681,8 @@ gboolean convert_os_xy_to_latlon(const gchar *easting, const gchar *northing, gd
 	lat = lat - VII*dE2 + VIII*dE4 - IX*dE6;
 	const gdouble lon = lon0 + X*dE - XI*dE3 + XII*dE5 - XIIA*dE7;
 	
-	*d_lon = lon / deg2rad;
-	*d_lat = lat / deg2rad;
+	*d_lon = lon / deg2rad_multi;
+	*d_lat = lat / deg2rad_multi;
 	
 	return TRUE;
 }
@@ -681,12 +693,8 @@ gboolean convert_os_ngr_to_latlon(const gchar *text, gdouble *d_lat, gdouble *d_
 	gint l1;
 	gint l2;
 
-	gchar s_e[6], s_n[6];
 	gchar easting[7], northing[7];
-	gint64 i64_e = 0;
-	gint64 i64_n = 0;
-	
-	
+		
 	if( ((gchar)text[0])>='a' && ((gchar)text[0]) <= 'z' ) 
 		l1 = text[0] - (gint)'a'; // lower case
 	else if( ((gchar)text[0])>='A' && ((gchar)text[0]) <= 'Z' )
@@ -705,7 +713,7 @@ gboolean convert_os_ngr_to_latlon(const gchar *text, gdouble *d_lat, gdouble *d_
 	// shuffle down letters after 'I' since 'I' is not used in grid:
 	if (l1 > 7) l1--;
 	if (l2 > 7) l2--;
-
+	  
 	// convert grid letters into 100km-square indexes from false origin (grid square SV):
 	gdouble e = ((l1-2)%5)*5 + (l2%5);
 	gdouble n = (19-floor(l1/5)*5) - floor(l2/5);
@@ -722,32 +730,32 @@ gboolean convert_os_ngr_to_latlon(const gchar *text, gdouble *d_lat, gdouble *d_
 	
 	// floor the length incase a space has been added
 	const gint len = (gint)floor((gdouble)strlen(gridref)/2.00); // normally this will be 4, often 3
-	if(len>5) return FALSE; 
+	if(len>5 || len <3) return FALSE; 
 	
-	if(len >0)
+	snprintf(easting, 2+len, "%u%s", (gint)e, gridref);
+	snprintf(northing, 2+len, "%u%s", (gint)n, gridref+len);
+		
+	fprintf(stderr, "easting = %s, northing = %s\n", easting, northing);	
+	
+	switch (len) 
 	{
-		snprintf(s_e, len+1, "%s", gridref);
-		
-		while( (gchar)((gint)gridref+len) == ' ' ) 
-			gridref = (gchar*)(gridref+1); // Allow for a space
-		
-		snprintf(s_n, len+1, "%s", gridref+len);
-		
-		i64_e = g_ascii_strtoll (s_e, NULL, 10);
-		i64_n = g_ascii_strtoll (s_n, NULL, 10);
-		
-		// Move to most significate values
-		i64_e *= pow(10, 5-len);
-		i64_n *= pow(10, 5-len);
+    	case 3:
+    		easting[4] = '0';
+    		easting[5] = '0';
+    		northing[4] = '0';
+    		northing[5] = '0';
+    		break;
+    	case 4:
+    		easting[5] = '0';
+    		northing[5] = '0';
+    		break;
+    	// 10-digit refs are already 1m
 	}
 	
-	// append numeric part of references to grid index:
-	e = (e*100000) + (gdouble)i64_e;
-	n = (n*100000) + (gdouble)i64_n;
-
-	snprintf(easting, 7, "%06u", (gint)e);
-	snprintf(northing, 7, "%06u", (gint)n);
+	easting[6] = '\0';
+	northing[6] = '\0';
 	
+
 	convert_os_xy_to_latlon(easting, northing, d_lat, d_lon);
 	
 	return TRUE;
@@ -767,6 +775,7 @@ gboolean parse_coords(const gchar* txt_lat, const gchar* txt_lon, gdouble* lat, 
 
         if(!valid || *lat < -90. || *lat > 90.) { valid = FALSE; }
         else   if(*lon < -180. || *lon > 180.)  { valid = FALSE; }
+        
 	}
 	// UK_OSGB contains two 6 digit integers
 	else if( _degformat == UK_OSGB)

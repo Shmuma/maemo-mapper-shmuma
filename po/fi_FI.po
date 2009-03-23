@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: maemo-mapper 1.2.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-03-08 19:22-0700\n"
-"PO-Revision-Date: 2008-10-12 22:36+0200\n"
+"POT-Creation-Date: 2009-03-14 17:55-0700\n"
+"PO-Revision-Date: 2009-03-14 17:58+0200\n"
 "Last-Translator: Marko Vertainen <marko.vertainen@iki.fi>\n"
 "Language-Team: John Costigan <gnuite@gmail.com>\n"
 "MIME-Version: 1.0\n"
@@ -23,19 +23,17 @@ msgstr ""
 msgid "# POIs"
 msgstr "# POI:t"
 
-#: ../src/menu.c:1889 ../src/settings.c:3217
+#: ../src/menu.c:1889 ../src/settings.c:3219
 msgid "APRS"
-msgstr ""
+msgstr "APRS"
 
-#: ../src/settings.c:3360
-#, fuzzy
+#: ../src/settings.c:3362
 msgid "APRS Settings"
-msgstr "Asetukset"
+msgstr "APRS asetukset"
 
 #: ../src/menu.c:1920
-#, fuzzy
 msgid "APRS Settings..."
-msgstr "Asetukset..."
+msgstr "APRS asetukset..."
 
 #: ../src/menu.c:1934
 msgid "About..."
@@ -181,19 +179,19 @@ msgstr "Autom. nouto"
 msgid "Avoid Highways"
 msgstr "Vältä valtateitä"
 
-#: ../src/settings.c:3310
+#: ../src/settings.c:3312
 msgid "Beacon Comment"
-msgstr ""
+msgstr "Majakan kommentti"
 
-#: ../src/settings.c:3281
+#: ../src/settings.c:3283
 msgid "Beacon interval"
-msgstr ""
+msgstr "Majakan päivitysväli"
 
 #: ../src/poi.c:2287
 msgid "Bear."
 msgstr "Suunt."
 
-#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3108
+#: ../src/main.c:423 ../src/settings.c:1505 ../src/settings.c:3110
 msgid "Bluetooth"
 msgstr "Bluetooth"
 
@@ -311,13 +309,12 @@ msgid "Confirm download of"
 msgstr "Vahvista"
 
 #: ../src/menu.c:1894
-#, fuzzy
 msgid "Connect to APRS Server"
-msgstr "Virhe yhdistettäessä GPSD-palveluun."
+msgstr "Yhdistä APRS palvelimeen"
 
 #: ../src/menu.c:1901
 msgid "Connect to TNC"
-msgstr ""
+msgstr "Yhdistä TNC:hen"
 
 #: ../src/settings.c:1058
 msgid "Continue?"
@@ -332,9 +329,8 @@ msgid "Copy Description"
 msgstr "Kopioi kuvaus"
 
 #: ../src/cmenu.c:713
-#, fuzzy
 msgid "Copy Position"
-msgstr "Näytä sijainti"
+msgstr "Kopioi sijainti"
 
 #: ../src/menu.c:1745
 msgid "Counter"
@@ -541,7 +537,7 @@ msgstr "Virhe GPS-tietojen lukemisessa."
 
 #: ../src/maps.c:1460
 msgid "Error saving map to disk - disk full?"
-msgstr ""
+msgstr "Virhe kartan tallennuksessa - levy täynnä?"
 
 #: ../src/poi.c:812
 msgid "Error updating Category"
@@ -587,7 +583,7 @@ msgstr "Yhteyden muodostus GPX-reittipalvelimeen epäonnistui"
 msgid "Failed to initialize GConf.  Quitting."
 msgstr "GConf alustus epäonnistui.  Lopetetaan."
 
-#: ../src/settings.c:378 ../src/settings.c:2940
+#: ../src/settings.c:378 ../src/settings.c:2942
 msgid "Failed to initialize GConf.  Settings were not saved."
 msgstr "GConf alustus epäonnistui.  Asetuksia ei tallennettu."
 
@@ -627,7 +623,7 @@ msgstr ""
 msgid "File"
 msgstr "Tiedosto"
 
-#: ../src/settings.c:1534 ../src/settings.c:3139
+#: ../src/settings.c:1534 ../src/settings.c:3141
 msgid "File Path"
 msgstr "Tiedostopolku"
 
@@ -661,7 +657,7 @@ msgstr "Koko näyttö"
 
 #: ../src/maps.c:2036
 msgid "GDBM (legacy)"
-msgstr ""
+msgstr "GDBM (vanha)"
 
 #: ../src/menu.c:1866 ../src/settings.c:1137 ../src/settings.c:1500
 msgid "GPS"
@@ -801,22 +797,21 @@ msgstr "Lisää merkki..."
 msgid "Insert Track Break"
 msgstr "Lisää katkaisupiste reittijälkeen"
 
-#: ../src/settings.c:3235
+#: ../src/settings.c:3237
 msgid "Internet"
-msgstr ""
+msgstr "Internet"
 
-#: ../src/settings.c:3275
+#: ../src/settings.c:3277
 msgid "Internet 2"
-msgstr ""
+msgstr "Internet 2"
 
 #: ../src/maps.c:3688
-#, fuzzy
 msgid "Invalid Bottom-Right coordinate specified"
-msgstr "Virheellinen ala-oikea latitudi"
+msgstr "Virheellinen ala-oikea koordinaatti"
 
 #: ../src/poi.c:1331
 msgid "Invalid Coordinate specified"
-msgstr ""
+msgstr "Virheellinen koordinaatti annettu"
 
 #: ../src/menu.c:884
 msgid "Invalid Latitude"
@@ -831,9 +826,8 @@ msgid "Invalid NMEA input from receiver!"
 msgstr "Virheellinen NMEA-syöte vastaanottimelta!"
 
 #: ../src/maps.c:3679
-#, fuzzy
 msgid "Invalid Top-Left coordinate specified"
-msgstr "Virheellinen ylä-vasen latitudi"
+msgstr "Virheellinen ylä-vasen koordinaatti"
 
 #: ../src/util.c:167
 msgid "Invalid address."
@@ -841,7 +835,7 @@ msgstr "Virheellinen osoite"
 
 #: ../src/poi.c:1583
 msgid "Invalid coordinate specified"
-msgstr ""
+msgstr "Virheellinen koordinaatti annettu"
 
 #: ../src/poi.c:2865
 msgid "Invalid origin or query."
@@ -914,12 +908,11 @@ msgstr "Viivanleveys"
 
 #: ../src/menu.c:1914
 msgid "List Messages..."
-msgstr ""
+msgstr "Listaa sanomat..."
 
 #: ../src/menu.c:1908
-#, fuzzy
 msgid "List Stations..."
-msgstr "Asetukset..."
+msgstr "Listaa Asemat..."
 
 #: ../src/display.c:1046
 msgid "Local time"
@@ -1082,9 +1075,9 @@ msgstr "Ei keskitystä"
 msgid "North"
 msgstr "Pohjoiseen"
 
-#: ../src/settings.c:3163
+#: ../src/settings.c:3165
 msgid "Only KISS TNC's are supported (9600 8N1)"
-msgstr ""
+msgstr "Vain KISS TNC:t ovat tuettu (9600 8N1)"
 
 #: ../src/menu.c:1640 ../src/menu.c:1660
 msgid "Open..."
@@ -1379,7 +1372,7 @@ msgstr "SPS"
 
 #: ../src/maps.c:2034
 msgid "SQLite 3 (default)"
-msgstr ""
+msgstr "SQLite 3 (oletus)"
 
 #: ../src/display.c:1064
 msgid "Sat in use"
@@ -1405,7 +1398,7 @@ msgstr "Tallenna..."
 msgid "Scale"
 msgstr "Asteikko"
 
-#: ../src/settings.c:1523 ../src/settings.c:3127
+#: ../src/settings.c:1523 ../src/settings.c:3129
 msgid "Scan..."
 msgstr "Etsi..."
 
@@ -1538,10 +1531,9 @@ msgstr "Nopeus"
 msgid "Speed Limit"
 msgstr "Nopeusrajoitus"
 
-#: ../src/settings.c:3057
-#, fuzzy
+#: ../src/settings.c:3059
 msgid "Station"
-msgstr "Simulaatio"
+msgstr "Asema"
 
 #: ../src/poi.c:179
 msgid "Stations for purchasing fuel for vehicles."
@@ -1551,13 +1543,13 @@ msgstr "Huoltoasemat ja autokorjaamot."
 msgid "Successfully compacted database."
 msgstr "Karttavaraston tiivistys onnistui."
 
-#: ../src/settings.c:3102
+#: ../src/settings.c:3104
 msgid "TNC 1"
-msgstr ""
+msgstr "TNC 1"
 
-#: ../src/settings.c:3194
+#: ../src/settings.c:3196
 msgid "TNC 2"
-msgstr ""
+msgstr "TNC 2"
 
 #: ../src/cmenu.c:669
 msgid "Tap Point"
@@ -1682,7 +1674,7 @@ msgstr "Liikenne"
 
 #: ../src/maps.c:2025
 msgid "Type"
-msgstr ""
+msgstr "Tyyppi"
 
 #: ../src/maps.c:2273
 msgid "URL"
@@ -1856,9 +1848,9 @@ msgstr "nofix"
 msgid "none"
 msgstr "ei lainkaan"
 
-#: ../src/settings.c:3303
+#: ../src/settings.c:3305
 msgid "seconds"
-msgstr ""
+msgstr "sekunnit"
 
 #: ../src/maps.c:2990 ../src/maps.c:3098
 msgid "up to about"

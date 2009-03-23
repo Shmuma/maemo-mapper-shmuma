@@ -30,6 +30,8 @@ void map_cache_clean (void);
 void maps_init();
 void maps_destroy();
 
+RepoData *create_default_repo();
+
 gboolean mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley);
 GdkPixbuf* mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley);
 
