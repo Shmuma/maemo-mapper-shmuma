@@ -1,22 +1,18 @@
-Source: maemo-mapper
+Source: maemo-mapper-shmuma
 Section: user/other
 Priority: optional
-Maintainer: John Costigan <gnuite@gmail.com>
+Maintainer: Max Lapan <max.lapan@gmail.com>
 Build-Depends: debhelper (>= 4.0.0), intltool, hildon-libs-dev | libhildon1-dev, hildon-fm-dev | libhildonfm2-dev, libhildonhelp-dev | libosso-help-dev, libgtk2.0-dev, libosso-gnomevfs2-dev, libglib2.0-dev, libdbus-glib-1-dev, libosso-dev, libsqlite3-dev, libconic0-dev, libgdbm-dev, osso-gpsd-dev, libgpsmgr-dev, libgpsbt-dev, osso-af-settings
 Standards-Version: 3.6.0
 
-Package: maemo-mapper
+Package: maemo-mapper-shmuma
 Architecture: armel i386
 Pre-Depends: maemo-select-menu-location
 Depends: ${shlibs:Depends}
 Suggests: flite, proj
 Description: Geographical mapping and driving directions.
- Specifically designed for the Maemo platform and the Nokia 770 form factor.
- It includes support for visualizing GPS input, but is functional and useful
- without GPS hardware.  It also includes features for downloading and
- interacting with maps, GPX data (including driving directions), and other
- geo-related information.  It focuses in part on in-car navigation and
- usability.  Home page: http://www.gnuite.com/nokia770/maemo-mapper
+ The unofficial modifications of maemo-mapper application. Primary changes are concerned to Yandex
+ maps services support, such as tiles, traffic and router.
 XB-Maemo-Icon-26:
  iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAF/ElEQVRIS42WyXMbxxXGf92z
  YidgkCAkrrCokCLDRLJLsSwvB1duLl9S5UMcl33Vxf9LDi5Xbr6lUpWDqnxKVeJYthbLUUm2

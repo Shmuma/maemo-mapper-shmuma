@@ -15,7 +15,7 @@ if [ "x$MAEMO_VERSION" = "x1" ]
 then
     VERSION_SUFFIX=-os2006-os2007
 else
-    VERSION_SUFFIX=-os2008-yandex2
+    VERSION_SUFFIX=-os2008
 fi
 
 sed -i "1,1s/(\([0-9.][0-9.]*\)[-a-zA-Z0-9]*)/(\1$VERSION_SUFFIX)/" $CHANGELOG
