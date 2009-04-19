@@ -1334,15 +1334,14 @@ route_download(gchar *to)
                           G_CALLBACK(route_download_swap), &oti);
 
         gtk_widget_set_sensitive(oti.chk_auto, FALSE);
+        /* Populate combobox with available routers */
+        i = 0;
+        while (_route_dl_url_table[i].title)
+            gtk_combo_box_append_text (GTK_COMBO_BOX (cmb_source_url), _route_dl_url_table[i++].title);
+        gtk_combo_box_set_active (GTK_COMBO_BOX (cmb_source_url), _route_dl_index);
     }
 
     /* Initialize fields. */
-    /* Populate combobox with available routers */
-    i = 0;
-    while (_route_dl_url_table[i].title)
-        gtk_combo_box_append_text (GTK_COMBO_BOX (cmb_source_url), _route_dl_url_table[i++].title);
-    gtk_combo_box_set_active (GTK_COMBO_BOX (cmb_source_url), _route_dl_index);
-
     if(to)
         gtk_entry_set_text(GTK_ENTRY(oti.txt_to), to);
 
