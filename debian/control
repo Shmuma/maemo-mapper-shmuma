@@ -10,6 +10,8 @@ Architecture: armel i386
 Pre-Depends: maemo-select-menu-location
 Depends: ${shlibs:Depends}
 Suggests: flite, proj
+Provides: maemo-mapper
+Conflicts: maemo-mapper
 Description: Geographical mapping and driving directions.
  The unofficial modifications of maemo-mapper application. Primary changes are concerned to Yandex
  maps services support, such as tiles, traffic and router.
