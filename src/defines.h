@@ -220,7 +220,7 @@
 #define REPO_DEFAULT_MIN_ZOOM (4)
 #define REPO_DEFAULT_MAX_ZOOM (20)
 
-#define XML_DATE_FORMAT "%FT%T"
+#define XML_DATE_FORMAT "%FT%TZ"
 
 #define HELP_ID_PREFIX "help_maemomapper_"
 #define HELP_ID_INTRO HELP_ID_PREFIX"intro"

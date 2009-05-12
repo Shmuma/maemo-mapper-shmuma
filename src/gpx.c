@@ -88,8 +88,6 @@ struct _PoiSaxData {
     data->sax_data.unknown_depth = 1; \
 }
 
-static gchar XML_TZONE[7];
-
 /**
  * Handle char data in the parsing of a GPX file.
  */
@@ -702,9 +700,8 @@ gpx_path_write(Path *path, GnomeVFSHandle *handle)
                     first_sub = FALSE;
                 }
                 gpx_write_string(handle, "        <time>");
-                strftime(buffer, 80, XML_DATE_FORMAT, localtime(&curr->time));
+                strftime(buffer, 80, XML_DATE_FORMAT, gmtime(&curr->time));
                 gpx_write_string(handle, buffer);
-                gpx_write_string(handle, XML_TZONE);
                 gpx_write_string(handle, "</time>\n");
             }
 
@@ -1037,16 +1034,5 @@ void
 gpx_init()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
-
-    /* set XML_TZONE */
-    {   
-        time_t time1;
-        struct tm time2;
-        time1 = time(NULL);
-        localtime_r(&time1, &time2);
-        snprintf(XML_TZONE, sizeof(XML_TZONE), "%+03ld:%02ld",
-                (time2.tm_gmtoff / 60 / 60), (time2.tm_gmtoff / 60) % 60);
-    }
-
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
