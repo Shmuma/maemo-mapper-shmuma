@@ -400,7 +400,7 @@ gpx_path_end_element(PathSaxData *data, const xmlChar *name)
                 gchar *ptr;
 
                 if(NULL == (ptr = strptime(data->sax_data.chars->str,
-                            XML_DATE_FORMAT, &time)))
+                            XML_DATE_PARSE_FORMAT, &time)))
                     /* Failed to parse dateTime format. */
                     data->sax_data.state = ERROR;
                 else
@@ -700,7 +700,7 @@ gpx_path_write(Path *path, GnomeVFSHandle *handle)
                     first_sub = FALSE;
                 }
                 gpx_write_string(handle, "        <time>");
-                strftime(buffer, 80, XML_DATE_FORMAT, gmtime(&curr->time));
+                strftime(buffer, 80, XML_DATE_OUT_FORMAT, gmtime(&curr->time));
                 gpx_write_string(handle, buffer);
                 gpx_write_string(handle, "</time>\n");
             }
