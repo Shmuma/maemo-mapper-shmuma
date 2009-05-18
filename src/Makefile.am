@@ -47,6 +47,7 @@ maemo_mapper_SOURCES = \
 	hashtable_itr.c \
 	aprs_display.c \
 	aprs_message.c \
-	aprs_kiss.c
+	aprs_kiss.c \
+	gpx-full.c
 
 # bin_SCRIPTS = maemo-mapper.sh
