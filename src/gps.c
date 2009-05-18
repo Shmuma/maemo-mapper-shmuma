@@ -223,6 +223,8 @@ gps_parse_rmc(gchar *sentence)
         {
             map_move_mark();
         }
+
+        gpx_full_append (&_gps, &_pos);
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
