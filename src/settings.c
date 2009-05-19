@@ -1460,6 +1460,8 @@ gboolean settings_dialog()
     static GtkWidget *cmb_unblank_option = NULL;
     static GtkWidget *cmb_info_font_size = NULL;
 
+    static GtkWidget *chk_save_full_gpx = NULL;
+
     static BrowseInfo poi_browse_info = {0, 0};
     static BrowseInfo gps_file_browse_info = {0, 0};
     static ScanInfo scan_info = {0};
@@ -1844,6 +1846,17 @@ gboolean settings_dialog()
                 1, 2, 2, 3, GTK_FILL, 0, 2, 4);
         gtk_container_add(GTK_CONTAINER(label),
                 num_poi_zoom = hildon_number_editor_new(0, MAX_ZOOM));
+
+        /* Full GPX settings */
+        gtk_notebook_append_page (GTK_NOTEBOOK (notebook),
+                                  table = gtk_table_new (2, 3, FALSE),
+                                  label = gtk_label_new (_("Full GPX")));
+
+        /* Track on/off checkbox */
+        gtk_table_attach (GTK_TABLE (table),
+                          chk_save_full_gpx = gtk_check_button_new_with_label (_("Save full GPX track")),
+                          0, 2, 0, 1, GTK_FILL, 0, 2, 4);
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (chk_save_full_gpx), _save_full_gpx);
 
         /* Connect signals. */
         memset(&scan_info, 0, sizeof(scan_info));
