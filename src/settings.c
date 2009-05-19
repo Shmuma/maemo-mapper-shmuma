@@ -131,6 +131,9 @@
 #define GCONF_KEY_POI_DL_URL GCONF_KEY_PREFIX"/poi_dl_url" 
 #define GCONF_KEY_DEG_FORMAT GCONF_KEY_PREFIX"/deg_format" 
 
+#define GCONF_KEY_ENABLE_FULL_GPX GCONF_KEY_PREFIX"/enable_full_gpx"
+#define GCONF_KEY_FULL_GPX_DIR GCONF_KEY_PREFIX"/full_gpx_dir"
+
 // APRS
 #ifdef INCLUDE_APRS
 #define GCONF_KEY_APRS_SERVER      GCONF_KEY_PREFIX"/aprs_server" 
@@ -721,6 +724,10 @@ settings_save()
     gconf_client_set_int(gconf_client,
             GCONF_KEY_POI_ZOOM, _poi_zoom, NULL);
 
+    /* Full GPX */
+    gconf_client_set_bool (gconf_client, GCONF_KEY_ENABLE_FULL_GPX, _enable_full_gpx, NULL);
+    gconf_client_set_string (gconf_client, GCONF_KEY_FULL_GPX_DIR, _full_gpx_dir, NULL);
+
     gconf_client_clear_cache(gconf_client);
     g_object_unref(gconf_client);
     g_free(settings_dir);
@@ -937,15 +944,16 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
     return TRUE;
 }
 
+
 static gboolean
-settings_dialog_browse_forfile(GtkWidget *widget, BrowseInfo *browse_info)
+settings_dialog_browse_generic(GtkWidget *widget, BrowseInfo *browse_info, gboolean directory)
 {
     GtkWidget *dialog;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     dialog = GTK_WIDGET(
             hildon_file_chooser_dialog_new(GTK_WINDOW(browse_info->dialog),
-            GTK_FILE_CHOOSER_ACTION_OPEN));
+                                           directory ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN));
 
     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
@@ -964,6 +972,21 @@ settings_dialog_browse_forfile(GtkWidget *widget, BrowseInfo *browse_info)
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
+
+
+static gboolean
+settings_dialog_browse_forfile(GtkWidget *widget, BrowseInfo *browse_info)
+{
+    return settings_dialog_browse_generic (widget, browse_info, FALSE);
+}
+
+
+static gboolean
+settings_dialog_browse_fordir(GtkWidget *widget, BrowseInfo *browse_info)
+{
+    return settings_dialog_browse_generic (widget, browse_info, TRUE);
+}
+
 
 static gboolean
 settings_dialog_hardkeys_reset(GtkWidget *widget, KeysDialogInfo *cdi)
@@ -1460,10 +1483,16 @@ gboolean settings_dialog()
     static GtkWidget *cmb_unblank_option = NULL;
     static GtkWidget *cmb_info_font_size = NULL;
 
+    static GtkWidget *chk_enable_full_gpx = NULL;
+    static GtkWidget *txt_full_gpx_directory = NULL;
+    static GtkWidget *btn_browse_full_gpx_directory = NULL;
+    static BrowseInfo full_gpx_browse_info = {0, 0};
+
     static BrowseInfo poi_browse_info = {0, 0};
     static BrowseInfo gps_file_browse_info = {0, 0};
     static ScanInfo scan_info = {0};
     gboolean rcvr_changed = FALSE;
+    gboolean full_gpx_changed = FALSE;
     gint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -1845,6 +1874,31 @@ gboolean settings_dialog()
         gtk_container_add(GTK_CONTAINER(label),
                 num_poi_zoom = hildon_number_editor_new(0, MAX_ZOOM));
 
+        /* Full GPX settings */
+        gtk_notebook_append_page (GTK_NOTEBOOK (notebook),
+                                  table = gtk_table_new (2, 3, FALSE),
+                                  label = gtk_label_new (_("Full GPX")));
+
+        /* Track on/off checkbox */
+        gtk_table_attach (GTK_TABLE (table),
+                          chk_enable_full_gpx = gtk_check_button_new_with_label (_("Save full GPX track")),
+                          0, 2, 0, 1, GTK_FILL, 0, 2, 4);
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (chk_enable_full_gpx), _enable_full_gpx);
+
+        /* GPX data directory */
+        gtk_table_attach (GTK_TABLE (table), 
+                          label = gtk_label_new (_("GPX directory")),
+                          0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+        gtk_table_attach (GTK_TABLE (table), 
+                          hbox = gtk_hbox_new (FALSE, 4),
+                          1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+        gtk_box_pack_start (GTK_BOX (hbox),
+                            txt_full_gpx_directory = gtk_entry_new (),
+                            TRUE, TRUE, 0);
+        gtk_box_pack_start (GTK_BOX (hbox),
+                            btn_browse_full_gpx_directory = gtk_button_new_with_label (_("Browse...")),
+                            FALSE, FALSE, 0);
+
         /* Connect signals. */
         memset(&scan_info, 0, sizeof(scan_info));
         scan_info.settings_dialog = dialog;
@@ -1866,8 +1920,13 @@ gboolean settings_dialog()
         g_signal_connect(G_OBJECT(btn_browse_gps), "clicked",
                 G_CALLBACK(settings_dialog_browse_forfile),
                 &gps_file_browse_info);
-    }
 
+        full_gpx_browse_info.dialog = dialog;
+        full_gpx_browse_info.txt = txt_full_gpx_directory;
+        g_signal_connect(G_OBJECT(btn_browse_full_gpx_directory), "clicked",
+                         G_CALLBACK(settings_dialog_browse_fordir),
+                         &full_gpx_browse_info);       
+    }
 
     /* Initialize fields. */
     if(_gri.bt_mac)
@@ -1924,6 +1983,8 @@ gboolean settings_dialog()
             _unblank_option);
     gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_info_font_size),
             _info_font_size);
+    if(_full_gpx_dir)
+        gtk_entry_set_text(GTK_ENTRY(txt_full_gpx_directory), _full_gpx_dir);
 
     gtk_widget_show_all(dialog);
 
@@ -2107,6 +2168,29 @@ gboolean settings_dialog()
                 HILDON_NUMBER_EDITOR(num_poi_zoom));
 
         update_gcs();
+
+        /* Full GPX settings */
+        if (_enable_full_gpx != gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (chk_enable_full_gpx)))
+            full_gpx_changed = TRUE;
+        _enable_full_gpx = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (chk_enable_full_gpx));
+
+        if (!_full_gpx_dir && *gtk_entry_get_text (GTK_ENTRY (txt_full_gpx_directory))
+            || strcmp (_full_gpx_dir, gtk_entry_get_text (GTK_ENTRY (txt_full_gpx_directory)))) 
+        {
+            if (_full_gpx_dir)
+                g_free (_full_gpx_dir);
+            _full_gpx_dir = NULL;
+
+            if (*gtk_entry_get_text (GTK_ENTRY (txt_full_gpx_directory)))
+                _full_gpx_dir = g_strdup (gtk_entry_get_text (GTK_ENTRY (txt_full_gpx_directory)));
+            full_gpx_changed = TRUE;
+        }
+
+        /* settings changed, need to reinitialize full GPX subsystem */
+        if (full_gpx_changed) {
+            gpx_full_finalize ();
+            gpx_full_initialize (_enable_full_gpx, _full_gpx_dir);
+        }
 
         settings_save();
 
@@ -2815,6 +2899,26 @@ settings_init()
             if(!str || !gdk_color_parse(str, &_color[i]))
                 _color[i] = COLORABLE_DEFAULT[i];
         }
+    }
+
+    /* Full GPX settings */
+    /* Enable full GPX, default is FALSE */
+    value = gconf_client_get (gconf_client, GCONF_KEY_ENABLE_FULL_GPX, NULL);
+    if (value) {
+        _enable_full_gpx = gconf_value_get_bool (value);
+        gconf_value_free (value);
+    }
+    else
+        _enable_full_gpx = FALSE;
+
+    /* Full GPX directory */
+    _full_gpx_dir = gconf_client_get_string (gconf_client, 
+                                             GCONF_KEY_FULL_GPX_DIR, NULL);
+
+    if (_full_gpx_dir == NULL) {
+        gchar *base = gnome_vfs_expand_initial_tilde(REPO_DEFAULT_CACHE_BASE);
+        _full_gpx_dir = gnome_vfs_uri_make_full_from_relative (base, "Tracks");
+        g_free (base);
     }
 
     gconf_client_clear_cache(gconf_client);

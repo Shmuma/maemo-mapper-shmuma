@@ -70,6 +70,7 @@
 #include "poi.h"
 #include "settings.h"
 #include "util.h"
+#include "gpx-full.h"
 
 static void osso_cb_hw_state(osso_hw_state_t *state, gpointer data);
 
@@ -185,6 +186,8 @@ maemo_mapper_destroy()
     gps_destroy(FALSE);
 
     path_destroy();
+
+    gpx_full_finalize ();
 
     settings_save();
 
@@ -441,6 +444,9 @@ maemo_mapper_init(gint argc, gchar **argv)
     settings_init();
 
     maps_init(_map_cache_size);
+
+    /* initialize full GPX traker */
+    gpx_full_initialize (_enable_full_gpx, _full_gpx_dir);
 
     /* Initialize _program. */
     _program = HILDON_PROGRAM(hildon_program_get_instance());

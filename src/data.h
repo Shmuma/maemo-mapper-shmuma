@@ -194,6 +194,8 @@ extern gboolean _speed_excess;
 extern SpeedLocation _speed_location;
 extern UnblankOption _unblank_option;
 extern InfoFontSize _info_font_size;
+extern gboolean _enable_full_gpx;
+extern gchar *_full_gpx_dir;
 
 extern GList *_repo_list;
 extern RepoData *_curr_repo;
