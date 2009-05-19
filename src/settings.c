@@ -1475,6 +1475,7 @@ gboolean settings_dialog()
     static BrowseInfo gps_file_browse_info = {0, 0};
     static ScanInfo scan_info = {0};
     gboolean rcvr_changed = FALSE;
+    gboolean full_gpx_changed = FALSE;
     gint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -2147,6 +2148,8 @@ gboolean settings_dialog()
         update_gcs();
 
         /* Full GPX settings */
+        if (_enable_full_gpx != gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (chk_enable_full_gpx)))
+            full_gpx_changed = TRUE;
         _enable_full_gpx = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (chk_enable_full_gpx));
 
         if (!_full_gpx_dir && *gtk_entry_get_text (GTK_ENTRY (txt_full_gpx_directory))
@@ -2158,6 +2161,13 @@ gboolean settings_dialog()
 
             if (*gtk_entry_get_text (GTK_ENTRY (txt_full_gpx_directory)))
                 _full_gpx_dir = g_strdup (gtk_entry_get_text (GTK_ENTRY (txt_full_gpx_directory)));
+            full_gpx_changed = TRUE;
+        }
+
+        /* settings changed, need to reinitialize full GPX subsystem */
+        if (full_gpx_changed) {
+            gpx_full_finalize ();
+            gpx_full_initialize (_enable_full_gpx, _full_gpx_dir);
         }
 
         settings_save();

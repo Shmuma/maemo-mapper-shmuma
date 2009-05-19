@@ -18,6 +18,8 @@ static FILE* gpx_file = NULL;
    overwriten by it's data. So, we have complete file to protect from maemo mapper crash. */
 static int save_counter = 0;
 static int flush_performed = 0;
+static int header_written = 0;
+static gchar *file_name = NULL;
 
 
 static inline gboolean append_string (const char* str)
@@ -66,10 +68,21 @@ static void do_flush (gboolean seek)
 }
 
 
+static void write_header ()
+{
+    /* write file's header */
+    append_string ("<?xml version=\"1.0\"?>\n"
+                   "<gpx version=\"1.0\" creator=\"maemo-mapper\" "
+                   "xmlns=\"http://www.topografix.com/GPX/1/0\">\n"
+                   "  <trk>\n"
+                   "    <trkseg>\n");
+    header_written = 1;
+}
+
+
 /* Initialize file with GPX data */
 gboolean gpx_full_initialize (gboolean enabled, gchar* path)
 {
-    gchar* fname_buf;
     struct tm* tm;
     time_t t;
     int counter = 0;
@@ -81,33 +94,29 @@ gboolean gpx_full_initialize (gboolean enabled, gchar* path)
     if (!path)
         return FALSE;
 
+    gnome_vfs_make_directory (path, 0755);
+
     t = time (NULL);
     tm = localtime (&t);
 
-    fname_buf = g_malloc (strlen (path) + 50);
+    file_name = g_malloc (strlen (path) + 50);
 
     while (1) {
-        sprintf (fname_buf, "%s/mapper_%04d%02d%02d_%04d.gpx", path, tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, counter++);
-        if (stat (fname_buf, &st) < 0)
+        sprintf (file_name, "%s/mapper_%04d%02d%02d_%04d.gpx", path, tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday, counter++);
+        if (stat (file_name, &st) < 0)
             break;
     }
 
     /* file not exists, create one */
-    gpx_file = fopen (fname_buf, "w+");
+    gpx_file = fopen (file_name, "w+");
 
     if (!gpx_file)
         goto err;
 
-    /* write file's header */
-    append_string ("<?xml version=\"1.0\"?>\n"
-                   "<gpx version=\"1.0\" creator=\"maemo-mapper\" "
-                   "xmlns=\"http://www.topografix.com/GPX/1/0\">\n"
-                   "  <trk>\n"
-                   "    <trkseg>\n");
     return TRUE;
 err:
-    if (fname_buf)
-        free (fname_buf);
+    if (file_name)
+        g_free (file_name);
     if (gpx_file)
         fclose (gpx_file);
     return FALSE;
@@ -119,7 +128,13 @@ gboolean gpx_full_append (GpsData* data, Point* pos)
 {
     static char buf[80];
 
+    if (!gpx_file)
+        return FALSE;
+
     flush_performed = 0;
+    if (!header_written)
+        write_header ();
+
     append_string ("      <trkpt lat=\"");
     append_double ("%.06f", data->lat);
     append_string ("\" lon=\"");
@@ -180,14 +195,28 @@ gboolean gpx_full_append (GpsData* data, Point* pos)
 /* Finalize file */
 gboolean gpx_full_finalize ()
 {
-    if (!gpx_file)
+    /* no file -- no problems */
+    if (!gpx_file) {
+        header_written = flush_performed = save_counter = 0;
+        if (file_name)
+            g_free (file_name);
         return TRUE;
+    }
 
-    if (!flush_performed)
-        do_flush (FALSE);
+    /* if file was created and have not data points, unlink it */
+    if (!header_written) {
+        if (file_name)
+            unlink (file_name);
+    }
+    else {
+        if (!flush_performed)
+            do_flush (FALSE);
+    }
     fclose (gpx_file);
     gpx_file = NULL;
-    flush_performed = save_counter = 0;
+    header_written = flush_performed = save_counter = 0;
+    if (file_name)
+        g_free (file_name);
     return TRUE;
 }
 
