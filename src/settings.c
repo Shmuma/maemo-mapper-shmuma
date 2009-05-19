@@ -944,15 +944,16 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
     return TRUE;
 }
 
+
 static gboolean
-settings_dialog_browse_forfile(GtkWidget *widget, BrowseInfo *browse_info)
+settings_dialog_browse_generic(GtkWidget *widget, BrowseInfo *browse_info, gboolean directory)
 {
     GtkWidget *dialog;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     dialog = GTK_WIDGET(
             hildon_file_chooser_dialog_new(GTK_WINDOW(browse_info->dialog),
-            GTK_FILE_CHOOSER_ACTION_OPEN));
+                                           directory ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN));
 
     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
@@ -971,6 +972,21 @@ settings_dialog_browse_forfile(GtkWidget *widget, BrowseInfo *browse_info)
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
+
+
+static gboolean
+settings_dialog_browse_forfile(GtkWidget *widget, BrowseInfo *browse_info)
+{
+    return settings_dialog_browse_generic (widget, browse_info, FALSE);
+}
+
+
+static gboolean
+settings_dialog_browse_fordir(GtkWidget *widget, BrowseInfo *browse_info)
+{
+    return settings_dialog_browse_generic (widget, browse_info, TRUE);
+}
+
 
 static gboolean
 settings_dialog_hardkeys_reset(GtkWidget *widget, KeysDialogInfo *cdi)
@@ -1470,6 +1486,7 @@ gboolean settings_dialog()
     static GtkWidget *chk_enable_full_gpx = NULL;
     static GtkWidget *txt_full_gpx_directory = NULL;
     static GtkWidget *btn_browse_full_gpx_directory = NULL;
+    static BrowseInfo full_gpx_browse_info = {0, 0};
 
     static BrowseInfo poi_browse_info = {0, 0};
     static BrowseInfo gps_file_browse_info = {0, 0};
@@ -1903,8 +1920,13 @@ gboolean settings_dialog()
         g_signal_connect(G_OBJECT(btn_browse_gps), "clicked",
                 G_CALLBACK(settings_dialog_browse_forfile),
                 &gps_file_browse_info);
-    }
 
+        full_gpx_browse_info.dialog = dialog;
+        full_gpx_browse_info.txt = txt_full_gpx_directory;
+        g_signal_connect(G_OBJECT(btn_browse_full_gpx_directory), "clicked",
+                         G_CALLBACK(settings_dialog_browse_fordir),
+                         &full_gpx_browse_info);       
+    }
 
     /* Initialize fields. */
     if(_gri.bt_mac)
