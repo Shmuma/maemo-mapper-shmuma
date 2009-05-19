@@ -1502,7 +1502,7 @@ msgstr "Информация"
 
 #: ../src/settings.c:1839
 msgid "Show POI below zoom"
-msgstr "Показывать метки при масштабе меньше"
+msgstr "Максимальный масштаб"
 
 #: ../src/cmenu.c:675 ../src/cmenu.c:709 ../src/display.c:2726
 msgid "Show Position"
