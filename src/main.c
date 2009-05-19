@@ -446,7 +446,7 @@ maemo_mapper_init(gint argc, gchar **argv)
     maps_init(_map_cache_size);
 
     /* initialize full GPX traker */
-    gpx_full_initialize (TRUE, "./");
+    gpx_full_initialize (_enable_full_gpx, _full_gpx_dir);
 
     /* Initialize _program. */
     _program = HILDON_PROGRAM(hildon_program_get_instance());
