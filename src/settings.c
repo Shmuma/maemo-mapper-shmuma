@@ -955,11 +955,9 @@ settings_dialog_browse_generic(GtkWidget *widget, BrowseInfo *browse_info, gbool
             hildon_file_chooser_dialog_new(GTK_WINDOW(browse_info->dialog),
                                            directory ? GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER : GTK_FILE_CHOOSER_ACTION_OPEN));
 
-    gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
-    if (!directory)
-        gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
-                                            gtk_entry_get_text(GTK_ENTRY(browse_info->txt)));
-    gtk_widget_show_all(dialog);
+/*     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE); */
+    gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
+                                        gtk_entry_get_text(GTK_ENTRY(browse_info->txt)));
 
     if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
