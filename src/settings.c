@@ -131,6 +131,8 @@
 #define GCONF_KEY_POI_DL_URL GCONF_KEY_PREFIX"/poi_dl_url" 
 #define GCONF_KEY_DEG_FORMAT GCONF_KEY_PREFIX"/deg_format" 
 
+#define GCONF_KEY_ENABLE_FULL_GPX GCONF_KEY_PREFIX"/enable_full_gpx"
+
 // APRS
 #ifdef INCLUDE_APRS
 #define GCONF_KEY_APRS_SERVER      GCONF_KEY_PREFIX"/aprs_server" 
@@ -720,6 +722,8 @@ settings_save()
     /* Save Show POI below zoom. */
     gconf_client_set_int(gconf_client,
             GCONF_KEY_POI_ZOOM, _poi_zoom, NULL);
+
+    gconf_client_set_bool (gconf_client, GCONF_KEY_ENABLE_FULL_GPX, _enable_full_gpx, NULL);
 
     gconf_client_clear_cache(gconf_client);
     g_object_unref(gconf_client);
@@ -1460,7 +1464,9 @@ gboolean settings_dialog()
     static GtkWidget *cmb_unblank_option = NULL;
     static GtkWidget *cmb_info_font_size = NULL;
 
-    static GtkWidget *chk_save_full_gpx = NULL;
+    static GtkWidget *chk_enable_full_gpx = NULL;
+    static GtkWidget *txt_full_gpx_directory = NULL;
+    static GtkWidget *btn_browse_full_gpx_directory = NULL;
 
     static BrowseInfo poi_browse_info = {0, 0};
     static BrowseInfo gps_file_browse_info = {0, 0};
@@ -1854,9 +1860,23 @@ gboolean settings_dialog()
 
         /* Track on/off checkbox */
         gtk_table_attach (GTK_TABLE (table),
-                          chk_save_full_gpx = gtk_check_button_new_with_label (_("Save full GPX track")),
+                          chk_enable_full_gpx = gtk_check_button_new_with_label (_("Save full GPX track")),
                           0, 2, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (chk_save_full_gpx), _save_full_gpx);
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (chk_enable_full_gpx), _enable_full_gpx);
+
+        /* GPX data directory */
+        gtk_table_attach (GTK_TABLE (table), 
+                          label = gtk_label_new (_("GPX directory")),
+                          0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+        gtk_table_attach (GTK_TABLE (table), 
+                          hbox = gtk_hbox_new (FALSE, 4),
+                          1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
+        gtk_box_pack_start (GTK_BOX (hbox),
+                            txt_full_gpx_directory = gtk_entry_new (),
+                            TRUE, TRUE, 0);
+        gtk_box_pack_start (GTK_BOX (hbox),
+                            btn_browse_full_gpx_directory = gtk_button_new_with_label (_("Browse...")),
+                            FALSE, FALSE, 0);
 
         /* Connect signals. */
         memset(&scan_info, 0, sizeof(scan_info));
@@ -2120,6 +2140,9 @@ gboolean settings_dialog()
                 HILDON_NUMBER_EDITOR(num_poi_zoom));
 
         update_gcs();
+
+        /* Full GPX settings */
+        _enable_full_gpx = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (chk_enable_full_gpx));
 
         settings_save();
 
@@ -2834,6 +2857,16 @@ settings_init()
                 _color[i] = COLORABLE_DEFAULT[i];
         }
     }
+
+    /* Full GPX settings */
+    /* Enable full GPX, default is FALSE */
+    value = gconf_client_get (gconf_client, GCONF_KEY_ENABLE_FULL_GPX, NULL);
+    if (value) {
+        _enable_full_gpx = gconf_value_get_bool (value);
+        gconf_value_free (value);
+    }
+    else
+        _enable_full_gpx = FALSE;
 
     gconf_client_clear_cache(gconf_client);
     g_object_unref(gconf_client);
