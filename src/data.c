@@ -213,6 +213,7 @@ UnblankOption _unblank_option = UNBLANK_FULLSCREEN;
 InfoFontSize _info_font_size = INFO_FONT_MEDIUM;
 
 gboolean _enable_full_gpx = FALSE;
+gchar *_full_gpx_dir = NULL;
 
 GList *_repo_list = NULL;
 RepoData *_curr_repo = NULL;

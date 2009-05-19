@@ -132,6 +132,7 @@
 #define GCONF_KEY_DEG_FORMAT GCONF_KEY_PREFIX"/deg_format" 
 
 #define GCONF_KEY_ENABLE_FULL_GPX GCONF_KEY_PREFIX"/enable_full_gpx"
+#define GCONF_KEY_FULL_GPX_DIR GCONF_KEY_PREFIX"/full_gpx_dir"
 
 // APRS
 #ifdef INCLUDE_APRS
@@ -723,7 +724,9 @@ settings_save()
     gconf_client_set_int(gconf_client,
             GCONF_KEY_POI_ZOOM, _poi_zoom, NULL);
 
+    /* Full GPX */
     gconf_client_set_bool (gconf_client, GCONF_KEY_ENABLE_FULL_GPX, _enable_full_gpx, NULL);
+    gconf_client_set_string (gconf_client, GCONF_KEY_FULL_GPX_DIR, _full_gpx_dir, NULL);
 
     gconf_client_clear_cache(gconf_client);
     g_object_unref(gconf_client);
@@ -1957,6 +1960,8 @@ gboolean settings_dialog()
             _unblank_option);
     gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_info_font_size),
             _info_font_size);
+    if(_full_gpx_dir)
+        gtk_entry_set_text(GTK_ENTRY(txt_full_gpx_directory), _full_gpx_dir);
 
     gtk_widget_show_all(dialog);
 
@@ -2143,6 +2148,17 @@ gboolean settings_dialog()
 
         /* Full GPX settings */
         _enable_full_gpx = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (chk_enable_full_gpx));
+
+        if (!_full_gpx_dir && *gtk_entry_get_text (GTK_ENTRY (txt_full_gpx_directory))
+            || strcmp (_full_gpx_dir, gtk_entry_get_text (GTK_ENTRY (txt_full_gpx_directory)))) 
+        {
+            if (_full_gpx_dir)
+                g_free (_full_gpx_dir);
+            _full_gpx_dir = NULL;
+
+            if (*gtk_entry_get_text (GTK_ENTRY (txt_full_gpx_directory)))
+                _full_gpx_dir = g_strdup (gtk_entry_get_text (GTK_ENTRY (txt_full_gpx_directory)));
+        }
 
         settings_save();
 
@@ -2867,6 +2883,16 @@ settings_init()
     }
     else
         _enable_full_gpx = FALSE;
+
+    /* Full GPX directory */
+    _full_gpx_dir = gconf_client_get_string (gconf_client, 
+                                             GCONF_KEY_FULL_GPX_DIR, NULL);
+
+    if (_full_gpx_dir == NULL) {
+        gchar *base = gnome_vfs_expand_initial_tilde(REPO_DEFAULT_CACHE_BASE);
+        _full_gpx_dir = gnome_vfs_uri_make_full_from_relative (base, "Tracks");
+        g_free (base);
+    }
 
     gconf_client_clear_cache(gconf_client);
     g_object_unref(gconf_client);
