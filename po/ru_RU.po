@@ -120,11 +120,11 @@ msgstr ""
 
 #: ../src/settings.c:1662
 msgid "Announce"
-msgstr "Объявить"
+msgstr "Оповещение"
 
 #: ../src/cmenu.c:697
 msgid "Apply Map Correction"
-msgstr "Скорректировать координаты"
+msgstr "Поправка координат"
 
 #: ../src/maps.c:3411
 msgid "Area"
@@ -132,19 +132,19 @@ msgstr "Область"
 
 #: ../src/menu.c:1836 ../src/settings.c:1591
 msgid "Auto-Center"
-msgstr "Авто-центрировать"
+msgstr "Слежение"
 
 #: ../src/menu.c:1207
 msgid "Auto-Center Mode: Lat/Lon"
-msgstr "Центровка: Координаты"
+msgstr "Слежение: Координаты"
 
 #: ../src/menu.c:1190
 msgid "Auto-Center Mode: Lead"
-msgstr "Центровка: Направление"
+msgstr "Слежение: Направление"
 
 #: ../src/menu.c:1224
 msgid "Auto-Center Off"
-msgstr "Центровка выключена"
+msgstr "Слежение выключено"
 
 #: ../src/menu.c:1703
 msgid "Auto-Download"
@@ -214,7 +214,7 @@ msgstr "Просмотреть метки"
 #: ../src/maps.c:1850 ../src/maps.c:2287 ../src/menu.c:1688
 #: ../src/settings.c:1552 ../src/settings.c:1834
 msgid "Browse..."
-msgstr "Просмотреть..."
+msgstr "Выбрать..."
 
 #: ../src/poi.c:189
 msgid "Bus stops, airports, train stations, etc."
@@ -497,7 +497,7 @@ msgstr "Включить голосовые уведомления (требуе
 
 #: ../src/settings.c:1667
 msgid "Enable Waypoint Announcements"
-msgstr "Включить предупреждения по точках маршрута"
+msgstr "Опопвещать о пунктах маршрута"
 
 #: ../src/poi.c:705 ../src/poi.c:968
 msgid "Enabled"
@@ -629,7 +629,7 @@ msgstr "Файл"
 
 #: ../src/settings.c:1534 ../src/settings.c:3141
 msgid "File Path"
-msgstr "Путь"
+msgstr "Устройство"
 
 #: ../src/gpx.c:158 ../src/gpx.c:186
 msgid "File is incomplete."
@@ -917,7 +917,7 @@ msgstr "Местное время"
 
 #: ../src/poi.c:505 ../src/settings.c:1797
 msgid "Location"
-msgstr "Местоположение"
+msgstr "Расположение"
 
 #: ../src/poi.c:190
 msgid "Lodging"
@@ -1331,7 +1331,7 @@ msgstr "Повернуть"
 
 #: ../src/settings.c:1637
 msgid "Rotate Sensit."
-msgstr "Чувствительность поворота."
+msgstr "Чувств. поворота"
 
 #: ../src/main.c:288
 msgid "Rotate View Clockwise"
@@ -1502,7 +1502,7 @@ msgstr "Информация"
 
 #: ../src/settings.c:1839
 msgid "Show POI below zoom"
-msgstr "Максимальный масштаб"
+msgstr "До масштаба"
 
 #: ../src/cmenu.c:675 ../src/cmenu.c:709 ../src/display.c:2726
 msgid "Show Position"
@@ -1526,7 +1526,7 @@ msgstr "Скорость"
 
 #: ../src/settings.c:1787
 msgid "Speed Limit"
-msgstr "Ограничение скорости"
+msgstr "Лимит скорости"
 
 #: ../src/settings.c:3059
 #, fuzzy
@@ -1750,7 +1750,7 @@ msgstr "При движении"
 
 #: ../src/main.c:233
 msgid "When Moving (Full Screen Only)"
-msgstr "При движении (только в полноэкранном режиме)"
+msgstr "При движении (полный экран)"
 
 #: ../src/main.c:231
 msgid "When Receiving Any GPS Data"
