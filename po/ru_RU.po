@@ -497,7 +497,7 @@ msgstr "Включить голосовые уведомления (требуе
 
 #: ../src/settings.c:1667
 msgid "Enable Waypoint Announcements"
-msgstr "Опопвещать о пунктах маршрута"
+msgstr "Оповещать о пунктах маршрута"
 
 #: ../src/poi.c:705 ../src/poi.c:968
 msgid "Enabled"
@@ -917,7 +917,7 @@ msgstr "Местное время"
 
 #: ../src/poi.c:505 ../src/settings.c:1797
 msgid "Location"
-msgstr "Расположение"
+msgstr "Положение"
 
 #: ../src/poi.c:190
 msgid "Lodging"
