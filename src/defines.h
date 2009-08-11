@@ -321,7 +321,6 @@
             if(APPROACHING_WAYPOINT) \
             { \
                 printf("Unblanking screen...\n"); \
-                osso_display_state_on(_osso); \
                 osso_display_blanking_pause(_osso); \
             } \
             break; \
@@ -334,7 +333,6 @@
                 break; \
         case UNBLANK_WITH_GPS: \
             printf("Unblanking screen...\n"); \
-            osso_display_state_on(_osso); \
             osso_display_blanking_pause(_osso); \
     } \
 }
