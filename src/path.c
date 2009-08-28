@@ -30,11 +30,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <bt-dbus.h>
 #include <sqlite3.h>
 
 #ifndef LEGACY
-#    include <hildon/hildon-help.h>
 #    include <hildon/hildon-note.h>
 #    include <hildon/hildon-banner.h>
 #    include <hildon/hildon-sound.h>
@@ -1223,11 +1221,10 @@ route_download(gchar *to)
 
         /* Enable the help button. */
 #ifndef LEGACY
-        hildon_help_dialog_help_enable(
 #else
         ossohelp_dialog_help_enable(
-#endif
                 GTK_DIALOG(dialog), HELP_ID_DOWNROUTE, _osso);
+#endif
 
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                 table = gtk_table_new(2, 5, FALSE), TRUE, TRUE, 0);

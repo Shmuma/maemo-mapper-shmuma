@@ -35,7 +35,6 @@
 #include "types.h"
 
 #ifndef LEGACY
-#    include <hildon/hildon-help.h>
 #    include <hildon/hildon-note.h>
 #    include <hildon/hildon-file-chooser-dialog.h>
 #    include <hildon/hildon-banner.h>
@@ -1311,13 +1310,11 @@ window_present()
 
             confirm = hildon_note_new_confirmation(GTK_WINDOW(_window),
                     _("It looks like this is your first time running"
-                        " Maemo Mapper.  Press OK to view the the help pages."
-                        " Otherwise, press Cancel to continue."));
+                        " Maemo Mapper."));
 
             if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
             {
 #ifndef LEGACY
-                hildon_help_show(_osso, HELP_ID_INTRO, 0);
 #else
                 ossohelp_show(_osso, HELP_ID_INTRO, 0);
 #endif

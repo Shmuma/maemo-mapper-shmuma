@@ -31,12 +31,10 @@
 #include <string.h>
 #include <math.h>
 #include <dbus/dbus-glib.h>
-#include <bt-dbus.h>
 #include <gconf/gconf-client.h>
 #include <glib.h>
 
 #ifndef LEGACY
-#    include <hildon/hildon-help.h>
 #    include <hildon/hildon-note.h>
 #    include <hildon/hildon-color-button.h>
 #    include <hildon/hildon-file-chooser-dialog.h>
@@ -728,215 +726,6 @@ settings_save()
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
-static void
-scan_cb_dev_found(DBusGProxy *sig_proxy, const gchar *bda,
-        const gchar *name, gpointer *class, guchar rssi, gint coff,
-        ScanInfo *scan_info)
-{
-    GtkTreeIter iter;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-    gtk_list_store_append(scan_info->store, &iter);
-    gtk_list_store_set(scan_info->store, &iter,
-            0, g_strdup(bda),
-            1, g_strdup(name),
-            -1);
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-}
-
-static void
-scan_cb_search_complete(DBusGProxy *sig_proxy, ScanInfo *scan_info)
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-    gtk_widget_destroy(scan_info->banner);
-    dbus_g_proxy_disconnect_signal(sig_proxy, BTSEARCH_DEV_FOUND_SIG,
-            G_CALLBACK(scan_cb_dev_found), scan_info);
-    dbus_g_proxy_disconnect_signal(sig_proxy, BTSEARCH_SEARCH_COMPLETE_SIG,
-            G_CALLBACK(scan_cb_search_complete), scan_info);
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-}
-
-static gint
-scan_start_search(ScanInfo *scan_info)
-{
-    GError *error = NULL;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    /* Initialize D-Bus. */
-    if(NULL == (scan_info->bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error)))
-    {
-        g_printerr("Failed to open connection to D-Bus: %s.\n",
-                error->message);
-        return 1;
-    }
-
-    if(NULL == (scan_info->req_proxy =dbus_g_proxy_new_for_name(scan_info->bus,
-            BTSEARCH_SERVICE,
-            BTSEARCH_REQ_PATH,
-            BTSEARCH_REQ_INTERFACE)))
-    {
-        g_printerr("Failed to create D-Bus request proxy for btsearch.");
-        return 2;
-    }
-
-    if(NULL == (scan_info->sig_proxy =dbus_g_proxy_new_for_name(scan_info->bus,
-            BTSEARCH_SERVICE,
-            BTSEARCH_SIG_PATH,
-            BTSEARCH_SIG_INTERFACE)))
-    {
-        g_printerr("Failed to create D-Bus signal proxy for btsearch.");
-        return 2;
-    }
-
-    dbus_g_object_register_marshaller(
-            g_cclosure_user_marshal_VOID__STRING_STRING_POINTER_UCHAR_UINT,
-            G_TYPE_NONE,
-            G_TYPE_STRING,
-            G_TYPE_STRING,
-            DBUS_TYPE_G_UCHAR_ARRAY,
-            G_TYPE_UCHAR,
-            G_TYPE_UINT,
-            G_TYPE_INVALID);
-
-    dbus_g_proxy_add_signal(scan_info->sig_proxy,
-            BTSEARCH_DEV_FOUND_SIG,
-            G_TYPE_STRING,
-            G_TYPE_STRING,
-            DBUS_TYPE_G_UCHAR_ARRAY,
-            G_TYPE_UCHAR,
-            G_TYPE_UINT,
-            G_TYPE_INVALID);
-    dbus_g_proxy_connect_signal(scan_info->sig_proxy, BTSEARCH_DEV_FOUND_SIG,
-            G_CALLBACK(scan_cb_dev_found), scan_info, NULL);
-
-    dbus_g_proxy_add_signal(scan_info->sig_proxy,
-            BTSEARCH_SEARCH_COMPLETE_SIG,
-            G_TYPE_INVALID);
-    dbus_g_proxy_connect_signal(scan_info->sig_proxy,
-            BTSEARCH_SEARCH_COMPLETE_SIG,
-            G_CALLBACK(scan_cb_search_complete), scan_info, NULL);
-
-    error = NULL;
-    if(!dbus_g_proxy_call(scan_info->req_proxy, BTSEARCH_START_SEARCH_REQ,
-                &error, G_TYPE_INVALID, G_TYPE_INVALID))
-    {
-        if(error->domain == DBUS_GERROR
-                && error->code == DBUS_GERROR_REMOTE_EXCEPTION)
-        {
-            g_printerr("Caught remote method exception %s: %s",
-                    dbus_g_error_get_name(error),
-                    error->message);
-        }
-        else
-            g_printerr("Error: %s\n", error->message);
-        return 3;
-    }
-
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return 0;
-}
-
-/**
- * Scan for all bluetooth devices.  This method can take a few seconds,
- * during which the UI will freeze.
- */
-static gboolean
-scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
-{
-    GError *error = NULL;
-    GtkWidget *dialog = NULL;
-    GtkWidget *lst_devices = NULL;
-    GtkTreeViewColumn *column = NULL;
-    GtkCellRenderer *renderer = NULL;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    dialog = gtk_dialog_new_with_buttons(_("Select Bluetooth Device"),
-            GTK_WINDOW(scan_info->settings_dialog), GTK_DIALOG_MODAL,
-            GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-            GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-            NULL);
-
-    scan_info->scan_dialog = dialog;
-
-    scan_info->store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING);
-
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 500, 300);
-
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-            lst_devices = gtk_tree_view_new_with_model(
-                GTK_TREE_MODEL(scan_info->store)), TRUE, TRUE, 0);
-
-    g_object_unref(G_OBJECT(scan_info->store));
-
-    gtk_tree_selection_set_mode(
-            gtk_tree_view_get_selection(GTK_TREE_VIEW(lst_devices)),
-            GTK_SELECTION_SINGLE);
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(lst_devices), TRUE);
-
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes(
-            _("MAC"), renderer, "text", 0, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(lst_devices), column);
-
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes(
-            _("Description"), renderer, "text", 1, NULL);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(lst_devices), column);
-
-    gtk_widget_show_all(dialog);
-
-    scan_info->banner = hildon_banner_show_animation(dialog, NULL,
-            _("Scanning for Bluetooth Devices"));
-
-    if(scan_start_search(scan_info))
-    {
-        gtk_widget_destroy(scan_info->banner);
-        popup_error(scan_info->settings_dialog,
-                _("An error occurred while attempting to scan for "
-                "bluetooth devices."));
-    }
-    else while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
-    {
-        GtkTreeIter iter;
-        if(gtk_tree_selection_get_selected(
-                    gtk_tree_view_get_selection(GTK_TREE_VIEW(lst_devices)),
-                    NULL, &iter))
-        {
-            gchar *mac;
-            gtk_tree_model_get(GTK_TREE_MODEL(scan_info->store),
-                    &iter, 0, &mac, -1);
-            gtk_entry_set_text(GTK_ENTRY(scan_info->txt_gps_bt_mac), mac);
-            break;
-        }
-        else
-            popup_error(dialog,
-                    _("Please select a bluetooth device from the list."));
-    }
-
-    gtk_widget_destroy(dialog);
-
-    /* Clean up D-Bus. */
-    if(scan_info->req_proxy)
-    {
-        dbus_g_proxy_call(scan_info->req_proxy, BTSEARCH_STOP_SEARCH_REQ,
-                    &error, G_TYPE_INVALID, G_TYPE_INVALID);
-        g_object_unref(scan_info->req_proxy);
-        scan_info->req_proxy = NULL;
-    }
-    if(scan_info->sig_proxy)
-    {
-        g_object_unref(scan_info->sig_proxy);
-        scan_info->sig_proxy = NULL;
-    }
-    if(scan_info->bus)
-    {
-        dbus_g_connection_unref(scan_info->bus);
-        scan_info->bus = NULL;
-    }
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
 static gboolean
 settings_dialog_browse_forfile(GtkWidget *widget, BrowseInfo *browse_info)
 {
@@ -1462,7 +1251,6 @@ gboolean settings_dialog()
 
     static BrowseInfo poi_browse_info = {0, 0};
     static BrowseInfo gps_file_browse_info = {0, 0};
-    static ScanInfo scan_info = {0};
     gboolean rcvr_changed = FALSE;
     gint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -1476,11 +1264,10 @@ gboolean settings_dialog()
 
         /* Enable the help button. */
 #ifndef LEGACY
-        hildon_help_dialog_help_enable(
 #else
         ossohelp_dialog_help_enable(
-#endif 
                 GTK_DIALOG(dialog), HELP_ID_SETTINGS, _osso);
+#endif 
 
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
                btn_buttons = gtk_button_new_with_label(_("Hardware Keys...")));
@@ -1846,11 +1633,6 @@ gboolean settings_dialog()
                 num_poi_zoom = hildon_number_editor_new(0, MAX_ZOOM));
 
         /* Connect signals. */
-        memset(&scan_info, 0, sizeof(scan_info));
-        scan_info.settings_dialog = dialog;
-        scan_info.txt_gps_bt_mac = txt_gps_bt_mac;
-        g_signal_connect(G_OBJECT(btn_scan), "clicked",
-                         G_CALLBACK(scan_bluetooth), &scan_info);
         g_signal_connect(G_OBJECT(btn_buttons), "clicked",
                          G_CALLBACK(settings_dialog_hardkeys), dialog);
         g_signal_connect(G_OBJECT(btn_colors), "clicked",

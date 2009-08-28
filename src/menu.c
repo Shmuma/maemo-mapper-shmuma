@@ -31,7 +31,6 @@
 #include <string.h>
 
 #ifndef LEGACY
-#    include <hildon/hildon-help.h>
 #    include <hildon/hildon-program.h>
 #    include <hildon/hildon-banner.h>
 #else
@@ -1457,7 +1456,6 @@ menu_cb_help(GtkMenuItem *item)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
 #ifndef LEGACY
-    hildon_help_show(_osso, HELP_ID_INTRO, 0);
 #else
     ossohelp_show(_osso, HELP_ID_INTRO, 0);
 #endif
@@ -1472,7 +1470,6 @@ menu_cb_about(GtkMenuItem *item)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
 #ifndef LEGACY
-    hildon_help_show(_osso, HELP_ID_ABOUT, HILDON_HELP_SHOW_DIALOG);
 #else
     ossohelp_show(_osso, HELP_ID_ABOUT, OSSO_HELP_SHOW_DIALOG);
 #endif

@@ -71,12 +71,8 @@ AS_IF([test "x$HAVE_LEGACY" = xyes],
                 AC_DEFINE(LEGACY, 1, Build for OS2006/OS2007)
         ],
         [
-                PKG_CHECK_MODULES(OSSO, libosso >= 1 hildon-help)
+                PKG_CHECK_MODULES(OSSO, libosso >= 1)
                 PKG_CHECK_MODULES(HILDON, hildon-1 hildon-fm-2)
-                AC_CHECK_HEADER(gps.h, , AC_MSG_ERROR(gps.h not found. Please install libgps-dev.))
-                AC_CHECK_LIB(gps, gps_open, , AC_MSG_ERROR(libgps.so not found. Please install libgps.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
-                AC_CHECK_HEADER(gpsbt.h, , AC_MSG_WARN(gpsbt.h not found. Compiling without gpsbt support.))
-                AC_CHECK_LIB(gpsbt, gpsbt_start, , AC_MSG_WARN(libgpsbt.so not found. Compiling without gpsbt support.), -lgps -lgpsmgr -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
         ])
 
 AC_SUBST(OSSO_LIBS)
@@ -143,7 +139,6 @@ AC_SUBST(plugindesktopentrydir)
 
 AC_DEFINE_UNQUOTED([LOCALEDIR], "${localedir}", [Runtime locale catalog files path])
 AC_DEFINE_UNQUOTED([PIXMAPDIR], "${pixmapdir}", [Runtime pixmap files path])
-AC_DEFINE([INCLUDE_APRS], [1], [Include APRS functionality])
 
 
 # Produce output files
