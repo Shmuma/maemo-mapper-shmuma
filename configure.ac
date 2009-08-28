@@ -73,6 +73,7 @@ AS_IF([test "x$HAVE_LEGACY" = xyes],
         [
                 PKG_CHECK_MODULES(OSSO, libosso >= 1)
                 PKG_CHECK_MODULES(HILDON, hildon-1 hildon-fm-2)
+                PKG_CHECK_MODULES(LOCATION, liblocation)
         ])
 
 AC_SUBST(OSSO_LIBS)
@@ -80,6 +81,9 @@ AC_SUBST(OSSO_CFLAGS)
 
 AC_SUBST(HILDON_LIBS)
 AC_SUBST(HILDON_CFLAGS)
+
+AC_SUBST(LOCATION_LIBS)
+AC_SUBST(LOCATION_CFLAGS)
 
 
 # Localisation

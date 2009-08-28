@@ -61,12 +61,17 @@
 #include "path.h"
 #include "util.h"
 
+#include <location/location-gpsd-control.h>
+#include <location/location-gps-device.h>
+
+static LocationGPSDControl *gpsd_control = NULL;
+static LocationGPSDevice *gps_device = NULL;
+
 static volatile GThread *_gps_thread = NULL;
 static GMutex *_gps_init_mutex = NULL;
 static gint _gps_rcvr_retry_count = 0;
 
 static gint _gmtoffset = 0;
-
 
 #define MACRO_PARSE_INT(tofill, str) { \
     gchar *error_check; \
@@ -91,6 +96,43 @@ static gint _gmtoffset = 0;
         return; \
     } \
 }
+
+static void
+on_gps_changed(LocationGPSDevice *device)
+{
+    gboolean newly_fixed = FALSE;
+
+    if (device->fix->fields & LOCATION_GPS_DEVICE_LATLONG_SET)
+    {
+        /* Data is valid. */
+        if (_gps_state < RCVR_FIXED)
+        {
+            newly_fixed = TRUE;
+            set_conn_state(RCVR_FIXED);
+        }
+
+	_gps.lat = device->fix->latitude;
+	_gps.lon = device->fix->longitude;
+	_gps.speed = device->fix->speed;
+	_gps.heading = device->fix->track;
+	_gps.fix = 2;
+	_gps.satinuse = device->satellites_in_use;
+
+	/* Translate data into integers. */
+	latlon2unit(_gps.lat, _gps.lon, _pos.unitx, _pos.unity);
+
+	if (track_add(_pos.time, newly_fixed) || newly_fixed)
+	{
+	    /* Move mark to new location. */
+	    map_refresh_mark(FALSE);
+	}
+	else
+	{
+	    map_move_mark();
+	}
+    }
+}
+
 static void
 gps_parse_rmc(gchar *sentence)
 {
@@ -867,7 +909,7 @@ rcvr_disconnect()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    _gps_thread = NULL;
+    location_gpsd_control_stop(gpsd_control);
 
     if(_window)
         set_conn_state(RCVR_OFF);
@@ -890,12 +932,7 @@ rcvr_connect()
     {
         set_conn_state(RCVR_DOWN);
 
-        /* Lock/Unlock the mutex to ensure that the thread doesn't
-         * start until _gps_thread is set. */
-        g_mutex_lock(_gps_init_mutex);
-        _gps_thread = g_thread_create((GThreadFunc)thread_read_nmea,
-                gri_clone(&_gri), TRUE, NULL); /* Joinable. */
-        g_mutex_unlock(_gps_init_mutex);
+	location_gpsd_control_start(gpsd_control);
     }
 
     vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
@@ -923,6 +960,15 @@ void
 gps_init()
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
+
+    if (!gpsd_control)
+    {
+	gpsd_control = location_gpsd_control_get_default();
+
+	gps_device = g_object_new(LOCATION_TYPE_GPS_DEVICE, NULL);
+	g_signal_connect (gps_device, "changed",
+			  G_CALLBACK(on_gps_changed), NULL);
+    }
 
     _gps_init_mutex = g_mutex_new();
 
