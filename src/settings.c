@@ -226,6 +226,15 @@ static struct _SettingWidgets {
     GtkWidget *num_announce_notice;
     GtkWidget *enable_voice;
     GtkWidget *enable_announce;
+
+    GtkWidget *draw_width;
+    GtkWidget *unblank_option;
+    GtkWidget *info_font_size;
+    GtkWidget *units;
+    GtkWidget *degformat;
+    GtkWidget *auto_download_precache;
+    GtkWidget *speed_limit;
+    GtkWidget *speed_location;
 } widgets;
 
 #ifdef INCLUDE_APRS
@@ -1384,6 +1393,164 @@ create_announce_dialog(GtkWindow *parent)
     return dialog;
 }
 
+static GtkWidget *
+create_misc_dialog(GtkWindow *parent)
+{
+    GtkWidget *dialog;
+    GtkWidget *pannable;
+    HildonTouchSelector *selector;
+    GtkWidget *vbox, *hbox;
+    gint i;
+
+    dialog = gtk_dialog_new_with_buttons
+        (_("Misc."), parent, GTK_DIALOG_MODAL,
+         GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+         NULL);
+
+    vbox = gtk_vbox_new(FALSE, 0);
+
+    pannable = hildon_pannable_area_new();
+    gtk_widget_set_size_request(pannable, -1, 400);
+    hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(pannable),
+                                           vbox);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), pannable,
+                       TRUE, TRUE, 0);
+
+    /* Line Width. */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    for (i = 1; i <= 20; i++)
+    {
+        gchar buffer[5];
+        sprintf(buffer, "%d", i);
+        hildon_touch_selector_append_text(selector, buffer);
+    }
+    widgets.draw_width =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Line Width"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), widgets.draw_width, FALSE, TRUE, 0);
+
+    /* Unblank Screen */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    for (i = 0; i < UNBLANK_ENUM_COUNT; i++)
+        hildon_touch_selector_append_text(selector, UNBLANK_ENUM_TEXT[i]);
+    widgets.unblank_option =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Unblank Screen"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), widgets.unblank_option, FALSE, TRUE, 0);
+
+    /* Information Font Size. */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    for (i = 0; i < INFO_FONT_ENUM_COUNT; i++)
+        hildon_touch_selector_append_text(selector, INFO_FONT_ENUM_TEXT[i]);
+    widgets.info_font_size =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Info Font Size"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), widgets.info_font_size, FALSE, TRUE, 0);
+
+    /* Units. */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    for (i = 0; i < UNITS_ENUM_COUNT; i++)
+        hildon_touch_selector_append_text(selector, UNITS_ENUM_TEXT[i]);
+    widgets.units =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Units"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), widgets.units, FALSE, TRUE, 0);
+
+
+    /* Degrees format */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    for (i = 0; i < DEG_FORMAT_ENUM_COUNT; i++)
+        hildon_touch_selector_append_text(selector,
+                                          DEG_FORMAT_ENUM_TEXT[i].name);
+    widgets.degformat =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Degrees Format"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), widgets.degformat, FALSE, TRUE, 0);
+
+    /* Pre-cache */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    for (i = 0; i < 5; i++)
+    {
+        gchar buffer[5];
+        sprintf(buffer, "%d", i);
+        hildon_touch_selector_append_text(selector, buffer);
+    }
+    widgets.auto_download_precache =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Auto-Download Pre-cache"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), widgets.auto_download_precache,
+                       FALSE, TRUE, 0);
+
+    /* Speed warner. */
+    hbox = gtk_hbox_new(TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, TRUE, 0);
+
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    hildon_touch_selector_append_text(selector, _("Disabled"));
+    for (i = 1; i <= 100; i++)
+    {
+        gchar buffer[5];
+        sprintf(buffer, "%d", i * 5);
+        hildon_touch_selector_append_text(selector, buffer);
+    }
+    widgets.speed_limit =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Speed Limit"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_box_pack_start(GTK_BOX(hbox), widgets.speed_limit, TRUE, TRUE, 0);
+
+    /* Speed location */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    for (i = 0; i < SPEED_LOCATION_ENUM_COUNT; i++)
+        hildon_touch_selector_append_text(selector,
+                                          SPEED_LOCATION_ENUM_TEXT[i]);
+    widgets.speed_location =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Location"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_box_pack_start(GTK_BOX(hbox), widgets.speed_location, TRUE, TRUE, 0);
+
+    return dialog;
+}
+
 /**
  * Bring up the Settings dialog.  Return TRUE if and only if the recever
  * information has changed (MAC or channel).
@@ -1394,21 +1561,12 @@ gboolean settings_dialog()
     static GtkWidget *table = NULL;
     static GtkWidget *hbox = NULL;
     static GtkWidget *label = NULL;
-    static GtkWidget *num_draw_width = NULL;
-    static GtkWidget *cmb_units = NULL;
-    static GtkWidget *cmb_degformat = NULL;
     static GtkWidget *btn_buttons = NULL;
     static GtkWidget *btn_colors = NULL;
 
     static GtkWidget *txt_poi_db = NULL;
     static GtkWidget *btn_browse_poi = NULL;
     static GtkWidget *num_poi_zoom = NULL;
-    static GtkWidget *num_auto_download_precache = NULL;
-    static GtkWidget *chk_speed_limit_on = NULL;
-    static GtkWidget *num_speed = NULL;
-    static GtkWidget *cmb_speed_location = NULL;
-    static GtkWidget *cmb_unblank_option = NULL;
-    static GtkWidget *cmb_info_font_size = NULL;
     GtkWidget *pannable;
     GtkWidget *vbox;
     GtkWidget *page_dialog;
@@ -1416,7 +1574,6 @@ gboolean settings_dialog()
 
     static BrowseInfo poi_browse_info = {0, 0};
     gboolean rcvr_changed = FALSE;
-    gint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(dialog == NULL)
@@ -1462,125 +1619,12 @@ gboolean settings_dialog()
         gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
         /* Misc. page. */
-        gtk_box_pack_start(GTK_BOX(vbox), gtk_hseparator_new(),
-                           FALSE, TRUE, 0);
-        table = gtk_table_new(3, 5, FALSE);
-        label = gtk_label_new(_("Misc."));
-        gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
-
-        /* Line Width. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Line Width")),
-                0, 1, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                num_draw_width = hildon_controlbar_new(),
-                1, 5, 0, 1, GTK_FILL, 0, 2, 4);
-        hildon_controlbar_set_range(HILDON_CONTROLBAR(num_draw_width), 1, 20);
-        force_min_visible_bars(HILDON_CONTROLBAR(num_draw_width), 1);
-
-        /* Unblank Screen */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Unblank Screen")),
-                0, 1, 1, 2, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                cmb_unblank_option = gtk_combo_box_new_text(),
-                1, 5, 1, 2, GTK_FILL, 0, 2, 4);
-        for(i = 0; i < UNBLANK_ENUM_COUNT; i++)
-            gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_unblank_option),
-                    UNBLANK_ENUM_TEXT[i]);
-
-        /* Information Font Size. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Info Font Size")),
-                0, 1, 2, 3, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                cmb_info_font_size = gtk_combo_box_new_text(),
-                1, 2, 2, 3, GTK_FILL, 0, 2, 4);
-        for(i = 0; i < INFO_FONT_ENUM_COUNT; i++)
-            gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_info_font_size),
-                    INFO_FONT_ENUM_TEXT[i]);
-
-        gtk_table_attach(GTK_TABLE(table),
-                gtk_vseparator_new(),
-                2, 3, 2, 3, GTK_EXPAND | GTK_FILL, GTK_FILL, 2,4);
-
-
-        /* Units. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Units")),
-                3, 4, 2, 3, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                cmb_units = gtk_combo_box_new_text(),
-                4, 5, 2, 3, GTK_FILL, 0, 2, 4);
-        for(i = 0; i < UNITS_ENUM_COUNT; i++)
-            gtk_combo_box_append_text(
-                    GTK_COMBO_BOX(cmb_units), UNITS_ENUM_TEXT[i]);
-
-        /* Misc. 2 page. */
-        gtk_box_pack_start(GTK_BOX(vbox), gtk_hseparator_new(),
-                           FALSE, TRUE, 0);
-        table = gtk_table_new(3, 4, FALSE);
-        label = gtk_label_new(_("Misc. 2"));
-        gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
-
-        /* Degrees format */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Degrees Format")),
-                0, 1, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-                1, 2, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_container_add(GTK_CONTAINER(label),
-                cmb_degformat = gtk_combo_box_new_text());
-        for(i = 0; i < DEG_FORMAT_ENUM_COUNT; i++)
-            gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_degformat),
-                DEG_FORMAT_ENUM_TEXT[i].name);
-
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Auto-Download Pre-cache")),
-                0, 1, 1, 2, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                num_auto_download_precache = hildon_controlbar_new(),
-                1, 2, 1, 2, GTK_FILL, 0, 2, 4);
-        hildon_controlbar_set_range(
-                HILDON_CONTROLBAR(num_auto_download_precache), 1, 5);
-        force_min_visible_bars(
-                HILDON_CONTROLBAR(num_auto_download_precache), 1);
-
-        /* Speed warner. */
-        gtk_table_attach(GTK_TABLE(table),
-                hbox = gtk_hbox_new(FALSE, 4),
-                0, 4, 2, 3, GTK_FILL, 0, 2, 4);
-
-        gtk_box_pack_start(GTK_BOX(hbox),
-                chk_speed_limit_on = gtk_check_button_new_with_label(
-                    _("Speed Limit")),
-                FALSE, FALSE, 0);
-
-        gtk_box_pack_start(GTK_BOX(hbox),
-                label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-                FALSE, FALSE, 0);
-        gtk_container_add(GTK_CONTAINER(label),
-                num_speed = hildon_number_editor_new(0, 999));
-
-        gtk_box_pack_start(GTK_BOX(hbox),
-                label = gtk_label_new(_("Location")),
-                FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-                FALSE, FALSE, 0);
-        gtk_container_add(GTK_CONTAINER(label),
-                cmb_speed_location = gtk_combo_box_new_text());
-        for(i = 0; i < SPEED_LOCATION_ENUM_COUNT; i++)
-            gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_speed_location),
-                    SPEED_LOCATION_ENUM_TEXT[i]);
-
+        button = gtk_button_new_with_label(_("Misc."));
+        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
+        page_dialog = create_misc_dialog(GTK_WINDOW(dialog));
+        g_signal_connect(button, "clicked",
+                         G_CALLBACK(run_subdialog), page_dialog);
+        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
         /* POI page */
         gtk_box_pack_start(GTK_BOX(vbox), gtk_hseparator_new(),
@@ -1658,22 +1702,25 @@ gboolean settings_dialog()
 
     gtk_range_set_value(GTK_RANGE(widgets.num_announce_notice),
                         _announce_notice_ratio);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_draw_width),
-            _draw_width);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_units), _units);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_degformat), _degformat);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_speed_limit_on),
-            _speed_limit_on);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_auto_download_precache),
-            _auto_download_precache);
-    hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_speed),
-            _speed_limit);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_speed_location),
-            _speed_location);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_unblank_option),
-            _unblank_option);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_info_font_size),
-            _info_font_size);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(widgets.draw_width), _draw_width);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(widgets.units), _units);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(widgets.degformat), _degformat);
+    if (_auto_download_precache < 1) _auto_download_precache = 2;
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(widgets.auto_download_precache),
+         _auto_download_precache - 1);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(widgets.speed_limit),
+         _speed_limit_on ? (_speed_limit / 5) : 0);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(widgets.speed_location), _speed_location);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(widgets.unblank_option), _unblank_option);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(widgets.info_font_size), _info_font_size);
 
     gtk_widget_show_all(dialog);
 
@@ -1695,27 +1742,28 @@ gboolean settings_dialog()
         _rotate_dir = hildon_picker_button_get_active
             (HILDON_PICKER_BUTTON(widgets.rotate_dir));
 
-        _auto_download_precache = hildon_controlbar_get_value(
-                HILDON_CONTROLBAR(num_auto_download_precache));
+        _auto_download_precache = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(widgets.auto_download_precache)) + 1;
 
-        _draw_width = hildon_controlbar_get_value(
-                HILDON_CONTROLBAR(num_draw_width));
+        _draw_width = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(widgets.draw_width));
 
-        _units = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_units));
-        _degformat = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_degformat));
+        _units = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(widgets.units));
+        _degformat = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(widgets.degformat));
 
-        _speed_limit_on = gtk_toggle_button_get_active(
-                GTK_TOGGLE_BUTTON(chk_speed_limit_on));
-        _speed_limit = hildon_number_editor_get_value(
-                HILDON_NUMBER_EDITOR(num_speed));
-        _speed_location = gtk_combo_box_get_active(
-                GTK_COMBO_BOX(cmb_speed_location));
+        _speed_limit = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(widgets.speed_limit)) * 5;
+        _speed_limit_on = _speed_limit > 0;
+        _speed_location = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(widgets.speed_location));
 
-        _unblank_option = gtk_combo_box_get_active(
-                GTK_COMBO_BOX(cmb_unblank_option));
+        _unblank_option = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(widgets.unblank_option));
 
-        _info_font_size = gtk_combo_box_get_active(
-                GTK_COMBO_BOX(cmb_info_font_size));
+        _info_font_size = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(widgets.info_font_size));
 
         _announce_notice_ratio =
             gtk_range_get_value(GTK_RANGE(widgets.num_announce_notice));
