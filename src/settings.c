@@ -1215,13 +1215,6 @@ gboolean settings_dialog()
     static GtkWidget *table = NULL;
     static GtkWidget *hbox = NULL;
     static GtkWidget *label = NULL;
-    static GtkWidget *rad_gps_bt = NULL;
-    static GtkWidget *rad_gps_gpsd = NULL;
-    static GtkWidget *rad_gps_file = NULL;
-    static GtkWidget *txt_gps_bt_mac = NULL;
-    static GtkWidget *txt_gps_gpsd_host = NULL;
-    static GtkWidget *num_gps_gpsd_port = NULL;
-    static GtkWidget *txt_gps_file_path = NULL;
     static GtkWidget *num_center_ratio = NULL;
     static GtkWidget *num_lead_ratio = NULL;
     static GtkWidget *chk_lead_is_fixed = NULL;
@@ -1234,8 +1227,6 @@ gboolean settings_dialog()
     static GtkWidget *num_draw_width = NULL;
     static GtkWidget *cmb_units = NULL;
     static GtkWidget *cmb_degformat = NULL;
-    static GtkWidget *btn_scan = NULL;
-    static GtkWidget *btn_browse_gps = NULL;
     static GtkWidget *btn_buttons = NULL;
     static GtkWidget *btn_colors = NULL;
 
@@ -1250,7 +1241,6 @@ gboolean settings_dialog()
     static GtkWidget *cmb_info_font_size = NULL;
 
     static BrowseInfo poi_browse_info = {0, 0};
-    static BrowseInfo gps_file_browse_info = {0, 0};
     gboolean rcvr_changed = FALSE;
     gint i;
     printf("%s()\n", __PRETTY_FUNCTION__);
@@ -1280,96 +1270,6 @@ gboolean settings_dialog()
 
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                 notebook = gtk_notebook_new(), TRUE, TRUE, 0);
-
-        /* Receiver page. */
-        gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-                table = gtk_table_new(3, 4, FALSE),
-                label = gtk_label_new(_("GPS")));
-
-        /* Receiver MAC Address. */
-        gtk_table_attach(GTK_TABLE(table),
-                rad_gps_bt = gtk_radio_button_new_with_label(
-                    NULL, _("Bluetooth")),
-                0, 1, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                hbox = gtk_hbox_new(FALSE, 4),
-                1, 2, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                txt_gps_bt_mac = gtk_entry_new(),
-                TRUE, TRUE, 0);
-#ifdef MAEMO_CHANGES
-#ifndef LEGACY
-        g_object_set(G_OBJECT(txt_gps_bt_mac), "hildon-input-mode",
-                HILDON_GTK_INPUT_MODE_FULL, NULL);
-#else
-        g_object_set(G_OBJECT(txt_gps_bt_mac), HILDON_AUTOCAP, FALSE, NULL);
-#endif
-#endif
-        gtk_box_pack_start(GTK_BOX(hbox),
-                btn_scan = gtk_button_new_with_label(_("Scan...")),
-                FALSE, FALSE, 0);
-#ifndef HAVE_LIBGPSBT
-	gtk_widget_set_sensitive(rad_gps_bt, FALSE);
-	gtk_widget_set_sensitive(txt_gps_bt_mac, FALSE);
-	gtk_widget_set_sensitive(btn_scan, FALSE);
-#endif
-
-        /* File Path (RFComm). */
-        gtk_table_attach(GTK_TABLE(table),
-                rad_gps_file = gtk_radio_button_new_with_label_from_widget(
-                    GTK_RADIO_BUTTON(rad_gps_bt), _("File Path")),
-                0, 1, 1, 2, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                hbox = gtk_hbox_new(FALSE, 4),
-                1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                txt_gps_file_path = gtk_entry_new(),
-                TRUE, TRUE, 0);
-#ifdef MAEMO_CHANGES
-#ifndef LEGACY
-        g_object_set(G_OBJECT(txt_gps_file_path), "hildon-input-mode",
-                HILDON_GTK_INPUT_MODE_FULL, NULL);
-#else
-        g_object_set(G_OBJECT(txt_gps_file_path), HILDON_AUTOCAP, FALSE, NULL);
-#endif
-#endif
-        gtk_box_pack_start(GTK_BOX(hbox),
-                btn_browse_gps = gtk_button_new_with_label(_("Browse...")),
-                FALSE, FALSE, 0);
-#ifndef HAVE_LIBGPSBT
-	gtk_widget_set_sensitive(rad_gps_file, FALSE);
-	gtk_widget_set_sensitive(txt_gps_file_path, FALSE);
-	gtk_widget_set_sensitive(btn_browse_gps, FALSE);
-#endif
-
-        /* GPSD Hostname and Port. */
-        gtk_table_attach(GTK_TABLE(table),
-                rad_gps_gpsd = gtk_radio_button_new_with_label_from_widget(
-                    GTK_RADIO_BUTTON(rad_gps_bt), _("GPSD Host")),
-                0, 1, 2, 3, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                hbox = gtk_hbox_new(FALSE, 4),
-                1, 2, 2, 3, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                txt_gps_gpsd_host = gtk_entry_new(),
-                TRUE, TRUE, 0);
-#ifdef MAEMO_CHANGES
-#ifndef LEGACY
-        g_object_set(G_OBJECT(txt_gps_gpsd_host), "hildon-input-mode",
-                HILDON_GTK_INPUT_MODE_FULL, NULL);
-#else
-        g_object_set(G_OBJECT(txt_gps_gpsd_host), HILDON_AUTOCAP, FALSE, NULL);
-#endif
-#endif
-        gtk_box_pack_start(GTK_BOX(hbox),
-                label = gtk_label_new(_("Port")),
-                FALSE, FALSE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                num_gps_gpsd_port = hildon_number_editor_new(1, 65535),
-                FALSE, FALSE, 0);
 
 
         /* Auto-Center page. */
@@ -1642,37 +1542,10 @@ gboolean settings_dialog()
         poi_browse_info.txt = txt_poi_db;
         g_signal_connect(G_OBJECT(btn_browse_poi), "clicked",
                 G_CALLBACK(settings_dialog_browse_forfile), &poi_browse_info);
-
-        gps_file_browse_info.dialog = dialog;
-        gps_file_browse_info.txt = txt_gps_file_path;
-        g_signal_connect(G_OBJECT(btn_browse_gps), "clicked",
-                G_CALLBACK(settings_dialog_browse_forfile),
-                &gps_file_browse_info);
     }
 
 
     /* Initialize fields. */
-    if(_gri.bt_mac)
-        gtk_entry_set_text(GTK_ENTRY(txt_gps_bt_mac), _gri.bt_mac);
-    if(_gri.gpsd_host)
-        gtk_entry_set_text(GTK_ENTRY(txt_gps_gpsd_host), _gri.gpsd_host);
-    hildon_number_editor_set_value(
-            HILDON_NUMBER_EDITOR(num_gps_gpsd_port), _gri.gpsd_port);
-    if(_gri.file_path)
-        gtk_entry_set_text(GTK_ENTRY(txt_gps_file_path), _gri.file_path);
-    switch(_gri.type)
-    {
-        case GPS_RCVR_GPSD:
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(rad_gps_gpsd),TRUE);
-            break;
-        case GPS_RCVR_FILE:
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(rad_gps_file),TRUE);
-            break;
-        default: /* Including GPS_RCVR_BT */
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(rad_gps_bt), TRUE);
-            break;
-    }
-
     if(_poi_db_filename)
         gtk_entry_set_text(GTK_ENTRY(txt_poi_db), _poi_db_filename);
     hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_poi_zoom),
@@ -1711,108 +1584,6 @@ gboolean settings_dialog()
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
-        GpsRcvrType new_grtype;
-
-        if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(rad_gps_gpsd))
-                && !*gtk_entry_get_text(GTK_ENTRY(txt_gps_gpsd_host)))
-        {
-            popup_error(dialog, _("Please specify a GPSD hostname."));
-            continue;
-        }
-
-        if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(rad_gps_file))
-                && !*gtk_entry_get_text(GTK_ENTRY(txt_gps_file_path)))
-        {
-            popup_error(dialog, _("Please specify a GPS file pathname."));
-            continue;
-        }
-
-        /* Set _gri.bt_mac if necessary. */
-        if(!*gtk_entry_get_text(GTK_ENTRY(txt_gps_bt_mac)))
-        {
-            /* User specified no rcvr mac - set _gri.bt_mac to NULL. */
-            if(_gri.bt_mac)
-            {
-                g_free(_gri.bt_mac);
-                _gri.bt_mac = NULL;
-                rcvr_changed = (_gri.type == GPS_RCVR_BT);
-            }
-        }
-        else if(!_gri.bt_mac || strcmp(_gri.bt_mac,
-                      gtk_entry_get_text(GTK_ENTRY(txt_gps_bt_mac))))
-        {
-            /* User specified a new rcvr mac. */
-            g_free(_gri.bt_mac);
-            _gri.bt_mac = g_strdup(gtk_entry_get_text(
-                        GTK_ENTRY(txt_gps_bt_mac)));
-            rcvr_changed = (_gri.type == GPS_RCVR_BT);
-        }
-
-        /* Set _gri.gpsd_host if necessary. */
-        if(!*gtk_entry_get_text(GTK_ENTRY(txt_gps_gpsd_host)))
-        {
-            /* User specified no rcvr mac - set _gri.gpsd_host to NULL. */
-            if(_gri.gpsd_host)
-            {
-                g_free(_gri.gpsd_host);
-                _gri.gpsd_host = NULL;
-                rcvr_changed = (_gri.type == GPS_RCVR_GPSD);
-            }
-        }
-        else if(!_gri.gpsd_host || strcmp(_gri.gpsd_host,
-                      gtk_entry_get_text(GTK_ENTRY(txt_gps_gpsd_host))))
-        {
-            /* User specified a new rcvr mac. */
-            g_free(_gri.gpsd_host);
-            _gri.gpsd_host = g_strdup(gtk_entry_get_text(
-                        GTK_ENTRY(txt_gps_gpsd_host)));
-            rcvr_changed = (_gri.type == GPS_RCVR_GPSD);
-        }
-
-        if(_gri.gpsd_port != hildon_number_editor_get_value(
-                    HILDON_NUMBER_EDITOR(num_gps_gpsd_port)))
-        {
-            _gri.gpsd_port = hildon_number_editor_get_value(
-                    HILDON_NUMBER_EDITOR(num_gps_gpsd_port));
-            rcvr_changed = (_gri.type == GPS_RCVR_GPSD);
-        }
-
-        /* Set _gri.file_path if necessary. */
-        if(!*gtk_entry_get_text(GTK_ENTRY(txt_gps_file_path)))
-        {
-            /* User specified no rcvr mac - set _gri.file_path to NULL. */
-            if(_gri.file_path)
-            {
-                g_free(_gri.file_path);
-                _gri.file_path = NULL;
-                rcvr_changed = (_gri.type == GPS_RCVR_FILE);
-            }
-        }
-        else if(!_gri.file_path || strcmp(_gri.file_path,
-                      gtk_entry_get_text(GTK_ENTRY(txt_gps_file_path))))
-        {
-            /* User specified a new rcvr mac. */
-            g_free(_gri.file_path);
-            _gri.file_path = g_strdup(gtk_entry_get_text(
-                        GTK_ENTRY(txt_gps_file_path)));
-            rcvr_changed = (_gri.type == GPS_RCVR_FILE);
-        }
-
-        if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(rad_gps_bt)))
-            new_grtype = GPS_RCVR_BT;
-        else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(rad_gps_gpsd)))
-            new_grtype = GPS_RCVR_GPSD;
-        else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(rad_gps_file)))
-            new_grtype = GPS_RCVR_FILE;
-        else
-            new_grtype = GPS_RCVR_BT;
-
-        if(new_grtype != _gri.type)
-        {
-            _gri.type = new_grtype;
-            rcvr_changed = TRUE;
-        }
-
         _center_ratio = hildon_controlbar_get_value(
                 HILDON_CONTROLBAR(num_center_ratio));
 
