@@ -34,21 +34,14 @@
 #include <gconf/gconf-client.h>
 #include <glib.h>
 
-#ifndef LEGACY
-#    include <hildon/hildon-note.h>
-#    include <hildon/hildon-color-button.h>
-#    include <hildon/hildon-file-chooser-dialog.h>
-#    include <hildon/hildon-number-editor.h>
-#    include <hildon/hildon-banner.h>
-#else
-#    include <osso-helplib.h>
-#    include <hildon-widgets/hildon-note.h>
-#    include <hildon-widgets/hildon-color-button.h>
-#    include <hildon-widgets/hildon-file-chooser-dialog.h>
-#    include <hildon-widgets/hildon-number-editor.h>
-#    include <hildon-widgets/hildon-banner.h>
-#    include <hildon-widgets/hildon-input-mode-hint.h>
-#endif
+#include <hildon/hildon-note.h>
+#include <hildon/hildon-color-button.h>
+#include <hildon/hildon-file-chooser-dialog.h>
+#include <hildon/hildon-number-editor.h>
+#include <hildon/hildon-banner.h>
+#include <hildon/hildon-pannable-area.h>
+#include <hildon/hildon-picker-button.h>
+#include <hildon/hildon-check-button.h>
 
 #include "types.h"
 #include "data.h"
@@ -221,6 +214,19 @@ typedef struct _ColorsDialogInfo ColorsDialogInfo;
 struct _ColorsDialogInfo {
     GtkWidget *col[COLORABLE_ENUM_COUNT];
 };
+
+static struct _SettingWidgets {
+    GtkWidget *lead_is_fixed;
+    GtkWidget *num_center_ratio;
+    GtkWidget *num_lead_ratio;
+    GtkWidget *num_ac_min_speed;
+    GtkWidget *num_rotate_sens;
+    GtkWidget *rotate_dir;
+
+    GtkWidget *num_announce_notice;
+    GtkWidget *enable_voice;
+    GtkWidget *enable_announce;
+} widgets;
 
 #ifdef INCLUDE_APRS
 typedef enum
@@ -1204,6 +1210,180 @@ void load_aprs_options(GConfClient *gconf_client)
 }
 #endif // INCLUDE_APRS
 
+static void
+run_subdialog (GtkButton *button, GtkWidget *subdialog)
+{
+    gint ret;
+
+    gtk_widget_show_all(subdialog);
+    ret = gtk_dialog_run(GTK_DIALOG(subdialog));
+    if (ret == GTK_RESPONSE_DELETE_EVENT)
+    {
+        GtkWindow *parent;
+
+        parent = gtk_window_get_transient_for(GTK_WINDOW(subdialog));
+        gtk_dialog_response(GTK_DIALOG(parent), GTK_RESPONSE_CANCEL);
+    }
+    gtk_widget_hide(subdialog);
+}
+
+static GtkWidget *
+create_auto_center_dialog(GtkWindow *parent)
+{
+    GtkWidget *dialog;
+    HildonTouchSelector *selector;
+    GtkWidget *table, *label;
+    GtkAdjustment *adjustment;
+    gint i;
+
+    /* Auto-Center page. */
+    dialog = gtk_dialog_new_with_buttons
+        (_("Auto-Center"), parent, GTK_DIALOG_MODAL,
+         GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+         NULL);
+
+    table = gtk_table_new(5, 2, FALSE);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+                       TRUE, TRUE, 0);
+
+    /* Lead Amount. */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    hildon_touch_selector_append_text(selector, _("Speed based"));
+    hildon_touch_selector_append_text(selector, _("Fixed"));
+    widgets.lead_is_fixed =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Lead Amount"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+
+    gtk_table_attach(GTK_TABLE(table),
+                     widgets.lead_is_fixed,
+                     0, 1, 0, 1, GTK_FILL | GTK_EXPAND, 0, 2, 4);
+    gtk_table_attach(GTK_TABLE(table),
+                     widgets.num_lead_ratio = hildon_gtk_hscale_new(),
+                     1, 2, 0, 1, GTK_FILL, 0, 2, 4);
+    adjustment = gtk_range_get_adjustment(GTK_RANGE(widgets.num_lead_ratio));
+    g_object_set(adjustment,
+                 "step-increment", 1.0,
+                 "lower", 1.0,
+                 "upper", 10.0,
+                 NULL);
+
+    /* Auto-Center Pan Sensitivity. */
+    gtk_table_attach(GTK_TABLE(table),
+                     label = gtk_label_new(_("Pan Sensitivity")),
+                     0, 1, 1, 2, GTK_FILL | GTK_EXPAND, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+                     widgets.num_center_ratio = hildon_gtk_hscale_new(),
+                     1, 2, 1, 2, GTK_FILL | GTK_EXPAND, 0, 2, 4);
+    adjustment = gtk_range_get_adjustment(GTK_RANGE(widgets.num_center_ratio));
+    g_object_set(adjustment,
+                 "step-increment", 1.0,
+                 "lower", 1.0,
+                 "upper", 10.0,
+                 NULL);
+
+    /* Minimum speed */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    for (i = 0; i < 20; i++)
+    {
+        gchar buffer[5];
+        sprintf(buffer, "%d", i * 5);
+        hildon_touch_selector_append_text(selector, buffer);
+    }
+    widgets.num_ac_min_speed =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Min. Speed"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_table_attach(GTK_TABLE(table), widgets.num_ac_min_speed,
+                     0, 2, 2, 3, GTK_FILL | GTK_EXPAND, 0, 2, 4);
+
+    /* Auto-Center Rotate Sensitivity. */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    for (i = 0; i < ROTATE_DIR_ENUM_COUNT; i++)
+        hildon_touch_selector_append_text(selector, ROTATE_DIR_ENUM_TEXT[i]);
+    widgets.rotate_dir =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Rotate Sensit."),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_table_attach(GTK_TABLE(table), widgets.rotate_dir,
+                     0, 1, 3, 4, GTK_FILL | GTK_EXPAND, 0, 2, 4);
+    gtk_table_attach(GTK_TABLE(table),
+                     widgets.num_rotate_sens = hildon_gtk_hscale_new(),
+                     1, 2, 3, 4, GTK_FILL | GTK_EXPAND, 0, 2, 4);
+    adjustment = gtk_range_get_adjustment(GTK_RANGE(widgets.num_rotate_sens));
+    g_object_set(adjustment,
+                 "step-increment", 1.0,
+                 "lower", 1.0,
+                 "upper", 10.0,
+                 NULL);
+
+    return dialog;
+}
+
+static GtkWidget *
+create_announce_dialog(GtkWindow *parent)
+{
+    GtkWidget *dialog;
+    GtkWidget *table, *label;
+    GtkAdjustment *adjustment;
+
+    /* Auto-Center page. */
+    dialog = gtk_dialog_new_with_buttons
+        (_("Announce"), parent, GTK_DIALOG_MODAL,
+         GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+         NULL);
+
+    table = gtk_table_new(3, 2, FALSE);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+                       TRUE, TRUE, 0);
+
+    /* Enable Waypoint Announcements. */
+    widgets.enable_announce =
+        hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_button_set_label(GTK_BUTTON(widgets.enable_announce),
+                         _("Enable Waypoint Announcements"));
+    gtk_table_attach(GTK_TABLE(table), widgets.enable_announce,
+                     0, 2, 0, 1, GTK_FILL, 0, 2, 4);
+
+    /* Announcement Advance Notice. */
+    gtk_table_attach(GTK_TABLE(table),
+                     label = gtk_label_new(_("Advance Notice")),
+                     0, 1, 1, 2, GTK_FILL | GTK_EXPAND, 0, 2, 4);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
+    gtk_table_attach(GTK_TABLE(table),
+                     widgets.num_announce_notice = hildon_gtk_hscale_new(),
+                     1, 2, 1, 2, GTK_FILL | GTK_EXPAND, 0, 2, 4);
+    adjustment =
+        gtk_range_get_adjustment(GTK_RANGE(widgets.num_announce_notice));
+    g_object_set(adjustment,
+                 "step-increment", 1.0,
+                 "lower", 1.0,
+                 "upper", 20.0,
+                 NULL);
+
+    /* Enable Voice. */
+    widgets.enable_voice = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_button_set_label(GTK_BUTTON(widgets.enable_voice),
+                         _("Enable Voice Synthesis (requires flite)"));
+    gtk_table_attach(GTK_TABLE(table), widgets.enable_voice,
+                     0, 2, 2, 3, GTK_FILL, 0, 2, 4);
+
+    return dialog;
+}
+
 /**
  * Bring up the Settings dialog.  Return TRUE if and only if the recever
  * information has changed (MAC or channel).
@@ -1211,19 +1391,9 @@ void load_aprs_options(GConfClient *gconf_client)
 gboolean settings_dialog()
 {
     static GtkWidget *dialog = NULL;
-    static GtkWidget *notebook = NULL;
     static GtkWidget *table = NULL;
     static GtkWidget *hbox = NULL;
     static GtkWidget *label = NULL;
-    static GtkWidget *num_center_ratio = NULL;
-    static GtkWidget *num_lead_ratio = NULL;
-    static GtkWidget *chk_lead_is_fixed = NULL;
-    static GtkWidget *num_rotate_sens = NULL;
-    static GtkWidget *cmb_rotate_dir = NULL;
-    static GtkWidget *num_ac_min_speed = NULL;
-    static GtkWidget *num_announce_notice = NULL;
-    static GtkWidget *chk_enable_voice = NULL;
-    static GtkWidget *chk_enable_announce = NULL;
     static GtkWidget *num_draw_width = NULL;
     static GtkWidget *cmb_units = NULL;
     static GtkWidget *cmb_degformat = NULL;
@@ -1239,6 +1409,10 @@ gboolean settings_dialog()
     static GtkWidget *cmb_speed_location = NULL;
     static GtkWidget *cmb_unblank_option = NULL;
     static GtkWidget *cmb_info_font_size = NULL;
+    GtkWidget *pannable;
+    GtkWidget *vbox;
+    GtkWidget *page_dialog;
+    GtkWidget *button;
 
     static BrowseInfo poi_browse_info = {0, 0};
     gboolean rcvr_changed = FALSE;
@@ -1252,13 +1426,6 @@ gboolean settings_dialog()
                 GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                 NULL);
 
-        /* Enable the help button. */
-#ifndef LEGACY
-#else
-        ossohelp_dialog_help_enable(
-                GTK_DIALOG(dialog), HELP_ID_SETTINGS, _osso);
-#endif 
-
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
                btn_buttons = gtk_button_new_with_label(_("Hardware Keys...")));
 
@@ -1268,118 +1435,38 @@ gboolean settings_dialog()
         gtk_dialog_add_button(GTK_DIALOG(dialog),
                 GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT);
 
+        pannable = hildon_pannable_area_new();
+        vbox = gtk_vbox_new(FALSE, 0);
+        hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(pannable),
+                                               vbox);
+
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                notebook = gtk_notebook_new(), TRUE, TRUE, 0);
+                           pannable, TRUE, TRUE, 0);
 
 
         /* Auto-Center page. */
-        gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-                table = gtk_table_new(3, 3, FALSE),
-                label = gtk_label_new(_("Auto-Center")));
+        button = gtk_button_new_with_label(_("Auto-Center"));
+        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
+        page_dialog = create_auto_center_dialog(GTK_WINDOW(dialog));
+        g_signal_connect(button, "clicked",
+                         G_CALLBACK(run_subdialog), page_dialog);
+        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
-        /* Lead Amount. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Lead Amount")),
-                0, 1, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-                1, 2, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_container_add(GTK_CONTAINER(label),
-                num_lead_ratio = hildon_controlbar_new());
-        hildon_controlbar_set_range(HILDON_CONTROLBAR(num_lead_ratio), 1, 10);
-        force_min_visible_bars(HILDON_CONTROLBAR(num_lead_ratio), 1);
-
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-                2, 3, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_container_add(GTK_CONTAINER(label),
-            chk_lead_is_fixed = gtk_check_button_new_with_label(_("Fixed")));
-
-        /* Auto-Center Pan Sensitivity. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Pan Sensitivity")),
-                0, 1, 1, 2, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-                1, 2, 1, 2, GTK_FILL, 0, 2, 4);
-        gtk_container_add(GTK_CONTAINER(label),
-                num_center_ratio = hildon_controlbar_new());
-        hildon_controlbar_set_range(HILDON_CONTROLBAR(num_center_ratio), 1,10);
-        force_min_visible_bars(HILDON_CONTROLBAR(num_center_ratio), 1);
-
-        gtk_table_attach(GTK_TABLE(table),
-                hbox = gtk_hbox_new(FALSE, 4),
-                2, 3, 1, 2, GTK_FILL, 0, 2, 4);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                label = gtk_label_new(_("Min. Speed")),
-                TRUE, TRUE, 4);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                num_ac_min_speed = hildon_number_editor_new(0, 99),
-                TRUE, TRUE, 4);
-
-        /* Auto-Center Rotate Sensitivity. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Rotate Sensit.")),
-                0, 1, 2, 3, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                num_rotate_sens = hildon_controlbar_new(),
-                1, 2, 2, 3, GTK_FILL, 0, 2, 4);
-        hildon_controlbar_set_range(HILDON_CONTROLBAR(num_rotate_sens), 1,10);
-        force_min_visible_bars(HILDON_CONTROLBAR(num_rotate_sens), 1);
-
-        gtk_table_attach(GTK_TABLE(table),
-                hbox = gtk_hbox_new(FALSE, 4),
-                2, 3, 2, 3, GTK_FILL, 0, 2, 4);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                label = gtk_label_new(_("Points")),
-                TRUE, TRUE, 4);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                cmb_rotate_dir = gtk_combo_box_new_text(),
-                TRUE, TRUE, 4);
-        for(i = 0; i < ROTATE_DIR_ENUM_COUNT; i++)
-            gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_rotate_dir),
-                    ROTATE_DIR_ENUM_TEXT[i]);
 
         /* Announcement. */
-        gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-                table = gtk_table_new(2, 3, FALSE),
-                label = gtk_label_new(_("Announce")));
-
-        /* Enable Waypoint Announcements. */
-        gtk_table_attach(GTK_TABLE(table),
-                chk_enable_announce = gtk_check_button_new_with_label(
-                    _("Enable Waypoint Announcements")),
-                0, 2, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_enable_announce),
-                _enable_announce);
-
-        /* Announcement Advance Notice. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Advance Notice")),
-                0, 1, 1, 2, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                num_announce_notice = hildon_controlbar_new(),
-                1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-        hildon_controlbar_set_range(
-                HILDON_CONTROLBAR(num_announce_notice), 1, 20);
-        force_min_visible_bars(HILDON_CONTROLBAR(num_announce_notice), 1);
-
-        /* Enable Voice. */
-        gtk_table_attach(GTK_TABLE(table),
-                chk_enable_voice = gtk_check_button_new_with_label(
-                    _("Enable Voice Synthesis (requires flite)")),
-                0, 2, 2, 3, GTK_FILL, 0, 2, 4);
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(chk_enable_voice),
-                _enable_voice);
+        button = gtk_button_new_with_label(_("Announce"));
+        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
+        page_dialog = create_announce_dialog(GTK_WINDOW(dialog));
+        g_signal_connect(button, "clicked",
+                         G_CALLBACK(run_subdialog), page_dialog);
+        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
         /* Misc. page. */
-        gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-                table = gtk_table_new(3, 5, FALSE),
-                label = gtk_label_new(_("Misc.")));
+        gtk_box_pack_start(GTK_BOX(vbox), gtk_hseparator_new(),
+                           FALSE, TRUE, 0);
+        table = gtk_table_new(3, 5, FALSE);
+        label = gtk_label_new(_("Misc."));
+        gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
 
         /* Line Width. */
         gtk_table_attach(GTK_TABLE(table),
@@ -1434,9 +1521,11 @@ gboolean settings_dialog()
                     GTK_COMBO_BOX(cmb_units), UNITS_ENUM_TEXT[i]);
 
         /* Misc. 2 page. */
-        gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-                table = gtk_table_new(3, 4, FALSE),
-                label = gtk_label_new(_("Misc. 2")));
+        gtk_box_pack_start(GTK_BOX(vbox), gtk_hseparator_new(),
+                           FALSE, TRUE, 0);
+        table = gtk_table_new(3, 4, FALSE);
+        label = gtk_label_new(_("Misc. 2"));
+        gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
 
         /* Degrees format */
         gtk_table_attach(GTK_TABLE(table),
@@ -1494,9 +1583,11 @@ gboolean settings_dialog()
 
 
         /* POI page */
-        gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
-                table = gtk_table_new(2, 3, FALSE),
-                label = gtk_label_new(_("POI")));
+        gtk_box_pack_start(GTK_BOX(vbox), gtk_hseparator_new(),
+                           FALSE, TRUE, 0);
+        table = gtk_table_new(2, 3, FALSE);
+        label = gtk_label_new(_("POI"));
+        gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
 
         /* POI database. */
         gtk_table_attach(GTK_TABLE(table),
@@ -1550,19 +1641,23 @@ gboolean settings_dialog()
         gtk_entry_set_text(GTK_ENTRY(txt_poi_db), _poi_db_filename);
     hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_poi_zoom),
             _poi_zoom);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_center_ratio),
-            _center_ratio);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_lead_ratio),
-            _lead_ratio);
-    gtk_toggle_button_set_active(
-            GTK_TOGGLE_BUTTON(chk_lead_is_fixed), _lead_is_fixed);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_rotate_sens),
-            _rotate_sens);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_rotate_dir), _rotate_dir);
-    hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_ac_min_speed),
-            _ac_min_speed);
-    hildon_controlbar_set_value(HILDON_CONTROLBAR(num_announce_notice),
-            _announce_notice_ratio);
+    gtk_range_set_value(GTK_RANGE(widgets.num_center_ratio), _center_ratio);
+    gtk_range_set_value(GTK_RANGE(widgets.num_lead_ratio), _lead_ratio);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(widgets.lead_is_fixed), _lead_is_fixed);
+    gtk_range_set_value(GTK_RANGE(widgets.num_rotate_sens), _rotate_sens);
+    hildon_picker_button_set_active(HILDON_PICKER_BUTTON(widgets.rotate_dir),
+                                    _rotate_dir);
+
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(widgets.num_ac_min_speed), _ac_min_speed / 5);
+    hildon_check_button_set_active
+        (HILDON_CHECK_BUTTON(widgets.enable_announce), _enable_announce);
+    hildon_check_button_set_active(HILDON_CHECK_BUTTON(widgets.enable_voice),
+                                   _enable_voice);
+
+    gtk_range_set_value(GTK_RANGE(widgets.num_announce_notice),
+                        _announce_notice_ratio);
     hildon_controlbar_set_value(HILDON_CONTROLBAR(num_draw_width),
             _draw_width);
     gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_units), _units);
@@ -1584,22 +1679,21 @@ gboolean settings_dialog()
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
-        _center_ratio = hildon_controlbar_get_value(
-                HILDON_CONTROLBAR(num_center_ratio));
+        _center_ratio =
+            gtk_range_get_value(GTK_RANGE(widgets.num_center_ratio));
 
-        _lead_ratio = hildon_controlbar_get_value(
-                HILDON_CONTROLBAR(num_lead_ratio));
+        _lead_ratio = gtk_range_get_value(GTK_RANGE(widgets.num_lead_ratio));
 
-        _lead_is_fixed = gtk_toggle_button_get_active(
-                GTK_TOGGLE_BUTTON(chk_lead_is_fixed));
+        _lead_is_fixed = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(widgets.lead_is_fixed));
 
-        _rotate_sens = hildon_controlbar_get_value(
-                HILDON_CONTROLBAR(num_rotate_sens));
+        _rotate_sens = gtk_range_get_value(GTK_RANGE(widgets.num_rotate_sens));
 
-        _ac_min_speed = hildon_number_editor_get_value(
-                HILDON_NUMBER_EDITOR(num_ac_min_speed));
+        _ac_min_speed = hildon_picker_button_get_active(
+                HILDON_PICKER_BUTTON(widgets.num_ac_min_speed)) * 5;
 
-        _rotate_dir = gtk_combo_box_get_active(GTK_COMBO_BOX(cmb_rotate_dir));
+        _rotate_dir = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(widgets.rotate_dir));
 
         _auto_download_precache = hildon_controlbar_get_value(
                 HILDON_CONTROLBAR(num_auto_download_precache));
@@ -1623,14 +1717,14 @@ gboolean settings_dialog()
         _info_font_size = gtk_combo_box_get_active(
                 GTK_COMBO_BOX(cmb_info_font_size));
 
-        _announce_notice_ratio = hildon_controlbar_get_value(
-                HILDON_CONTROLBAR(num_announce_notice));
+        _announce_notice_ratio =
+            gtk_range_get_value(GTK_RANGE(widgets.num_announce_notice));
 
-        _enable_announce = gtk_toggle_button_get_active(
-                GTK_TOGGLE_BUTTON(chk_enable_announce));
+        _enable_announce = hildon_check_button_get_active
+            (HILDON_CHECK_BUTTON(widgets.enable_announce));
 
-        _enable_voice = gtk_toggle_button_get_active(
-                GTK_TOGGLE_BUTTON(chk_enable_voice));
+        _enable_voice = hildon_check_button_get_active
+            (HILDON_CHECK_BUTTON(widgets.enable_voice));
 
         /* Check if user specified a different POI database from before. */
         if((!_poi_db_filename && *gtk_entry_get_text(GTK_ENTRY(txt_poi_db)))
