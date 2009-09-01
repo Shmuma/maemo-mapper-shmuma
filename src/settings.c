@@ -215,31 +215,6 @@ struct _ColorsDialogInfo {
     GtkWidget *col[COLORABLE_ENUM_COUNT];
 };
 
-static struct _SettingWidgets {
-    GtkWidget *lead_is_fixed;
-    GtkWidget *num_center_ratio;
-    GtkWidget *num_lead_ratio;
-    GtkWidget *num_ac_min_speed;
-    GtkWidget *num_rotate_sens;
-    GtkWidget *rotate_dir;
-
-    GtkWidget *num_announce_notice;
-    GtkWidget *enable_voice;
-    GtkWidget *enable_announce;
-
-    GtkWidget *draw_width;
-    GtkWidget *unblank_option;
-    GtkWidget *info_font_size;
-    GtkWidget *units;
-    GtkWidget *degformat;
-    GtkWidget *auto_download_precache;
-    GtkWidget *speed_limit;
-    GtkWidget *speed_location;
-
-    GtkWidget *poi_db;
-    GtkWidget *poi_zoom;
-} widgets;
-
 #ifdef INCLUDE_APRS
 typedef enum
 {
@@ -1223,30 +1198,32 @@ void load_aprs_options(GConfClient *gconf_client)
 }
 #endif // INCLUDE_APRS
 
-static void
-run_subdialog (GtkButton *button, GtkWidget *subdialog)
+static inline void
+settings_dialog_set_save(gpointer dialog, gboolean save)
 {
-    gint ret;
-
-    gtk_widget_show_all(subdialog);
-    ret = gtk_dialog_run(GTK_DIALOG(subdialog));
-    if (ret == GTK_RESPONSE_DELETE_EVENT)
-    {
-        GtkWindow *parent;
-
-        parent = gtk_window_get_transient_for(GTK_WINDOW(subdialog));
-        gtk_dialog_response(GTK_DIALOG(parent), GTK_RESPONSE_CANCEL);
-    }
-    gtk_widget_hide(subdialog);
+    g_object_set_data(G_OBJECT(dialog), "save_settings",
+                      GINT_TO_POINTER(save));
 }
 
-static GtkWidget *
-create_auto_center_dialog(GtkWindow *parent)
+static inline gboolean
+settings_dialog_get_save(gpointer dialog)
+{
+    return g_object_get_data(G_OBJECT(dialog), "save_settings") != NULL;
+}
+
+static void
+run_auto_center_dialog(GtkWindow *parent)
 {
     GtkWidget *dialog;
     HildonTouchSelector *selector;
     GtkWidget *table, *label;
     GtkAdjustment *adjustment;
+    GtkWidget *lead_is_fixed;
+    GtkWidget *num_center_ratio;
+    GtkWidget *num_lead_ratio;
+    GtkWidget *num_ac_min_speed;
+    GtkWidget *num_rotate_sens;
+    GtkWidget *rotate_dir;
     gint i;
 
     /* Auto-Center page. */
@@ -1263,7 +1240,7 @@ create_auto_center_dialog(GtkWindow *parent)
     selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
     hildon_touch_selector_append_text(selector, _("Speed based"));
     hildon_touch_selector_append_text(selector, _("Fixed"));
-    widgets.lead_is_fixed =
+    lead_is_fixed =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1273,12 +1250,12 @@ create_auto_center_dialog(GtkWindow *parent)
                      NULL);
 
     gtk_table_attach(GTK_TABLE(table),
-                     widgets.lead_is_fixed,
+                     lead_is_fixed,
                      0, 1, 0, 1, GTK_FILL | GTK_EXPAND, 0, 2, 4);
     gtk_table_attach(GTK_TABLE(table),
-                     widgets.num_lead_ratio = hildon_gtk_hscale_new(),
+                     num_lead_ratio = hildon_gtk_hscale_new(),
                      1, 2, 0, 1, GTK_FILL, 0, 2, 4);
-    adjustment = gtk_range_get_adjustment(GTK_RANGE(widgets.num_lead_ratio));
+    adjustment = gtk_range_get_adjustment(GTK_RANGE(num_lead_ratio));
     g_object_set(adjustment,
                  "step-increment", 1.0,
                  "lower", 1.0,
@@ -1291,9 +1268,9 @@ create_auto_center_dialog(GtkWindow *parent)
                      0, 1, 1, 2, GTK_FILL | GTK_EXPAND, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
-                     widgets.num_center_ratio = hildon_gtk_hscale_new(),
+                     num_center_ratio = hildon_gtk_hscale_new(),
                      1, 2, 1, 2, GTK_FILL | GTK_EXPAND, 0, 2, 4);
-    adjustment = gtk_range_get_adjustment(GTK_RANGE(widgets.num_center_ratio));
+    adjustment = gtk_range_get_adjustment(GTK_RANGE(num_center_ratio));
     g_object_set(adjustment,
                  "step-increment", 1.0,
                  "lower", 1.0,
@@ -1308,7 +1285,7 @@ create_auto_center_dialog(GtkWindow *parent)
         sprintf(buffer, "%d", i * 5);
         hildon_touch_selector_append_text(selector, buffer);
     }
-    widgets.num_ac_min_speed =
+    num_ac_min_speed =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1316,14 +1293,14 @@ create_auto_center_dialog(GtkWindow *parent)
                      "touch-selector", selector,
                      "xalign", 0.0,
                      NULL);
-    gtk_table_attach(GTK_TABLE(table), widgets.num_ac_min_speed,
+    gtk_table_attach(GTK_TABLE(table), num_ac_min_speed,
                      0, 2, 2, 3, GTK_FILL | GTK_EXPAND, 0, 2, 4);
 
     /* Auto-Center Rotate Sensitivity. */
     selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
     for (i = 0; i < ROTATE_DIR_ENUM_COUNT; i++)
         hildon_touch_selector_append_text(selector, ROTATE_DIR_ENUM_TEXT[i]);
-    widgets.rotate_dir =
+    rotate_dir =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1331,27 +1308,62 @@ create_auto_center_dialog(GtkWindow *parent)
                      "touch-selector", selector,
                      "xalign", 0.0,
                      NULL);
-    gtk_table_attach(GTK_TABLE(table), widgets.rotate_dir,
+    gtk_table_attach(GTK_TABLE(table), rotate_dir,
                      0, 1, 3, 4, GTK_FILL | GTK_EXPAND, 0, 2, 4);
     gtk_table_attach(GTK_TABLE(table),
-                     widgets.num_rotate_sens = hildon_gtk_hscale_new(),
+                     num_rotate_sens = hildon_gtk_hscale_new(),
                      1, 2, 3, 4, GTK_FILL | GTK_EXPAND, 0, 2, 4);
-    adjustment = gtk_range_get_adjustment(GTK_RANGE(widgets.num_rotate_sens));
+    adjustment = gtk_range_get_adjustment(GTK_RANGE(num_rotate_sens));
     g_object_set(adjustment,
                  "step-increment", 1.0,
                  "lower", 1.0,
                  "upper", 10.0,
                  NULL);
 
-    return dialog;
+    /* Initialize widgets */
+    gtk_range_set_value(GTK_RANGE(num_center_ratio), _center_ratio);
+    gtk_range_set_value(GTK_RANGE(num_lead_ratio), _lead_ratio);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(lead_is_fixed), _lead_is_fixed);
+    gtk_range_set_value(GTK_RANGE(num_rotate_sens), _rotate_sens);
+    hildon_picker_button_set_active(HILDON_PICKER_BUTTON(rotate_dir),
+                                    _rotate_dir);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(num_ac_min_speed), _ac_min_speed / 5);
+
+    gtk_widget_show_all(dialog);
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        _center_ratio = gtk_range_get_value(GTK_RANGE(num_center_ratio));
+
+        _lead_ratio = gtk_range_get_value(GTK_RANGE(num_lead_ratio));
+
+        _lead_is_fixed = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(lead_is_fixed));
+
+        _rotate_sens = gtk_range_get_value(GTK_RANGE(num_rotate_sens));
+
+        _ac_min_speed = hildon_picker_button_get_active(
+                HILDON_PICKER_BUTTON(num_ac_min_speed)) * 5;
+
+        _rotate_dir = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(rotate_dir));
+
+        settings_dialog_set_save(parent, TRUE);
+    }
+
+    gtk_widget_destroy(dialog);
 }
 
-static GtkWidget *
-create_announce_dialog(GtkWindow *parent)
+static void
+run_announce_dialog(GtkWindow *parent)
 {
     GtkWidget *dialog;
     GtkWidget *table, *label;
     GtkAdjustment *adjustment;
+    GtkWidget *num_announce_notice;
+    GtkWidget *enable_voice;
+    GtkWidget *enable_announce;
 
     /* Auto-Center page. */
     dialog = gtk_dialog_new_with_buttons
@@ -1364,11 +1376,11 @@ create_announce_dialog(GtkWindow *parent)
                        TRUE, TRUE, 0);
 
     /* Enable Waypoint Announcements. */
-    widgets.enable_announce =
+    enable_announce =
         hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
-    gtk_button_set_label(GTK_BUTTON(widgets.enable_announce),
+    gtk_button_set_label(GTK_BUTTON(enable_announce),
                          _("Enable Waypoint Announcements"));
-    gtk_table_attach(GTK_TABLE(table), widgets.enable_announce,
+    gtk_table_attach(GTK_TABLE(table), enable_announce,
                      0, 2, 0, 1, GTK_FILL, 0, 2, 4);
 
     /* Announcement Advance Notice. */
@@ -1377,10 +1389,10 @@ create_announce_dialog(GtkWindow *parent)
                      0, 1, 1, 2, GTK_FILL | GTK_EXPAND, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
-                     widgets.num_announce_notice = hildon_gtk_hscale_new(),
+                     num_announce_notice = hildon_gtk_hscale_new(),
                      1, 2, 1, 2, GTK_FILL | GTK_EXPAND, 0, 2, 4);
     adjustment =
-        gtk_range_get_adjustment(GTK_RANGE(widgets.num_announce_notice));
+        gtk_range_get_adjustment(GTK_RANGE(num_announce_notice));
     g_object_set(adjustment,
                  "step-increment", 1.0,
                  "lower", 1.0,
@@ -1388,22 +1400,53 @@ create_announce_dialog(GtkWindow *parent)
                  NULL);
 
     /* Enable Voice. */
-    widgets.enable_voice = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
-    gtk_button_set_label(GTK_BUTTON(widgets.enable_voice),
+    enable_voice = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_button_set_label(GTK_BUTTON(enable_voice),
                          _("Enable Voice Synthesis (requires flite)"));
-    gtk_table_attach(GTK_TABLE(table), widgets.enable_voice,
+    gtk_table_attach(GTK_TABLE(table), enable_voice,
                      0, 2, 2, 3, GTK_FILL, 0, 2, 4);
 
-    return dialog;
+    /* Initialize widgets */
+    hildon_check_button_set_active
+        (HILDON_CHECK_BUTTON(enable_announce), _enable_announce);
+    hildon_check_button_set_active(HILDON_CHECK_BUTTON(enable_voice),
+                                   _enable_voice);
+    gtk_range_set_value(GTK_RANGE(num_announce_notice),
+                        _announce_notice_ratio);
+
+    gtk_widget_show_all(dialog);
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        _announce_notice_ratio =
+            gtk_range_get_value(GTK_RANGE(num_announce_notice));
+
+        _enable_announce = hildon_check_button_get_active
+            (HILDON_CHECK_BUTTON(enable_announce));
+
+        _enable_voice = hildon_check_button_get_active
+            (HILDON_CHECK_BUTTON(enable_voice));
+
+        settings_dialog_set_save(parent, TRUE);
+    }
+
+    gtk_widget_destroy(dialog);
 }
 
-static GtkWidget *
-create_misc_dialog(GtkWindow *parent)
+static void
+run_misc_dialog(GtkWindow *parent)
 {
     GtkWidget *dialog;
     GtkWidget *pannable;
     HildonTouchSelector *selector;
     GtkWidget *vbox, *hbox;
+    GtkWidget *draw_width;
+    GtkWidget *unblank_option;
+    GtkWidget *info_font_size;
+    GtkWidget *units;
+    GtkWidget *degformat;
+    GtkWidget *auto_download_precache;
+    GtkWidget *speed_limit;
+    GtkWidget *speed_location;
     gint i;
 
     dialog = gtk_dialog_new_with_buttons
@@ -1428,7 +1471,7 @@ create_misc_dialog(GtkWindow *parent)
         sprintf(buffer, "%d", i);
         hildon_touch_selector_append_text(selector, buffer);
     }
-    widgets.draw_width =
+    draw_width =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1436,13 +1479,13 @@ create_misc_dialog(GtkWindow *parent)
                      "touch-selector", selector,
                      "xalign", 0.0,
                      NULL);
-    gtk_box_pack_start(GTK_BOX(vbox), widgets.draw_width, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), draw_width, FALSE, TRUE, 0);
 
     /* Unblank Screen */
     selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
     for (i = 0; i < UNBLANK_ENUM_COUNT; i++)
         hildon_touch_selector_append_text(selector, UNBLANK_ENUM_TEXT[i]);
-    widgets.unblank_option =
+    unblank_option =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1450,13 +1493,13 @@ create_misc_dialog(GtkWindow *parent)
                      "touch-selector", selector,
                      "xalign", 0.0,
                      NULL);
-    gtk_box_pack_start(GTK_BOX(vbox), widgets.unblank_option, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), unblank_option, FALSE, TRUE, 0);
 
     /* Information Font Size. */
     selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
     for (i = 0; i < INFO_FONT_ENUM_COUNT; i++)
         hildon_touch_selector_append_text(selector, INFO_FONT_ENUM_TEXT[i]);
-    widgets.info_font_size =
+    info_font_size =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1464,13 +1507,13 @@ create_misc_dialog(GtkWindow *parent)
                      "touch-selector", selector,
                      "xalign", 0.0,
                      NULL);
-    gtk_box_pack_start(GTK_BOX(vbox), widgets.info_font_size, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), info_font_size, FALSE, TRUE, 0);
 
     /* Units. */
     selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
     for (i = 0; i < UNITS_ENUM_COUNT; i++)
         hildon_touch_selector_append_text(selector, UNITS_ENUM_TEXT[i]);
-    widgets.units =
+    units =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1478,7 +1521,7 @@ create_misc_dialog(GtkWindow *parent)
                      "touch-selector", selector,
                      "xalign", 0.0,
                      NULL);
-    gtk_box_pack_start(GTK_BOX(vbox), widgets.units, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), units, FALSE, TRUE, 0);
 
 
     /* Degrees format */
@@ -1486,7 +1529,7 @@ create_misc_dialog(GtkWindow *parent)
     for (i = 0; i < DEG_FORMAT_ENUM_COUNT; i++)
         hildon_touch_selector_append_text(selector,
                                           DEG_FORMAT_ENUM_TEXT[i].name);
-    widgets.degformat =
+    degformat =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1494,7 +1537,7 @@ create_misc_dialog(GtkWindow *parent)
                      "touch-selector", selector,
                      "xalign", 0.0,
                      NULL);
-    gtk_box_pack_start(GTK_BOX(vbox), widgets.degformat, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), degformat, FALSE, TRUE, 0);
 
     /* Pre-cache */
     selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
@@ -1504,7 +1547,7 @@ create_misc_dialog(GtkWindow *parent)
         sprintf(buffer, "%d", i);
         hildon_touch_selector_append_text(selector, buffer);
     }
-    widgets.auto_download_precache =
+    auto_download_precache =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1512,7 +1555,7 @@ create_misc_dialog(GtkWindow *parent)
                      "touch-selector", selector,
                      "xalign", 0.0,
                      NULL);
-    gtk_box_pack_start(GTK_BOX(vbox), widgets.auto_download_precache,
+    gtk_box_pack_start(GTK_BOX(vbox), auto_download_precache,
                        FALSE, TRUE, 0);
 
     /* Speed warner. */
@@ -1527,7 +1570,7 @@ create_misc_dialog(GtkWindow *parent)
         sprintf(buffer, "%d", i * 5);
         hildon_touch_selector_append_text(selector, buffer);
     }
-    widgets.speed_limit =
+    speed_limit =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1535,14 +1578,14 @@ create_misc_dialog(GtkWindow *parent)
                      "touch-selector", selector,
                      "xalign", 0.0,
                      NULL);
-    gtk_box_pack_start(GTK_BOX(hbox), widgets.speed_limit, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), speed_limit, TRUE, TRUE, 0);
 
     /* Speed location */
     selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
     for (i = 0; i < SPEED_LOCATION_ENUM_COUNT; i++)
         hildon_touch_selector_append_text(selector,
                                           SPEED_LOCATION_ENUM_TEXT[i]);
-    widgets.speed_location =
+    speed_location =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_VERTICAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1550,17 +1593,73 @@ create_misc_dialog(GtkWindow *parent)
                      "touch-selector", selector,
                      "xalign", 0.0,
                      NULL);
-    gtk_box_pack_start(GTK_BOX(hbox), widgets.speed_location, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), speed_location, TRUE, TRUE, 0);
 
-    return dialog;
+    /* Initialize widgets */
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(draw_width), _draw_width);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(units), _units);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(degformat), _degformat);
+    if (_auto_download_precache < 1) _auto_download_precache = 2;
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(auto_download_precache),
+         _auto_download_precache - 1);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(speed_limit),
+         _speed_limit_on ? (_speed_limit / 5) : 0);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(speed_location), _speed_location);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(unblank_option), _unblank_option);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(info_font_size), _info_font_size);
+
+
+    gtk_widget_show_all(dialog);
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        _auto_download_precache = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(auto_download_precache)) + 1;
+
+        _draw_width = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(draw_width));
+
+        _units = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(units));
+
+        _degformat = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(degformat));
+
+        _speed_limit = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(speed_limit)) * 5;
+
+        _speed_limit_on = _speed_limit > 0;
+
+        _speed_location = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(speed_location));
+
+        _unblank_option = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(unblank_option));
+
+        _info_font_size = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(info_font_size));
+
+        settings_dialog_set_save(parent, TRUE);
+    }
+
+    gtk_widget_destroy(dialog);
 }
 
-static GtkWidget *
-create_poi_dialog(GtkWindow *parent)
+static void
+run_poi_dialog(GtkWindow *parent)
 {
     GtkWidget *dialog;
     GtkBox *vbox;
     HildonTouchSelector *selector;
+    GtkWidget *poi_db;
+    GtkWidget *poi_zoom;
     gint i;
 
     /* POI page. */
@@ -1572,13 +1671,13 @@ create_poi_dialog(GtkWindow *parent)
     vbox = GTK_BOX(GTK_DIALOG(dialog)->vbox);
 
     /* POI database. */
-    widgets.poi_db = hildon_button_new_with_text
+    poi_db = hildon_button_new_with_text
         (HILDON_SIZE_FINGER_HEIGHT, HILDON_BUTTON_ARRANGEMENT_VERTICAL,
          _("POI database"), "");
-    gtk_button_set_alignment(GTK_BUTTON(widgets.poi_db), 0.0, 0.5);
-    g_signal_connect(widgets.poi_db, "clicked",
+    gtk_button_set_alignment(GTK_BUTTON(poi_db), 0.0, 0.5);
+    g_signal_connect(poi_db, "clicked",
                      G_CALLBACK(settings_dialog_browse_forfile), NULL);
-    gtk_box_pack_start(vbox, widgets.poi_db, FALSE, TRUE, 0);
+    gtk_box_pack_start(vbox, poi_db, FALSE, TRUE, 0);
 
     /* Show POI below zoom. */
     selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
@@ -1588,7 +1687,7 @@ create_poi_dialog(GtkWindow *parent)
         sprintf(buffer, "%d", i);
         hildon_touch_selector_append_text(selector, buffer);
     }
-    widgets.poi_zoom =
+    poi_zoom =
         g_object_new(HILDON_TYPE_PICKER_BUTTON,
                      "arrangement", HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
                      "size", HILDON_SIZE_FINGER_HEIGHT,
@@ -1596,9 +1695,49 @@ create_poi_dialog(GtkWindow *parent)
                      "touch-selector", selector,
                      "xalign", 0.0,
                      NULL);
-    gtk_box_pack_start(GTK_BOX(vbox), widgets.poi_zoom, FALSE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), poi_zoom, FALSE, TRUE, 0);
 
-    return dialog;
+    /* Initialize widgets */
+    if(_poi_db_filename)
+        hildon_button_set_value(HILDON_BUTTON(poi_db),
+                                _poi_db_filename);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(poi_zoom), _poi_zoom);
+
+    gtk_widget_show_all(dialog);
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        const gchar *poi_db_path;
+
+        /* Check if user specified a different POI database from before. */
+        poi_db_path = hildon_button_get_value(HILDON_BUTTON(poi_db));
+        if (g_strcmp0(_poi_db_filename, poi_db_path) != 0)
+        {
+            /* Clear old filename/dirname, if necessary. */
+            if(_poi_db_filename)
+            {
+                g_free(_poi_db_filename);
+                _poi_db_filename = NULL;
+                g_free(_poi_db_dirname);
+                _poi_db_dirname = NULL;
+            }
+
+            if(*poi_db_path)
+            {
+                _poi_db_filename = g_strdup(poi_db_path);
+                _poi_db_dirname = g_path_get_dirname(_poi_db_filename);
+            }
+
+            poi_db_connect();
+        }
+
+        _poi_zoom = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(poi_zoom));
+
+        settings_dialog_set_save(parent, TRUE);
+    }
+
+    gtk_widget_destroy(dialog);
 }
 
 /**
@@ -1610,7 +1749,6 @@ gboolean settings_dialog()
     static GtkWidget *dialog = NULL;
 
     GtkWidget *hbox, *vbox;
-    GtkWidget *page_dialog;
     GtkWidget *button;
 
     gboolean rcvr_changed = FALSE;
@@ -1620,7 +1758,6 @@ gboolean settings_dialog()
     {
         dialog = gtk_dialog_new_with_buttons(_("Settings"),
                 GTK_WINDOW(_window), GTK_DIALOG_MODAL,
-                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                 NULL);
 
         hbox = gtk_hbox_new(TRUE, 0);
@@ -1633,26 +1770,23 @@ gboolean settings_dialog()
         /* Auto-Center page. */
         button = gtk_button_new_with_label(_("Auto-Center"));
         hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
-        page_dialog = create_auto_center_dialog(GTK_WINDOW(dialog));
-        g_signal_connect(button, "clicked",
-                         G_CALLBACK(run_subdialog), page_dialog);
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(run_auto_center_dialog), dialog);
         gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
 
         /* Announcement. */
         button = gtk_button_new_with_label(_("Announce"));
         hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
-        page_dialog = create_announce_dialog(GTK_WINDOW(dialog));
-        g_signal_connect(button, "clicked",
-                         G_CALLBACK(run_subdialog), page_dialog);
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(run_announce_dialog), dialog);
         gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
         /* Misc. page. */
         button = gtk_button_new_with_label(_("Misc."));
         hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
-        page_dialog = create_misc_dialog(GTK_WINDOW(dialog));
-        g_signal_connect(button, "clicked",
-                         G_CALLBACK(run_subdialog), page_dialog);
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(run_misc_dialog), dialog);
         gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
         /* second column */
@@ -1662,9 +1796,8 @@ gboolean settings_dialog()
         /* POI page */
         button = gtk_button_new_with_label(_("POI"));
         hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
-        page_dialog = create_poi_dialog(GTK_WINDOW(dialog));
-        g_signal_connect(button, "clicked",
-                         G_CALLBACK(run_subdialog), page_dialog);
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(run_poi_dialog), dialog);
         gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
         /* Hardware keys */
@@ -1682,136 +1815,18 @@ gboolean settings_dialog()
         gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
     }
 
-
-    /* Initialize fields. */
-    if(_poi_db_filename)
-        hildon_button_set_value(HILDON_BUTTON(widgets.poi_db),
-                                _poi_db_filename);
-    hildon_picker_button_set_active
-        (HILDON_PICKER_BUTTON(widgets.poi_zoom), _poi_zoom);
-    gtk_range_set_value(GTK_RANGE(widgets.num_center_ratio), _center_ratio);
-    gtk_range_set_value(GTK_RANGE(widgets.num_lead_ratio), _lead_ratio);
-    hildon_picker_button_set_active
-        (HILDON_PICKER_BUTTON(widgets.lead_is_fixed), _lead_is_fixed);
-    gtk_range_set_value(GTK_RANGE(widgets.num_rotate_sens), _rotate_sens);
-    hildon_picker_button_set_active(HILDON_PICKER_BUTTON(widgets.rotate_dir),
-                                    _rotate_dir);
-
-    hildon_picker_button_set_active
-        (HILDON_PICKER_BUTTON(widgets.num_ac_min_speed), _ac_min_speed / 5);
-    hildon_check_button_set_active
-        (HILDON_CHECK_BUTTON(widgets.enable_announce), _enable_announce);
-    hildon_check_button_set_active(HILDON_CHECK_BUTTON(widgets.enable_voice),
-                                   _enable_voice);
-
-    gtk_range_set_value(GTK_RANGE(widgets.num_announce_notice),
-                        _announce_notice_ratio);
-    hildon_picker_button_set_active
-        (HILDON_PICKER_BUTTON(widgets.draw_width), _draw_width);
-    hildon_picker_button_set_active
-        (HILDON_PICKER_BUTTON(widgets.units), _units);
-    hildon_picker_button_set_active
-        (HILDON_PICKER_BUTTON(widgets.degformat), _degformat);
-    if (_auto_download_precache < 1) _auto_download_precache = 2;
-    hildon_picker_button_set_active
-        (HILDON_PICKER_BUTTON(widgets.auto_download_precache),
-         _auto_download_precache - 1);
-    hildon_picker_button_set_active
-        (HILDON_PICKER_BUTTON(widgets.speed_limit),
-         _speed_limit_on ? (_speed_limit / 5) : 0);
-    hildon_picker_button_set_active
-        (HILDON_PICKER_BUTTON(widgets.speed_location), _speed_location);
-    hildon_picker_button_set_active
-        (HILDON_PICKER_BUTTON(widgets.unblank_option), _unblank_option);
-    hildon_picker_button_set_active
-        (HILDON_PICKER_BUTTON(widgets.info_font_size), _info_font_size);
-
     gtk_widget_show_all(dialog);
 
-    while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
+    settings_dialog_set_save(dialog, FALSE);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    if (settings_dialog_get_save(dialog))
     {
-        const gchar *poi_db;
-        _center_ratio =
-            gtk_range_get_value(GTK_RANGE(widgets.num_center_ratio));
-
-        _lead_ratio = gtk_range_get_value(GTK_RANGE(widgets.num_lead_ratio));
-
-        _lead_is_fixed = hildon_picker_button_get_active
-            (HILDON_PICKER_BUTTON(widgets.lead_is_fixed));
-
-        _rotate_sens = gtk_range_get_value(GTK_RANGE(widgets.num_rotate_sens));
-
-        _ac_min_speed = hildon_picker_button_get_active(
-                HILDON_PICKER_BUTTON(widgets.num_ac_min_speed)) * 5;
-
-        _rotate_dir = hildon_picker_button_get_active
-            (HILDON_PICKER_BUTTON(widgets.rotate_dir));
-
-        _auto_download_precache = hildon_picker_button_get_active
-            (HILDON_PICKER_BUTTON(widgets.auto_download_precache)) + 1;
-
-        _draw_width = hildon_picker_button_get_active
-            (HILDON_PICKER_BUTTON(widgets.draw_width));
-
-        _units = hildon_picker_button_get_active
-            (HILDON_PICKER_BUTTON(widgets.units));
-        _degformat = hildon_picker_button_get_active
-            (HILDON_PICKER_BUTTON(widgets.degformat));
-
-        _speed_limit = hildon_picker_button_get_active
-            (HILDON_PICKER_BUTTON(widgets.speed_limit)) * 5;
-        _speed_limit_on = _speed_limit > 0;
-        _speed_location = hildon_picker_button_get_active
-            (HILDON_PICKER_BUTTON(widgets.speed_location));
-
-        _unblank_option = hildon_picker_button_get_active
-            (HILDON_PICKER_BUTTON(widgets.unblank_option));
-
-        _info_font_size = hildon_picker_button_get_active
-            (HILDON_PICKER_BUTTON(widgets.info_font_size));
-
-        _announce_notice_ratio =
-            gtk_range_get_value(GTK_RANGE(widgets.num_announce_notice));
-
-        _enable_announce = hildon_check_button_get_active
-            (HILDON_CHECK_BUTTON(widgets.enable_announce));
-
-        _enable_voice = hildon_check_button_get_active
-            (HILDON_CHECK_BUTTON(widgets.enable_voice));
-
-        /* Check if user specified a different POI database from before. */
-        poi_db = hildon_button_get_value(HILDON_BUTTON(widgets.poi_db));
-        if (g_strcmp0(_poi_db_filename, poi_db) != 0)
-        {
-            /* Clear old filename/dirname, if necessary. */
-            if(_poi_db_filename)
-            {
-                g_free(_poi_db_filename);
-                _poi_db_filename = NULL;
-                g_free(_poi_db_dirname);
-                _poi_db_dirname = NULL;
-            }
-
-            if(*poi_db)
-            {
-                _poi_db_filename = g_strdup(poi_db);
-                _poi_db_dirname = g_path_get_dirname(_poi_db_filename);
-            }
-
-            poi_db_connect();
-        }
-
-        _poi_zoom = hildon_picker_button_get_active
-            (HILDON_PICKER_BUTTON(widgets.poi_zoom));
-
         update_gcs();
 
         settings_save();
 
         map_force_redraw();
         map_refresh_mark(TRUE);
-
-        break;
     }
 
     gtk_widget_hide(dialog);
