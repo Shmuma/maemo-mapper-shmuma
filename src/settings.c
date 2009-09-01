@@ -1609,8 +1609,7 @@ gboolean settings_dialog()
 {
     static GtkWidget *dialog = NULL;
 
-    GtkWidget *pannable;
-    GtkWidget *vbox;
+    GtkWidget *hbox, *vbox;
     GtkWidget *page_dialog;
     GtkWidget *button;
 
@@ -1624,14 +1623,12 @@ gboolean settings_dialog()
                 GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                 NULL);
 
-        pannable = hildon_pannable_area_new();
-        vbox = gtk_vbox_new(FALSE, 0);
-        hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(pannable),
-                                               vbox);
-
+        hbox = gtk_hbox_new(TRUE, 0);
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                           pannable, TRUE, TRUE, 0);
+                           hbox, TRUE, TRUE, 0);
 
+        vbox = gtk_vbox_new(TRUE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, TRUE, 0);
 
         /* Auto-Center page. */
         button = gtk_button_new_with_label(_("Auto-Center"));
@@ -1658,6 +1655,10 @@ gboolean settings_dialog()
                          G_CALLBACK(run_subdialog), page_dialog);
         gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
+        /* second column */
+        vbox = gtk_vbox_new(TRUE, 0);
+        gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, TRUE, 0);
+
         /* POI page */
         button = gtk_button_new_with_label(_("POI"));
         hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
@@ -1666,12 +1667,14 @@ gboolean settings_dialog()
                          G_CALLBACK(run_subdialog), page_dialog);
         gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
+        /* Hardware keys */
         button = gtk_button_new_with_label(_("Hardware Keys..."));
         hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
         g_signal_connect(G_OBJECT(button), "clicked",
                          G_CALLBACK(settings_dialog_hardkeys), dialog);
         gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
+        /* Colors */
         button = gtk_button_new_with_label(_("Colors..."));
         hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
         g_signal_connect(G_OBJECT(button), "clicked",
