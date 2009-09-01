@@ -1747,12 +1747,8 @@ run_poi_dialog(GtkWindow *parent)
 gboolean settings_dialog()
 {
     static GtkWidget *dialog = NULL;
-
     GtkWidget *hbox, *vbox;
     GtkWidget *button;
-
-    gboolean rcvr_changed = FALSE;
-    printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(dialog == NULL)
     {
@@ -1830,9 +1826,7 @@ gboolean settings_dialog()
     }
 
     gtk_widget_hide(dialog);
-
-    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, rcvr_changed);
-    return rcvr_changed;
+    return FALSE;
 }
 
 RepoData*
