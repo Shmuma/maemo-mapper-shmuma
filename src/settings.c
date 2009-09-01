@@ -235,6 +235,9 @@ static struct _SettingWidgets {
     GtkWidget *auto_download_precache;
     GtkWidget *speed_limit;
     GtkWidget *speed_location;
+
+    GtkWidget *poi_db;
+    GtkWidget *poi_zoom;
 } widgets;
 
 #ifdef INCLUDE_APRS
@@ -742,24 +745,25 @@ settings_save()
 }
 
 static gboolean
-settings_dialog_browse_forfile(GtkWidget *widget, BrowseInfo *browse_info)
+settings_dialog_browse_forfile(GtkWidget *button)
 {
-    GtkWidget *dialog;
+    GtkWidget *dialog, *parent;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    parent = gtk_widget_get_toplevel(button);
     dialog = GTK_WIDGET(
-            hildon_file_chooser_dialog_new(GTK_WINDOW(browse_info->dialog),
+            hildon_file_chooser_dialog_new(GTK_WINDOW(parent),
             GTK_FILE_CHOOSER_ACTION_OPEN));
 
     gtk_file_chooser_set_local_only(GTK_FILE_CHOOSER(dialog), TRUE);
     gtk_file_chooser_set_current_folder(GTK_FILE_CHOOSER(dialog),
-            gtk_entry_get_text(GTK_ENTRY(browse_info->txt)));
+            hildon_button_get_value(HILDON_BUTTON(button)));
 
     if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
         gchar *filename = gtk_file_chooser_get_filename(
                 GTK_FILE_CHOOSER(dialog));
-        gtk_entry_set_text(GTK_ENTRY(browse_info->txt), filename);
+        hildon_button_set_value(HILDON_BUTTON(button), filename);
         g_free(filename);
     }
 
@@ -1551,6 +1555,52 @@ create_misc_dialog(GtkWindow *parent)
     return dialog;
 }
 
+static GtkWidget *
+create_poi_dialog(GtkWindow *parent)
+{
+    GtkWidget *dialog;
+    GtkBox *vbox;
+    HildonTouchSelector *selector;
+    gint i;
+
+    /* POI page. */
+    dialog = gtk_dialog_new_with_buttons
+        (_("POI"), parent, GTK_DIALOG_MODAL,
+         GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+         NULL);
+
+    vbox = GTK_BOX(GTK_DIALOG(dialog)->vbox);
+
+    /* POI database. */
+    widgets.poi_db = hildon_button_new_with_text
+        (HILDON_SIZE_FINGER_HEIGHT, HILDON_BUTTON_ARRANGEMENT_VERTICAL,
+         _("POI database"), "");
+    gtk_button_set_alignment(GTK_BUTTON(widgets.poi_db), 0.0, 0.5);
+    g_signal_connect(widgets.poi_db, "clicked",
+                     G_CALLBACK(settings_dialog_browse_forfile), NULL);
+    gtk_box_pack_start(vbox, widgets.poi_db, FALSE, TRUE, 0);
+
+    /* Show POI below zoom. */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    for (i = 0; i <= MAX_ZOOM; i++)
+    {
+        gchar buffer[5];
+        sprintf(buffer, "%d", i);
+        hildon_touch_selector_append_text(selector, buffer);
+    }
+    widgets.poi_zoom =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Show POI below zoom"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), widgets.poi_zoom, FALSE, TRUE, 0);
+
+    return dialog;
+}
+
 /**
  * Bring up the Settings dialog.  Return TRUE if and only if the recever
  * information has changed (MAC or channel).
@@ -1558,21 +1608,14 @@ create_misc_dialog(GtkWindow *parent)
 gboolean settings_dialog()
 {
     static GtkWidget *dialog = NULL;
-    static GtkWidget *table = NULL;
-    static GtkWidget *hbox = NULL;
-    static GtkWidget *label = NULL;
     static GtkWidget *btn_buttons = NULL;
     static GtkWidget *btn_colors = NULL;
 
-    static GtkWidget *txt_poi_db = NULL;
-    static GtkWidget *btn_browse_poi = NULL;
-    static GtkWidget *num_poi_zoom = NULL;
     GtkWidget *pannable;
     GtkWidget *vbox;
     GtkWidget *page_dialog;
     GtkWidget *button;
 
-    static BrowseInfo poi_browse_info = {0, 0};
     gboolean rcvr_changed = FALSE;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -1627,64 +1670,27 @@ gboolean settings_dialog()
         gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
         /* POI page */
-        gtk_box_pack_start(GTK_BOX(vbox), gtk_hseparator_new(),
-                           FALSE, TRUE, 0);
-        table = gtk_table_new(2, 3, FALSE);
-        label = gtk_label_new(_("POI"));
-        gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
-
-        /* POI database. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("POI database")),
-                0, 1, 1, 2, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                hbox = gtk_hbox_new(FALSE, 4),
-                1, 2, 1, 2, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-        gtk_box_pack_start(GTK_BOX(hbox),
-                txt_poi_db = gtk_entry_new(),
-                TRUE, TRUE, 0);
-#ifdef MAEMO_CHANGES
-#ifndef LEGACY
-        g_object_set(G_OBJECT(txt_poi_db), "hildon-input-mode",
-                HILDON_GTK_INPUT_MODE_FULL, NULL);
-#else
-        g_object_set(G_OBJECT(txt_poi_db), HILDON_AUTOCAP, FALSE, NULL);
-#endif
-#endif
-        gtk_box_pack_start(GTK_BOX(hbox),
-                btn_browse_poi = gtk_button_new_with_label(_("Browse...")),
-                FALSE, FALSE, 0);
-
-        /* Show POI below zoom. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Show POI below zoom")),
-                0, 1, 2, 3, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-                1, 2, 2, 3, GTK_FILL, 0, 2, 4);
-        gtk_container_add(GTK_CONTAINER(label),
-                num_poi_zoom = hildon_number_editor_new(0, MAX_ZOOM));
+        button = gtk_button_new_with_label(_("POI"));
+        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
+        page_dialog = create_poi_dialog(GTK_WINDOW(dialog));
+        g_signal_connect(button, "clicked",
+                         G_CALLBACK(run_subdialog), page_dialog);
+        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
         /* Connect signals. */
         g_signal_connect(G_OBJECT(btn_buttons), "clicked",
                          G_CALLBACK(settings_dialog_hardkeys), dialog);
         g_signal_connect(G_OBJECT(btn_colors), "clicked",
                          G_CALLBACK(settings_dialog_colors), dialog);
-
-        poi_browse_info.dialog = dialog;
-        poi_browse_info.txt = txt_poi_db;
-        g_signal_connect(G_OBJECT(btn_browse_poi), "clicked",
-                G_CALLBACK(settings_dialog_browse_forfile), &poi_browse_info);
     }
 
 
     /* Initialize fields. */
     if(_poi_db_filename)
-        gtk_entry_set_text(GTK_ENTRY(txt_poi_db), _poi_db_filename);
-    hildon_number_editor_set_value(HILDON_NUMBER_EDITOR(num_poi_zoom),
-            _poi_zoom);
+        hildon_button_set_value(HILDON_BUTTON(widgets.poi_db),
+                                _poi_db_filename);
+    hildon_picker_button_set_active
+        (HILDON_PICKER_BUTTON(widgets.poi_zoom), _poi_zoom);
     gtk_range_set_value(GTK_RANGE(widgets.num_center_ratio), _center_ratio);
     gtk_range_set_value(GTK_RANGE(widgets.num_lead_ratio), _lead_ratio);
     hildon_picker_button_set_active
@@ -1726,6 +1732,7 @@ gboolean settings_dialog()
 
     while(GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(dialog)))
     {
+        const gchar *poi_db;
         _center_ratio =
             gtk_range_get_value(GTK_RANGE(widgets.num_center_ratio));
 
@@ -1775,9 +1782,8 @@ gboolean settings_dialog()
             (HILDON_CHECK_BUTTON(widgets.enable_voice));
 
         /* Check if user specified a different POI database from before. */
-        if((!_poi_db_filename && *gtk_entry_get_text(GTK_ENTRY(txt_poi_db)))
-                || strcmp(_poi_db_filename,
-                    gtk_entry_get_text(GTK_ENTRY(txt_poi_db))))
+        poi_db = hildon_button_get_value(HILDON_BUTTON(widgets.poi_db));
+        if (g_strcmp0(_poi_db_filename, poi_db) != 0)
         {
             /* Clear old filename/dirname, if necessary. */
             if(_poi_db_filename)
@@ -1788,18 +1794,17 @@ gboolean settings_dialog()
                 _poi_db_dirname = NULL;
             }
 
-            if(*gtk_entry_get_text(GTK_ENTRY(txt_poi_db)))
+            if(*poi_db)
             {
-                _poi_db_filename = g_strdup(gtk_entry_get_text(
-                            GTK_ENTRY(txt_poi_db)));
+                _poi_db_filename = g_strdup(poi_db);
                 _poi_db_dirname = g_path_get_dirname(_poi_db_filename);
             }
 
             poi_db_connect();
         }
 
-        _poi_zoom = hildon_number_editor_get_value(
-                HILDON_NUMBER_EDITOR(num_poi_zoom));
+        _poi_zoom = hildon_picker_button_get_active
+            (HILDON_PICKER_BUTTON(widgets.poi_zoom));
 
         update_gcs();
 
