@@ -1608,8 +1608,6 @@ create_poi_dialog(GtkWindow *parent)
 gboolean settings_dialog()
 {
     static GtkWidget *dialog = NULL;
-    static GtkWidget *btn_buttons = NULL;
-    static GtkWidget *btn_colors = NULL;
 
     GtkWidget *pannable;
     GtkWidget *vbox;
@@ -1625,15 +1623,6 @@ gboolean settings_dialog()
                 GTK_WINDOW(_window), GTK_DIALOG_MODAL,
                 GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                 NULL);
-
-        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
-               btn_buttons = gtk_button_new_with_label(_("Hardware Keys...")));
-
-        gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
-                btn_colors = gtk_button_new_with_label(_("Colors...")));
-
-        gtk_dialog_add_button(GTK_DIALOG(dialog),
-                GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT);
 
         pannable = hildon_pannable_area_new();
         vbox = gtk_vbox_new(FALSE, 0);
@@ -1677,11 +1666,17 @@ gboolean settings_dialog()
                          G_CALLBACK(run_subdialog), page_dialog);
         gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
 
-        /* Connect signals. */
-        g_signal_connect(G_OBJECT(btn_buttons), "clicked",
+        button = gtk_button_new_with_label(_("Hardware Keys..."));
+        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
+        g_signal_connect(G_OBJECT(button), "clicked",
                          G_CALLBACK(settings_dialog_hardkeys), dialog);
-        g_signal_connect(G_OBJECT(btn_colors), "clicked",
+        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
+
+        button = gtk_button_new_with_label(_("Colors..."));
+        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
+        g_signal_connect(G_OBJECT(button), "clicked",
                          G_CALLBACK(settings_dialog_colors), dialog);
+        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
     }
 
 
