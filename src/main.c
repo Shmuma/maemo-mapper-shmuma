@@ -71,6 +71,9 @@
 #include "settings.h"
 #include "util.h"
 
+#include <clutter-gtk/clutter-gtk.h>
+
+
 static void osso_cb_hw_state(osso_hw_state_t *state, gpointer data);
 
 static HildonProgram *_program = NULL;
@@ -706,7 +709,7 @@ main(gint argc, gchar *argv[])
         return 1;
     }
 
-    gtk_init(&argc, &argv);
+    gtk_clutter_init(&argc, &argv);
 
     /* Init gconf. */
     g_type_init();
