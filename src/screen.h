@@ -54,6 +54,9 @@ struct _MapScreenClass
 
 GType map_screen_get_type (void);
 
+void map_screen_set_center(MapScreen *screen, gint x, gint y, gint zoom);
+void map_screen_set_rotation(MapScreen *screen, gint angle);
+
 
 G_END_DECLS
 #endif /* MAP_SCREEN_H */
