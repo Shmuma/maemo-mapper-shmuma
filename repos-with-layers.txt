@@ -3,10 +3,10 @@ Traffic	http://mt.google.com/mapstt?zoom=%0d&x=%d&y=%d	/home/user/MyDocs/.docume
 Google Satellite	http://kh.google.com/kh?v=999&t=%s	/home/user/MyDocs/.documents/Maps/GSat	2	1	0	1	2	20	0
 Traffic	http://mt.google.com/mapstt?zoom=%0d&x=%d&y=%d	/home/user/MyDocs/.documents/Maps/Traffic	2	1	0	1	4	20	1	0	15
 Traffic	http://mt.google.com/mt?v=w2t.999&x=%d&y=%d&zoom=%d	/home/user/MyDocs/.documents/Maps/Labels	2	1	0	1	2	20	1	0	0
-Yandex	http://vec.maps.yandex.net/tiles?l=map&v=2.4.1&x=%d&y=%d&z=%d	/home/user/MyDocs/.documents/Maps/Yandex	2	1	0	1	2	20	0
+Yandex	http://vec.maps.yandex.net/tiles?l=map&v=2.8.1&x=%d&y=%d&z=%d	/home/user/MyDocs/.documents/Maps/Yandex	2	1	0	1	2	20	0
 Traffic	http://maemo.shmuma.ru/proxy/trf.maps.yandex?x=%d&y=%d&z=%d	/home/user/MyDocs/.documents/Maps/YTraffic	2	1	0	1	4	20	1	0	15
-Yandex Satellite	http://sat.maps.yandex.net/tiles?l=sat&v=1.7.1&x=%d&y=%d&z=%d	/home/user/MyDocs/.documents/Maps/YandexSat	2	1	0	1	2	20	0
-Streets	http://vec.maps.yandex.net/tiles?l=skl&v=2.4.1&x=%d&y=%d&z=%d	/home/user/MyDocs/.documents/Maps/YHybr	2	1	0	1	4	20	1	0	15
+Yandex Satellite	http://sat.maps.yandex.net/tiles?l=sat&v=1.11.0&x=%d&y=%d&z=%d	/home/user/MyDocs/.documents/Maps/YandexSat	2	1	0	1	2	20	0
+Streets	http://vec.maps.yandex.net/tiles?l=skl&v=2.8.1&x=%d&y=%d&z=%d	/home/user/MyDocs/.documents/Maps/YHybr	2	1	0	1	4	20	1	0	15
 VE Street	http://r0.ortho.tiles.virtualearth.net/tiles/r%0s.png?g=45	/home/user/MyDocs/.documents/Maps/VEStreet	2	1	0	1	2	20	0
 Traffic	http://mt.google.com/mapstt?zoom=%0d&x=%d&y=%d	/home/user/MyDocs/.documents/Maps/Traffic	2	1	0	1	4	20	1	0	15
 VE Satellite	http://a0.ortho.tiles.virtualearth.net/tiles/a%0s.jpeg?g=50	/home/user/MyDocs/.documents/Maps/VESat	2	1	0	1	2	20	0
