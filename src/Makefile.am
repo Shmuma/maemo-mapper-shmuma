@@ -41,6 +41,7 @@ maemo_mapper_SOURCES = \
 	poi.c \
 	settings.c \
 	screen.c \
+	tile.c \
 	util.c \
 	aprs_decode.c \
 	aprs.c \

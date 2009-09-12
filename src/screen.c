@@ -26,6 +26,7 @@
 #include "data.h"
 #include "defines.h"
 #include "maps.h"
+#include "tile.h"
 #include "types.h"
 
 struct _MapScreenPrivate
@@ -41,29 +42,6 @@ G_DEFINE_TYPE(MapScreen, map_screen, GTK_CLUTTER_TYPE_EMBED);
 
 #define MAP_SCREEN_PRIV(screen) (MAP_SCREEN(screen)->priv)
 
-static ClutterActor *
-create_tile(RepoData *repo, gint zoom, gint x, gint y)
-{
-    ClutterActor *tile;
-    GdkPixbuf *pixbuf;
-    gint px, py;
-
-    /* TODO: handle layers */
-    pixbuf = mapdb_get(repo, zoom, x, y);
-    if (pixbuf)
-    {
-        tile = gtk_clutter_texture_new_from_pixbuf(pixbuf);
-        g_object_unref(pixbuf);
-    }
-    else
-        /* TODO: start download process */
-        tile = clutter_texture_new();
-    px = x * TILE_SIZE_PIXELS;
-    py = y * TILE_SIZE_PIXELS;
-    clutter_actor_set_position(tile, px, py);
-    clutter_actor_show(tile);
-    return tile;
-}
 static void
 load_tiles_into_map(MapScreen *screen, RepoData *repo, gint zoom,
                     gint tx1, gint ty1, gint tx2, gint ty2)
@@ -78,7 +56,7 @@ load_tiles_into_map(MapScreen *screen, RepoData *repo, gint zoom,
     {
         for (ty = ty1; ty <= ty2; ty++)
         {
-            tile = create_tile(repo, zoom, tx, ty);
+            tile = map_tile_load(repo, zoom, tx, ty);
             clutter_container_add_actor(map, tile);
         }
     }
