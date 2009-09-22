@@ -29,9 +29,13 @@
 #include "tile.h"
 #include "types.h"
 
+#include <cairo/cairo.h>
+
 struct _MapScreenPrivate
 {
     ClutterActor *map;
+    ClutterActor *compass;
+    ClutterActor *compass_north;
 
     gint zoom;
 
@@ -63,6 +67,86 @@ load_tiles_into_map(MapScreen *screen, RepoData *repo, gint zoom,
 }
 
 static void
+create_compass(MapScreen *screen)
+{
+    MapScreenPrivate *priv = screen->priv;
+    gint height, width;
+    cairo_surface_t *surface;
+    cairo_text_extents_t te;
+    cairo_t *cr;
+    GError *error = NULL;
+
+    width = 40, height = 75;
+    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    cr = cairo_create(surface);
+
+    cairo_move_to(cr, 20, 57);
+    cairo_line_to(cr, 40, 75);
+    cairo_line_to(cr, 20, 0);
+    cairo_line_to(cr, 0, 75);
+    cairo_close_path(cr);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_fill_preserve(cr);
+    cairo_set_source_rgb(cr, 1, 1, 1);
+    cairo_set_line_width(cr, 2);
+    cairo_stroke(cr);
+    cairo_destroy(cr);
+
+    g_debug ("Creating texture");
+    priv->compass = clutter_texture_new();
+    g_assert(priv->compass != NULL);
+    clutter_texture_set_from_rgb_data(CLUTTER_TEXTURE(priv->compass),
+                                      cairo_image_surface_get_data(surface),
+                                      TRUE,
+                                      width, height,
+                                      cairo_image_surface_get_stride(surface),
+                                      4,
+                                      CLUTTER_TEXTURE_NONE,
+                                      &error);
+    cairo_surface_destroy(surface);
+    if (G_UNLIKELY(error))
+    {
+        g_warning("Creation of texture failed: %s", error->message);
+        g_error_free(error);
+    }
+    clutter_actor_set_anchor_point(priv->compass, 20, 45);
+    clutter_actor_show(priv->compass);
+
+    /* create the "N" letter */
+    width = 16, height = 16;
+    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    cr = cairo_create(surface);
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_select_font_face (cr, "Sans Serif",
+                            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size (cr, 20);
+    cairo_text_extents (cr, "N", &te);
+    cairo_move_to (cr, 8 - te.width / 2 - te.x_bearing,
+                       8 - te.height / 2 - te.y_bearing);
+    cairo_show_text (cr, "N");
+    cairo_destroy(cr);
+
+    priv->compass_north = clutter_texture_new();
+    g_assert(priv->compass_north != NULL);
+    clutter_texture_set_from_rgb_data(CLUTTER_TEXTURE(priv->compass_north),
+                                      cairo_image_surface_get_data(surface),
+                                      TRUE,
+                                      width, height,
+                                      cairo_image_surface_get_stride(surface),
+                                      4,
+                                      CLUTTER_TEXTURE_NONE,
+                                      &error);
+    cairo_surface_destroy(surface);
+    if (G_UNLIKELY(error))
+    {
+        g_warning("Creation of texture failed: %s", error->message);
+        g_error_free(error);
+    }
+    clutter_actor_set_anchor_point(priv->compass_north, 8, 8);
+    clutter_actor_show(priv->compass_north);
+}
+
+static void
 map_screen_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     MapScreenPrivate *priv = MAP_SCREEN_PRIV(widget);
@@ -74,6 +158,15 @@ map_screen_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
     clutter_actor_set_position(priv->map,
                                allocation->width / 2,
                                allocation->height / 2);
+    if (priv->compass)
+    {
+        gint x, y;
+
+        x = allocation->width - 42;
+        y = allocation->height - 42;
+        clutter_actor_set_position(priv->compass, x, y);
+        clutter_actor_set_position(priv->compass_north, x, y);
+    }
 }
 
 static void
@@ -106,6 +199,10 @@ map_screen_init(MapScreen *screen)
     g_return_if_fail(priv->map != NULL);
     clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->map);
     clutter_actor_show(priv->map);
+
+    create_compass(screen);
+    clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->compass);
+    clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->compass_north);
 }
 
 static void
@@ -196,10 +293,17 @@ map_screen_set_center(MapScreen *screen, gint x, gint y, gint zoom)
 void
 map_screen_set_rotation(MapScreen *screen, gint angle)
 {
-    GtkAllocation *allocation;
+    MapScreenPrivate *priv;
+
     g_return_if_fail(MAP_IS_SCREEN(screen));
-    allocation = &(GTK_WIDGET(screen)->allocation);
-    clutter_actor_set_rotation(screen->priv->map,
+    priv = screen->priv;
+    clutter_actor_set_rotation(priv->map,
                                CLUTTER_Z_AXIS, -angle, 0, 0, 0);
+
+    if (priv->compass)
+    {
+        clutter_actor_set_rotation(priv->compass,
+                                   CLUTTER_Z_AXIS, -angle, 0, 0, 0);
+    }
 }
 

@@ -89,6 +89,9 @@ PKG_CHECK_MODULES(CLUTTER, clutter-1.0 clutter-gtk-0.10)
 AC_SUBST(CLUTTER_LIBS)
 AC_SUBST(CLUTTER_CFLAGS)
 
+PKG_CHECK_MODULES(CAIRO, cairo)
+AC_SUBST(CAIRO_LIBS)
+AC_SUBST(CAIRO_CFLAGS)
 
 # Localisation
 localedir=`$PKG_CONFIG osso-af-settings --variable=localedir`
