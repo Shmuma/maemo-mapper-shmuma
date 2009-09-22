@@ -39,6 +39,8 @@ struct _MapScreenPrivate
 
     gint zoom;
 
+    guint show_compass : 1;
+
     guint is_disposed : 1;
 };
 
@@ -110,7 +112,6 @@ create_compass(MapScreen *screen)
         g_error_free(error);
     }
     clutter_actor_set_anchor_point(priv->compass, 20, 45);
-    clutter_actor_show(priv->compass);
 
     /* create the "N" letter */
     width = 16, height = 16;
@@ -143,7 +144,6 @@ create_compass(MapScreen *screen)
         g_error_free(error);
     }
     clutter_actor_set_anchor_point(priv->compass_north, 8, 8);
-    clutter_actor_show(priv->compass_north);
 }
 
 static void
@@ -304,6 +304,32 @@ map_screen_set_rotation(MapScreen *screen, gint angle)
     {
         clutter_actor_set_rotation(priv->compass,
                                    CLUTTER_Z_AXIS, -angle, 0, 0, 0);
+    }
+}
+
+/**
+ * map_screen_show_compass:
+ * @screen: the #MapScreen.
+ * @show: %TRUE if the compass should be shown.
+ */
+void
+map_screen_show_compass(MapScreen *screen, gboolean show)
+{
+    MapScreenPrivate *priv;
+
+    g_return_if_fail(MAP_IS_SCREEN(screen));
+    priv = screen->priv;
+
+    priv->show_compass = show;
+    if (show)
+    {
+        clutter_actor_show(priv->compass);
+        clutter_actor_show(priv->compass_north);
+    }
+    else
+    {
+        clutter_actor_hide(priv->compass);
+        clutter_actor_hide(priv->compass_north);
     }
 }
 
