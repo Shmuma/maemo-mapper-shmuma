@@ -73,14 +73,12 @@ create_compass(MapScreen *screen)
 {
     MapScreenPrivate *priv = screen->priv;
     gint height, width;
-    cairo_surface_t *surface;
     cairo_text_extents_t te;
     cairo_t *cr;
-    GError *error = NULL;
 
     width = 40, height = 75;
-    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-    cr = cairo_create(surface);
+    priv->compass = clutter_cairo_texture_new(width, height);
+    cr = clutter_cairo_texture_create(CLUTTER_CAIRO_TEXTURE(priv->compass));
 
     cairo_move_to(cr, 20, 57);
     cairo_line_to(cr, 40, 75);
@@ -94,29 +92,13 @@ create_compass(MapScreen *screen)
     cairo_stroke(cr);
     cairo_destroy(cr);
 
-    g_debug ("Creating texture");
-    priv->compass = clutter_texture_new();
-    g_assert(priv->compass != NULL);
-    clutter_texture_set_from_rgb_data(CLUTTER_TEXTURE(priv->compass),
-                                      cairo_image_surface_get_data(surface),
-                                      TRUE,
-                                      width, height,
-                                      cairo_image_surface_get_stride(surface),
-                                      4,
-                                      CLUTTER_TEXTURE_NONE,
-                                      &error);
-    cairo_surface_destroy(surface);
-    if (G_UNLIKELY(error))
-    {
-        g_warning("Creation of texture failed: %s", error->message);
-        g_error_free(error);
-    }
     clutter_actor_set_anchor_point(priv->compass, 20, 45);
 
     /* create the "N" letter */
     width = 16, height = 16;
-    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-    cr = cairo_create(surface);
+    priv->compass_north = clutter_cairo_texture_new(width, height);
+    cr = clutter_cairo_texture_create
+        (CLUTTER_CAIRO_TEXTURE(priv->compass_north));
     cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_select_font_face (cr, "Sans Serif",
                             CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
@@ -127,22 +109,6 @@ create_compass(MapScreen *screen)
     cairo_show_text (cr, "N");
     cairo_destroy(cr);
 
-    priv->compass_north = clutter_texture_new();
-    g_assert(priv->compass_north != NULL);
-    clutter_texture_set_from_rgb_data(CLUTTER_TEXTURE(priv->compass_north),
-                                      cairo_image_surface_get_data(surface),
-                                      TRUE,
-                                      width, height,
-                                      cairo_image_surface_get_stride(surface),
-                                      4,
-                                      CLUTTER_TEXTURE_NONE,
-                                      &error);
-    cairo_surface_destroy(surface);
-    if (G_UNLIKELY(error))
-    {
-        g_warning("Creation of texture failed: %s", error->message);
-        g_error_free(error);
-    }
     clutter_actor_set_anchor_point(priv->compass_north, 8, 8);
 }
 
