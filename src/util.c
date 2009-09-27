@@ -1038,3 +1038,30 @@ strdmstod_test()
     }
 }
 #endif
+
+/* binary square root, taken from:
+ * http://en.wikipedia.org/wiki/Methods_of_computing_square_roots
+ */
+gint gint_sqrt(gint num)
+{
+    gint op = num;
+    gint res = 0;
+    gint one = 1 << 30; // The second-to-top bit is set: 1L<<30 for long
+
+    // "one" starts at the highest power of four <= the argument.
+    while (one > op)
+        one >>= 2;
+
+    while (one != 0) {
+        if (op >= res + one) {
+            op -= res + one;
+            res = (res >> 1) + one;
+        }
+        else {
+            res >>= 1;
+        }
+        one >>= 2;
+    }
+    return res;
+}
+
