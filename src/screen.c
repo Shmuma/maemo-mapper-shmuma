@@ -26,18 +26,37 @@
 #include "data.h"
 #include "defines.h"
 #include "maps.h"
+#include "math.h"
 #include "tile.h"
 #include "types.h"
+#include "util.h"
 
 #include <cairo/cairo.h>
 
 struct _MapScreenPrivate
 {
     ClutterActor *map;
+    gint map_center_ux;
+    gint map_center_uy;
+
+    ClutterActor *tile_group;
+
     ClutterActor *compass;
     ClutterActor *compass_north;
 
+    /* layer for drawing over the map (used for paths) */
+    ClutterActor *overlay;
+
+    /* center of the draw layer, in pixels */
+    gint overlay_center_px; /* Y is the same */
+
+    /* upper left of the draw layer, in units */
+    gint overlay_start_px;
+    gint overlay_start_py;
+
     gint zoom;
+
+    guint source_overlay_redraw;
 
     guint show_compass : 1;
 
@@ -48,22 +67,143 @@ G_DEFINE_TYPE(MapScreen, map_screen, GTK_CLUTTER_TYPE_EMBED);
 
 #define MAP_SCREEN_PRIV(screen) (MAP_SCREEN(screen)->priv)
 
+static inline void
+point_to_pixels(MapScreenPrivate *priv, Point *p, gint *x, gint *y)
+{
+    *x = unit2zpixel(p->unitx, priv->zoom) - priv->overlay_start_px;
+    *y = unit2zpixel(p->unity, priv->zoom) - priv->overlay_start_py;
+}
+
+static inline void
+set_source_color(cairo_t *cr, GdkColor *color)
+{
+    cairo_set_source_rgb(cr,
+                         color->red / 65535.0,
+                         color->green / 65535.0,
+                         color->blue / 65535.0);
+}
+
+static void
+draw_break(cairo_t *cr, GdkColor *color, gint x, gint y)
+{
+    cairo_save(cr);
+    cairo_new_sub_path(cr);
+    cairo_arc(cr, x, y, _draw_width, 0, 2 * M_PI);
+    cairo_set_line_width(cr, _draw_width);
+    set_source_color(cr, color);
+    cairo_stroke(cr);
+    cairo_restore(cr);
+}
+
+static void
+draw_path(MapScreen *screen, Path *path, Colorable base)
+{
+    MapScreenPrivate *priv = screen->priv;
+    Point *curr;
+    WayPoint *wcurr;
+    cairo_t *cr;
+    gint x = 0, y = 0;
+    gboolean segment_open = FALSE;
+
+    g_debug ("%s", G_STRFUNC);
+    cr = clutter_cairo_texture_create(CLUTTER_CAIRO_TEXTURE(priv->overlay));
+    g_assert(cr != NULL);
+
+    set_source_color(cr, &_color[base]);
+    cairo_set_line_width(cr, _draw_width);
+    cairo_set_line_join(cr, CAIRO_LINE_JOIN_BEVEL);
+    for (curr = path->head, wcurr = path->whead; curr <= path->tail; curr++)
+    {
+        if (G_UNLIKELY(curr->unity == 0))
+        {
+            if (segment_open)
+            {
+                /* use x and y from the previous iteration */
+                cairo_stroke(cr);
+                draw_break(cr, &_color[base + 2], x, y);
+                segment_open = FALSE;
+            }
+        }
+        else
+        {
+            point_to_pixels(priv, curr, &x, &y);
+            if (G_UNLIKELY(!segment_open))
+            {
+                draw_break(cr, &_color[base + 2], x, y);
+                cairo_move_to(cr, x, y);
+                segment_open = TRUE;
+            }
+            else
+                cairo_line_to(cr, x, y);
+        }
+    }
+    cairo_stroke(cr);
+
+    cairo_destroy(cr);
+}
+
+static void
+draw_paths(MapScreen *screen)
+{
+    if ((_show_paths & ROUTES_MASK) && _route.head != _route.tail)
+        draw_path(screen, &_route, COLORABLE_ROUTE);
+
+    if (_show_paths & TRACKS_MASK)
+        draw_path(screen, &_track, COLORABLE_TRACK);
+}
+
+static gboolean
+overlay_redraw_real(MapScreen *screen)
+{
+    MapScreenPrivate *priv;
+    GtkAllocation *allocation;
+    gfloat center_x, center_y;
+
+    g_return_val_if_fail (MAP_IS_SCREEN (screen), FALSE);
+    priv = screen->priv;
+
+    clutter_cairo_texture_clear(CLUTTER_CAIRO_TEXTURE(priv->overlay));
+    allocation = &(GTK_WIDGET(screen)->allocation);
+    clutter_actor_get_anchor_point(priv->map, &center_x, &center_y);
+    clutter_actor_set_position(priv->overlay, center_x, center_y);
+
+    priv->overlay_start_px = center_x - priv->overlay_center_px;
+    priv->overlay_start_py = center_y - priv->overlay_center_px;
+
+    draw_paths(screen);
+
+    priv->source_overlay_redraw = 0;
+    return FALSE;
+}
+
+static void
+overlay_redraw_idle(MapScreen *screen)
+{
+    MapScreenPrivate *priv = screen->priv;
+
+    if (priv->source_overlay_redraw == 0)
+    {
+        priv->source_overlay_redraw =
+            g_idle_add((GSourceFunc)overlay_redraw_real, screen);
+    }
+}
+
 static void
 load_tiles_into_map(MapScreen *screen, RepoData *repo, gint zoom,
                     gint tx1, gint ty1, gint tx2, gint ty2)
 {
-    ClutterContainer *map;
+    ClutterContainer *tile_group;
     ClutterActor *tile;
     gint tx, ty;
 
-    map = CLUTTER_CONTAINER(screen->priv->map);
+    tile_group = CLUTTER_CONTAINER(screen->priv->tile_group);
 
     for (tx = tx1; tx <= tx2; tx++)
     {
         for (ty = ty1; ty <= ty2; ty++)
         {
             tile = map_tile_load(repo, zoom, tx, ty);
-            clutter_container_add_actor(map, tile);
+            clutter_container_add_actor(tile_group, tile);
         }
     }
 }
@@ -116,6 +256,7 @@ static void
 map_screen_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     MapScreenPrivate *priv = MAP_SCREEN_PRIV(widget);
+    gint diagonal;
 
     GTK_WIDGET_CLASS(map_screen_parent_class)->size_allocate
         (widget, allocation);
@@ -133,6 +274,22 @@ map_screen_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
         clutter_actor_set_position(priv->compass, x, y);
         clutter_actor_set_position(priv->compass_north, x, y);
     }
+
+    /* Resize the map overlay */
+
+    /* The overlayed texture used for drawing must be big enough to cover
+     * the screen when the map rotates: so, it will be a square whose side
+     * is as big as the diagonal of the widget */
+    diagonal = gint_sqrt(allocation->width * allocation->width +
+                         allocation->height * allocation->height);
+    clutter_cairo_texture_set_surface_size
+        (CLUTTER_CAIRO_TEXTURE(priv->overlay), diagonal, diagonal);
+    priv->overlay_center_px = diagonal / 2;
+    clutter_actor_set_anchor_point(priv->overlay,
+                                   priv->overlay_center_px,
+                                   priv->overlay_center_px);
+
+    overlay_redraw_idle((MapScreen *)widget);
 }
 
 static void
@@ -144,6 +301,12 @@ map_screen_dispose(GObject *object)
 	return;
 
     priv->is_disposed = TRUE;
+
+    if (priv->source_overlay_redraw != 0)
+    {
+        g_source_remove (priv->source_overlay_redraw);
+        priv->source_overlay_redraw = 0;
+    }
 
     G_OBJECT_CLASS(map_screen_parent_class)->dispose(object);
 }
@@ -166,9 +329,18 @@ map_screen_init(MapScreen *screen)
     clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->map);
     clutter_actor_show(priv->map);
 
+    priv->tile_group = clutter_group_new();
+    g_return_if_fail(priv->tile_group != NULL);
+    clutter_container_add_actor(CLUTTER_CONTAINER(priv->map), priv->tile_group);
+    clutter_actor_show(priv->tile_group);
+
     create_compass(screen);
     clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->compass);
     clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->compass_north);
+
+    priv->overlay = clutter_cairo_texture_new(0, 0);
+    clutter_container_add_actor(CLUTTER_CONTAINER(priv->map), priv->overlay);
+    clutter_actor_show(priv->overlay);
 }
 
 static void
@@ -210,7 +382,7 @@ map_screen_set_center(MapScreen *screen, gint x, gint y, gint zoom)
 
     /* Destroying all the existing tiles.
      * TODO: implement some caching, reuse tiles when possible. */
-    clutter_group_remove_all(CLUTTER_GROUP(priv->map));
+    clutter_group_remove_all(CLUTTER_GROUP(priv->tile_group));
 
     /* Calculate cache amount */
     if(repo->type != REPOTYPE_NONE && MAPDB_EXISTS(repo))
@@ -249,6 +421,14 @@ map_screen_set_center(MapScreen *screen, gint x, gint y, gint zoom)
     px = unit2zpixel(x, new_zoom);
     py = unit2zpixel(y, new_zoom);
     clutter_actor_set_anchor_point(priv->map, px, py);
+
+    /* Update map data */
+    priv->zoom = new_zoom;
+    priv->map_center_ux = x;
+    priv->map_center_uy = y;
+
+    /* draw the paths */
+    overlay_redraw_idle(screen);
 }
 
 /**
