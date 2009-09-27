@@ -204,12 +204,18 @@ load_tiles_into_map(MapScreen *screen, RepoData *repo, gint zoom,
     gint tx, ty;
 
     tile_group = CLUTTER_CONTAINER(screen->priv->tile_group);
+    clutter_actor_set_position(screen->priv->tile_group,
+                               tx1 * TILE_SIZE_PIXELS,
+                               ty1 * TILE_SIZE_PIXELS);
 
     for (tx = tx1; tx <= tx2; tx++)
     {
         for (ty = ty1; ty <= ty2; ty++)
         {
             tile = map_tile_load(repo, zoom, tx, ty);
+            clutter_actor_set_position(tile,
+                                       (tx - tx1) * TILE_SIZE_PIXELS,
+                                       (ty - ty1) * TILE_SIZE_PIXELS);
             clutter_container_add_actor(tile_group, tile);
         }
     }

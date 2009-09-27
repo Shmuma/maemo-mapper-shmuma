@@ -82,7 +82,7 @@ map_tile_load(RepoData *repo, gint zoom, gint x, gint y)
 {
     ClutterActor *tile;
     GdkPixbuf *pixbuf, *area;
-    gint px, py, zoff;
+    gint zoff;
 
     tile = g_object_new (MAP_TYPE_TILE, NULL);
 
@@ -121,9 +121,6 @@ map_tile_load(RepoData *repo, gint zoom, gint x, gint y)
     {
         /* TODO: start download process */
     }
-    px = x * TILE_SIZE_PIXELS;
-    py = y * TILE_SIZE_PIXELS;
-    clutter_actor_set_position(tile, px, py);
     clutter_actor_show(tile);
     return tile;
 }
