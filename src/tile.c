@@ -81,20 +81,43 @@ ClutterActor *
 map_tile_load(RepoData *repo, gint zoom, gint x, gint y)
 {
     ClutterActor *tile;
-    GdkPixbuf *pixbuf;
-    gint px, py;
+    GdkPixbuf *pixbuf, *area;
+    gint px, py, zoff;
 
     tile = g_object_new (MAP_TYPE_TILE, NULL);
 
     /* TODO: handle layers */
-    pixbuf = mapdb_get(repo, zoom, x, y);
-    if (pixbuf)
+    for (zoff = 0; zoff + zoom <= MAX_ZOOM && zoff < 4; zoff++)
     {
-        gtk_clutter_texture_set_from_pixbuf(CLUTTER_TEXTURE(tile),
-                                            pixbuf, NULL);
-        g_object_unref(pixbuf);
+        pixbuf = mapdb_get(repo, zoom + zoff, x >> zoff, y >> zoff);
+        if (pixbuf)
+        {
+            if (zoff != 0)
+            {
+                gint area_size, modulo, area_x, area_y;
+
+                area_size = TILE_SIZE_PIXELS >> zoff;
+                modulo = 1 << zoff;
+                area_x = (x % modulo) * area_size;
+                area_y = (y % modulo) * area_size;
+                area = gdk_pixbuf_new_subpixbuf (pixbuf, area_x, area_y,
+                                                 area_size, area_size);
+                g_object_unref (pixbuf);
+                pixbuf = gdk_pixbuf_scale_simple (area,
+                                                  TILE_SIZE_PIXELS,
+                                                  TILE_SIZE_PIXELS,
+                                                  GDK_INTERP_NEAREST);
+                g_object_unref (area);
+
+            }
+            gtk_clutter_texture_set_from_pixbuf(CLUTTER_TEXTURE(tile),
+                                                pixbuf, NULL);
+            g_object_unref(pixbuf);
+            break;
+        }
     }
-    else
+
+    if (zoff != 0)
     {
         /* TODO: start download process */
     }
