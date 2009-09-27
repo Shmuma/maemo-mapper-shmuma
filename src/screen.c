@@ -33,6 +33,11 @@
 
 #include <cairo/cairo.h>
 
+#define SCALE_WIDTH     100
+#define SCALE_HEIGHT    22
+#define ZOOM_WIDTH      25
+#define ZOOM_HEIGHT     SCALE_HEIGHT
+
 struct _MapScreenPrivate
 {
     ClutterActor *map;
@@ -43,6 +48,8 @@ struct _MapScreenPrivate
 
     ClutterActor *compass;
     ClutterActor *compass_north;
+    ClutterActor *scale;
+    ClutterActor *zoom_box;
 
     /* layer for drawing over the map (used for paths) */
     ClutterActor *overlay;
@@ -253,6 +260,110 @@ create_compass(MapScreen *screen)
 }
 
 static void
+compute_scale_text(gchar *buffer, gsize len, gint zoom)
+{
+    gfloat distance;
+    gdouble lat1, lon1, lat2, lon2;
+
+    unit2latlon(_center.unitx - pixel2zunit(SCALE_WIDTH / 2 - 4, zoom),
+                _center.unity, lat1, lon1);
+    unit2latlon(_center.unitx + pixel2zunit(SCALE_WIDTH / 2 - 4, zoom),
+                _center.unity, lat2, lon2);
+    distance = calculate_distance(lat1, lon1, lat2, lon2) *
+        UNITS_CONVERT[_units];
+
+    if(distance < 1.f)
+        snprintf(buffer, len, "%0.2f %s", distance, UNITS_ENUM_TEXT[_units]);
+    else if(distance < 10.f)
+        snprintf(buffer, len, "%0.1f %s", distance, UNITS_ENUM_TEXT[_units]);
+    else
+        snprintf(buffer, len, "%0.f %s", distance, UNITS_ENUM_TEXT[_units]);
+}
+
+static void
+update_scale_and_zoom(MapScreen *screen)
+{
+    MapScreenPrivate *priv = screen->priv;
+    cairo_text_extents_t te;
+    gchar buffer[16];
+    cairo_t *cr;
+
+    cr = clutter_cairo_texture_create(CLUTTER_CAIRO_TEXTURE(priv->scale));
+
+    cairo_rectangle(cr, 0, 0, SCALE_WIDTH, SCALE_HEIGHT);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_fill_preserve(cr);
+    cairo_set_source_rgb(cr, 1, 1, 1);
+    cairo_set_line_width(cr, 4);
+    cairo_stroke(cr);
+
+    /* text in scale box */
+    compute_scale_text(buffer, sizeof(buffer), priv->zoom);
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_select_font_face (cr, "Sans Serif",
+                            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size (cr, 16);
+    cairo_text_extents (cr, buffer, &te);
+    cairo_move_to (cr,
+                   SCALE_WIDTH / 2  - te.width / 2 - te.x_bearing,
+                   SCALE_HEIGHT / 2 - te.height / 2 - te.y_bearing);
+    cairo_show_text (cr, buffer);
+
+    /* arrows */
+    cairo_set_line_width(cr, 2);
+    cairo_move_to(cr, 4, SCALE_HEIGHT / 2 - 4);
+    cairo_line_to(cr, 4, SCALE_HEIGHT / 2 + 4);
+    cairo_move_to(cr, 4, SCALE_HEIGHT / 2);
+    cairo_line_to(cr, (SCALE_WIDTH - te.width) / 2 - 4, SCALE_HEIGHT / 2);
+    cairo_stroke(cr);
+    cairo_move_to(cr, SCALE_WIDTH - 4, SCALE_HEIGHT / 2 - 4);
+    cairo_line_to(cr, SCALE_WIDTH - 4, SCALE_HEIGHT / 2 + 4);
+    cairo_move_to(cr, SCALE_WIDTH - 4, SCALE_HEIGHT / 2);
+    cairo_line_to(cr, (SCALE_WIDTH + te.width) / 2 + 4, SCALE_HEIGHT / 2);
+    cairo_stroke(cr);
+
+    cairo_destroy(cr);
+
+    /* zoom box */
+    cr = clutter_cairo_texture_create(CLUTTER_CAIRO_TEXTURE(priv->zoom_box));
+
+    cairo_rectangle(cr, 0, 0, ZOOM_WIDTH, ZOOM_HEIGHT);
+    cairo_set_source_rgb(cr, 0, 0, 0);
+    cairo_fill_preserve(cr);
+    cairo_set_source_rgb(cr, 1, 1, 1);
+    cairo_set_line_width(cr, 4);
+    cairo_stroke(cr);
+
+    snprintf(buffer, sizeof(buffer), "%d", priv->zoom);
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_select_font_face (cr, "Sans Serif",
+                            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size (cr, 16);
+    cairo_text_extents (cr, buffer, &te);
+    cairo_move_to (cr,
+                   ZOOM_WIDTH / 2  - te.width / 2 - te.x_bearing,
+                   ZOOM_HEIGHT / 2 - te.height / 2 - te.y_bearing);
+    cairo_show_text (cr, buffer);
+    cairo_destroy(cr);
+}
+
+static void
+create_scale_and_zoom(MapScreen *screen)
+{
+    MapScreenPrivate *priv = screen->priv;
+
+    priv->scale = clutter_cairo_texture_new(SCALE_WIDTH, SCALE_HEIGHT);
+    clutter_actor_set_anchor_point(priv->scale,
+                                   SCALE_WIDTH / 2 + 1,
+                                   SCALE_HEIGHT);
+
+    priv->zoom_box = clutter_cairo_texture_new(ZOOM_WIDTH, ZOOM_HEIGHT);
+    clutter_actor_set_anchor_point(priv->zoom_box,
+                                   ZOOM_WIDTH - 1 + SCALE_WIDTH / 2,
+                                   ZOOM_HEIGHT);
+}
+
+static void
 map_screen_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     MapScreenPrivate *priv = MAP_SCREEN_PRIV(widget);
@@ -274,6 +385,14 @@ map_screen_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
         clutter_actor_set_position(priv->compass, x, y);
         clutter_actor_set_position(priv->compass_north, x, y);
     }
+
+    /* scale and zoom box */
+    clutter_actor_set_position(priv->scale,
+                               allocation->width / 2,
+                               allocation->height);
+    clutter_actor_set_position(priv->zoom_box,
+                               allocation->width / 2,
+                               allocation->height);
 
     /* Resize the map overlay */
 
@@ -341,6 +460,10 @@ map_screen_init(MapScreen *screen)
     priv->overlay = clutter_cairo_texture_new(0, 0);
     clutter_container_add_actor(CLUTTER_CONTAINER(priv->map), priv->overlay);
     clutter_actor_show(priv->overlay);
+
+    create_scale_and_zoom(screen);
+    clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->scale);
+    clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->zoom_box);
 }
 
 static void
@@ -422,8 +545,14 @@ map_screen_set_center(MapScreen *screen, gint x, gint y, gint zoom)
     py = unit2zpixel(y, new_zoom);
     clutter_actor_set_anchor_point(priv->map, px, py);
 
+    /* if the zoom changed, update scale and zoom box */
+    if (new_zoom != priv->zoom)
+    {
+        priv->zoom = new_zoom;
+        update_scale_and_zoom(screen);
+    }
+
     /* Update map data */
-    priv->zoom = new_zoom;
     priv->map_center_ux = x;
     priv->map_center_uy = y;
 
@@ -477,5 +606,43 @@ map_screen_show_compass(MapScreen *screen, gboolean show)
         clutter_actor_hide(priv->compass);
         clutter_actor_hide(priv->compass_north);
     }
+}
+
+/**
+ * map_screen_show_scale:
+ * @screen: the #MapScreen.
+ * @show: %TRUE if the scale should be shown.
+ */
+void
+map_screen_show_scale(MapScreen *screen, gboolean show)
+{
+    MapScreenPrivate *priv;
+
+    g_return_if_fail(MAP_IS_SCREEN(screen));
+    priv = screen->priv;
+
+    if (show)
+        clutter_actor_show(priv->scale);
+    else
+        clutter_actor_hide(priv->scale);
+}
+
+/**
+ * map_screen_show_zoom_box:
+ * @screen: the #MapScreen.
+ * @show: %TRUE if the zoom box should be shown.
+ */
+void
+map_screen_show_zoom_box(MapScreen *screen, gboolean show)
+{
+    MapScreenPrivate *priv;
+
+    g_return_if_fail(MAP_IS_SCREEN(screen));
+    priv = screen->priv;
+
+    if (show)
+        clutter_actor_show(priv->zoom_box);
+    else
+        clutter_actor_hide(priv->zoom_box);
 }
 

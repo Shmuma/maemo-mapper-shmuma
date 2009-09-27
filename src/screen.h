@@ -58,6 +58,8 @@ void map_screen_set_center(MapScreen *screen, gint x, gint y, gint zoom);
 void map_screen_set_rotation(MapScreen *screen, gint angle);
 
 void map_screen_show_compass(MapScreen *screen, gboolean show);
+void map_screen_show_scale(MapScreen *screen, gboolean show);
+void map_screen_show_zoom_box(MapScreen *screen, gboolean show);
 
 G_END_DECLS
 #endif /* MAP_SCREEN_H */
