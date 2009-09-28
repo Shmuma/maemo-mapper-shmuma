@@ -61,5 +61,7 @@ void map_screen_show_compass(MapScreen *screen, gboolean show);
 void map_screen_show_scale(MapScreen *screen, gboolean show);
 void map_screen_show_zoom_box(MapScreen *screen, gboolean show);
 
+void map_screen_update_mark(MapScreen *screen);
+
 G_END_DECLS
 #endif /* MAP_SCREEN_H */

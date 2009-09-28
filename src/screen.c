@@ -38,6 +38,10 @@
 #define ZOOM_WIDTH      25
 #define ZOOM_HEIGHT     SCALE_HEIGHT
 
+#define VELVEC_SIZE_FACTOR 4
+#define MARK_WIDTH      (_draw_width * 4)
+#define MARK_HEIGHT     100
+
 struct _MapScreenPrivate
 {
     ClutterActor *map;
@@ -50,6 +54,9 @@ struct _MapScreenPrivate
     ClutterActor *compass_north;
     ClutterActor *scale;
     ClutterActor *zoom_box;
+
+    /* marker for the GPS position/speed */
+    ClutterActor *mark;
 
     /* layer for drawing over the map (used for paths) */
     ClutterActor *overlay;
@@ -370,6 +377,57 @@ create_scale_and_zoom(MapScreen *screen)
 }
 
 static void
+update_mark(MapScreen *screen)
+{
+    MapScreenPrivate *priv = screen->priv;
+    cairo_t *cr;
+    Colorable color;
+    gfloat x, y, sqrt_speed;
+
+    clutter_actor_get_anchor_point(priv->mark, &x, &y);
+    cr = clutter_cairo_texture_create(CLUTTER_CAIRO_TEXTURE(priv->mark));
+
+    cairo_new_sub_path(cr);
+    cairo_arc(cr, x, y, _draw_width, 0, 2 * M_PI);
+    cairo_set_line_width(cr, _draw_width);
+    color = (_gps_state == RCVR_FIXED) ? COLORABLE_MARK : COLORABLE_MARK_OLD;
+    set_source_color(cr, &_color[color]);
+    cairo_stroke(cr);
+
+    /* draw the speed vector */
+    sqrt_speed = VELVEC_SIZE_FACTOR * sqrtf(10 + _gps.speed);
+    cairo_move_to(cr, x, y);
+    cairo_line_to(cr, x, y - sqrt_speed);
+    cairo_set_line_width(cr, _draw_width);
+    cairo_set_line_cap(cr, CAIRO_LINE_JOIN_ROUND);
+    color = (_gps_state == RCVR_FIXED) ?
+        (_show_velvec ? COLORABLE_MARK_VELOCITY : COLORABLE_MARK) :
+        COLORABLE_MARK_OLD;
+    set_source_color(cr, &_color[color]);
+    cairo_stroke(cr);
+
+    cairo_destroy(cr);
+
+    /* set position and angle */
+    clutter_actor_set_position(priv->mark,
+                               unit2zpixel(_pos.unitx, priv->zoom),
+                               unit2zpixel(_pos.unity, priv->zoom));
+    clutter_actor_set_rotation(priv->mark,
+                               CLUTTER_Z_AXIS, _gps.heading, 0, 0, 0);
+}
+
+static void
+create_mark(MapScreen *screen)
+{
+    MapScreenPrivate *priv = screen->priv;
+
+    priv->mark = clutter_cairo_texture_new(MARK_WIDTH, MARK_HEIGHT);
+    clutter_actor_set_anchor_point(priv->mark,
+                                   MARK_WIDTH / 2,
+                                   MARK_HEIGHT - MARK_WIDTH / 2);
+}
+
+static void
 map_screen_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
 {
     MapScreenPrivate *priv = MAP_SCREEN_PRIV(widget);
@@ -470,6 +528,9 @@ map_screen_init(MapScreen *screen)
     create_scale_and_zoom(screen);
     clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->scale);
     clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->zoom_box);
+
+    create_mark(screen);
+    clutter_container_add_actor(CLUTTER_CONTAINER(priv->map), priv->mark);
 }
 
 static void
@@ -650,5 +711,16 @@ map_screen_show_zoom_box(MapScreen *screen, gboolean show)
         clutter_actor_show(priv->zoom_box);
     else
         clutter_actor_hide(priv->zoom_box);
+}
+
+/**
+ * map_screen_update_mark:
+ * @screen: the #MapScreen.
+ */
+void
+map_screen_update_mark(MapScreen *screen)
+{
+    g_return_if_fail(MAP_IS_SCREEN(screen));
+    update_mark(screen);
 }
 
