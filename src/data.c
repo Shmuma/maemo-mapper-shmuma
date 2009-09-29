@@ -181,7 +181,7 @@ gboolean _enable_tracking = TRUE;
 gboolean _gps_info = FALSE;
 
 route_dl_table_entry_t _route_dl_url_table[] = {
-    { title: "Yandex", url: "http://maemo.shmuma.ru/proxy/yaroute?from=%s&to=%s" },
+    { title: "Yandex", url: "http://mm-proxy.appspot.com/yaroute?from=%s&to=%s" },
     { title: "Google", url: "http://www.gnuite.com/cgi-bin/gpx.cgi?saddr=%s&daddr=%s" },
     { title: NULL }
 };

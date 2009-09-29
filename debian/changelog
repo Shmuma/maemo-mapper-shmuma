@@ -1,3 +1,9 @@
+maemo-mapper-shmuma (2.6.2.5) unstable; urgency=low
+
+  * Changed URL for Yandex router proxy. Now it uses google app engine.
+
+ -- Max Lapan <max.lapan@gmail.com>  Tue, 29 Sep 2009 19:58:39 +0400
+
 maemo-mapper-shmuma (2.6.2.4) unstable; urgency=low
 
   * Fixed bug with incorrect screen unblanking which cause low brightness
