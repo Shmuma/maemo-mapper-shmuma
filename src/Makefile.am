@@ -25,6 +25,7 @@ maemo_mapper_LDADD = $(GTK_LIBS) $(OSSO_LIBS) $(HILDON_LIBS) $(GNOME_VFS_LIBS) $
 
 maemo_mapper_SOURCES = \
 	cmenu.c \
+	controller.c \
 	data.c \
 	dbus-ifc.c \
 	display.c \
