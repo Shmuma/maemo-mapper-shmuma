@@ -25,8 +25,22 @@ desktop_DATA = maemo-mapper.desktop
 
 icon_26x26_DATA = icons/26x26/maemo-mapper.png 
 icon_40x40_DATA = icons/40x40/maemo-mapper.png
-icon_scalable_DATA = icons/scalable/maemo-mapper.png icons/scalable/maemo-mapper-wait.png
+icon_scalable_DATA = icons/scalable/maemo-mapper.png icons/scalable/maemo-mapper-wait.png \
+	icons/scalable/maemo-mapper-add-point.png \
+	icons/scalable/maemo-mapper-fullscreen.png \
+	icons/scalable/maemo-mapper-rotate.png \
+	icons/scalable/maemo-mapper-settings.png \
+	icons/scalable/maemo-mapper-zoom-in.png \
+	icons/scalable/maemo-mapper-zoom-out.png
+icon_svg = \
+	icons/scalable/svg/maemo-mapper-add-point.svg \
+	icons/scalable/svg/maemo-mapper-fullscreen.svg \
+	icons/scalable/svg/maemo-mapper-settings.svg \
+	icons/scalable/svg/maemo-mapper-rotate.svg \
+	icons/scalable/svg/maemo-mapper-zoom-in.svg \
+	icons/scalable/svg/maemo-mapper-zoom-out.svg
 icon_aprs_DATA = icons/aprs/allicons.png icons/aprs/allicon2.png  
-EXTRA_DIST = $(serviceentry_DATA) $(desktopentry_DATA) $(icon_26x26_DATA) $(icon_40x40_DATA) $(icon_scalable_DATA) $(icon_aprs_DATA)
+EXTRA_DIST = $(serviceentry_DATA) $(desktopentry_DATA) $(icon_26x26_DATA) $(icon_40x40_DATA) $(icon_scalable_DATA) $(icon_aprs_DATA) \
+	$(icon_svg)
 
 SUBDIRS = help
