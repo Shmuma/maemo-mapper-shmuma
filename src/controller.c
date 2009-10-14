@@ -38,6 +38,8 @@ G_DEFINE_TYPE(MapController, map_controller, G_TYPE_OBJECT);
 
 #define MAP_CONTROLLER_PRIV(controller) (MAP_CONTROLLER(controller)->priv)
 
+static MapController *instance = NULL;
+
 static void
 map_controller_dispose(GObject *object)
 {
@@ -60,6 +62,9 @@ map_controller_init(MapController *controller)
                                        MapControllerPrivate);
     controller->priv = priv;
 
+    g_assert(instance == NULL);
+    instance = controller;
+
     priv->screen = g_object_new(MAP_TYPE_SCREEN, NULL);
     map_screen_show_compass(priv->screen, _show_comprose);
     map_screen_show_scale(priv->screen, _show_scale);
@@ -74,6 +79,12 @@ map_controller_class_init(MapControllerClass *klass)
     g_type_class_add_private(object_class, sizeof(MapControllerPrivate));
 
     object_class->dispose = map_controller_dispose;
+}
+
+MapController *
+map_controller_get_instance()
+{
+    return instance;
 }
 
 GtkWidget *

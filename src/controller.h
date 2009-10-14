@@ -54,6 +54,8 @@ struct _MapControllerClass
 
 GType map_controller_get_type (void);
 
+MapController *map_controller_get_instance();
+
 GtkWidget *map_controller_get_screen_widget(MapController *self);
 
 G_END_DECLS
