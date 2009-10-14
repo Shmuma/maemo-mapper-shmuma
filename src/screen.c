@@ -25,6 +25,7 @@
 
 #include "data.h"
 #include "defines.h"
+#include "display.h"
 #include "maps.h"
 #include "math.h"
 #include "tile.h"
@@ -32,6 +33,7 @@
 #include "util.h"
 
 #include <cairo/cairo.h>
+#include <hildon/hildon-banner.h>
 
 #define SCALE_WIDTH     100
 #define SCALE_HEIGHT    22
@@ -80,6 +82,31 @@ struct _MapScreenPrivate
 G_DEFINE_TYPE(MapScreen, map_screen, GTK_CLUTTER_TYPE_EMBED);
 
 #define MAP_SCREEN_PRIV(screen) (MAP_SCREEN(screen)->priv)
+
+static void
+map_screen_change_zoom_by_step(MapScreen *self, gboolean zoom_in)
+{
+    MapScreenPrivate *priv;
+    gint new_zoom, sign;
+
+    g_return_if_fail(MAP_IS_SCREEN(self));
+    priv = self->priv;
+
+    /* TODO: reimplement, once the old map is dropped */
+    sign = zoom_in ? -1 : 1;
+    new_zoom = priv->zoom + _curr_repo->view_zoom_steps * sign;
+    BOUND(new_zoom, 0, MAX_ZOOM);
+    if (new_zoom == priv->zoom) return;
+
+    {
+        gchar buffer[80];
+        snprintf(buffer, sizeof(buffer),"%s %d",
+                 _("Zoom to Level"), new_zoom);
+        MACRO_BANNER_SHOW_INFO(_window, buffer);
+    }
+
+    map_set_zoom(new_zoom);
+}
 
 static inline void
 point_to_pixels(MapScreenPrivate *priv, Point *p, gint *x, gint *y)
@@ -722,5 +749,17 @@ map_screen_update_mark(MapScreen *screen)
 {
     g_return_if_fail(MAP_IS_SCREEN(screen));
     update_mark(screen);
+}
+
+void
+map_screen_zoom_in(MapScreen *screen)
+{
+    map_screen_change_zoom_by_step(screen, TRUE);
+}
+
+void
+map_screen_zoom_out(MapScreen *screen)
+{
+    map_screen_change_zoom_by_step(screen, FALSE);
 }
 
