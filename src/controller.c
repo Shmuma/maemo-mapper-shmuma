@@ -94,3 +94,25 @@ map_controller_get_screen_widget(MapController *self)
     return (GtkWidget *)self->priv->screen;
 }
 
+void
+map_controller_zoom_in(MapController *self)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    map_screen_zoom_in(self->priv->screen);
+}
+
+void
+map_controller_zoom_out(MapController *self)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    map_screen_zoom_out(self->priv->screen);
+}
+
+void
+map_controller_switch_fullscreen(MapController *self)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    gtk_check_menu_item_set_active
+        (GTK_CHECK_MENU_ITEM(_menu_view_fullscreen_item), !_fullscreen);
+}
+

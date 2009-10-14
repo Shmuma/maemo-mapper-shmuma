@@ -58,5 +58,9 @@ MapController *map_controller_get_instance();
 
 GtkWidget *map_controller_get_screen_widget(MapController *self);
 
+void map_controller_zoom_in(MapController *self);
+void map_controller_zoom_out(MapController *self);
+void map_controller_switch_fullscreen(MapController *self);
+
 G_END_DECLS
 #endif /* MAP_CONTROLLER_H */
