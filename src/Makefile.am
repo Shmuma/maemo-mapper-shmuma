@@ -38,6 +38,7 @@ maemo_mapper_SOURCES = \
 	maps.c \
 	marshal.c \
 	menu.c \
+	osm.c \
 	path.c \
 	poi.c \
 	settings.c \

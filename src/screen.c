@@ -28,6 +28,7 @@
 #include "display.h"
 #include "maps.h"
 #include "math.h"
+#include "osm.h"
 #include "tile.h"
 #include "types.h"
 #include "util.h"
@@ -51,6 +52,9 @@ struct _MapScreenPrivate
     gint map_center_uy;
 
     ClutterActor *tile_group;
+
+    /* On-screen Menu */
+    ClutterActor *osm;
 
     ClutterActor *compass;
     ClutterActor *compass_north;
@@ -485,6 +489,10 @@ map_screen_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
                                allocation->width / 2,
                                allocation->height);
 
+    /* resize the OSM */
+    map_osm_set_screen_size(MAP_OSM(priv->osm),
+                            allocation->width, allocation->height);
+
     /* Resize the map overlay */
 
     /* The overlayed texture used for drawing must be big enough to cover
@@ -558,6 +566,15 @@ map_screen_init(MapScreen *screen)
 
     create_mark(screen);
     clutter_container_add_actor(CLUTTER_CONTAINER(priv->map), priv->mark);
+
+    /* On-screen Menu */
+    priv->osm = g_object_new(MAP_TYPE_OSM,
+                             "widget", screen,
+                             NULL);
+    clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->osm);
+    /* show the menu when the stage is clicked */
+    g_signal_connect_swapped(stage, "button-press-event",
+                             G_CALLBACK(clutter_actor_show), priv->osm);
 }
 
 static void
