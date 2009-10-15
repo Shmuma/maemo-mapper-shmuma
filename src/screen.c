@@ -74,9 +74,15 @@ struct _MapScreenPrivate
     gint overlay_start_px;
     gint overlay_start_py;
 
+    /* coordinates of last button press; reset x to -1 when released */
+    gint btn_press_screen_x;
+    gint btn_press_screen_y;
+
     gint zoom;
 
     guint source_overlay_redraw;
+
+    guint is_dragging : 1;
 
     guint show_compass : 1;
 
@@ -86,6 +92,83 @@ struct _MapScreenPrivate
 G_DEFINE_TYPE(MapScreen, map_screen, GTK_CLUTTER_TYPE_EMBED);
 
 #define MAP_SCREEN_PRIV(screen) (MAP_SCREEN(screen)->priv)
+
+static gboolean
+on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
+{
+    MapScreenPrivate *priv = screen->priv;
+    gint dx, dy;
+
+    if (event->type == CLUTTER_BUTTON_PRESS)
+    {
+        ClutterButtonEvent *be = (ClutterButtonEvent *)event;
+        priv->btn_press_screen_x = be->x;
+        priv->btn_press_screen_y = be->y;
+    }
+    else if (event->type == CLUTTER_BUTTON_RELEASE)
+    {
+        ClutterButtonEvent *be = (ClutterButtonEvent *)event;
+
+        /* if the screen was not being dragged, show the On-Screen Menu */
+        if (!priv->is_dragging)
+            clutter_actor_show(priv->osm);
+        else
+        {
+            GtkAllocation *allocation = &(GTK_WIDGET(screen)->allocation);
+            gfloat x, y, angle, sin_angle, cos_angle;
+            gint dx2, dy2;
+
+            angle = clutter_actor_get_rotation(priv->map, CLUTTER_Z_AXIS,
+                                               NULL, NULL, NULL);
+            angle = angle * M_PI / 180;
+            cos_angle = cos(angle);
+            sin_angle = sin(angle);
+            x = be->x - priv->btn_press_screen_x;
+            y = be->y - priv->btn_press_screen_y;
+            dx2 = x * cos_angle + y * sin_angle;
+            dy2 = y * cos_angle - x * sin_angle;
+            dx = pixel2zunit(dx2, priv->zoom);
+            dy = pixel2zunit(dy2, priv->zoom);
+            clutter_actor_set_position(priv->map,
+                                       allocation->width / 2,
+                                       allocation->height / 2);
+            map_screen_set_center(screen,
+                                  priv->map_center_ux - dx,
+                                  priv->map_center_uy - dy,
+                                  -1);
+        }
+
+        priv->btn_press_screen_x = -1;
+        priv->is_dragging = FALSE;
+    }
+    else /* motion event */
+    {
+        ClutterMotionEvent *me = (ClutterMotionEvent *)event;
+
+        if (!(me->modifier_state & CLUTTER_BUTTON1_MASK))
+            return TRUE; /* ignore pure motion events */
+        dx = me->x - priv->btn_press_screen_x;
+        dy = me->y - priv->btn_press_screen_y;
+
+        if (!priv->is_dragging && (ABS(dx) > 20 || ABS(dy) > 20))
+        {
+            priv->is_dragging = TRUE;
+            clutter_actor_hide(priv->osm);
+        }
+
+        if (priv->is_dragging)
+        {
+            GtkAllocation *allocation = &(GTK_WIDGET(screen)->allocation);
+
+            clutter_actor_set_position(priv->map,
+                                       allocation->width / 2 + dx,
+                                       allocation->height / 2 + dy);
+        }
+    }
+
+    /* propagate the event */
+    return FALSE;
+}
 
 static void
 map_screen_change_zoom_by_step(MapScreen *self, gboolean zoom_in)
@@ -541,6 +624,13 @@ map_screen_init(MapScreen *screen)
 
     stage = gtk_clutter_embed_get_stage(GTK_CLUTTER_EMBED(screen));
     g_return_if_fail(stage != NULL);
+    g_signal_connect(stage, "motion-event",
+                     G_CALLBACK(on_pointer_event), screen);
+    g_signal_connect(stage, "button-press-event",
+                     G_CALLBACK(on_pointer_event), screen);
+    g_signal_connect(stage, "button-release-event",
+                     G_CALLBACK(on_pointer_event), screen);
+    priv->btn_press_screen_x = -1;
 
     priv->map = clutter_group_new();
     g_return_if_fail(priv->map != NULL);
@@ -572,9 +662,6 @@ map_screen_init(MapScreen *screen)
                              "widget", screen,
                              NULL);
     clutter_container_add_actor(CLUTTER_CONTAINER(stage), priv->osm);
-    /* show the menu when the stage is clicked */
-    g_signal_connect_swapped(stage, "button-press-event",
-                             G_CALLBACK(clutter_actor_show), priv->osm);
 }
 
 static void
