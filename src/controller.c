@@ -116,3 +116,10 @@ map_controller_switch_fullscreen(MapController *self)
         (GTK_CHECK_MENU_ITEM(_menu_view_fullscreen_item), !_fullscreen);
 }
 
+void
+map_controller_activate_menu_settings(MapController *self)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    gtk_menu_item_activate(GTK_MENU_ITEM(_menu_settings_item));
+}
+
