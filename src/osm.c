@@ -53,7 +53,7 @@ struct _MapOsmPrivate
         ClutterActor *v[N_BUTTONS_ROW * 2];
         struct {
             /* this must be kept in sync with the btn_icons array */
-            ClutterActor *btn0;
+            ClutterActor *settings;
             ClutterActor *btn1;
             ClutterActor *btn2;
             ClutterActor *btn3;
@@ -148,6 +148,9 @@ map_osm_constructed(GObject *object)
                              G_CALLBACK(map_controller_zoom_out), controller);
     g_signal_connect_swapped(priv->btn.n.fullscreen, "button-press-event",
                              G_CALLBACK(map_controller_switch_fullscreen),
+                             controller);
+    g_signal_connect_swapped(priv->btn.n.settings, "button-press-event",
+                             G_CALLBACK(map_controller_activate_menu_settings),
                              controller);
 
     constructed = G_OBJECT_CLASS(map_osm_parent_class)->constructed;
