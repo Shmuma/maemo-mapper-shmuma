@@ -360,4 +360,6 @@
     : ((map_repo)->gdbm_db != NULL) )
 #define _voice_synth_path "/usr/bin/flite"
 
+#define STR_EMPTY(s) (!s || s[0] == '\0')
+
 #endif /* ifndef MAEMO_MAPPER_DEFINES */
