@@ -132,7 +132,7 @@ conic_recommend_connected()
 
 #if defined(__arm__) && defined(CONIC)
     g_mutex_lock(_conic_connection_mutex);
-    if(!_conic_is_connecting)
+    if(!_conic_is_connected && !_conic_is_connecting)
     {
         /* Fire up a connection request. */
         con_ic_connection_connect(_conic_conn, CON_IC_CONNECT_FLAG_NONE);
