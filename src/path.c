@@ -154,7 +154,7 @@ read_path_from_db(Path *path, sqlite3_stmt *select_stmt)
         path->tail->time = sqlite3_column_int(select_stmt, 2);
         path->tail->altitude = sqlite3_column_int(select_stmt, 3);
 
-        desc = sqlite3_column_text(select_stmt, 4);
+        desc = (const gchar *)sqlite3_column_text(select_stmt, 4);
         if(desc)
         {
             MACRO_PATH_INCREMENT_WTAIL(*path);
