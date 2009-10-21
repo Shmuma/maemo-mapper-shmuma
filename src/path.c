@@ -32,17 +32,13 @@
 #include <math.h>
 #include <sqlite3.h>
 
-#ifndef LEGACY
-#    include <hildon/hildon-note.h>
-#    include <hildon/hildon-banner.h>
-#    include <hildon/hildon-sound.h>
-#else
-#    include <osso-helplib.h>
-#    include <hildon-widgets/hildon-note.h>
-#    include <hildon-widgets/hildon-banner.h>
-#    include <hildon-widgets/hildon-system-sound.h>
-#    include <hildon-widgets/hildon-input-mode-hint.h>
-#endif
+#include <hildon/hildon-check-button.h>
+#include <hildon/hildon-entry.h>
+#include <hildon/hildon-note.h>
+#include <hildon/hildon-banner.h>
+#include <hildon/hildon-pannable-area.h>
+#include <hildon/hildon-picker-button.h>
+#include <hildon/hildon-sound.h>
 
 #include "types.h"
 #include "data.h"
@@ -56,16 +52,13 @@
 #include "poi.h"
 #include "util.h"
 
-typedef struct _RouteDownloadInfo RouteDownloadInfo;
-struct _RouteDownloadInfo {
-    GtkWidget *rad_use_gps;
-    GtkWidget *rad_use_route;
-    GtkWidget *rad_use_text;
-    GtkWidget *chk_avoid_highways;
-    GtkWidget *chk_auto;
-    GtkWidget *txt_from;
-    GtkWidget *txt_to;
-};
+typedef struct {
+    GtkWindow *dialog;
+    GtkWidget *autoroute;
+    gint origin_row_gps;
+    gint origin_row_route;
+    gint origin_row_other;
+} RouteDownloadInfo;
 
 /* _near_point is the route point to which we are closest. */
 static Point *_near_point = NULL;
@@ -1115,75 +1108,59 @@ find_nearest_waypoint(gint unitx, gint unity)
     return NULL;
 }
 
-static gboolean
-origin_type_selected(GtkWidget *toggle, RouteDownloadInfo *oti)
+static void
+on_origin_changed_other(HildonPickerButton *button, RouteDownloadInfo *rdi)
 {
-    printf("%s()\n", __PRETTY_FUNCTION__);
+    GtkEntryCompletion *completion;
+    GtkWidget *dialog;
+    GtkWidget *entry;
+    gboolean chose = FALSE;
 
-    if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle)))
+    /* if the "Other" option is chosen then ask the user to enter a location */
+    if (hildon_picker_button_get_active(button) != rdi->origin_row_other)
+        return;
+
+    dialog = gtk_dialog_new_with_buttons
+        (_("Origin"), rdi->dialog, GTK_DIALOG_MODAL,
+         GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+         NULL);
+
+    entry = hildon_entry_new(HILDON_SIZE_FINGER_HEIGHT);
+    completion = gtk_entry_completion_new();
+    gtk_entry_completion_set_model(completion, GTK_TREE_MODEL(_loc_model));
+    gtk_entry_completion_set_text_column(completion, 0);
+    gtk_entry_set_completion(GTK_ENTRY(entry), completion);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), entry,
+                       FALSE, FALSE, 0);
+
+    gtk_widget_show_all(dialog);
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
     {
-        gtk_widget_set_sensitive(oti->txt_from, toggle == oti->rad_use_text);
-        gtk_widget_set_sensitive(oti->chk_auto, toggle == oti->rad_use_gps);
+        const gchar *origin;
+
+        origin = gtk_entry_get_text(GTK_ENTRY(entry));
+        if (!STR_EMPTY(origin))
+        {
+            hildon_button_set_value(HILDON_BUTTON(button), origin);
+            chose = TRUE;
+        }
     }
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
+
+    if (!chose)
+        hildon_picker_button_set_active(button, 0);
+
+    gtk_widget_destroy(dialog);
 }
 
-static gboolean
-route_download_swap(GtkWidget *button, RouteDownloadInfo *oti)
+static void
+on_origin_changed_gps(HildonPickerButton *button, RouteDownloadInfo *rdi)
 {
-    gchar *old_origin;
-    printf("%s()\n", __PRETTY_FUNCTION__);
+    gboolean enable;
 
-    /* Save the old origin. */
-    old_origin = g_strdup(gtk_entry_get_text(GTK_ENTRY(oti->txt_from)));
+    /* enable autoroute only if the GPS option is chosen */
+    enable = (hildon_picker_button_get_active(button) == rdi->origin_row_gps);
 
-    /* Set the origin text field equal to the current destination. */
-    gtk_entry_set_text(GTK_ENTRY(oti->txt_from),
-            gtk_entry_get_text(GTK_ENTRY(oti->txt_to)));
-
-    /* Set the contents of the destination text field. */
-    if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(oti->rad_use_gps)))
-    {
-        /* "Use GPS Location" is enabled - set Destination to GPS Location */
-        gchar buffer[80];
-        gchar strlat[32];
-        gchar strlon[32];
-        g_ascii_formatd(strlat, 32, "%.06f", _gps.lat);
-        g_ascii_formatd(strlon, 32, "%.06f", _gps.lon);
-        snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
-        gtk_entry_set_text(GTK_ENTRY(oti->txt_to), buffer);
-    }
-    else if(gtk_toggle_button_get_active(
-                GTK_TOGGLE_BUTTON(oti->rad_use_route)))
-    {
-        /* "Use End of Route" is enabled - set Destination to start of route */
-        gchar buffer[80];
-        gchar strlat[32];
-        gchar strlon[32];
-        Point *p;
-        gdouble lat, lon;
-
-        /* Use first non-zero route point. */
-        for(p = _route.head; !p->unity; p++) { }
-
-        unit2latlon(p->unitx, p->unity, lat, lon);
-        g_ascii_formatd(strlat, 32, "%.06f", lat);
-        g_ascii_formatd(strlon, 32, "%.06f", lon);
-        snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
-        gtk_entry_set_text(GTK_ENTRY(oti->txt_to), buffer);
-    }
-    else if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(oti->rad_use_text)))
-    {
-        /* "Origin" is enabled - just use the text. */
-        gtk_entry_set_text(GTK_ENTRY(oti->txt_to), old_origin);
-    }
-
-    g_free(old_origin);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(oti->rad_use_text), TRUE);
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
+    gtk_widget_set_sensitive(rdi->autoroute, enable);
 }
 
 /**
@@ -1199,174 +1176,119 @@ route_download_swap(GtkWidget *button, RouteDownloadInfo *oti)
 gboolean
 route_download(gchar *to)
 {
-    static GtkWidget *dialog = NULL;
-    static GtkWidget *table = NULL;
-    static GtkWidget *label = NULL;
-    static GtkWidget *txt_source_url = NULL;
-    static GtkWidget *btn_swap = NULL;
-    static RouteDownloadInfo oti;
-    printf("%s()\n", __PRETTY_FUNCTION__);
+    GtkWidget *dialog;
+    GtkWidget *label;
+    GtkWidget *txt_source_url;
+    GtkWidget *btn_swap, *btn_highways;
+    GtkWidget *origin, *destination;
+    GtkWidget *table, *pannable;
+    GtkEntryCompletion *to_comp;
+    HildonTouchSelector *selector;
+    RouteDownloadInfo rdi;
+    gint active_origin_row, row;
 
+    g_debug("%s", G_STRFUNC);
     conic_recommend_connected();
 
-    if(dialog == NULL)
-    {
-        GtkEntryCompletion *from_comp;
-        GtkEntryCompletion *to_comp;
-        dialog = gtk_dialog_new_with_buttons(_("Download Route"),
-                GTK_WINDOW(_window), GTK_DIALOG_MODAL,
-                GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
-                NULL);
 
-        /* Enable the help button. */
-#ifndef LEGACY
-#else
-        ossohelp_dialog_help_enable(
-                GTK_DIALOG(dialog), HELP_ID_DOWNROUTE, _osso);
-#endif
+    dialog = gtk_dialog_new_with_buttons(_("Download Route"),
+                                         GTK_WINDOW(_window), GTK_DIALOG_MODAL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                         NULL);
+    rdi.dialog = GTK_WINDOW(dialog);
+    table = gtk_table_new(7, 2, FALSE);
 
-        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                table = gtk_table_new(2, 5, FALSE), TRUE, TRUE, 0);
+    pannable = hildon_pannable_area_new();
+    gtk_widget_set_size_request(pannable, -1, 400);
+    hildon_pannable_area_add_with_viewport(HILDON_PANNABLE_AREA(pannable),
+                                           table);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), pannable,
+                       TRUE, TRUE, 0);
 
-        /* Source URL. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Source URL")),
-                0, 1, 0, 1, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                txt_source_url = gtk_entry_new(),
-                1, 5, 0, 1, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-        gtk_entry_set_width_chars(GTK_ENTRY(txt_source_url), 25);
+    /* Source URL. */
+    gtk_table_attach(GTK_TABLE(table),
+                     label = gtk_label_new(_("Source URL")),
+                     0, 1, 0, 1, 0, 0, 0, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5f);
+    txt_source_url = hildon_entry_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_table_attach(GTK_TABLE(table), txt_source_url,
+                     1, 2, 0, 1, GTK_EXPAND|GTK_FILL, 0, 0, 0);
 
-        /* Use GPS Location. */
-        gtk_table_attach(GTK_TABLE(table),
-                oti.rad_use_gps = gtk_radio_button_new_with_label(NULL,
-                    _("Use GPS Location")),
-                0, 2, 1, 2, GTK_FILL, 0, 2, 4);
-
-        /* Use End of Route. */
-        gtk_table_attach(GTK_TABLE(table),
-               oti.rad_use_route = gtk_radio_button_new_with_label_from_widget(
-                   GTK_RADIO_BUTTON(oti.rad_use_gps), _("Use End of Route")),
-               0, 2, 2, 3, GTK_FILL, 0, 2, 4);
-
-        gtk_table_attach(GTK_TABLE(table),
-                gtk_vseparator_new(),
-                2, 3, 1, 3, GTK_FILL, GTK_FILL, 2,4);
-
-        /* Auto. */
-        gtk_table_attach(GTK_TABLE(table),
-                oti.chk_auto = gtk_check_button_new_with_label(
-                    _("Auto-Update")),
-                3, 5, 1, 2, GTK_FILL, 0, 2, 4);
-
-        /* Avoid Highways. */
-        gtk_table_attach(GTK_TABLE(table),
-                oti.chk_avoid_highways = gtk_check_button_new_with_label(
-                    _("Avoid Highways")),
-                3, 5, 2, 3, GTK_FILL, 0, 2, 4);
-
-
-        /* Origin. */
-        gtk_table_attach(GTK_TABLE(table),
-                oti.rad_use_text = gtk_radio_button_new_with_label_from_widget(
-                    GTK_RADIO_BUTTON(oti.rad_use_gps), _("Origin")),
-                0, 1, 3, 4, GTK_FILL, 0, 2, 4);
-        gtk_table_attach(GTK_TABLE(table),
-                oti.txt_from = gtk_entry_new(),
-                1, 4, 3, 4, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-        gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_from), 25);
-#ifdef MAEMO_CHANGES
-#ifndef LEGACY
-        g_object_set(G_OBJECT(oti.txt_from), "hildon-input-mode",
-                                HILDON_GTK_INPUT_MODE_FULL, NULL);
-#else
-        g_object_set(G_OBJECT(oti.txt_from), HILDON_AUTOCAP, FALSE, NULL);
-#endif
-#endif
-
-        /* Destination. */
-        gtk_table_attach(GTK_TABLE(table),
-                label = gtk_label_new(_("Destination")),
-                0, 1, 4, 5, GTK_FILL, 0, 2, 4);
-        gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-        gtk_table_attach(GTK_TABLE(table),
-                oti.txt_to = gtk_entry_new(),
-                1, 4, 4, 5, GTK_EXPAND | GTK_FILL, 0, 2, 4);
-        gtk_entry_set_width_chars(GTK_ENTRY(oti.txt_to), 25);
-#ifdef MAEMO_CHANGES
-#ifndef LEGACY
-        g_object_set(G_OBJECT(oti.txt_to), "hildon-input-mode",
-                                HILDON_GTK_INPUT_MODE_FULL, NULL);
-#else
-        g_object_set(G_OBJECT(oti.txt_to), HILDON_AUTOCAP, FALSE, NULL);
-#endif
-#endif
-
-        /* Swap button. */
-        gtk_table_attach(GTK_TABLE(table),
-                btn_swap = gtk_button_new_with_label("Swap"),
-                4, 5, 3, 5, GTK_FILL, GTK_FILL, 2, 4);
-
-        /* Set up auto-completion. */
-        from_comp = gtk_entry_completion_new();
-        gtk_entry_completion_set_model(from_comp, GTK_TREE_MODEL(_loc_model));
-        gtk_entry_completion_set_text_column(from_comp, 0);
-        gtk_entry_set_completion(GTK_ENTRY(oti.txt_from), from_comp);
-
-        to_comp = gtk_entry_completion_new();
-        gtk_entry_completion_set_model(to_comp, GTK_TREE_MODEL(_loc_model));
-        gtk_entry_completion_set_text_column(to_comp, 0);
-        gtk_entry_set_completion(GTK_ENTRY(oti.txt_to), to_comp);
-
-
-        g_signal_connect(G_OBJECT(oti.rad_use_gps), "toggled",
-                          G_CALLBACK(origin_type_selected), &oti);
-        g_signal_connect(G_OBJECT(oti.rad_use_route), "toggled",
-                          G_CALLBACK(origin_type_selected), &oti);
-        g_signal_connect(G_OBJECT(oti.rad_use_text), "toggled",
-                          G_CALLBACK(origin_type_selected), &oti);
-        g_signal_connect(G_OBJECT(btn_swap), "clicked",
-                          G_CALLBACK(route_download_swap), &oti);
-
-        gtk_widget_set_sensitive(oti.chk_auto, FALSE);
-    }
-
-    /* Initialize fields. */
-
-    gtk_entry_set_text(GTK_ENTRY(txt_source_url), _route_dl_url);
-    if(to)
-        gtk_entry_set_text(GTK_ENTRY(oti.txt_to), to);
-
+    /* Origin. */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    row = 0;
+    rdi.origin_row_gps = row++;
+    hildon_touch_selector_append_text(selector, _("Use GPS Location"));
     /* Use "End of Route" by default if they have a route. */
     if(_route.head != _route.tail)
     {
-        /* There is no route, so make it the default. */
-        gtk_widget_set_sensitive(oti.rad_use_route, TRUE);
-        gtk_toggle_button_set_active(
-                GTK_TOGGLE_BUTTON(oti.rad_use_route), TRUE);
-        gtk_widget_grab_focus(oti.rad_use_route);
+        hildon_touch_selector_append_text(selector, _("Use End of Route"));
+        rdi.origin_row_route = row++;
+        rdi.origin_row_other = row++;
+        active_origin_row = rdi.origin_row_route;
     }
-    /* Else use "GPS Location" if they have GPS enabled. */
     else
     {
-        /* There is no route, so desensitize "Use End of Route." */
-        gtk_widget_set_sensitive(oti.rad_use_route, FALSE);
-        if(_enable_gps)
-        {
-            gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(oti.rad_use_gps), TRUE);
-            gtk_widget_grab_focus(oti.rad_use_gps);
-        }
-        /* Else use text. */
-        else
-        {
-            gtk_toggle_button_set_active(
-                    GTK_TOGGLE_BUTTON(oti.rad_use_text), TRUE);
-            gtk_widget_grab_focus(oti.txt_from);
-        }
+        /* Else use "GPS Location" if they have GPS enabled. */
+        rdi.origin_row_other = row++;
+        rdi.origin_row_route = -1;
+        active_origin_row =
+            _enable_gps ? rdi.origin_row_gps : rdi.origin_row_other;
     }
+    hildon_touch_selector_append_text(selector, _("Other..."));
+    hildon_touch_selector_set_active(selector, 0, active_origin_row);
+
+    origin =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Origin"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    g_signal_connect(origin, "value-changed",
+                     G_CALLBACK(on_origin_changed_other), &rdi);
+    gtk_table_attach_defaults(GTK_TABLE(table), origin, 0, 2, 1, 2);
+
+    /* Auto. */
+    rdi.autoroute = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    if (active_origin_row != rdi.origin_row_gps)
+        gtk_widget_set_sensitive(rdi.autoroute, FALSE);
+    gtk_button_set_label(GTK_BUTTON(rdi.autoroute), _("Auto-Update"));
+    g_signal_connect(origin, "value-changed",
+                     G_CALLBACK(on_origin_changed_gps), &rdi);
+    gtk_table_attach_defaults(GTK_TABLE(table), rdi.autoroute, 0, 2, 2, 3);
+
+    /* Destination. */
+    gtk_table_attach(GTK_TABLE(table),
+                     gtk_label_new(_("Destination")),
+                     0, 1, 4, 5, 0, 0, 0, 0);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5f);
+    destination = hildon_entry_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_table_attach(GTK_TABLE(table), destination,
+                     1, 2, 4, 5, GTK_EXPAND|GTK_FILL, 0, 0, 0);
+
+    /* Avoid Highways. */
+    btn_highways = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_button_set_label(GTK_BUTTON(btn_highways), _("Avoid Highways"));
+    gtk_table_attach_defaults(GTK_TABLE(table), btn_highways, 0, 2, 5, 6);
+
+    /* Swap button. */
+    btn_swap = gtk_toggle_button_new_with_label("Swap");
+    hildon_gtk_widget_set_theme_size(btn_swap, HILDON_SIZE_FINGER_HEIGHT);
+    gtk_table_attach_defaults(GTK_TABLE(table), btn_swap, 0, 2, 6, 7);
+
+    /* Set up auto-completion. */
+    to_comp = gtk_entry_completion_new();
+    gtk_entry_completion_set_model(to_comp, GTK_TREE_MODEL(_loc_model));
+    gtk_entry_completion_set_text_column(to_comp, 0);
+    gtk_entry_set_completion(GTK_ENTRY(destination), to_comp);
+
+
+    /* Initialize fields. */
+    gtk_entry_set_text(GTK_ENTRY(txt_source_url), _route_dl_url);
+    if(to)
+        gtk_entry_set_text(GTK_ENTRY(destination), to);
 
     gtk_widget_show_all(dialog);
 
@@ -1375,20 +1297,21 @@ route_download(gchar *to)
         gchar buffer[BUFFER_SIZE];
         const gchar *source_url, *from, *to;
         gboolean avoid_highways;
+        gint replace_policy;
 
         source_url = gtk_entry_get_text(GTK_ENTRY(txt_source_url));
-        if(!strlen(source_url))
+        if (STR_EMPTY(source_url))
         {
             popup_error(dialog, _("Please specify a source URL."));
             continue;
         }
-        else
-        {
-            g_free(_route_dl_url);
-            _route_dl_url = g_strdup(source_url);
-        }
 
-        if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(oti.rad_use_gps)))
+        g_free(_route_dl_url);
+        _route_dl_url = g_strdup(source_url);
+
+        active_origin_row =
+            hildon_picker_button_get_active(HILDON_PICKER_BUTTON(origin));
+        if (active_origin_row == rdi.origin_row_gps)
         {
             gchar strlat[32];
             gchar strlon[32];
@@ -1397,8 +1320,7 @@ route_download(gchar *to)
             snprintf(buffer, sizeof(buffer), "%s, %s", strlat, strlon);
             from = buffer;
         }
-        else if(gtk_toggle_button_get_active(
-                    GTK_TOGGLE_BUTTON(oti.rad_use_route)))
+        else if (active_origin_row == rdi.origin_row_route)
         {
             gchar strlat[32];
             gchar strlon[32];
@@ -1416,36 +1338,42 @@ route_download(gchar *to)
         }
         else
         {
-            from = gtk_entry_get_text(GTK_ENTRY(oti.txt_from));
+            from = hildon_button_get_value(HILDON_BUTTON(origin));
         }
 
-        if(!strlen(from))
+        if (STR_EMPTY(from))
         {
             popup_error(dialog, _("Please specify a start location."));
             continue;
         }
 
-        to = gtk_entry_get_text(GTK_ENTRY(oti.txt_to));
-        if(!strlen(to))
+        to = gtk_entry_get_text(GTK_ENTRY(destination));
+        if (STR_EMPTY(to))
         {
             popup_error(dialog, _("Please specify an end location."));
             continue;
         }
 
-        avoid_highways = gtk_toggle_button_get_active(
-                GTK_TOGGLE_BUTTON(oti.chk_avoid_highways));
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(btn_swap)))
+        {
+            const gchar *tmp = from;
+            from = to;
+            to = tmp;
+        }
+
+        avoid_highways =
+            hildon_check_button_get_active(HILDON_CHECK_BUTTON(btn_highways));
+        replace_policy = (active_origin_row == rdi.origin_row_gps) ? 0 : 1;
         if(route_download_and_setup(dialog, source_url, from, to,
-                gtk_toggle_button_get_active(
-                    GTK_TOGGLE_BUTTON(oti.chk_avoid_highways)),
-                (gtk_toggle_button_get_active(
-                    GTK_TOGGLE_BUTTON(oti.rad_use_gps)) ? 0 : 1)))
+                                    avoid_highways, replace_policy))
         {
             GtkTreeIter iter;
 
             /* Cancel any autoroute that might be occurring. */
             cancel_autoroute();
 
-            if(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(oti.chk_auto)))
+            if (hildon_check_button_get_active
+                (HILDON_CHECK_BUTTON(rdi.autoroute)))
             {
                 _autoroute_data.source_url = g_strdup(source_url);
                 _autoroute_data.dest = g_strdup(to);
@@ -1454,8 +1382,7 @@ route_download(gchar *to)
             }
 
             /* Save Origin in Route Locations list if not from GPS. */
-            if(gtk_toggle_button_get_active(
-                        GTK_TOGGLE_BUTTON(oti.rad_use_text))
+            if (active_origin_row == rdi.origin_row_other
                 && !g_slist_find_custom(_loc_list, from,
                             (GCompareFunc)strcmp))
             {
@@ -1479,7 +1406,7 @@ route_download(gchar *to)
         /* else let them try again. */
     }
 
-    gtk_widget_hide(dialog); /* Destroying causes a crash (!?!?!??!) */
+    gtk_widget_destroy(dialog);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
