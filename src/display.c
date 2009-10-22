@@ -34,18 +34,12 @@
 #include "aprs_decode.h"
 #include "types.h"
 
-#ifndef LEGACY
-#    include <hildon/hildon-note.h>
-#    include <hildon/hildon-file-chooser-dialog.h>
-#    include <hildon/hildon-banner.h>
-#    include <hildon/hildon-sound.h>
-#else
-#    include <osso-helplib.h>
-#    include <hildon-widgets/hildon-note.h>
-#    include <hildon-widgets/hildon-file-chooser-dialog.h>
-#    include <hildon-widgets/hildon-banner.h>
-#    include <hildon-widgets/hildon-system-sound.h>
-#endif
+#include <hildon/hildon-note.h>
+#include <hildon/hildon-file-chooser-dialog.h>
+#include <hildon/hildon-banner.h>
+#include <hildon/hildon-defines.h>
+#include <hildon/hildon-picker-button.h>
+#include <hildon/hildon-sound.h>
 
 #include "types.h"
 #include "data.h"
@@ -2656,10 +2650,10 @@ latlon_cb_copy_clicked(GtkWidget *widget, LatlonDialog *lld) {
 }
 
 static void
-latlon_cb_fmt_changed(GtkWidget *widget, LatlonDialog *lld) {
+latlon_cb_fmt_changed(HildonPickerButton *button, LatlonDialog *lld) {
   DegFormat fmt;
 
-  fmt = gtk_combo_box_get_active(GTK_COMBO_BOX(lld->fmt_combo));
+  fmt = hildon_picker_button_get_active(button);
 
   {
     gint old = _degformat; /* augh... */
@@ -2701,15 +2695,17 @@ latlon_dialog(gdouble lat, gdouble lon)
     LatlonDialog lld;
     GtkWidget *dialog;
     GtkWidget *table;
-    GtkWidget *label;
+    GtkBox *box;
     GtkWidget *lbl_lon_title;
     GtkWidget *lbl_lat_title;
     GtkWidget *txt_lat;
     GtkWidget *txt_lon;
-    GtkWidget *cmb_format;
+    GtkWidget *format;
+    HildonTouchSelector *selector;
     GtkWidget *btn_copy = NULL;
     gint prev_degformat = _degformat;
     gint fallback_deg_format = _degformat;
+    gint i;
     
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -2726,42 +2722,49 @@ latlon_dialog(gdouble lat, gdouble lon)
             NULL);
 
     /* Set the lat/lon strings. */
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-            table = gtk_table_new(5, 2, FALSE), TRUE, TRUE, 0);
+    box = GTK_BOX(GTK_DIALOG(dialog)->vbox);
+    gtk_box_pack_start(box,
+                       table = gtk_table_new(2, 2, TRUE), TRUE, TRUE, 0);
 
     gtk_table_attach(GTK_TABLE(table),
     		lbl_lat_title = gtk_label_new(/*_("Lat")*/ DEG_FORMAT_ENUM_TEXT[_degformat].short_field_1 ),
-            0, 1, 0, 1, GTK_FILL, 0, 2, 4);
+            0, 1, 0, 1, GTK_FILL, 0, HILDON_MARGIN_TRIPLE, 0);
     gtk_misc_set_alignment(GTK_MISC(lbl_lat_title), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
             txt_lat = gtk_label_new(""),
-            1, 2, 0, 1, GTK_FILL, 0, 2, 4);
-    gtk_misc_set_alignment(GTK_MISC(txt_lat), 1.f, 0.5f);
+            1, 2, 0, 1, GTK_FILL|GTK_EXPAND, 0, 0, 0);
+    gtk_misc_set_alignment(GTK_MISC(txt_lat), 0.0, 0.5f);
 
     
     gtk_table_attach(GTK_TABLE(table),
             lbl_lon_title = gtk_label_new(/*_("Lon")*/ DEG_FORMAT_ENUM_TEXT[_degformat].short_field_2 ),
-            0, 1, 1, 2, GTK_FILL, 0, 2, 4);
+            0, 1, 1, 2, GTK_FILL, 0, HILDON_MARGIN_TRIPLE, 0);
     gtk_misc_set_alignment(GTK_MISC(lbl_lon_title), 1.f, 0.5f);
     
     gtk_table_attach(GTK_TABLE(table),
             txt_lon = gtk_label_new(""),
-            1, 2, 1, 2, GTK_FILL, 0, 2, 4);
-    gtk_misc_set_alignment(GTK_MISC(txt_lon), 1.f, 0.5f);
+            1, 2, 1, 2, GTK_FILL|GTK_EXPAND, 0, 0, 0);
+    gtk_misc_set_alignment(GTK_MISC(txt_lon), 0.0, 0.5f);
 
     
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_label_new(_("Format")),
-            0, 1, 2, 3, GTK_FILL, 0, 2, 4);
-    gtk_misc_set_alignment(GTK_MISC(label), 1.f, 0.5f);
-    gtk_table_attach(GTK_TABLE(table),
-            label = gtk_alignment_new(0.f, 0.5f, 0.f, 0.f),
-            1, 2, 2, 3, GTK_FILL, 0, 2, 4);
-    gtk_container_add(GTK_CONTAINER(label),
-            cmb_format = gtk_combo_box_new_text());
-    gtk_table_attach(GTK_TABLE(table),
-            btn_copy = gtk_button_new_with_label(_("Copy")),
-            0, 2, 3, 4, GTK_FILL, 0, 2, 4);
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    for (i = 0; i < DEG_FORMAT_ENUM_COUNT; i++)
+        hildon_touch_selector_append_text(selector,
+                                          DEG_FORMAT_ENUM_TEXT[i].name);
+    format =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Format"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    hildon_picker_button_set_active(HILDON_PICKER_BUTTON(format), _degformat);
+    gtk_box_pack_start(box, format, FALSE, FALSE, 0);
+
+    btn_copy = gtk_button_new_with_label(_("Copy"));
+    hildon_gtk_widget_set_theme_size (btn_copy, HILDON_SIZE_FINGER_HEIGHT);
+    gtk_box_pack_start(box, btn_copy, FALSE, FALSE, 0);
 
     /* Lat/Lon */
     {
@@ -2779,20 +2782,7 @@ latlon_dialog(gdouble lat, gdouble lon)
     	  gtk_label_set_label(GTK_LABEL(txt_lon), g_strdup(""));
     }
 
-    /* Fill in formats */
-    {
-      int i;
-
-      for(i = 0; i < DEG_FORMAT_ENUM_COUNT; i++) {
-          gtk_combo_box_append_text(GTK_COMBO_BOX(cmb_format),
-                  DEG_FORMAT_ENUM_TEXT[i].name);
-      }
-      gtk_combo_box_set_active(GTK_COMBO_BOX(cmb_format), _degformat);
-    }
-
-
     /* setup cb context */
-    lld.fmt_combo = cmb_format;
     lld.glat = lat;
     lld.glon = lon;
     lld.lat = txt_lat;
@@ -2802,8 +2792,8 @@ latlon_dialog(gdouble lat, gdouble lon)
     lld.lon_title = lbl_lon_title;
     
     /* Connect Signals */
-    g_signal_connect(G_OBJECT(cmb_format), "changed",
-                    G_CALLBACK(latlon_cb_fmt_changed), &lld);
+    g_signal_connect(format, "value-changed",
+                     G_CALLBACK(latlon_cb_fmt_changed), &lld);
     g_signal_connect(G_OBJECT(btn_copy), "clicked",
                     G_CALLBACK(latlon_cb_copy_clicked), &lld);
 
