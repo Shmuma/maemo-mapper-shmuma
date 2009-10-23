@@ -29,6 +29,7 @@
 #include "maps.h"
 #include "math.h"
 #include "osm.h"
+#include "path.h"
 #include "tile.h"
 #include "types.h"
 #include "util.h"
@@ -224,18 +225,15 @@ draw_break(cairo_t *cr, GdkColor *color, gint x, gint y)
 }
 
 static void
-draw_path(MapScreen *screen, Path *path, Colorable base)
+draw_path(MapScreen *screen, cairo_t *cr, Path *path, Colorable base)
 {
     MapScreenPrivate *priv = screen->priv;
     Point *curr;
     WayPoint *wcurr;
-    cairo_t *cr;
     gint x = 0, y = 0;
     gboolean segment_open = FALSE;
 
     g_debug ("%s", G_STRFUNC);
-    cr = clutter_cairo_texture_create(CLUTTER_CAIRO_TEXTURE(priv->overlay));
-    g_assert(cr != NULL);
 
     set_source_color(cr, &_color[base]);
     cairo_set_line_width(cr, _draw_width);
@@ -264,20 +262,41 @@ draw_path(MapScreen *screen, Path *path, Colorable base)
             else
                 cairo_line_to(cr, x, y);
         }
+
+        if (wcurr->point == curr)
+        {
+            gint x1, y1;
+            point_to_pixels(priv, wcurr->point, &x1, &y1);
+            draw_break(cr, &_color[base + 1], x1, y1);
+            cairo_move_to(cr, x1, y1);
+            if (wcurr <= path->wtail)
+                wcurr++;
+        }
     }
     cairo_stroke(cr);
-
-    cairo_destroy(cr);
 }
 
 static void
-draw_paths(MapScreen *screen)
+draw_paths(MapScreen *screen, cairo_t *cr)
 {
     if ((_show_paths & ROUTES_MASK) && _route.head != _route.tail)
-        draw_path(screen, &_route, COLORABLE_ROUTE);
+    {
+        WayPoint *next_way;
+
+        draw_path(screen, cr, &_route, COLORABLE_ROUTE);
+        next_way = path_get_next_way();
+
+        /* Now, draw the next waypoint on top of all other waypoints. */
+        if (next_way)
+        {
+            gint x1, y1;
+            point_to_pixels(screen->priv, next_way->point, &x1, &y1);
+            draw_break(cr, &_color[COLORABLE_ROUTE_BREAK], x1, y1);
+        }
+    }
 
     if (_show_paths & TRACKS_MASK)
-        draw_path(screen, &_track, COLORABLE_TRACK);
+        draw_path(screen, cr, &_track, COLORABLE_TRACK);
 }
 
 static gboolean
@@ -286,6 +305,7 @@ overlay_redraw_real(MapScreen *screen)
     MapScreenPrivate *priv;
     GtkAllocation *allocation;
     gfloat center_x, center_y;
+    cairo_t *cr;
 
     g_return_val_if_fail (MAP_IS_SCREEN (screen), FALSE);
     priv = screen->priv;
@@ -298,7 +318,12 @@ overlay_redraw_real(MapScreen *screen)
     priv->overlay_start_px = center_x - priv->overlay_center_px;
     priv->overlay_start_py = center_y - priv->overlay_center_px;
 
-    draw_paths(screen);
+    cr = clutter_cairo_texture_create(CLUTTER_CAIRO_TEXTURE(priv->overlay));
+    g_assert(cr != NULL);
+
+    draw_paths(screen, cr);
+
+    cairo_destroy(cr);
 
     priv->source_overlay_redraw = 0;
     return FALSE;
