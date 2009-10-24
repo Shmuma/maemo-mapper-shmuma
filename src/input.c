@@ -548,6 +548,8 @@ map_cb_button_press(GtkWidget *widget, GdkEventButton *event)
     {
         _cmenu_position_x = event->x + 0.5 - _map_offset_devx;
         _cmenu_position_y = event->y + 0.5 - _map_offset_devy;
+        screen2unit(_cmenu_position_x, _cmenu_position_y,
+                    _cmenu_unitx, _cmenu_unity);
         g_mutex_lock(_mouse_mutex);
         _mouse_is_down = TRUE;
     }

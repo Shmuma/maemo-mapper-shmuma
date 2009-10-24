@@ -376,6 +376,8 @@ gboolean _mouse_is_dragging = FALSE;
 gboolean _mouse_is_down = FALSE;
 gint _cmenu_position_x = 0;
 gint _cmenu_position_y = 0;
+gint _cmenu_unitx = 0;
+gint _cmenu_unity = 0;
 
 /* Menu items for the "Location" context menu. */
 GtkWidget *_cmenu_loc_show_latlon_item = NULL;
