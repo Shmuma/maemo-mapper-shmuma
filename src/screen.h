@@ -62,6 +62,7 @@ void map_screen_zoom_out(MapScreen *screen);
 void map_screen_show_compass(MapScreen *screen, gboolean show);
 void map_screen_show_scale(MapScreen *screen, gboolean show);
 void map_screen_show_zoom_box(MapScreen *screen, gboolean show);
+void map_screen_show_message(MapScreen *screen, const gchar *text);
 
 void map_screen_update_mark(MapScreen *screen);
 

@@ -36,6 +36,7 @@
 
 #include <cairo/cairo.h>
 #include <hildon/hildon-banner.h>
+#include <hildon/hildon-defines.h>
 
 #define SCALE_WIDTH     100
 #define SCALE_HEIGHT    22
@@ -61,6 +62,8 @@ struct _MapScreenPrivate
     ClutterActor *compass_north;
     ClutterActor *scale;
     ClutterActor *zoom_box;
+
+    ClutterActor *message_box;
 
     /* marker for the GPS position/speed */
     ClutterActor *mark;
@@ -616,6 +619,12 @@ map_screen_size_allocate(GtkWidget *widget, GtkAllocation *allocation)
                                    priv->overlay_center_px);
 
     overlay_redraw_idle((MapScreen *)widget);
+
+    /* message box */
+    if (priv->message_box)
+        clutter_actor_set_size(priv->message_box,
+                               allocation->width - 2 * HILDON_MARGIN_DOUBLE,
+                               allocation->height - 2 * HILDON_MARGIN_DOUBLE);
 }
 
 static void
@@ -848,6 +857,44 @@ map_screen_show_scale(MapScreen *screen, gboolean show)
         clutter_actor_show(priv->scale);
     else
         clutter_actor_hide(priv->scale);
+}
+
+/**
+ * map_screen_show_message:
+ * @screen: the #MapScreen.
+ * @text: the message to be shown.
+ *
+ * Shows a message to the user.
+ */
+void
+map_screen_show_message(MapScreen *screen, const gchar *text)
+{
+    MapScreenPrivate *priv = screen->priv;
+
+    if (!priv->message_box)
+    {
+        ClutterActor *stage;
+        GtkAllocation *allocation;
+
+        priv->message_box = clutter_text_new();
+        clutter_actor_set_position(priv->message_box,
+                                   HILDON_MARGIN_DOUBLE,
+                                   HILDON_MARGIN_DOUBLE);
+        allocation = &(GTK_WIDGET(screen)->allocation);
+        clutter_actor_set_size(priv->message_box,
+                               allocation->width - 2 * HILDON_MARGIN_DOUBLE,
+                               allocation->height - 2 * HILDON_MARGIN_DOUBLE);
+        clutter_text_set_font_name(CLUTTER_TEXT(priv->message_box),
+                                   "Sans Serif 20");
+        clutter_text_set_line_wrap(CLUTTER_TEXT(priv->message_box), TRUE);
+        clutter_text_set_line_alignment(CLUTTER_TEXT(priv->message_box),
+                                        PANGO_ALIGN_CENTER);
+        stage = gtk_clutter_embed_get_stage(GTK_CLUTTER_EMBED(screen));
+        clutter_container_add_actor(CLUTTER_CONTAINER(stage),
+                                    priv->message_box);
+    }
+    clutter_text_set_text(CLUTTER_TEXT(priv->message_box), text);
+    clutter_actor_show(priv->message_box);
 }
 
 /**
