@@ -75,7 +75,7 @@ G_DEFINE_TYPE(MapOsm, map_osm, CLUTTER_TYPE_GROUP);
 
 static const gchar *btn_icons[N_BUTTONS_ROW * 2] = {
     "maemo-mapper-settings",
-    "maemo-mapper-add-point",
+    "maemo-mapper-point",
     NULL,
     NULL,
     "maemo-mapper-zoom-in",
