@@ -54,7 +54,7 @@ struct _MapOsmPrivate
         struct {
             /* this must be kept in sync with the btn_icons array */
             ClutterActor *settings;
-            ClutterActor *btn1;
+            ClutterActor *point;
             ClutterActor *btn2;
             ClutterActor *btn3;
             ClutterActor *zoom_in;
@@ -116,6 +116,13 @@ enable_hide_on_timeout(MapOsm *self, gboolean hide_on_timeout)
     }
 }
 
+static gboolean
+wrap_action_point(MapController *controller)
+{
+    map_controller_action_point(controller);
+    return TRUE;
+}
+
 static void
 map_osm_constructed(GObject *object)
 {
@@ -152,6 +159,8 @@ map_osm_constructed(GObject *object)
     g_signal_connect_swapped(priv->btn.n.settings, "button-press-event",
                              G_CALLBACK(map_controller_activate_menu_settings),
                              controller);
+    g_signal_connect_swapped(priv->btn.n.point, "button-release-event",
+                             G_CALLBACK(wrap_action_point), controller);
 
     constructed = G_OBJECT_CLASS(map_osm_parent_class)->constructed;
     if (constructed != NULL)

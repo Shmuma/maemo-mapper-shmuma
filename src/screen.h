@@ -66,5 +66,7 @@ void map_screen_show_message(MapScreen *screen, const gchar *text);
 
 void map_screen_update_mark(MapScreen *screen);
 
+void map_screen_action_point(MapScreen *screen);
+
 G_END_DECLS
 #endif /* MAP_SCREEN_H */

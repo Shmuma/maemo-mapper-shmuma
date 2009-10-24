@@ -57,11 +57,15 @@ GType map_controller_get_type (void);
 MapController *map_controller_get_instance();
 
 GtkWidget *map_controller_get_screen_widget(MapController *self);
+GtkWindow *map_controller_get_main_window(MapController *self);
 
 void map_controller_zoom_in(MapController *self);
 void map_controller_zoom_out(MapController *self);
 void map_controller_switch_fullscreen(MapController *self);
 void map_controller_activate_menu_settings(MapController *self);
+void map_controller_action_point(MapController *self);
+
+void map_controller_activate_menu_point(MapController *self, gint x, gint y);
 
 G_END_DECLS
 #endif /* MAP_CONTROLLER_H */

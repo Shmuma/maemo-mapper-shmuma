@@ -23,6 +23,7 @@
 #endif
 #include "controller.h"
 
+#include "cmenu.h"
 #include "data.h"
 #include "defines.h"
 #include "screen.h"
@@ -94,6 +95,15 @@ map_controller_get_screen_widget(MapController *self)
     return (GtkWidget *)self->priv->screen;
 }
 
+GtkWindow *
+map_controller_get_main_window(MapController *self)
+{
+    GtkWidget *screen;
+
+    screen = map_controller_get_screen_widget(self);
+    return GTK_WINDOW(gtk_widget_get_toplevel(screen));
+}
+
 void
 map_controller_zoom_in(MapController *self)
 {
@@ -121,5 +131,23 @@ map_controller_activate_menu_settings(MapController *self)
 {
     g_return_if_fail(MAP_IS_CONTROLLER(self));
     gtk_menu_item_activate(GTK_MENU_ITEM(_menu_settings_item));
+}
+
+void
+map_controller_action_point(MapController *self)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    map_screen_action_point(self->priv->screen);
+}
+
+void
+map_controller_activate_menu_point(MapController *self, gint x, gint y)
+{
+    Point p;
+
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    p.unitx = x;
+    p.unity = y;
+    map_menu_point_map(&p);
 }
 

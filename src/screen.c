@@ -140,6 +140,26 @@ map_screen_pixel_to_units(MapScreen *screen, gint px, gint py,
 }
 
 static gboolean
+on_point_chosen(ClutterActor *actor, ClutterButtonEvent *event,
+                MapScreen *screen)
+{
+    MapScreenPrivate *priv = screen->priv;
+    MapController *controller;
+    gint x, y;
+
+    g_signal_handlers_disconnect_by_func(actor, on_point_chosen, screen);
+    clutter_actor_hide(priv->message_box);
+    priv->action_ongoing = FALSE;
+
+    /* Get the coordinates of the point, in units */
+    map_screen_pixel_to_units(screen, event->x, event->y, &x, &y);
+
+    controller = map_controller_get_instance();
+    map_controller_activate_menu_point(controller, x, y);
+    return TRUE; /* Event handled */
+}
+
+static gboolean
 on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
 {
     MapScreenPrivate *priv = screen->priv;
@@ -973,5 +993,23 @@ void
 map_screen_zoom_out(MapScreen *screen)
 {
     map_screen_change_zoom_by_step(screen, FALSE);
+}
+
+void
+map_screen_action_point(MapScreen *screen)
+{
+    MapScreenPrivate *priv;
+    ClutterActor *stage;
+
+    g_return_if_fail(MAP_IS_SCREEN(screen));
+    priv = screen->priv;
+
+    clutter_actor_hide(priv->osm);
+    priv->action_ongoing = TRUE;
+    priv->allow_scrolling = TRUE;
+    stage = gtk_clutter_embed_get_stage(GTK_CLUTTER_EMBED(screen));
+    g_signal_connect(stage, "button-release-event",
+                     G_CALLBACK(on_point_chosen), screen);
+    map_screen_show_message(screen, _("Tap a point on the map"));
 }
 
