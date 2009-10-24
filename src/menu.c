@@ -55,6 +55,7 @@
 #include "menu.h"
 #include "path.h"
 #include "poi.h"
+#include "screen.h"
 #include "settings.h"
 #include "util.h"
 
@@ -1087,6 +1088,7 @@ menu_cb_view_show_zoomlevel(GtkMenuItem *item)
 
     _show_zoomlevel = gtk_check_menu_item_get_active(
                 GTK_CHECK_MENU_ITEM(_menu_view_show_zoomlevel_item));
+    map_screen_show_zoom_box(MAP_SCREEN(_w_map), _show_zoomlevel);
     map_force_redraw();
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -1100,6 +1102,7 @@ menu_cb_view_show_scale(GtkMenuItem *item)
 
     _show_scale = gtk_check_menu_item_get_active(
                 GTK_CHECK_MENU_ITEM(_menu_view_show_scale_item));
+    map_screen_show_scale(MAP_SCREEN(_w_map), _show_scale);
     map_force_redraw();
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -1113,6 +1116,7 @@ menu_cb_view_show_comprose(GtkMenuItem *item)
 
     _show_comprose = gtk_check_menu_item_get_active(
                 GTK_CHECK_MENU_ITEM(_menu_view_show_comprose_item));
+    map_screen_show_compass(MAP_SCREEN(_w_map), _show_comprose);
     map_force_redraw();
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);

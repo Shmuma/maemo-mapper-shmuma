@@ -57,6 +57,7 @@
 #include "defines.h"
 
 #include "cmenu.h"
+#include "controller.h"
 #include "dbus-ifc.h"
 #include "display.h"
 #include "gps.h"
@@ -68,6 +69,7 @@
 #include "menu.h"
 #include "path.h"
 #include "poi.h"
+#include "screen.h"
 #include "settings.h"
 #include "util.h"
 
@@ -508,6 +510,10 @@ maemo_mapper_init(gint argc, gchar **argv)
     _map_widget = gtk_drawing_area_new();
 
     gtk_box_pack_start(GTK_BOX(hbox), _map_widget, TRUE, TRUE, 0);
+
+    _controller = g_object_new(MAP_TYPE_CONTROLLER, NULL);
+    _w_map = map_controller_get_screen_widget(_controller);
+    gtk_box_pack_start(GTK_BOX(hbox), _w_map, TRUE, TRUE, 0);
 
     gtk_widget_show_all(hbox);
     gps_show_info(); /* hides info, if necessary. */

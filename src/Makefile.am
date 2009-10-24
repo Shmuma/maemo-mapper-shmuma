@@ -55,3 +55,6 @@ maemo_mapper_SOURCES = \
 	aprs_kiss.c
 
 # bin_SCRIPTS = maemo-mapper.sh
+run: all
+	scp maemo-mapper rover:/usr/bin
+	ssh rover su - user -c maemo-mapper

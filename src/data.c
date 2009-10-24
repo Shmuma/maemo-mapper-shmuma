@@ -75,8 +75,12 @@ GtkWidget *_window = NULL;
 /** The main OSSO context of the application. */
 osso_context_t *_osso = NULL;
 
+/* The controller object of the application. */
+MapController *_controller = NULL;
+
 /** The widget that provides the visual display of the map. */
 GtkWidget *_map_widget = NULL;
+GtkWidget *_w_map = NULL;
 
 /** The backing pixmap of _map_widget. */
 GdkPixmap *_map_pixmap = NULL;

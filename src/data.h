@@ -29,6 +29,7 @@
 #endif
 
 #include <libosso.h>
+#include "controller.h"
 #include "types.h"
 
 /* Constants regarding enums and defaults. */
@@ -54,8 +55,14 @@ extern GtkWidget *_window;
 /** The main OSSO context of the application. */
 extern osso_context_t *_osso;
 
+/** The controller object of the application. */
+extern MapController *_controller;
+
 /** The widget that provides the visual display of the map. */
 extern GtkWidget *_map_widget;
+
+/** The widget that provides the visual display of the map. */
+extern GtkWidget *_w_map;
 
 /** The backing pixmap of _map_widget. */
 extern GdkPixmap *_map_pixmap;

@@ -52,6 +52,7 @@
 #include "maps.h"
 #include "path.h"
 #include "poi.h"
+#include "screen.h"
 #include "settings.h"
 #include "util.h"
 
@@ -1380,6 +1381,7 @@ map_set_mark()
     _mark_width = abs(_mark_bufx1 - _mark_bufx2) + (4 * _draw_width);
     _mark_height = abs(_mark_bufy1 - _mark_bufy2) + (4 * _draw_width);
 
+    map_screen_update_mark(MAP_SCREEN(_w_map));
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
@@ -1464,6 +1466,11 @@ map_center_unit_full(Point new_center,
 
     if(!_mouse_is_down)
     {
+        map_screen_set_center(MAP_SCREEN(_w_map),
+                              new_center.unitx, new_center.unity,
+                              zoom);
+        map_screen_set_rotation(MAP_SCREEN(_w_map), rotate_angle);
+
         /* Assure that _center.unitx/y are bounded. */
         BOUND(new_center.unitx, 0, WORLD_SIZE_UNITS);
         BOUND(new_center.unity, 0, WORLD_SIZE_UNITS);
