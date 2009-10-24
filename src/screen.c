@@ -86,6 +86,14 @@ struct _MapScreenPrivate
 
     guint source_overlay_redraw;
 
+    /* Set this flag to TRUE when there is an action ongoing which requires
+     * touchscreen interaction: this prevents the OSM from popping up */
+    guint action_ongoing : 1;
+    /* Set this flag to TRUE if action_ongoing is TRUE, but you still want to
+     * allow the map to be scrolled (i.e., you are interested only in tap
+     * events, not motion ones */
+    guint allow_scrolling : 1;
+
     guint is_dragging : 1;
 
     guint show_compass : 1;
@@ -101,6 +109,7 @@ static gboolean
 on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
 {
     MapScreenPrivate *priv = screen->priv;
+    gboolean handled = FALSE;
     gint dx, dy;
 
     if (event->type == CLUTTER_BUTTON_PRESS)
@@ -114,9 +123,9 @@ on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
         ClutterButtonEvent *be = (ClutterButtonEvent *)event;
 
         /* if the screen was not being dragged, show the On-Screen Menu */
-        if (!priv->is_dragging)
+        if (!priv->is_dragging && !priv->action_ongoing)
             clutter_actor_show(priv->osm);
-        else
+        else if (priv->is_dragging)
         {
             GtkAllocation *allocation = &(GTK_WIDGET(screen)->allocation);
             gfloat x, y, angle, sin_angle, cos_angle;
@@ -140,17 +149,19 @@ on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
                                   priv->map_center_ux - dx,
                                   priv->map_center_uy - dy,
                                   -1);
+            handled = TRUE;
         }
 
         priv->btn_press_screen_x = -1;
         priv->is_dragging = FALSE;
     }
-    else /* motion event */
+    else if (!priv->action_ongoing || priv->allow_scrolling) /* motion event */
     {
         ClutterMotionEvent *me = (ClutterMotionEvent *)event;
 
         if (!(me->modifier_state & CLUTTER_BUTTON1_MASK))
             return TRUE; /* ignore pure motion events */
+
         dx = me->x - priv->btn_press_screen_x;
         dy = me->y - priv->btn_press_screen_y;
 
@@ -167,11 +178,11 @@ on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
             clutter_actor_set_position(priv->map,
                                        allocation->width / 2 + dx,
                                        allocation->height / 2 + dy);
+            handled = TRUE;
         }
     }
 
-    /* propagate the event */
-    return FALSE;
+    return handled;
 }
 
 static void
