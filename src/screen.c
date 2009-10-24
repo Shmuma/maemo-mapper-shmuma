@@ -105,6 +105,40 @@ G_DEFINE_TYPE(MapScreen, map_screen, GTK_CLUTTER_TYPE_EMBED);
 
 #define MAP_SCREEN_PRIV(screen) (MAP_SCREEN(screen)->priv)
 
+static void
+map_screen_pixel_to_screen_units(MapScreenPrivate *priv, gint px, gint py,
+                                 gint *ux, gint *uy)
+{
+    gfloat x, y, angle, sin_angle, cos_angle;
+    gint px2, py2;
+
+    angle = clutter_actor_get_rotation(priv->map, CLUTTER_Z_AXIS,
+                                       NULL, NULL, NULL);
+    angle = angle * M_PI / 180;
+    cos_angle = cos(angle);
+    sin_angle = sin(angle);
+    x = px, y = py;
+    px2 = x * cos_angle + y * sin_angle;
+    py2 = y * cos_angle - x * sin_angle;
+    *ux = pixel2zunit(px2, priv->zoom);
+    *uy = pixel2zunit(py2, priv->zoom);
+}
+
+static inline void
+map_screen_pixel_to_units(MapScreen *screen, gint px, gint py,
+                          gint *ux, gint *uy)
+{
+    MapScreenPrivate *priv = screen->priv;
+    GtkAllocation *allocation = &(GTK_WIDGET(screen)->allocation);
+    gint usx, usy;
+
+    px -= allocation->width / 2;
+    py -= allocation->height / 2;
+    map_screen_pixel_to_screen_units(priv, px, py, &usx, &usy);
+    *ux = usx + priv->map_center_ux;
+    *uy = usy + priv->map_center_uy;
+}
+
 static gboolean
 on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
 {
@@ -128,20 +162,11 @@ on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
         else if (priv->is_dragging)
         {
             GtkAllocation *allocation = &(GTK_WIDGET(screen)->allocation);
-            gfloat x, y, angle, sin_angle, cos_angle;
-            gint dx2, dy2;
 
-            angle = clutter_actor_get_rotation(priv->map, CLUTTER_Z_AXIS,
-                                               NULL, NULL, NULL);
-            angle = angle * M_PI / 180;
-            cos_angle = cos(angle);
-            sin_angle = sin(angle);
-            x = be->x - priv->btn_press_screen_x;
-            y = be->y - priv->btn_press_screen_y;
-            dx2 = x * cos_angle + y * sin_angle;
-            dy2 = y * cos_angle - x * sin_angle;
-            dx = pixel2zunit(dx2, priv->zoom);
-            dy = pixel2zunit(dy2, priv->zoom);
+            map_screen_pixel_to_screen_units(priv,
+                                             be->x - priv->btn_press_screen_x,
+                                             be->y - priv->btn_press_screen_y,
+                                             &dx, &dy);
             clutter_actor_set_position(priv->map,
                                        allocation->width / 2,
                                        allocation->height / 2);
