@@ -28,6 +28,7 @@
 
 #define _GNU_SOURCE
 
+#include <dialog.h>
 #include <string.h>
 #include <math.h>
 #include <gtk/gtk.h>
@@ -41,7 +42,6 @@
 #    include <hildon-widgets/hildon-banner.h>
 #endif
 
-#include "types.h"
 #include "data.h"
 #include "defines.h"
 
@@ -775,3 +775,99 @@ void cmenu_init()
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
+
+static void
+on_apply_correction_toggled(GtkToggleButton *button, Point *p)
+{
+    GtkWidget *dialog;
+
+    if (gtk_toggle_button_get_active(button))
+    {
+        /* Get difference between tap point and GPS location. */
+        _map_correction_unitx = p->unitx - _pos.unitx;
+        _map_correction_unity = p->unity - _pos.unity;
+        map_refresh_mark(TRUE);
+        MACRO_BANNER_SHOW_INFO(_window, _("Map correction applied."));
+    }
+    else
+    {
+        _map_correction_unitx = 0;
+        _map_correction_unity = 0;
+        map_refresh_mark(TRUE);
+        MACRO_BANNER_SHOW_INFO(_window, _("Map correction removed."));
+    }
+
+    g_debug("Map correction now set to: %d, %d",
+            _map_correction_unitx, _map_correction_unity);
+    /* close the dialog */
+    dialog = gtk_widget_get_toplevel((GtkWidget *)button);
+    gtk_dialog_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
+}
+
+void
+map_menu_point_map(Point *p)
+{
+    GtkWidget *dialog, *button;
+    MapController *controller;
+    MapDialog *dlg;
+
+    controller = map_controller_get_instance();
+    dialog = map_dialog_new(_("Map Point"),
+                            map_controller_get_main_window(controller),
+                            FALSE);
+    dlg = (MapDialog *)dialog;
+
+    /* TODO: rewrite these handlers to use the Point */
+    _cmenu_unitx = p->unitx;
+    _cmenu_unity = p->unity;
+
+    button = map_dialog_create_button(dlg, _("Show Position"));
+    g_signal_connect(button, "clicked",
+                      G_CALLBACK(cmenu_cb_loc_show_latlon), NULL);
+
+    button = map_dialog_create_button(dlg, _("Show Distance to"));
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(cmenu_cb_loc_distance_to), NULL);
+
+    button = map_dialog_create_button(dlg, _("Download Route to..."));
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(cmenu_cb_loc_route_to), NULL);
+
+    button = map_dialog_create_button(dlg, _("Download POI..."));
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(cmenu_cb_loc_download_poi), NULL);
+
+    button = map_dialog_create_button(dlg, _("Browse POI..."));
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(cmenu_cb_loc_browse_poi), NULL);
+
+    button = map_dialog_create_button(dlg, _("Add Route Point"));
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(cmenu_cb_loc_add_route), NULL);
+
+    button = map_dialog_create_button(dlg, _("Add Waypoint..."));
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(cmenu_cb_loc_add_way), NULL);
+
+    button = map_dialog_create_button(dlg, _("Add POI..."));
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(cmenu_cb_loc_add_poi), NULL);
+
+    button = map_dialog_create_button(dlg, _("Set as GPS Location"));
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(cmenu_cb_loc_set_gps), NULL);
+
+    button = gtk_toggle_button_new_with_label(_("Apply Map Correction"));
+    hildon_gtk_widget_set_theme_size(button, HILDON_SIZE_FINGER_HEIGHT);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button),
+                                 _map_correction_unitx != 0 ||
+                                 _map_correction_unity != 0);
+    gtk_widget_show(button);
+    map_dialog_add_widget(dlg, button);
+    g_signal_connect(button, "toggled",
+                     G_CALLBACK(on_apply_correction_toggled), p);
+
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+}
+

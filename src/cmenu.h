@@ -24,6 +24,10 @@
 #ifndef MAEMO_MAPPER_CMENU
 #define MAEMO_MAPPER_CMENU
 
+#include "types.h"
+
 void cmenu_init(void);
+
+void map_menu_point_map(Point *p);
 
 #endif /* ifndef MAEMO_MAPPER_CMENU */
