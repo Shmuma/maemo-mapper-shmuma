@@ -28,6 +28,7 @@ maemo_mapper_SOURCES = \
 	controller.c \
 	data.c \
 	dbus-ifc.c \
+	dialog.c \
 	display.c \
 	gdk-pixbuf-rotate.c \
 	gps.c \
