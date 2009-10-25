@@ -57,7 +57,8 @@ GType map_dialog_get_type (void);
 GtkWidget *map_dialog_new(const gchar *title, GtkWindow *parent,
                           gboolean single_column);
 void map_dialog_add_widget(MapDialog *self, GtkWidget *widget);
-GtkWidget *map_dialog_create_button(MapDialog *self, const gchar *label);
+GtkWidget *map_dialog_create_button(MapDialog *self, const gchar *label,
+                                    gint response);
 
 G_END_DECLS
 #endif /* MAP_DIALOG_H */

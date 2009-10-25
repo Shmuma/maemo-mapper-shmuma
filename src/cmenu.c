@@ -810,6 +810,18 @@ map_menu_point_map(Point *p)
     GtkWidget *dialog, *button;
     MapController *controller;
     MapDialog *dlg;
+    gint response;
+    enum {
+        SHOW_LATLON = 0,
+        DISTANCE_TO,
+        ROUTE_TO,
+        DOWNLOAD_POI,
+        BROWSE_POI,
+        ADD_ROUTE,
+        ADD_WAYPOINT,
+        ADD_POI,
+        GPS_LOCATION,
+    };
 
     controller = map_controller_get_instance();
     dialog = map_dialog_new(_("Map Point"),
@@ -821,41 +833,24 @@ map_menu_point_map(Point *p)
     _cmenu_unitx = p->unitx;
     _cmenu_unity = p->unity;
 
-    button = map_dialog_create_button(dlg, _("Show Position"));
-    g_signal_connect(button, "clicked",
-                      G_CALLBACK(cmenu_cb_loc_show_latlon), NULL);
+    button = map_dialog_create_button(dlg, _("Show Position"), SHOW_LATLON);
 
-    button = map_dialog_create_button(dlg, _("Show Distance to"));
-    g_signal_connect(button, "clicked",
-                     G_CALLBACK(cmenu_cb_loc_distance_to), NULL);
+    button = map_dialog_create_button(dlg, _("Show Distance to"), DISTANCE_TO);
 
-    button = map_dialog_create_button(dlg, _("Download Route to..."));
-    g_signal_connect(button, "clicked",
-                     G_CALLBACK(cmenu_cb_loc_route_to), NULL);
+    button = map_dialog_create_button(dlg, _("Download Route to..."), ROUTE_TO);
 
-    button = map_dialog_create_button(dlg, _("Download POI..."));
-    g_signal_connect(button, "clicked",
-                     G_CALLBACK(cmenu_cb_loc_download_poi), NULL);
+    button = map_dialog_create_button(dlg, _("Download POI..."), DOWNLOAD_POI);
 
-    button = map_dialog_create_button(dlg, _("Browse POI..."));
-    g_signal_connect(button, "clicked",
-                     G_CALLBACK(cmenu_cb_loc_browse_poi), NULL);
+    button = map_dialog_create_button(dlg, _("Browse POI..."), BROWSE_POI);
 
-    button = map_dialog_create_button(dlg, _("Add Route Point"));
-    g_signal_connect(button, "clicked",
-                     G_CALLBACK(cmenu_cb_loc_add_route), NULL);
+    button = map_dialog_create_button(dlg, _("Add Route Point"), ADD_ROUTE);
 
-    button = map_dialog_create_button(dlg, _("Add Waypoint..."));
-    g_signal_connect(button, "clicked",
-                     G_CALLBACK(cmenu_cb_loc_add_way), NULL);
+    button = map_dialog_create_button(dlg, _("Add Waypoint..."), ADD_WAYPOINT);
 
-    button = map_dialog_create_button(dlg, _("Add POI..."));
-    g_signal_connect(button, "clicked",
-                     G_CALLBACK(cmenu_cb_loc_add_poi), NULL);
+    button = map_dialog_create_button(dlg, _("Add POI..."), ADD_POI);
 
-    button = map_dialog_create_button(dlg, _("Set as GPS Location"));
-    g_signal_connect(button, "clicked",
-                     G_CALLBACK(cmenu_cb_loc_set_gps), NULL);
+    button = map_dialog_create_button(dlg, _("Set as GPS Location"),
+                                      GPS_LOCATION);
 
     button = gtk_toggle_button_new_with_label(_("Apply Map Correction"));
     hildon_gtk_widget_set_theme_size(button, HILDON_SIZE_FINGER_HEIGHT);
@@ -867,7 +862,28 @@ map_menu_point_map(Point *p)
     g_signal_connect(button, "toggled",
                      G_CALLBACK(on_apply_correction_toggled), p);
 
-    gtk_dialog_run(GTK_DIALOG(dialog));
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
+    switch (response)
+    {
+    case SHOW_LATLON:
+        cmenu_cb_loc_show_latlon(NULL); break;
+    case DISTANCE_TO:
+        cmenu_cb_loc_distance_to(NULL); break;
+    case ROUTE_TO:
+        cmenu_cb_loc_route_to(NULL); break;
+    case DOWNLOAD_POI:
+        cmenu_cb_loc_download_poi(NULL); break;
+    case BROWSE_POI:
+        cmenu_cb_loc_browse_poi(NULL); break;
+    case ADD_ROUTE:
+        cmenu_cb_loc_add_route(NULL); break;
+    case ADD_WAYPOINT:
+        cmenu_cb_loc_add_way(NULL); break;
+    case ADD_POI:
+        cmenu_cb_loc_add_poi(NULL); break;
+    case GPS_LOCATION:
+        cmenu_cb_loc_set_gps(NULL); break;
+    }
 }
 

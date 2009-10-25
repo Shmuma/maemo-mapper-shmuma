@@ -38,14 +38,44 @@ struct _MapDialogPrivate
     gboolean single_column;
 };
 
+typedef struct {
+    gint response;
+} MapDialogResponseData;
+
 G_DEFINE_TYPE(MapDialog, map_dialog, GTK_TYPE_DIALOG);
 
 #define MAP_DIALOG_PRIV(dialog) (MAP_DIALOG(dialog)->priv)
 
 static void
+response_data_free(MapDialogResponseData *rd)
+{
+    g_slice_free(MapDialogResponseData, rd);
+}
+
+static MapDialogResponseData *
+response_data_get(GtkWidget *widget, gboolean create)
+{
+    MapDialogResponseData *rd;
+
+    rd = g_object_get_data(G_OBJECT(widget), "map_dialog_response");
+    if (!rd && create)
+    {
+        rd = g_slice_new(MapDialogResponseData);
+        g_object_set_data_full((GObject *)widget, "map_dialog_response",
+                               rd, (GDestroyNotify)response_data_free);
+    }
+
+    return rd;
+}
+
+static void
 on_button_clicked(GtkWidget *button, GtkDialog *dialog)
 {
-    gtk_dialog_response(dialog, GTK_RESPONSE_CLOSE);
+    MapDialogResponseData *rd;
+
+    rd = response_data_get(button, FALSE);
+    if (rd)
+        gtk_dialog_response(dialog, rd->response);
 }
 
 static void
@@ -160,8 +190,9 @@ map_dialog_add_widget(MapDialog *self, GtkWidget *widget)
 }
 
 GtkWidget *
-map_dialog_create_button(MapDialog *self, const gchar *label)
+map_dialog_create_button(MapDialog *self, const gchar *label, gint response)
 {
+    MapDialogResponseData *rd;
     GtkWidget *button;
 
     g_return_val_if_fail(MAP_IS_DIALOG(self), NULL);
@@ -169,7 +200,14 @@ map_dialog_create_button(MapDialog *self, const gchar *label)
     hildon_gtk_widget_set_theme_size(button, HILDON_SIZE_FINGER_HEIGHT);
     gtk_widget_show(button);
     map_dialog_add_widget(self, button);
-    g_signal_connect(button, "clicked", G_CALLBACK(on_button_clicked), self);
+
+    if (response != GTK_RESPONSE_NONE)
+    {
+        rd = response_data_get(button, TRUE);
+        rd->response = response;
+        g_signal_connect(button, "clicked",
+                         G_CALLBACK(on_button_clicked), self);
+    }
     return button;
 }
 
