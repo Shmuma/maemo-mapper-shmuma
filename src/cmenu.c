@@ -418,6 +418,69 @@ cmenu_cb_way_distance_to(GtkMenuItem *item)
     return TRUE;
 }
 
+static void
+cmenu_way_delete(WayPoint *way)
+{
+    gchar buffer[BUFFER_SIZE];
+    GtkWidget *confirm;
+
+    snprintf(buffer, sizeof(buffer), "%s:\n%s\n",
+             _("Confirm delete of waypoint"), way->desc);
+    confirm = hildon_note_new_confirmation(GTK_WINDOW(_window), buffer);
+
+    if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
+    {
+        Point *pdel_min, *pdel_max, *pdel_start, *pdel_end;
+        gint num_del;
+
+        /* Delete surrounding route data, too. */
+        if(way == _route.whead)
+            pdel_min = _route.head;
+        else
+            pdel_min = way[-1].point;
+
+        if(way == _route.wtail)
+            pdel_max = _route.tail;
+        else
+            pdel_max = way[1].point;
+
+        /* Find largest continuous segment around the waypoint, EXCLUDING
+         * pdel_min and pdel_max. */
+        for(pdel_start = way->point - 1; pdel_start->unity
+            && pdel_start > pdel_min; pdel_start--) { }
+        for(pdel_end = way->point + 1; pdel_end->unity
+            && pdel_end < pdel_max; pdel_end++) { }
+
+        /* If pdel_end is set to _route.tail, and if _route.tail is a
+         * non-zero point, then delete _route.tail. */
+        if(pdel_end == _route.tail && pdel_end->unity)
+            pdel_end++; /* delete _route.tail too */
+        /* else, if *both* endpoints are zero points, delete one. */
+        else if(!pdel_start->unity && !pdel_end->unity)
+            pdel_start--;
+
+        /* Delete BETWEEN pdel_start and pdel_end, exclusive. */
+        num_del = pdel_end - pdel_start - 1;
+
+        memmove(pdel_start + 1, pdel_end,
+                (_route.tail - pdel_end + 1) * sizeof(Point));
+        _route.tail -= num_del;
+
+        /* Remove waypoint and move/adjust subsequent waypoints. */
+        g_free(way->desc);
+        while(way++ != _route.wtail)
+        {
+            way[-1] = *way;
+            way[-1].point -= num_del;
+        }
+        _route.wtail--;
+
+        route_find_nearest_point();
+        map_force_redraw();
+    }
+    gtk_widget_destroy(confirm);
+}
+
 static gboolean
 cmenu_cb_way_delete(GtkMenuItem *item)
 {
@@ -426,64 +489,7 @@ cmenu_cb_way_delete(GtkMenuItem *item)
 
     if((way = find_nearest_waypoint(_cmenu_unitx, _cmenu_unity)))
     {
-        gchar buffer[BUFFER_SIZE];
-        GtkWidget *confirm;
-
-        snprintf(buffer, sizeof(buffer), "%s:\n%s\n",
-                _("Confirm delete of waypoint"), way->desc);
-        confirm = hildon_note_new_confirmation(GTK_WINDOW(_window), buffer);
-
-        if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
-        {
-            Point *pdel_min, *pdel_max, *pdel_start, *pdel_end;
-            gint num_del;
-
-            /* Delete surrounding route data, too. */
-            if(way == _route.whead)
-                pdel_min = _route.head;
-            else
-                pdel_min = way[-1].point;
-
-            if(way == _route.wtail)
-                pdel_max = _route.tail;
-            else
-                pdel_max = way[1].point;
-
-            /* Find largest continuous segment around the waypoint, EXCLUDING
-             * pdel_min and pdel_max. */
-            for(pdel_start = way->point - 1; pdel_start->unity
-                    && pdel_start > pdel_min; pdel_start--) { }
-            for(pdel_end = way->point + 1; pdel_end->unity
-                    && pdel_end < pdel_max; pdel_end++) { }
-
-            /* If pdel_end is set to _route.tail, and if _route.tail is a
-             * non-zero point, then delete _route.tail. */
-            if(pdel_end == _route.tail && pdel_end->unity)
-                pdel_end++; /* delete _route.tail too */
-            /* else, if *both* endpoints are zero points, delete one. */
-            else if(!pdel_start->unity && !pdel_end->unity)
-                pdel_start--;
-
-            /* Delete BETWEEN pdel_start and pdel_end, exclusive. */
-            num_del = pdel_end - pdel_start - 1;
-
-            memmove(pdel_start + 1, pdel_end,
-                    (_route.tail - pdel_end + 1) * sizeof(Point));
-            _route.tail -= num_del;
-
-            /* Remove waypoint and move/adjust subsequent waypoints. */
-            g_free(way->desc);
-            while(way++ != _route.wtail)
-            {
-                way[-1] = *way;
-                way[-1].point -= num_del;
-            }
-            _route.wtail--;
-
-            route_find_nearest_point();
-            map_force_redraw();
-        }
-        gtk_widget_destroy(confirm);
+        cmenu_way_delete(way);
     }
     else
     {
