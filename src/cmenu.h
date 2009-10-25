@@ -28,6 +28,7 @@
 
 void cmenu_init(void);
 
+void map_menu_point(Point *p);
 void map_menu_point_map(Point *p);
 
 #endif /* ifndef MAEMO_MAPPER_CMENU */

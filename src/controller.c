@@ -148,6 +148,6 @@ map_controller_activate_menu_point(MapController *self, gint x, gint y)
     g_return_if_fail(MAP_IS_CONTROLLER(self));
     p.unitx = x;
     p.unity = y;
-    map_menu_point_map(&p);
+    map_menu_point(&p);
 }
 

@@ -887,3 +887,54 @@ map_menu_point_map(Point *p)
     }
 }
 
+static void
+map_menu_point_select(Point *p, WayPoint *wp)
+{
+    GtkWidget *dialog, *button;
+    MapController *controller;
+    MapDialog *dlg;
+    gint response;
+    enum {
+        POINT_MAP,
+        POINT_WAYPOINT,
+        POINT_POI
+    };
+
+    controller = map_controller_get_instance();
+    dialog = map_dialog_new(_("Select point"),
+                            map_controller_get_main_window(controller),
+                            TRUE);
+    dlg = (MapDialog *)dialog;
+
+    button = map_dialog_create_button(dlg, _("Map Point"), POINT_MAP);
+
+    button = map_dialog_create_button(dlg, _("Waypoint"), POINT_WAYPOINT);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    switch (response) {
+    case POINT_MAP:
+        map_menu_point_map(p); break;
+    }
+}
+
+void
+map_menu_point(Point *p)
+{
+    WayPoint *way;
+
+    /* check whether a waypoint is nearby */
+    way = find_nearest_waypoint(p->unitx, p->unity);
+
+    /* TODO: check whether some POI is nearby */
+
+    /* if we have any waypoint or POI, first open a dialog for the user to
+     * select which one he wanted to pick */
+    if (way)
+    {
+        map_menu_point_select(p, way);
+    }
+    else
+        map_menu_point_map(p);
+}
+
