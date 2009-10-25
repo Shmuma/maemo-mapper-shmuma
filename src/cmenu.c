@@ -893,6 +893,71 @@ map_menu_point_map(Point *p)
     }
 }
 
+void
+map_menu_point_waypoint(WayPoint *way)
+{
+    GtkWidget *dialog, *button;
+    MapController *controller;
+    MapDialog *dlg;
+    gint response;
+    enum {
+        SHOW_LATLON = 0,
+        SHOW_DESC,
+        CLIP_LATLON,
+        CLIP_DESC,
+        ROUTE_TO,
+        DISTANCE_TO,
+        DELETE,
+        ADD_POI,
+    };
+
+    controller = map_controller_get_instance();
+    dialog = map_dialog_new(_("Waypoint"),
+                            map_controller_get_main_window(controller),
+                            FALSE);
+    dlg = (MapDialog *)dialog;
+
+    button = map_dialog_create_button(dlg, _("Show Position"), SHOW_LATLON);
+
+    button = map_dialog_create_button(dlg, _("Show Description"), SHOW_DESC);
+
+    button = map_dialog_create_button(dlg, _("Copy Position"), CLIP_LATLON);
+
+    button = map_dialog_create_button(dlg, _("Copy Description"), CLIP_DESC);
+
+    button = map_dialog_create_button(dlg, _("Show Distance to"), DISTANCE_TO);
+
+    button = map_dialog_create_button(dlg, _("Download Route to..."), ROUTE_TO);
+
+    button = map_dialog_create_button(dlg, _("Delete..."), DELETE);
+
+    button = map_dialog_create_button(dlg, _("Add POI..."), ADD_POI);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    switch (response)
+    {
+    case SHOW_LATLON:
+        cmenu_show_latlon(way->point->unitx, way->point->unity); break;
+    case SHOW_DESC:
+        MACRO_BANNER_SHOW_INFO(_window, way->desc); break;
+    case CLIP_LATLON:
+        cmenu_clip_latlon(way->point->unitx, way->point->unity); break;
+    case CLIP_DESC:
+        gtk_clipboard_set_text(
+                gtk_clipboard_get(GDK_SELECTION_CLIPBOARD), way->desc, -1);
+        break;
+    case ROUTE_TO:
+        cmenu_route_to(way->point->unitx, way->point->unity); break;
+    case DISTANCE_TO:
+        route_show_distance_to(way->point); break;
+    case DELETE:
+        cmenu_way_delete(way); break;
+    case ADD_POI:
+        poi_add_dialog(_window, way->point->unitx, way->point->unity); break;
+    }
+}
+
 static void
 map_menu_point_select(Point *p, WayPoint *wp)
 {
@@ -921,6 +986,8 @@ map_menu_point_select(Point *p, WayPoint *wp)
     switch (response) {
     case POINT_MAP:
         map_menu_point_map(p); break;
+    case POINT_WAYPOINT:
+        map_menu_point_waypoint(wp); break;
     }
 }
 
