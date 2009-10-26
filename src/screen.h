@@ -68,5 +68,8 @@ void map_screen_update_mark(MapScreen *screen);
 
 void map_screen_action_point(MapScreen *screen);
 
+void map_screen_clear_pois(MapScreen *self);
+void map_screen_show_poi(MapScreen *self, gint x, gint y, GdkPixbuf *pixbuf);
+
 G_END_DECLS
 #endif /* MAP_SCREEN_H */

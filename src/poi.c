@@ -55,6 +55,7 @@
 #include "gpx.h"
 #include "main.h"
 #include "poi.h"
+#include "screen.h"
 #include "util.h"
 
 static sqlite3 *_poi_db = NULL;
@@ -3212,6 +3213,8 @@ map_render_poi()
     GError *error = NULL;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    map_screen_clear_pois(MAP_SCREEN(_w_map));
+
     if(_poi_db && _poi_zoom > _zoom)
     {
         gint diag_offset = pixel2unit(MAX(_view_width_pixels,
@@ -3266,6 +3269,7 @@ map_render_poi()
                         _poi_db_dirname);
                 pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
             }
+            map_screen_show_poi(MAP_SCREEN(_w_map), unitx, unity, pixbuf);
             if(error)
             {
                 /* No icon for POI or for category or default POI icon file.
