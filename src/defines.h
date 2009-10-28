@@ -362,4 +362,8 @@
 
 #define STR_EMPTY(s) (!s || s[0] == '\0')
 
+/* Sanitize SQLite's sqlite3_column_text: */
+#define sqlite3_column_str(stmt, col) \
+    ((const gchar *)sqlite3_column_text(stmt, col))
+
 #endif /* ifndef MAEMO_MAPPER_DEFINES */

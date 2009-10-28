@@ -355,9 +355,9 @@ get_nearest_poi(gint unitx, gint unity, PoiInfo *poi)
         poi->cat_id = sqlite3_column_int(_stmt_select_nearest_poi, 1);
         poi->lat = sqlite3_column_double(_stmt_select_nearest_poi, 2);
         poi->lon = sqlite3_column_double(_stmt_select_nearest_poi, 3);
-        poi->label =g_strdup(sqlite3_column_text(_stmt_select_nearest_poi, 4));
-        poi->desc = g_strdup(sqlite3_column_text(_stmt_select_nearest_poi, 5));
-        poi->clabel=g_strdup(sqlite3_column_text(_stmt_select_nearest_poi, 6));
+        poi->label =g_strdup(sqlite3_column_str(_stmt_select_nearest_poi, 4));
+        poi->desc = g_strdup(sqlite3_column_str(_stmt_select_nearest_poi, 5));
+        poi->clabel=g_strdup(sqlite3_column_str(_stmt_select_nearest_poi, 6));
         result = TRUE;
     }
     else
@@ -431,9 +431,9 @@ select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick)
                 POI_LAT, lat,
                 POI_LON, lon,
                 POI_LATLON, g_strdup_printf("%s, %s", tmp1, tmp2),
-                POI_LABEL, sqlite3_column_text(_stmt_select_poi, 3),
-                POI_DESC, sqlite3_column_text(_stmt_select_poi, 4),
-                POI_CLABEL, sqlite3_column_text(_stmt_select_poi, 6),
+                POI_LABEL, sqlite3_column_str(_stmt_select_poi, 3),
+                POI_DESC, sqlite3_column_str(_stmt_select_poi, 4),
+                POI_CLABEL, sqlite3_column_str(_stmt_select_poi, 6),
                 -1);
         num_cats++;
     }
@@ -627,8 +627,8 @@ category_edit_dialog(GtkWidget *parent, gint cat_id)
             return FALSE;
         }
 
-        cat_label = g_strdup(sqlite3_column_text(_stmt_select_cat, 0));
-        cat_desc = g_strdup(sqlite3_column_text(_stmt_select_cat, 1));
+        cat_label = g_strdup(sqlite3_column_str(_stmt_select_cat, 0));
+        cat_desc = g_strdup(sqlite3_column_str(_stmt_select_cat, 1));
         cat_enabled = sqlite3_column_int(_stmt_select_cat, 2);
 
         sqlite3_reset(_stmt_select_cat);
@@ -843,8 +843,8 @@ generate_store()
         gtk_list_store_set(store, &iter,
                 CAT_ID, sqlite3_column_int(_stmt_selall_cat, 0),
                 CAT_ENABLED, sqlite3_column_int(_stmt_selall_cat, 3),
-                CAT_LABEL, sqlite3_column_text(_stmt_selall_cat, 1),
-                CAT_DESC, sqlite3_column_text(_stmt_selall_cat, 2),
+                CAT_LABEL, sqlite3_column_str(_stmt_selall_cat, 1),
+                CAT_DESC, sqlite3_column_str(_stmt_selall_cat, 2),
                 CAT_POI_CNT, sqlite3_column_int(_stmt_selall_cat, 4),
                 -1);
     }
@@ -1056,7 +1056,7 @@ poi_populate_categories(GtkListStore *store, gint cat_id,
     {
         GtkTreeIter iter;
         gint cid = sqlite3_column_int(_stmt_selall_cat, 0);
-        const gchar *clab = sqlite3_column_text(_stmt_selall_cat, 1);
+        const gchar *clab = sqlite3_column_str(_stmt_selall_cat, 1);
 
         gtk_list_store_append(store, &iter);
         gtk_list_store_set(store, &iter, 0, cid, 1, clab, -1);
@@ -3173,9 +3173,9 @@ poi_browse_dialog(gint unitx, gint unity)
             poi->cat_id = sqlite3_column_int(stmt, 1);
             poi->lat = sqlite3_column_double(stmt, 2);
             poi->lon = sqlite3_column_double(stmt, 3);
-            poi->label =g_strdup(sqlite3_column_text(stmt, 4));
-            poi->desc = g_strdup(sqlite3_column_text(stmt, 5));
-            poi->clabel=g_strdup(sqlite3_column_text(stmt, 6));
+            poi->label =g_strdup(sqlite3_column_str(stmt, 4));
+            poi->desc = g_strdup(sqlite3_column_str(stmt, 5));
+            poi->clabel=g_strdup(sqlite3_column_str(stmt, 6));
             poi_list = g_list_prepend(poi_list, poi);
         }
         sqlite3_reset(stmt);
@@ -3240,9 +3240,9 @@ map_render_poi()
         {
             lat1 = sqlite3_column_double(_stmt_select_poi, 0);
             lon1 = sqlite3_column_double(_stmt_select_poi, 1);
-            gchar *poi_label = g_utf8_strdown(sqlite3_column_text(
+            gchar *poi_label = g_utf8_strdown(sqlite3_column_str(
                     _stmt_select_poi, 3), -1);
-            gchar *cat_label = g_utf8_strdown(sqlite3_column_text(
+            gchar *cat_label = g_utf8_strdown(sqlite3_column_str(
                     _stmt_select_poi, 6), -1);
 
             latlon2unit(lat1, lon1, unitx, unity);
