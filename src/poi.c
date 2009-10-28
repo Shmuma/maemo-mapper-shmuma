@@ -2385,7 +2385,7 @@ poi_list_dialog(GtkWidget *parent, gint unitx, gint unity, GList *poi_list)
 
     gtk_widget_show_all(pli.dialog);
 
-    GTK_RESPONSE_ACCEPT == gtk_dialog_run(GTK_DIALOG(pli.dialog));
+    gtk_dialog_run(GTK_DIALOG(pli.dialog));
 
     map_force_redraw();
 
