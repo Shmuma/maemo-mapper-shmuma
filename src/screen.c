@@ -107,6 +107,13 @@ G_DEFINE_TYPE(MapScreen, map_screen, GTK_CLUTTER_TYPE_EMBED);
 #define MAP_SCREEN_PRIV(screen) (MAP_SCREEN(screen)->priv)
 
 static void
+actor_set_rotation_cb(ClutterActor *actor, gpointer angle)
+{
+    clutter_actor_set_rotation(actor, CLUTTER_Z_AXIS,
+                               GPOINTER_TO_INT(angle), 0, 0, 0);
+}
+
+static void
 map_screen_pixel_to_screen_units(MapScreenPrivate *priv, gint px, gint py,
                                  gint *ux, gint *uy)
 {
@@ -874,6 +881,11 @@ map_screen_set_rotation(MapScreen *screen, gint angle)
         clutter_actor_set_rotation(priv->compass,
                                    CLUTTER_Z_AXIS, -angle, 0, 0, 0);
     }
+
+    if (priv->poi_group)
+        clutter_container_foreach(CLUTTER_CONTAINER(priv->poi_group),
+                                  actor_set_rotation_cb,
+                                  GINT_TO_POINTER(angle));
 }
 
 /**
@@ -1050,6 +1062,7 @@ map_screen_show_poi(MapScreen *self, gint x, gint y, GdkPixbuf *pixbuf)
 {
     MapScreenPrivate *priv;
     ClutterActor *poi;
+    gint angle;
 
     g_return_if_fail(MAP_IS_SCREEN(self));
     priv = self->priv;
@@ -1068,6 +1081,9 @@ map_screen_show_poi(MapScreen *self, gint x, gint y, GdkPixbuf *pixbuf)
         clutter_actor_set_size(poi, 3 * _draw_width, 3 * _draw_width);
     }
 
+    angle = clutter_actor_get_rotation(priv->map, CLUTTER_Z_AXIS,
+                                       NULL, NULL, NULL);
+    clutter_actor_set_rotation(poi, CLUTTER_Z_AXIS, -angle, 0, 0, 0);
     clutter_actor_set_anchor_point_from_gravity(poi, CLUTTER_GRAVITY_CENTER);
     x = unit2zpixel(x, priv->zoom);
     y = unit2zpixel(y, priv->zoom);
