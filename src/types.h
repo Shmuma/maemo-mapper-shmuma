@@ -487,6 +487,13 @@ struct _BrowseInfo {
     GtkWidget *txt;
 };
 
+/* Map area; all coordinates are expressed in units */
+typedef struct {
+    gint x1;
+    gint y1;
+    gint x2;
+    gint y2;
+} MapArea;
 
 #ifdef INCLUDE_APRS
 

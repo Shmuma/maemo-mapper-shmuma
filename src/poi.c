@@ -367,38 +367,25 @@ get_nearest_poi(gint unitx, gint unity, PoiInfo *poi)
     return result;
 }
 
-gboolean
-select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick)
+GtkTreeModel *
+poi_get_model_for_area(MapArea *area)
 {
-    gint x, y;
-    gdouble lat1, lon1, lat2, lon2;
-    static GtkWidget *dialog = NULL;
-    static GtkWidget *list = NULL;
-    static GtkWidget *sw = NULL;
-    static GtkTreeViewColumn *column = NULL;
-    static GtkCellRenderer *renderer = NULL;
-    GtkListStore *store = NULL;
+    GtkListStore *store;
     GtkTreeIter iter;
-    gboolean selected = FALSE;
     gchar tmp1[LL_FMT_LEN], tmp2[LL_FMT_LEN];
-    gint num_cats = 0;
-    printf("%s()\n", __PRETTY_FUNCTION__);
+    gdouble lat1, lon1, lat2, lon2;
+    gint i = 0;
 
-    x = unitx - pixel2unit(3 * _draw_width);
-    y = unity + pixel2unit(3 * _draw_width);
-    unit2latlon(x, y, lat1, lon1);
-
-    x = unitx + pixel2unit(3 * _draw_width);
-    y = unity - pixel2unit(3 * _draw_width);
-    unit2latlon(x, y, lat2, lon2);
-
+    /* note that we invert the y */
+    unit2latlon(area->x1, area->y2, lat1, lon1);
+    unit2latlon(area->x2, area->y1, lat2, lon2);
     if(SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 1, lat1) ||
           SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 2, lat2) ||
           SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 3, lon1) ||
           SQLITE_OK != sqlite3_bind_double(_stmt_select_poi, 4, lon2))
     {
         g_printerr("Failed to bind values for _stmt_select_poi\n");
-        return FALSE;
+        return NULL;
     }
 
     /* Initialize store. */
@@ -422,8 +409,6 @@ select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick)
         lon = sqlite3_column_double(_stmt_select_poi, 1);
         
         format_lat_lon(lat, lon, tmp1, tmp2);
-        //lat_format(lat, tmp1);
-        //lon_format(lon, tmp2);
         gtk_list_store_append(store, &iter);
         gtk_list_store_set(store, &iter,
                 POI_POIID, sqlite3_column_int(_stmt_select_poi, 2),
@@ -435,44 +420,48 @@ select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick)
                 POI_DESC, sqlite3_column_str(_stmt_select_poi, 4),
                 POI_CLABEL, sqlite3_column_str(_stmt_select_poi, 6),
                 -1);
-        num_cats++;
+        i++;
     }
     sqlite3_reset(_stmt_select_poi);
 
-    switch(num_cats)
+    if (i == 0)
     {
-        case 0:
-            g_object_unref(G_OBJECT(store));
-            if(!quick)
-            {
-                MACRO_BANNER_SHOW_INFO(_window, _("No POIs found."));
-            }
-            return FALSE;
-            break;
-        case 1:
-            /* iter is still set to the most-recently added POI. */
-            gtk_tree_model_get(GTK_TREE_MODEL(store),
-                &iter,
-                POI_POIID, &(poi->poi_id),
-                POI_CATID, &(poi->cat_id),
-                POI_LAT, &(poi->lat),
-                POI_LON, &(poi->lon),
-                POI_LABEL, &(poi->label),
-                POI_DESC, &(poi->desc),
-                POI_CLABEL, &(poi->clabel),
-                -1);
-            g_object_unref(G_OBJECT(store));
-            return TRUE;
-            break;
-        default:
-            if(quick)
-            {
-                g_object_unref(G_OBJECT(store));
-                return get_nearest_poi(unitx, unity, poi);
-            }
+        g_object_unref(store);
+        store = NULL;
+    }
+    return (GtkTreeModel *)store;
+}
+
+gboolean
+poi_run_select_dialog(GtkTreeModel *model, PoiInfo *poi)
+{
+    static GtkWidget *dialog = NULL;
+    static GtkWidget *list = NULL;
+    static GtkWidget *sw = NULL;
+    static GtkTreeViewColumn *column = NULL;
+    static GtkCellRenderer *renderer = NULL;
+    GtkTreeIter iter;
+    gint n_poi;
+    gboolean selected = FALSE;
+
+    n_poi = gtk_tree_model_iter_n_children(model, NULL);
+    if (n_poi == 0) return FALSE;
+    else if (n_poi == 1)
+    {
+        /* No need to show the dialog */
+        gtk_tree_model_iter_nth_child(model, &iter, NULL, 0);
+        gtk_tree_model_get(model, &iter,
+                           POI_POIID, &(poi->poi_id),
+                           POI_CATID, &(poi->cat_id),
+                           POI_LAT, &(poi->lat),
+                           POI_LON, &(poi->lon),
+                           POI_LABEL, &(poi->label),
+                           POI_DESC, &(poi->desc),
+                           POI_CLABEL, &(poi->clabel),
+                           -1);
+        return TRUE;
     }
 
-    /* There are at least 2 matching POI's - let the user select one. */
     if(dialog == NULL)
     {
         dialog = gtk_dialog_new_with_buttons(_("Select POI"),
@@ -516,8 +505,7 @@ select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick)
         gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
     }
 
-    gtk_tree_view_set_model(GTK_TREE_VIEW(list), GTK_TREE_MODEL(store));
-    g_object_unref(G_OBJECT(store));
+    gtk_tree_view_set_model(GTK_TREE_VIEW(list), model);
 
     gtk_widget_show_all(dialog);
 
@@ -527,7 +515,7 @@ select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick)
                     gtk_tree_view_get_selection(GTK_TREE_VIEW(list)),
                     NULL, &iter))
         {
-            gtk_tree_model_get(GTK_TREE_MODEL(store), &iter,
+            gtk_tree_model_get(model, &iter,
                 POI_POIID, &(poi->poi_id),
                 POI_CATID, &(poi->cat_id),
                 POI_LAT, &(poi->lat),
@@ -543,9 +531,48 @@ select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick)
             popup_error(dialog, _("Select one POI from the list."));
     }
 
-    map_force_redraw();
-
     gtk_widget_hide(dialog);
+
+    return selected;
+}
+
+gboolean
+select_poi(gint unitx, gint unity, PoiInfo *poi, gboolean quick)
+{
+    GtkTreeModel *model = NULL;
+    gboolean selected;
+    gint num_cats;
+    MapArea area;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    area.x1 = unitx - pixel2unit(3 * _draw_width);
+    area.y1 = unity - pixel2unit(3 * _draw_width);
+    area.y2 = unity + pixel2unit(3 * _draw_width);
+    area.x2 = unitx + pixel2unit(3 * _draw_width);
+
+    model = poi_get_model_for_area(&area);
+    if (!model)
+    {
+        if (!quick)
+        {
+            MACRO_BANNER_SHOW_INFO(_window, _("No POIs found."));
+        }
+        return FALSE;
+    }
+
+    num_cats = gtk_tree_model_iter_n_children(model, NULL);
+    if (num_cats > 1 && quick)
+    {
+        g_object_unref(model);
+        /* automatic selection */
+        return get_nearest_poi(unitx, unity, poi);
+    }
+
+    selected = poi_run_select_dialog(model, poi);
+    g_object_unref(model);
+
+    map_force_redraw();
 
     vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, selected);
     return selected;

@@ -38,6 +38,9 @@ gboolean poi_import_dialog(gint unitx, gint unity);
 gboolean poi_download_dialog(gint unitx, gint unity);
 gboolean poi_browse_dialog(gint unitx, gint unity);
 
+gboolean poi_run_select_dialog(GtkTreeModel *model, PoiInfo *poi);
+GtkTreeModel *poi_get_model_for_area(MapArea *area);
+
 void map_render_poi(void);
 
 void poi_destroy(void);
