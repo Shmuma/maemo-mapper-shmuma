@@ -31,7 +31,6 @@
 #include "osm.h"
 #include "path.h"
 #include "tile.h"
-#include "types.h"
 #include "util.h"
 
 #include <cairo/cairo.h>
@@ -1090,4 +1089,20 @@ map_screen_show_poi(MapScreen *self, gint x, gint y, GdkPixbuf *pixbuf)
     clutter_actor_set_position(poi, x, y);
     clutter_container_add_actor(CLUTTER_CONTAINER(priv->poi_group), poi);
 }
+
+void
+map_screen_get_tap_area_from_units(MapScreen *self, gint ux, gint uy,
+                                   MapArea *area)
+{
+    gint radius;
+
+    g_return_if_fail(MAP_IS_SCREEN(self));
+
+    radius = pixel2zunit(3 * _draw_width, self->priv->zoom);
+    area->x1 = ux - radius;
+    area->y1 = uy - radius;
+    area->y2 = uy + radius;
+    area->x2 = ux + radius;
+}
+
 
