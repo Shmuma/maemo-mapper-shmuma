@@ -144,10 +144,12 @@ void
 map_controller_activate_menu_point(MapController *self, gint x, gint y)
 {
     Point p;
+    MapArea area;
 
     g_return_if_fail(MAP_IS_CONTROLLER(self));
     p.unitx = x;
     p.unity = y;
-    map_menu_point(&p);
+    map_screen_get_tap_area_from_units(self->priv->screen, x, y, &area);
+    map_menu_point(&p, &area);
 }
 

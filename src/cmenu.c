@@ -958,12 +958,63 @@ map_menu_point_waypoint(WayPoint *way)
     }
 }
 
-static void
-map_menu_point_select(Point *p, WayPoint *wp)
+void
+map_menu_point_poi(PoiInfo *poi)
 {
     GtkWidget *dialog, *button;
     MapController *controller;
     MapDialog *dlg;
+    gint response;
+    gint unitx, unity;
+    enum {
+        SHOW_EDIT = 0,
+        DISTANCE_TO,
+        ROUTE_TO,
+        ADD_ROUTE,
+        ADD_WAYPOINT,
+    };
+
+    controller = map_controller_get_instance();
+    dialog = map_dialog_new(_("POI"),
+                            map_controller_get_main_window(controller),
+                            FALSE);
+    dlg = (MapDialog *)dialog;
+
+    button = map_dialog_create_button(dlg, _("View/Edit..."), SHOW_EDIT);
+    button = map_dialog_create_button(dlg, _("Show Distance to"), DISTANCE_TO);
+    button = map_dialog_create_button(dlg, _("Download Route to..."), ROUTE_TO);
+    button = map_dialog_create_button(dlg, _("Add Route Point"), ADD_ROUTE);
+    button = map_dialog_create_button(dlg, _("Add Waypoint..."), ADD_WAYPOINT);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+
+    /* the POI coordinates in units are needed for most of the handlers, so
+     * let's calculate them here */
+    latlon2unit(poi->lat, poi->lon, unitx, unity);
+
+    switch (response)
+    {
+    case SHOW_EDIT:
+        poi_view_dialog(_window, poi); break;
+    case DISTANCE_TO:
+        cmenu_distance_to(unitx, unity); break;
+    case ROUTE_TO:
+        cmenu_route_to(unitx, unity); break;
+    case ADD_ROUTE:
+        cmenu_add_route(unitx, unity); break;
+    case ADD_WAYPOINT:
+        route_add_way_dialog(unitx, unity); break;
+    }
+}
+
+static void
+map_menu_point_select(Point *p, WayPoint *wp, GtkTreeModel *model)
+{
+    GtkWidget *dialog, *button;
+    MapController *controller;
+    MapDialog *dlg;
+    PoiInfo poi;
     gint response;
     enum {
         POINT_MAP,
@@ -978,8 +1029,10 @@ map_menu_point_select(Point *p, WayPoint *wp)
     dlg = (MapDialog *)dialog;
 
     button = map_dialog_create_button(dlg, _("Map Point"), POINT_MAP);
-
-    button = map_dialog_create_button(dlg, _("Waypoint"), POINT_WAYPOINT);
+    if (wp)
+        button = map_dialog_create_button(dlg, _("Waypoint"), POINT_WAYPOINT);
+    if (model)
+        button = map_dialog_create_button(dlg, _("POI"), POINT_POI);
 
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
@@ -988,24 +1041,37 @@ map_menu_point_select(Point *p, WayPoint *wp)
         map_menu_point_map(p); break;
     case POINT_WAYPOINT:
         map_menu_point_waypoint(wp); break;
+    case POINT_POI:
+        if (poi_run_select_dialog(model, &poi))
+        {
+            map_menu_point_poi(&poi);
+            g_free(poi.label);
+            g_free(poi.desc);
+            g_free(poi.clabel);
+        }
+        break;
     }
 }
 
 void
-map_menu_point(Point *p)
+map_menu_point(Point *p, MapArea *area)
 {
+    GtkTreeModel *model;
     WayPoint *way;
 
     /* check whether a waypoint is nearby */
     way = find_nearest_waypoint(p->unitx, p->unity);
 
-    /* TODO: check whether some POI is nearby */
+    /* check whether some POI is nearby */
+    model = poi_get_model_for_area(area);
 
     /* if we have any waypoint or POI, first open a dialog for the user to
      * select which one he wanted to pick */
-    if (way)
+    if (way || model)
     {
-        map_menu_point_select(p, way);
+        map_menu_point_select(p, way, model);
+        if (model)
+            g_object_unref(model);
     }
     else
         map_menu_point_map(p);
