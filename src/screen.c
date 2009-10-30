@@ -46,6 +46,9 @@
 #define MARK_WIDTH      (_draw_width * 4)
 #define MARK_HEIGHT     100
 
+/* (im)precision of a finger tap, in screen pixels */
+#define TOUCH_RADIUS    25
+
 struct _MapScreenPrivate
 {
     ClutterActor *map;
@@ -146,23 +149,30 @@ map_screen_pixel_to_units(MapScreen *screen, gint px, gint py,
     *uy = usy + priv->map_center_uy;
 }
 
-static gboolean
-on_point_chosen(ClutterActor *actor, ClutterButtonEvent *event,
-                MapScreen *screen)
+static inline void
+activate_point_menu(MapScreen *screen, ClutterButtonEvent *event)
 {
-    MapScreenPrivate *priv = screen->priv;
     MapController *controller;
     gint x, y;
-
-    g_signal_handlers_disconnect_by_func(actor, on_point_chosen, screen);
-    clutter_actor_hide(priv->message_box);
-    priv->action_ongoing = FALSE;
 
     /* Get the coordinates of the point, in units */
     map_screen_pixel_to_units(screen, event->x, event->y, &x, &y);
 
     controller = map_controller_get_instance();
     map_controller_activate_menu_point(controller, x, y);
+}
+
+static gboolean
+on_point_chosen(ClutterActor *actor, ClutterButtonEvent *event,
+                MapScreen *screen)
+{
+    MapScreenPrivate *priv = screen->priv;
+
+    g_signal_handlers_disconnect_by_func(actor, on_point_chosen, screen);
+    clutter_actor_hide(priv->message_box);
+    priv->action_ongoing = FALSE;
+
+    activate_point_menu(screen, event);
     return TRUE; /* Event handled */
 }
 
@@ -206,6 +216,13 @@ on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
 
         priv->btn_press_screen_x = -1;
         priv->is_dragging = FALSE;
+
+        if (be->click_count > 1)
+        {
+            /* activating the point menu seems a reasonable action for double
+             * clicks */
+            activate_point_menu(screen, be);
+        }
     }
     else if (!priv->action_ongoing || priv->allow_scrolling) /* motion event */
     {
@@ -715,10 +732,14 @@ map_screen_init(MapScreen *screen)
 {
     MapScreenPrivate *priv;
     ClutterActor *stage;
+    ClutterBackend *backend;
 
     priv = G_TYPE_INSTANCE_GET_PRIVATE(screen, MAP_TYPE_SCREEN,
                                        MapScreenPrivate);
     screen->priv = priv;
+
+    backend = clutter_get_default_backend();
+    clutter_backend_set_double_click_distance(backend, TOUCH_RADIUS);
 
     stage = gtk_clutter_embed_get_stage(GTK_CLUTTER_EMBED(screen));
     g_return_if_fail(stage != NULL);
