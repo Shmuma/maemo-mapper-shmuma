@@ -217,7 +217,8 @@ on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
         dx = me->x - priv->btn_press_screen_x;
         dy = me->y - priv->btn_press_screen_y;
 
-        if (!priv->is_dragging && (ABS(dx) > 20 || ABS(dy) > 20))
+        if (!priv->is_dragging &&
+            (ABS(dx) > TOUCH_RADIUS || ABS(dy) > TOUCH_RADIUS))
         {
             priv->is_dragging = TRUE;
             clutter_actor_hide(priv->osm);
@@ -1098,7 +1099,7 @@ map_screen_get_tap_area_from_units(MapScreen *self, gint ux, gint uy,
 
     g_return_if_fail(MAP_IS_SCREEN(self));
 
-    radius = pixel2zunit(3 * _draw_width, self->priv->zoom);
+    radius = pixel2zunit(TOUCH_RADIUS, self->priv->zoom);
     area->x1 = ux - radius;
     area->y1 = uy - radius;
     area->y2 = uy + radius;
