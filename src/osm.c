@@ -55,8 +55,8 @@ struct _MapOsmPrivate
             /* this must be kept in sync with the btn_icons array */
             ClutterActor *settings;
             ClutterActor *point;
-            ClutterActor *btn2;
-            ClutterActor *btn3;
+            ClutterActor *path;
+            ClutterActor *route;
             ClutterActor *zoom_in;
             ClutterActor *zoom_out;
             ClutterActor *rotate;
@@ -76,8 +76,8 @@ G_DEFINE_TYPE(MapOsm, map_osm, CLUTTER_TYPE_GROUP);
 static const gchar *btn_icons[N_BUTTONS_ROW * 2] = {
     "maemo-mapper-settings",
     "maemo-mapper-point",
-    NULL,
-    NULL,
+    "maemo-mapper-path",
+    "maemo-mapper-route",
     "maemo-mapper-zoom-in",
     "maemo-mapper-zoom-out",
     "maemo-mapper-rotate",
