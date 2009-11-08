@@ -33,5 +33,6 @@ void menu_layers_remove_repos(void);
 void menu_layers_add_repos(void);
 void menu_init(void);
 void map_menu_route(void);
+void map_menu_track(void);
 
 #endif /* ifndef MAEMO_MAPPER_MENU_H */

@@ -149,6 +149,13 @@ map_controller_action_route(MapController *self)
 }
 
 void
+map_controller_action_track(MapController *self)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    map_menu_track();
+}
+
+void
 map_controller_activate_menu_point(MapController *self, gint x, gint y)
 {
     Point p;

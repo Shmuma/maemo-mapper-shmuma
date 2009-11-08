@@ -380,13 +380,11 @@ menu_cb_track_clear(GtkMenuItem *item)
     return TRUE;
 }
 
-static gboolean
-menu_cb_track_enable_tracking(GtkMenuItem *item)
+static void
+track_enable_tracking(gboolean enable)
 {
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(!(_enable_tracking = gtk_check_menu_item_get_active(
-                GTK_CHECK_MENU_ITEM(_menu_track_enable_tracking_item))))
+    _enable_tracking = enable;
+    if(!enable)
     {
         track_insert_break(FALSE); /* FALSE = not temporary */
         MACRO_BANNER_SHOW_INFO(_window, _("Tracking Disabled"));
@@ -395,10 +393,32 @@ menu_cb_track_enable_tracking(GtkMenuItem *item)
     {
         MACRO_BANNER_SHOW_INFO(_window, _("Tracking Enabled"));
     }
+}
 
+static gboolean
+menu_cb_track_enable_tracking(GtkCheckMenuItem *item)
+{
+    gboolean enable;
+
+    printf("%s()\n", __PRETTY_FUNCTION__);
+
+    enable = gtk_check_menu_item_get_active(item);
+    track_enable_tracking(enable);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
+}
+
+static void
+on_enable_tracking_toggled(GtkToggleButton *button)
+{
+    GtkWidget *dialog;
+
+    track_enable_tracking(gtk_toggle_button_get_active(button));
+
+    /* close the dialog */
+    dialog = gtk_widget_get_toplevel((GtkWidget *)button);
+    gtk_dialog_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
 }
 
 /****************************************************************************
@@ -2154,6 +2174,67 @@ map_menu_route()
         menu_cb_route_reset(NULL); break;
     case ROUTE_CLEAR:
         menu_cb_route_clear(NULL); break;
+    }
+}
+
+void
+map_menu_track()
+{
+    GtkWidget *dialog, *button;
+    MapController *controller;
+    MapDialog *dlg;
+    gint response;
+    enum {
+        TRACK_OPEN,
+        TRACK_SAVE,
+        TRACK_INSERT_BREAK,
+        TRACK_INSERT_MARK,
+        TRACK_DISTANCE_FROM_LAST_MARK,
+        TRACK_DISTANCE_FROM_START,
+        TRACK_CLEAR,
+    };
+
+    controller = map_controller_get_instance();
+    dialog = map_dialog_new(_("Track"),
+                            map_controller_get_main_window(controller),
+                            TRUE);
+    dlg = (MapDialog *)dialog;
+
+    map_dialog_create_button(dlg, _("Open..."), TRACK_OPEN);
+    map_dialog_create_button(dlg, _("Save..."), TRACK_SAVE);
+    map_dialog_create_button(dlg, _("Insert Break"), TRACK_INSERT_BREAK);
+    map_dialog_create_button(dlg, _("Insert Mark..."), TRACK_INSERT_MARK);
+    map_dialog_create_button(dlg, _("Show Distance from Last Mark"),
+                             TRACK_DISTANCE_FROM_LAST_MARK);
+    map_dialog_create_button(dlg, _("Show Distance from Beginning"),
+                             TRACK_DISTANCE_FROM_START);
+    map_dialog_create_button(dlg, _("Clear"), TRACK_CLEAR);
+
+    button = gtk_toggle_button_new_with_label(_("Enable Tracking"));
+    hildon_gtk_widget_set_theme_size(button, HILDON_SIZE_FINGER_HEIGHT);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), _enable_tracking);
+    gtk_widget_show(button);
+    map_dialog_add_widget(dlg, button);
+    g_signal_connect(button, "toggled",
+                     G_CALLBACK(on_enable_tracking_toggled), NULL);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    switch (response) {
+    case TRACK_OPEN:
+        menu_cb_track_open(NULL); break;
+    case TRACK_SAVE:
+        menu_cb_track_save(NULL); break;
+    case TRACK_INSERT_BREAK:
+        menu_cb_track_insert_break(NULL); break;
+    case TRACK_INSERT_MARK:
+        menu_cb_track_insert_mark(NULL); break;
+    case TRACK_DISTANCE_FROM_LAST_MARK:
+        menu_cb_track_distlast(NULL); break;
+    case TRACK_DISTANCE_FROM_START:
+        menu_cb_track_distfirst(NULL); break;
+    case TRACK_CLEAR:
+        menu_cb_track_clear(NULL); break;
     }
 }
 
