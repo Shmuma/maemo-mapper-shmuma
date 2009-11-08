@@ -26,6 +26,7 @@
 #include "cmenu.h"
 #include "data.h"
 #include "defines.h"
+#include "menu.h"
 #include "screen.h"
 
 struct _MapControllerPrivate
@@ -138,6 +139,13 @@ map_controller_action_point(MapController *self)
 {
     g_return_if_fail(MAP_IS_CONTROLLER(self));
     map_screen_action_point(self->priv->screen);
+}
+
+void
+map_controller_action_route(MapController *self)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    map_menu_route();
 }
 
 void

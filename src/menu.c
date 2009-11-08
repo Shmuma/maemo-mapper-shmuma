@@ -43,7 +43,7 @@
 #include "types.h"
 #include "data.h"
 #include "defines.h"
-
+#include "dialog.h"
 #include "display.h"
 #include "gps.h"
 #include "aprs.h"
@@ -2102,5 +2102,58 @@ menu_init()
                       G_CALLBACK(gtk_main_quit), NULL);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+}
+
+void
+map_menu_route()
+{
+    GtkWidget *dialog;
+    MapController *controller;
+    MapDialog *dlg;
+    gint response;
+    enum {
+        ROUTE_OPEN,
+        ROUTE_DOWNLOAD,
+        ROUTE_SAVE,
+        ROUTE_DISTANCE_TO_WAYPOINT,
+        ROUTE_DISTANCE_TO_END,
+        ROUTE_RESET,
+        ROUTE_CLEAR,
+    };
+
+    controller = map_controller_get_instance();
+    dialog = map_dialog_new(_("Route"),
+                            map_controller_get_main_window(controller),
+                            TRUE);
+    dlg = (MapDialog *)dialog;
+
+    map_dialog_create_button(dlg, _("Open..."), ROUTE_OPEN);
+    map_dialog_create_button(dlg, _("Download..."), ROUTE_DOWNLOAD);
+    map_dialog_create_button(dlg, _("Save..."), ROUTE_SAVE);
+    map_dialog_create_button(dlg, _("Show Distance to Next Waypoint"),
+                             ROUTE_DISTANCE_TO_WAYPOINT);
+    map_dialog_create_button(dlg, _("Show Distance to End of Route"),
+                             ROUTE_DISTANCE_TO_END);
+    map_dialog_create_button(dlg, _("Reset"), ROUTE_RESET);
+    map_dialog_create_button(dlg, _("Clear"), ROUTE_CLEAR);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    switch (response) {
+    case ROUTE_OPEN:
+        menu_cb_route_open(NULL); break;
+    case ROUTE_DOWNLOAD:
+        menu_cb_route_download(NULL); break;
+    case ROUTE_SAVE:
+        menu_cb_route_save(NULL); break;
+    case ROUTE_DISTANCE_TO_WAYPOINT:
+        menu_cb_route_distnext(NULL); break;
+    case ROUTE_DISTANCE_TO_END:
+        menu_cb_route_distlast(NULL); break;
+    case ROUTE_RESET:
+        menu_cb_route_reset(NULL); break;
+    case ROUTE_CLEAR:
+        menu_cb_route_clear(NULL); break;
+    }
 }
 

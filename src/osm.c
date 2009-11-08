@@ -123,6 +123,13 @@ wrap_action_point(MapController *controller)
     return TRUE;
 }
 
+static gboolean
+wrap_action_route(MapController *controller)
+{
+    map_controller_action_route(controller);
+    return TRUE;
+}
+
 static void
 map_osm_constructed(GObject *object)
 {
@@ -161,6 +168,8 @@ map_osm_constructed(GObject *object)
                              controller);
     g_signal_connect_swapped(priv->btn.n.point, "button-release-event",
                              G_CALLBACK(wrap_action_point), controller);
+    g_signal_connect_swapped(priv->btn.n.route, "button-release-event",
+                             G_CALLBACK(wrap_action_route), controller);
 
     constructed = G_OBJECT_CLASS(map_osm_parent_class)->constructed;
     if (constructed != NULL)
