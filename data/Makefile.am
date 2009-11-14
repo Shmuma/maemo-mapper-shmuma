@@ -28,6 +28,7 @@ icon_40x40_DATA = icons/40x40/maemo-mapper.png
 icon_scalable_DATA = icons/scalable/maemo-mapper.png icons/scalable/maemo-mapper-wait.png \
 	icons/scalable/maemo-mapper-point.png \
 	icons/scalable/maemo-mapper-fullscreen.png \
+	icons/scalable/maemo-mapper-go-to.png \
 	icons/scalable/maemo-mapper-gps-enable.png \
 	icons/scalable/maemo-mapper-gps-disable.png \
 	icons/scalable/maemo-mapper-path.png \

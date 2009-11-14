@@ -66,6 +66,7 @@ void map_controller_activate_menu_settings(MapController *self);
 void map_controller_action_point(MapController *self);
 void map_controller_action_route(MapController *self);
 void map_controller_action_track(MapController *self);
+void map_controller_action_go_to(MapController *self);
 
 void map_controller_activate_menu_point(MapController *self, gint x, gint y);
 

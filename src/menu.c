@@ -2238,3 +2238,46 @@ map_menu_track()
     }
 }
 
+void
+map_menu_go_to()
+{
+    GtkWidget *dialog;
+    MapController *controller;
+    MapDialog *dlg;
+    gint response;
+    enum {
+        GO_TO_LATLON,
+        GO_TO_ADDRESS,
+        GO_TO_GPS,
+        GO_TO_WAYPOINT,
+        GO_TO_POI,
+    };
+
+    controller = map_controller_get_instance();
+    dialog = map_dialog_new(_("Go to"),
+                            map_controller_get_main_window(controller),
+                            TRUE);
+    dlg = (MapDialog *)dialog;
+
+    map_dialog_create_button(dlg, _("Lat/Lon..."), GO_TO_LATLON);
+    map_dialog_create_button(dlg, _("Address..."), GO_TO_ADDRESS);
+    map_dialog_create_button(dlg, _("GPS Location"), GO_TO_GPS);
+    map_dialog_create_button(dlg, _("Next Waypoint"), GO_TO_WAYPOINT);
+    map_dialog_create_button(dlg, _("Nearest POI"), GO_TO_POI);
+
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    switch (response) {
+    case GO_TO_LATLON:
+        menu_cb_view_goto_latlon(NULL); break;
+    case GO_TO_ADDRESS:
+        menu_cb_view_goto_address(NULL); break;
+    case GO_TO_GPS:
+        menu_cb_view_goto_gps(NULL); break;
+    case GO_TO_WAYPOINT:
+        menu_cb_view_goto_nextway(NULL); break;
+    case GO_TO_POI:
+        menu_cb_view_goto_nearpoi(NULL); break;
+    }
+}
+

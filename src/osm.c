@@ -68,7 +68,7 @@ struct _MapOsmPrivate
             ClutterActor *point;
             ClutterActor *path;
             ClutterActor *route;
-            ClutterActor *btn3;
+            ClutterActor *go_to;
             /* column 2 */
             ClutterActor *zoom_in;
             ClutterActor *zoom_out;
@@ -96,7 +96,7 @@ static const gchar *btn_icons[N_BUTTONS] = {
     "maemo-mapper-point",
     "maemo-mapper-path",
     "maemo-mapper-route",
-    NULL,
+    "maemo-mapper-go-to",
     /* column 2 */
     "maemo-mapper-zoom-in",
     "maemo-mapper-zoom-out",
@@ -157,6 +157,13 @@ static gboolean
 wrap_action_route(MapController *controller)
 {
     map_controller_action_route(controller);
+    return TRUE;
+}
+
+static gboolean
+wrap_action_go_to(MapController *controller)
+{
+    map_controller_action_go_to(controller);
     return TRUE;
 }
 
@@ -244,6 +251,8 @@ map_osm_constructed(GObject *object)
                              G_CALLBACK(wrap_action_track), controller);
     g_signal_connect_swapped(priv->btn.n.route, "button-release-event",
                              G_CALLBACK(wrap_action_route), controller);
+    g_signal_connect_swapped(priv->btn.n.go_to, "button-release-event",
+                             G_CALLBACK(wrap_action_go_to), controller);
     g_signal_connect(priv->btn.n.gps_toggle, "button-release-event",
                      G_CALLBACK(on_gps_toggled), object);
 
