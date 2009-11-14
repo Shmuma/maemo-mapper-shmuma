@@ -31,15 +31,22 @@
 #define HIDE_TIMEOUT    5
 
 /* number of buttons per column */
-#define N_BUTTONS_COLUMN   5
+#define N_BUTTONS_COLUMN   4
+
+/* number of buttons on the bottom row */
+#define N_BUTTONS_BOTTOM    2
 
 /* total number of buttons: 2 columns */
-#define N_BUTTONS   (N_BUTTONS_COLUMN * 2)
+#define N_BUTTONS   (N_BUTTONS_COLUMN * 2 + N_BUTTONS_BOTTOM)
+
+/* button indices */
+#define IDX_BUTTON0_BOTTOM  (N_BUTTONS_COLUMN * 2)
 
 #define BUTTON_SIZE_X   72
 #define BUTTON_SIZE_Y   72
 #define BUTTON_BORDER_OFFSET    8
-#define BUTTON_X_POS    ((BUTTON_SIZE_X / 2) + BUTTON_BORDER_OFFSET)
+#define BUTTON_X_OFFSET ((BUTTON_SIZE_X / 2) + BUTTON_BORDER_OFFSET)
+#define BUTTON_Y_OFFSET ((BUTTON_SIZE_Y / 2) + BUTTON_BORDER_OFFSET)
 
 enum
 {
@@ -57,16 +64,19 @@ struct _MapOsmPrivate
         ClutterActor *v[N_BUTTONS];
         struct {
             /* this must be kept in sync with the btn_icons array */
-            ClutterActor *settings;
+            /* column 1 */
             ClutterActor *point;
             ClutterActor *path;
             ClutterActor *route;
-            ClutterActor *gps_toggle;
+            ClutterActor *btn3;
+            /* column 2 */
             ClutterActor *zoom_in;
             ClutterActor *zoom_out;
             ClutterActor *rotate;
             ClutterActor *fullscreen;
-            ClutterActor *btn9;
+            /* bottom row */
+            ClutterActor *settings;
+            ClutterActor *gps_toggle;
         } n;
     } btn;
 
@@ -82,16 +92,19 @@ G_DEFINE_TYPE(MapOsm, map_osm, CLUTTER_TYPE_GROUP);
 #define MAP_OSM_PRIV(osm) (MAP_OSM(osm)->priv)
 
 static const gchar *btn_icons[N_BUTTONS] = {
-    "maemo-mapper-settings",
+    /* column 1 */
     "maemo-mapper-point",
     "maemo-mapper-path",
     "maemo-mapper-route",
-    "maemo-mapper-gps-disable",
+    NULL,
+    /* column 2 */
     "maemo-mapper-zoom-in",
     "maemo-mapper-zoom-out",
     "maemo-mapper-rotate",
     "maemo-mapper-fullscreen",
-    NULL,
+    /* bottom row */
+    "maemo-mapper-settings",
+    "maemo-mapper-gps-disable",
 };
 
 static gboolean
@@ -319,21 +332,21 @@ map_osm_set_screen_size(MapOsm *self, gint width, gint height)
 {
     MapOsmPrivate *priv;
     ClutterActor *button;
-    gint col, i, x, y, dy;
+    gint col, i, x, y, dy, dx;
 
     g_return_if_fail(MAP_IS_OSM(self));
     priv = self->priv;
 
     /* lay out the buttons according to the new screen size */
     dy = height / N_BUTTONS_COLUMN;
-    x = BUTTON_X_POS;
+    x = BUTTON_X_OFFSET;
     for (col = 0; col < 2; col++)
     {
         y = dy / 2;
 
         if (col == 1)
         {
-            x = width - BUTTON_X_POS;
+            x = width - BUTTON_X_OFFSET;
         }
 
         for (i = 0; i < N_BUTTONS_COLUMN; i++)
@@ -344,6 +357,19 @@ map_osm_set_screen_size(MapOsm *self, gint width, gint height)
             clutter_actor_set_position(button, x, y);
             y += dy;
         }
+    }
+
+    /* bottom row */
+    y = height - BUTTON_Y_OFFSET;
+    dx = dy; /* keep the same distance that we used for columns */
+    x = (width - dx * (N_BUTTONS_BOTTOM - 1)) / 2;
+    for (i = 0; i < N_BUTTONS_BOTTOM; i++)
+    {
+        button = priv->btn.v[IDX_BUTTON0_BOTTOM + i];
+        if (!button) continue;
+
+        clutter_actor_set_position(button, x, y);
+        x += dx;
     }
 }
 
