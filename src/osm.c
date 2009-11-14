@@ -30,8 +30,12 @@
 /* seconds to wait before hiding the menu */
 #define HIDE_TIMEOUT    5
 
-/* number of buttons per row */
-#define N_BUTTONS_ROW   5
+/* number of buttons per column */
+#define N_BUTTONS_COLUMN   5
+
+/* total number of buttons: 2 columns */
+#define N_BUTTONS   (N_BUTTONS_COLUMN * 2)
+
 #define BUTTON_SIZE_X   72
 #define BUTTON_SIZE_Y   72
 #define BUTTON_BORDER_OFFSET    8
@@ -48,9 +52,9 @@ struct _MapOsmPrivate
     /* widget used for loading the icons */
     GtkWidget *widget;
 
-    /* the two rows of buttons, accessible in a vector or by name */
+    /* the two columns of buttons, accessible in a vector or by name */
     union {
-        ClutterActor *v[N_BUTTONS_ROW * 2];
+        ClutterActor *v[N_BUTTONS];
         struct {
             /* this must be kept in sync with the btn_icons array */
             ClutterActor *settings;
@@ -77,7 +81,7 @@ G_DEFINE_TYPE(MapOsm, map_osm, CLUTTER_TYPE_GROUP);
 
 #define MAP_OSM_PRIV(osm) (MAP_OSM(osm)->priv)
 
-static const gchar *btn_icons[N_BUTTONS_ROW * 2] = {
+static const gchar *btn_icons[N_BUTTONS] = {
     "maemo-mapper-settings",
     "maemo-mapper-point",
     "maemo-mapper-path",
@@ -176,7 +180,7 @@ map_osm_constructed(GObject *object)
     icon_theme = gtk_icon_theme_get_default();
 
     /* add the buttons to the OSM */
-    for (i = 0; i < N_BUTTONS_ROW * 2; i++)
+    for (i = 0; i < N_BUTTONS; i++)
     {
         GdkPixbuf *pixbuf;
 
@@ -315,26 +319,26 @@ map_osm_set_screen_size(MapOsm *self, gint width, gint height)
 {
     MapOsmPrivate *priv;
     ClutterActor *button;
-    gint row, i, x, y, dy;
+    gint col, i, x, y, dy;
 
     g_return_if_fail(MAP_IS_OSM(self));
     priv = self->priv;
 
     /* lay out the buttons according to the new screen size */
-    dy = height / N_BUTTONS_ROW;
+    dy = height / N_BUTTONS_COLUMN;
     x = BUTTON_X_POS;
-    for (row = 0; row < 2; row++)
+    for (col = 0; col < 2; col++)
     {
         y = dy / 2;
 
-        if (row == 1)
+        if (col == 1)
         {
             x = width - BUTTON_X_POS;
         }
 
-        for (i = 0; i < N_BUTTONS_ROW; i++)
+        for (i = 0; i < N_BUTTONS_COLUMN; i++)
         {
-            button = priv->btn.v[row * N_BUTTONS_ROW + i];
+            button = priv->btn.v[col * N_BUTTONS_COLUMN + i];
             if (!button) continue;
 
             clutter_actor_set_position(button, x, y);
