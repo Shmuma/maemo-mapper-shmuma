@@ -25,6 +25,7 @@
 
 #include "controller.h"
 #include "defines.h"
+#include "menu.h"
 #include <clutter-gtk/clutter-gtk.h>
 
 /* seconds to wait before hiding the menu */
@@ -140,6 +141,13 @@ enable_hide_on_timeout(MapOsm *self, gboolean hide_on_timeout)
 }
 
 static gboolean
+wrap_action_view(MapController *controller)
+{
+    map_menu_view();
+    return TRUE;
+}
+
+static gboolean
 wrap_action_point(MapController *controller)
 {
     map_controller_action_point(controller);
@@ -243,8 +251,7 @@ map_osm_constructed(GObject *object)
                              G_CALLBACK(map_controller_switch_fullscreen),
                              controller);
     g_signal_connect_swapped(priv->btn.n.settings, "button-press-event",
-                             G_CALLBACK(map_controller_activate_menu_settings),
-                             controller);
+                             G_CALLBACK(wrap_action_view), controller);
     g_signal_connect_swapped(priv->btn.n.point, "button-release-event",
                              G_CALLBACK(wrap_action_point), controller);
     g_signal_connect_swapped(priv->btn.n.path, "button-release-event",

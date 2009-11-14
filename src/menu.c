@@ -59,6 +59,8 @@
 #include "settings.h"
 #include "util.h"
 
+#include <hildon/hildon-picker-button.h>
+
 /****************************************************************************
  * BELOW: ROUTE MENU ********************************************************
  ****************************************************************************/
@@ -2279,5 +2281,79 @@ map_menu_go_to()
     case GO_TO_POI:
         menu_cb_view_goto_nearpoi(NULL); break;
     }
+}
+
+void
+map_menu_view()
+{
+    GtkWidget *dialog;
+    GtkWindow *parent;
+    MapController *controller;
+    GtkBox *vbox;
+    HildonTouchSelector *selector;
+    GtkWidget *auto_rotate;
+    GtkWidget *auto_center;
+    gint auto_center_value;
+
+    controller = map_controller_get_instance();
+    parent = map_controller_get_main_window(controller);
+    dialog = gtk_dialog_new_with_buttons(_("View"), parent, GTK_DIALOG_MODAL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
+                                         NULL);
+
+    vbox = GTK_BOX(GTK_DIALOG(dialog)->vbox);
+
+    /* Auto center */
+    selector = HILDON_TOUCH_SELECTOR (hildon_touch_selector_new_text());
+    hildon_touch_selector_append_text(selector, _("Lat/Lon"));
+    hildon_touch_selector_append_text(selector, _("Lead"));
+    hildon_touch_selector_append_text(selector, _("None"));
+    auto_center =
+        g_object_new(HILDON_TYPE_PICKER_BUTTON,
+                     "arrangement", HILDON_BUTTON_ARRANGEMENT_HORIZONTAL,
+                     "size", HILDON_SIZE_FINGER_HEIGHT,
+                     "title", _("Auto-Center"),
+                     "touch-selector", selector,
+                     "xalign", 0.0,
+                     NULL);
+    gtk_box_pack_start(GTK_BOX(vbox), auto_center, FALSE, TRUE, 0);
+
+    if (_center_mode == CENTER_LATLON)
+        auto_center_value = 0;
+    else if (_center_mode == CENTER_LEAD)
+        auto_center_value = 1;
+    else
+        auto_center_value = 2;
+
+    hildon_picker_button_set_active(HILDON_PICKER_BUTTON(auto_center),
+                                    auto_center_value);
+
+    /* Auto rotation */
+    auto_rotate = gtk_toggle_button_new_with_label(_("Auto-Rotate"));
+    hildon_gtk_widget_set_theme_size(auto_rotate, HILDON_SIZE_FINGER_HEIGHT);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(auto_rotate),
+                                 _center_rotate);
+    gtk_box_pack_start(GTK_BOX(vbox), auto_rotate, FALSE, TRUE, 0);
+
+    gtk_widget_show_all(dialog);
+
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        auto_center_value =
+            hildon_picker_button_get_active(HILDON_PICKER_BUTTON(auto_center));
+        if (auto_center_value == 0)
+            _center_mode = CENTER_LATLON;
+        else if (auto_center_value == 1)
+            _center_mode = CENTER_LEAD;
+        else
+            _center_mode = 0;
+
+        _center_rotate =
+            gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(auto_rotate));
+
+        if (_center_mode > 0)
+            map_refresh_mark(TRUE);
+    }
+    gtk_widget_destroy(dialog);
 }
 
