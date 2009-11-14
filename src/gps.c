@@ -102,6 +102,9 @@ on_gps_changed(LocationGPSDevice *device)
 {
     gboolean newly_fixed = FALSE;
 
+    /* ignore any signals arriving while gps is disabled */
+    if (!_enable_gps) return;
+
     /* We consider a fix only if the geocoordinates are given, and if the
      * precision is below 10 km (TODO: this should be a configuration option).
      * The precision is eph, and is measured in centimetres. */
