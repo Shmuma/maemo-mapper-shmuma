@@ -26,6 +26,8 @@
 #include "cmenu.h"
 #include "data.h"
 #include "defines.h"
+#include "display.h"
+#include "gps.h"
 #include "menu.h"
 #include "screen.h"
 
@@ -166,5 +168,25 @@ map_controller_activate_menu_point(MapController *self, gint x, gint y)
     p.unity = y;
     map_screen_get_tap_area_from_units(self->priv->screen, x, y, &area);
     map_menu_point(&p, &area);
+}
+
+void
+map_controller_set_gps_enabled(MapController *self, gboolean enabled)
+{
+    _enable_gps = enabled;
+
+    if (enabled)
+        rcvr_connect();
+    else
+        rcvr_disconnect();
+
+    map_move_mark();
+    gps_show_info();
+}
+
+gboolean
+map_controller_get_gps_enabled(MapController *self)
+{
+    return _enable_gps;
 }
 

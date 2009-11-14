@@ -31,7 +31,7 @@
 #define HIDE_TIMEOUT    5
 
 /* number of buttons per row */
-#define N_BUTTONS_ROW   4
+#define N_BUTTONS_ROW   5
 #define BUTTON_SIZE_X   72
 #define BUTTON_SIZE_Y   72
 #define BUTTON_BORDER_OFFSET    8
@@ -57,12 +57,16 @@ struct _MapOsmPrivate
             ClutterActor *point;
             ClutterActor *path;
             ClutterActor *route;
+            ClutterActor *gps_toggle;
             ClutterActor *zoom_in;
             ClutterActor *zoom_out;
             ClutterActor *rotate;
             ClutterActor *fullscreen;
+            ClutterActor *btn9;
         } n;
     } btn;
+
+    GdkPixbuf *gps_enable, *gps_disable;
 
     guint id_hide_timeout;
 
@@ -78,10 +82,12 @@ static const gchar *btn_icons[N_BUTTONS_ROW * 2] = {
     "maemo-mapper-point",
     "maemo-mapper-path",
     "maemo-mapper-route",
+    "maemo-mapper-gps-disable",
     "maemo-mapper-zoom-in",
     "maemo-mapper-zoom-out",
     "maemo-mapper-rotate",
     "maemo-mapper-fullscreen",
+    NULL,
 };
 
 static gboolean
@@ -137,6 +143,21 @@ wrap_action_route(MapController *controller)
     return TRUE;
 }
 
+static gboolean
+on_gps_toggled(ClutterTexture *button, ClutterButtonEvent *event, MapOsm *self)
+{
+    MapController *controller;
+    gboolean enabled;
+
+    controller = map_controller_get_instance();
+    enabled = map_controller_get_gps_enabled(controller);
+    enabled = !enabled;
+    map_controller_set_gps_enabled(controller, enabled);
+    gtk_clutter_texture_set_from_pixbuf(button,
+        enabled ? self->priv->gps_disable : self->priv->gps_enable, NULL);
+    return TRUE;
+}
+
 static void
 map_osm_constructed(GObject *object)
 {
@@ -145,14 +166,31 @@ map_osm_constructed(GObject *object)
     ClutterContainer *container = CLUTTER_CONTAINER(object);
     MapController *controller;
     ClutterActor *button;
+    GtkSettings *settings;
+    GtkIconTheme *icon_theme;
     gint i;
+
+    controller = map_controller_get_instance();
+
+    settings = gtk_settings_get_default();
+    icon_theme = gtk_icon_theme_get_default();
 
     /* add the buttons to the OSM */
     for (i = 0; i < N_BUTTONS_ROW * 2; i++)
     {
+        GdkPixbuf *pixbuf;
+
         if (!btn_icons[i]) continue;
-        button = gtk_clutter_texture_new_from_icon_name(priv->widget,
-                                                        btn_icons[i], -1);
+
+        pixbuf = gtk_icon_theme_load_icon(icon_theme,
+                                          btn_icons[i], 72, 0, NULL);
+        if (!pixbuf)
+        {
+            g_warning("Missing icon %s", btn_icons[i]);
+            continue;
+        }
+
+        button = gtk_clutter_texture_new_from_pixbuf(pixbuf);
         priv->btn.v[i] = button;
         clutter_actor_set_anchor_point(button,
                                        BUTTON_SIZE_X / 2,
@@ -161,8 +199,18 @@ map_osm_constructed(GObject *object)
         clutter_container_add_actor(container, button);
     }
 
+    /* load the icons for the GPS toggle */
+    priv->gps_disable = gtk_icon_theme_load_icon(icon_theme,
+                                                 "maemo-mapper-gps-disable",
+                                                 72, 0, NULL);
+    priv->gps_enable = gtk_icon_theme_load_icon(icon_theme,
+                                                "maemo-mapper-gps-enable",
+                                                72, 0, NULL);
+    gtk_clutter_texture_set_from_pixbuf(CLUTTER_TEXTURE(priv->btn.n.gps_toggle),
+        map_controller_get_gps_enabled(controller) ?
+        priv->gps_disable : priv->gps_enable, NULL);
+
     /* Connect signals */
-    controller = map_controller_get_instance();
     g_signal_connect_swapped(priv->btn.n.zoom_in, "button-press-event",
                              G_CALLBACK(map_controller_zoom_in), controller);
     g_signal_connect_swapped(priv->btn.n.zoom_out, "button-press-event",
@@ -179,6 +227,8 @@ map_osm_constructed(GObject *object)
                              G_CALLBACK(wrap_action_track), controller);
     g_signal_connect_swapped(priv->btn.n.route, "button-release-event",
                              G_CALLBACK(wrap_action_route), controller);
+    g_signal_connect(priv->btn.n.gps_toggle, "button-release-event",
+                     G_CALLBACK(on_gps_toggled), object);
 
     constructed = G_OBJECT_CLASS(map_osm_parent_class)->constructed;
     if (constructed != NULL)

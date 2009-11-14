@@ -69,5 +69,8 @@ void map_controller_action_track(MapController *self);
 
 void map_controller_activate_menu_point(MapController *self, gint x, gint y);
 
+void map_controller_set_gps_enabled(MapController *self, gboolean enabled);
+gboolean map_controller_get_gps_enabled(MapController *self);
+
 G_END_DECLS
 #endif /* MAP_CONTROLLER_H */
