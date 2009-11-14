@@ -46,6 +46,7 @@
 #include "types.h"
 #include "data.h"
 #include "defines.h"
+#include "dialog.h"
 
 #include "gps.h"
 #include "display.h"
@@ -771,7 +772,7 @@ settings_dialog_hardkeys_reset(GtkWidget *widget, KeysDialogInfo *cdi)
 }
 
 static gboolean
-settings_dialog_hardkeys(GtkWidget *widget, GtkWidget *parent)
+settings_dialog_hardkeys(GtkWindow *parent)
 {
     gint i;
     static GtkWidget *dialog = NULL;
@@ -784,7 +785,7 @@ settings_dialog_hardkeys(GtkWidget *widget, GtkWidget *parent)
     if(dialog == NULL)
     {
         dialog = gtk_dialog_new_with_buttons(_("Hardware Keys"),
-                GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+                parent, GTK_DIALOG_MODAL,
                 GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                 NULL);
 
@@ -888,7 +889,7 @@ settings_dialog_colors_reset(GtkWidget *widget, ColorsDialogInfo *cdi)
 }
 
 static gboolean
-settings_dialog_colors(GtkWidget *widget, GtkWidget *parent)
+settings_dialog_colors(GtkWindow *parent)
 {
     static GtkWidget *dialog = NULL;
     static GtkWidget *table = NULL;
@@ -900,7 +901,7 @@ settings_dialog_colors(GtkWidget *widget, GtkWidget *parent)
     if(dialog == NULL)
     {
         dialog = gtk_dialog_new_with_buttons(_("Colors"),
-                GTK_WINDOW(parent), GTK_DIALOG_MODAL,
+                parent, GTK_DIALOG_MODAL,
                 GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                 NULL);
 
@@ -1747,74 +1748,63 @@ run_poi_dialog(GtkWindow *parent)
 gboolean settings_dialog()
 {
     static GtkWidget *dialog = NULL;
-    GtkWidget *hbox, *vbox;
-    GtkWidget *button;
+    GtkWindow *parent;
+    gint response;
+    gboolean quit;
+    enum {
+        SETTINGS_AUTO_CENTER,
+        SETTINGS_ANNOUNCE,
+        SETTINGS_MISC,
+        SETTINGS_POI,
+        SETTINGS_KEYS,
+        SETTINGS_COLORS,
+    };
 
     if(dialog == NULL)
     {
-        dialog = gtk_dialog_new_with_buttons(_("Settings"),
-                GTK_WINDOW(_window), GTK_DIALOG_MODAL,
-                NULL);
+        MapDialog *dlg;
 
-        hbox = gtk_hbox_new(TRUE, 0);
-        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
-                           hbox, TRUE, TRUE, 0);
-
-        vbox = gtk_vbox_new(TRUE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, TRUE, 0);
+        dialog = map_dialog_new(_("Settings"), GTK_WINDOW(_window), FALSE);
+        dlg = (MapDialog *)dialog;
 
         /* Auto-Center page. */
-        button = gtk_button_new_with_label(_("Auto-Center"));
-        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
-        g_signal_connect_swapped(button, "clicked",
-                                 G_CALLBACK(run_auto_center_dialog), dialog);
-        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
-
-
-        /* Announcement. */
-        button = gtk_button_new_with_label(_("Announce"));
-        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
-        g_signal_connect_swapped(button, "clicked",
-                                 G_CALLBACK(run_announce_dialog), dialog);
-        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
-
-        /* Misc. page. */
-        button = gtk_button_new_with_label(_("Misc."));
-        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
-        g_signal_connect_swapped(button, "clicked",
-                                 G_CALLBACK(run_misc_dialog), dialog);
-        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
-
-        /* second column */
-        vbox = gtk_vbox_new(TRUE, 0);
-        gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, TRUE, 0);
-
-        /* POI page */
-        button = gtk_button_new_with_label(_("POI"));
-        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
-        g_signal_connect_swapped(button, "clicked",
-                                 G_CALLBACK(run_poi_dialog), dialog);
-        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
-
-        /* Hardware keys */
-        button = gtk_button_new_with_label(_("Hardware Keys..."));
-        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
-        g_signal_connect(G_OBJECT(button), "clicked",
-                         G_CALLBACK(settings_dialog_hardkeys), dialog);
-        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
-
-        /* Colors */
-        button = gtk_button_new_with_label(_("Colors..."));
-        hildon_gtk_widget_set_theme_size (button, HILDON_SIZE_FINGER_HEIGHT);
-        g_signal_connect(G_OBJECT(button), "clicked",
-                         G_CALLBACK(settings_dialog_colors), dialog);
-        gtk_box_pack_start(GTK_BOX(vbox), button, TRUE, TRUE, 0);
+        map_dialog_create_button(dlg, _("Auto-Center"), SETTINGS_AUTO_CENTER);
+        map_dialog_create_button(dlg, _("Announce"), SETTINGS_ANNOUNCE);
+        map_dialog_create_button(dlg, _("Misc."), SETTINGS_MISC);
+        map_dialog_create_button(dlg, _("POI"), SETTINGS_POI);
+        map_dialog_create_button(dlg, _("Hardware Keys..."), SETTINGS_KEYS);
+        map_dialog_create_button(dlg, _("Colors..."), SETTINGS_COLORS);
     }
 
     gtk_widget_show_all(dialog);
 
     settings_dialog_set_save(dialog, FALSE);
-    gtk_dialog_run(GTK_DIALOG(dialog));
+    quit = FALSE;
+    parent = GTK_WINDOW(dialog);
+    do
+    {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case SETTINGS_AUTO_CENTER:
+                run_auto_center_dialog(parent); break;
+            case SETTINGS_ANNOUNCE:
+                run_announce_dialog(parent); break;
+            case SETTINGS_MISC:
+                run_misc_dialog(parent); break;
+            case SETTINGS_POI:
+                run_poi_dialog(parent); break;
+            case SETTINGS_KEYS:
+                settings_dialog_hardkeys(parent); break;
+            case SETTINGS_COLORS:
+                settings_dialog_colors(parent); break;
+            default:
+                quit = TRUE;
+        }
+    }
+    while (!quit);
+
+    gtk_widget_hide(dialog);
+
     if (settings_dialog_get_save(dialog))
     {
         update_gcs();
@@ -1825,7 +1815,6 @@ gboolean settings_dialog()
         map_refresh_mark(TRUE);
     }
 
-    gtk_widget_hide(dialog);
     return FALSE;
 }
 
