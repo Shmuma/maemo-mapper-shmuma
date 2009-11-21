@@ -295,7 +295,8 @@ static void map_cache_entry_make_pixbuf(MapCacheEntry *_entry){
         GdkPixbufLoader *loader;
         error = NULL;
         loader = gdk_pixbuf_loader_new();
-        gdk_pixbuf_loader_write(loader, _entry->data, _entry->data_sz, NULL);
+        gdk_pixbuf_loader_write(loader,
+                                (guchar *)_entry->data, _entry->data_sz, NULL);
         gdk_pixbuf_loader_close(loader, &error);
         if(!error)
         {
@@ -1387,7 +1388,7 @@ thread_proc_mut()
 
             /* Attempt to parse the bytes into a pixbuf. */
             loader = gdk_pixbuf_loader_new();
-            gdk_pixbuf_loader_write(loader, bytes, size, NULL);
+            gdk_pixbuf_loader_write(loader, (guchar *)bytes, size, NULL);
             gdk_pixbuf_loader_close(loader, &error);
             if(error || (NULL == (mut->pixbuf = g_object_ref(
                         gdk_pixbuf_loader_get_pixbuf(loader)))))

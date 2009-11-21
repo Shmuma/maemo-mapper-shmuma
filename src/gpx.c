@@ -272,8 +272,8 @@ gpx_path_start_element(PathSaxData *data,
                 has_lon = FALSE;
                 for(curr_attr = attrs; *curr_attr != NULL; )
                 {
-                    const gchar *attr_name = *curr_attr++;
-                    const gchar *attr_val = *curr_attr++;
+                    const gchar *attr_name = (const gchar *)*curr_attr++;
+                    const gchar *attr_val = (const gchar *)*curr_attr++;
                     if(!strcmp(attr_name, "lat"))
                     {
                         lat = g_ascii_strtod(attr_val, &error_check);
@@ -784,8 +784,8 @@ gpx_poi_start_element(PoiSaxData *data,
                 /* Parse the attributes - there should be lat and lon. */
                 for(curr_attr = attrs; *curr_attr != NULL; )
                 {
-                    const gchar *attr_name = *curr_attr++;
-                    const gchar *attr_val = *curr_attr++;
+                    const gchar *attr_name = (const gchar *)*curr_attr++;
+                    const gchar *attr_val = (const gchar *)*curr_attr++;
                     if(!strcmp(attr_name, "lat"))
                     {
                         lat = g_ascii_strtod(attr_val, &error_check);

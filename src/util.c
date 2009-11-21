@@ -334,7 +334,7 @@ strdmstod_1(gdouble *d, gchar *nptr, gchar **endptr, gchar *sep, gint utf8_deg)
     gint v_flag, f_flag;
     gdouble v;
 
-    p = nptr;
+    p = (guchar *)nptr;
 
     while (*p && isspace(*p)) {
         p++;
@@ -381,11 +381,11 @@ strdmstod_1(gdouble *d, gchar *nptr, gchar **endptr, gchar *sep, gint utf8_deg)
         }
 
         *d = v;
-        if (endptr) *endptr = p;
+        if (endptr) *endptr = (gchar *)p;
         return f_flag ? 2 : 3;
     }
 
-    if (endptr) *endptr = p;
+    if (endptr) *endptr = (gchar *)p;
     return *p == 0;
 }
 
@@ -393,7 +393,7 @@ static gdouble
 strdmstod_2(gchar *nptr, gchar **endptr)
 {
     gint ret;
-    guchar *p;
+    gchar *p;
     gdouble d, m, s;
 
     p = nptr;
