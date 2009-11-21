@@ -81,5 +81,29 @@ void map_controller_disable_auto_center(MapController *self);
 void map_controller_set_auto_rotate(MapController *self, gboolean enable);
 gboolean map_controller_get_auto_rotate(MapController *self);
 
+void map_controller_set_tracking(MapController *self, gboolean enable);
+gboolean map_controller_get_tracking(MapController *self);
+
+void map_controller_set_show_compass(MapController *self, gboolean show);
+gboolean map_controller_get_show_compass(MapController *self);
+
+void map_controller_set_show_routes(MapController *self, gboolean show);
+gboolean map_controller_get_show_routes(MapController *self);
+
+void map_controller_set_show_tracks(MapController *self, gboolean show);
+gboolean map_controller_get_show_tracks(MapController *self);
+
+void map_controller_set_show_scale(MapController *self, gboolean show);
+gboolean map_controller_get_show_scale(MapController *self);
+
+void map_controller_set_show_poi(MapController *self, gboolean show);
+gboolean map_controller_get_show_poi(MapController *self);
+
+void map_controller_set_show_velocity(MapController *self, gboolean show);
+gboolean map_controller_get_show_velocity(MapController *self);
+
+void map_controller_set_show_zoom(MapController *self, gboolean show);
+gboolean map_controller_get_show_zoom(MapController *self);
+
 G_END_DECLS
 #endif /* MAP_CONTROLLER_H */

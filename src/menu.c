@@ -414,9 +414,12 @@ menu_cb_track_enable_tracking(GtkCheckMenuItem *item)
 static void
 on_enable_tracking_toggled(GtkToggleButton *button)
 {
+    MapController *controller;
     GtkWidget *dialog;
 
-    track_enable_tracking(gtk_toggle_button_get_active(button));
+    controller = map_controller_get_instance();
+    map_controller_set_tracking(controller,
+                                gtk_toggle_button_get_active(button));
 
     /* close the dialog */
     dialog = gtk_widget_get_toplevel((GtkWidget *)button);

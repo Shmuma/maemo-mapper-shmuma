@@ -279,13 +279,11 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
             {
                 case CENTER_LATLON:
                 case CENTER_WAS_LEAD:
-                    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                                _menu_view_ac_lead_item), TRUE);
+                    map_controller_set_center_mode(controller, CENTER_LEAD);
                     break;
                 case CENTER_LEAD:
                 case CENTER_WAS_LATLON:
-                    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                                _menu_view_ac_latlon_item), TRUE);
+                    map_controller_set_center_mode(controller, CENTER_LATLON);
                     break;
             }
             break;
@@ -320,14 +318,12 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
             break;
 
         case CUSTOM_ACTION_TOGGLE_FULLSCREEN:
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                        _menu_view_fullscreen_item), !_fullscreen);
+            map_controller_switch_fullscreen(controller);
             break;
 
         case CUSTOM_ACTION_TOGGLE_TRACKING:
-            gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_track_enable_tracking_item),
-                    !_enable_tracking);
+            map_controller_set_tracking(controller,
+                !map_controller_get_tracking(controller));
             break;
 
         case CUSTOM_ACTION_TOGGLE_TRACKS:
@@ -350,24 +346,20 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
                      * clear. */
                     _show_paths = _show_paths << 16;
             }
-            gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_view_show_routes_item),
-                    _show_paths & ROUTES_MASK);
+            map_controller_set_show_routes(controller,
+                                           _show_paths & ROUTES_MASK);
 
-            gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_view_show_tracks_item),
-                    _show_paths & TRACKS_MASK);
+            map_controller_set_show_tracks(controller,
+                                           _show_paths & TRACKS_MASK);
 
         case CUSTOM_ACTION_TOGGLE_SCALE:
-            gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_view_show_scale_item),
-                    !_show_scale);
+            map_controller_set_show_scale(controller,
+                !map_controller_get_show_scale(controller));
             break;
 
         case CUSTOM_ACTION_TOGGLE_POI:
-            gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_view_show_poi_item),
-                    !_show_poi);
+            map_controller_set_show_poi(controller,
+                !map_controller_get_show_poi(controller));
             break;
         case CUSTOM_ACTION_CHANGE_REPO: {
             GList *curr = g_list_find(_repo_list, _curr_repo);

@@ -29,6 +29,7 @@
 #include "display.h"
 #include "gps.h"
 #include "menu.h"
+#include "path.h"
 #include "screen.h"
 
 #include <hildon/hildon-banner.h>
@@ -127,8 +128,15 @@ void
 map_controller_switch_fullscreen(MapController *self)
 {
     g_return_if_fail(MAP_IS_CONTROLLER(self));
-    gtk_check_menu_item_set_active
-        (GTK_CHECK_MENU_ITEM(_menu_view_fullscreen_item), !_fullscreen);
+
+    _fullscreen = !_fullscreen;
+
+    if(_fullscreen)
+        gtk_window_fullscreen(GTK_WINDOW(_window));
+    else
+        gtk_window_unfullscreen(GTK_WINDOW(_window));
+
+    g_idle_add((GSourceFunc)window_present, NULL);
 }
 
 void
@@ -243,5 +251,196 @@ map_controller_get_auto_rotate(MapController *self)
 {
     g_return_val_if_fail(MAP_IS_CONTROLLER(self), FALSE);
     return _center_rotate;
+}
+
+void
+map_controller_set_tracking(MapController *self, gboolean enable)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    if (enable == _enable_tracking) return;
+
+    if (enable)
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("Tracking Enabled"));
+    }
+    else
+    {
+        track_insert_break(FALSE); /* FALSE = not temporary */
+        MACRO_BANNER_SHOW_INFO(_window, _("Tracking Disabled"));
+    }
+
+    _enable_tracking = enable;
+}
+
+gboolean
+map_controller_get_tracking(MapController *self)
+{
+    g_return_val_if_fail(MAP_IS_CONTROLLER(self), FALSE);
+    return _center_rotate;
+}
+
+void
+map_controller_set_show_compass(MapController *self, gboolean show)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    if (_show_comprose == show) return;
+
+    _show_comprose = show;
+    map_screen_show_compass(self->priv->screen, _show_comprose);
+    map_force_redraw();
+}
+
+gboolean
+map_controller_get_show_compass(MapController *self)
+{
+    g_return_val_if_fail(MAP_IS_CONTROLLER(self), FALSE);
+
+    return _show_comprose;
+}
+
+void
+map_controller_set_show_routes(MapController *self, gboolean show)
+{
+    gboolean current;
+
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    current = _show_paths & ROUTES_MASK;
+    if (show == !!current) return;
+
+    if (show)
+    {
+        _show_paths |= ROUTES_MASK;
+        map_render_paths();
+        MACRO_QUEUE_DRAW_AREA();
+        MACRO_BANNER_SHOW_INFO(_window, _("Routes are now shown"));
+    }
+    else
+    {
+        _show_paths &= ~ROUTES_MASK;
+        map_force_redraw();
+        MACRO_BANNER_SHOW_INFO(_window, _("Routes are now hidden"));
+    }
+}
+
+gboolean
+map_controller_get_show_routes(MapController *self)
+{
+    g_return_val_if_fail(MAP_IS_CONTROLLER(self), FALSE);
+
+    return _show_paths & ROUTES_MASK;
+}
+
+void
+map_controller_set_show_tracks(MapController *self, gboolean show)
+{
+    gboolean current;
+
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    current = _show_paths & TRACKS_MASK;
+    if (show == !!current) return;
+
+    if (show)
+    {
+        _show_paths |= TRACKS_MASK;
+        map_render_paths();
+        MACRO_QUEUE_DRAW_AREA();
+        MACRO_BANNER_SHOW_INFO(_window, _("Tracks are now shown"));
+    }
+    else
+    {
+        _show_paths &= ~TRACKS_MASK;
+        map_force_redraw();
+        MACRO_BANNER_SHOW_INFO(_window, _("Tracks are now hidden"));
+    }
+}
+
+gboolean
+map_controller_get_show_tracks(MapController *self)
+{
+    g_return_val_if_fail(MAP_IS_CONTROLLER(self), FALSE);
+
+    return _show_paths & TRACKS_MASK;
+}
+
+void
+map_controller_set_show_scale(MapController *self, gboolean show)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    if (_show_scale == show) return;
+
+    _show_scale = show;
+    map_screen_show_scale(self->priv->screen, _show_scale);
+    map_force_redraw();
+}
+
+gboolean
+map_controller_get_show_scale(MapController *self)
+{
+    g_return_val_if_fail(MAP_IS_CONTROLLER(self), FALSE);
+
+    return _show_scale;
+}
+
+void
+map_controller_set_show_poi(MapController *self, gboolean show)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    if (_show_poi == show) return;
+
+    _show_poi = show;
+    map_force_redraw();
+}
+
+gboolean
+map_controller_get_show_poi(MapController *self)
+{
+    g_return_val_if_fail(MAP_IS_CONTROLLER(self), FALSE);
+
+    return _show_poi;
+}
+
+void
+map_controller_set_show_velocity(MapController *self, gboolean show)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    if (_show_velvec == show) return;
+
+    _show_velvec = show;
+    map_move_mark();
+}
+
+gboolean
+map_controller_get_show_velocity(MapController *self)
+{
+    g_return_val_if_fail(MAP_IS_CONTROLLER(self), FALSE);
+
+    return _show_velvec;
+}
+
+void
+map_controller_set_show_zoom(MapController *self, gboolean show)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    if (_show_zoomlevel == show) return;
+
+    _show_zoomlevel = show;
+    map_screen_show_zoom_box(MAP_SCREEN(_w_map), _show_zoomlevel);
+    map_force_redraw();
+}
+
+gboolean
+map_controller_get_show_zoom(MapController *self)
+{
+    g_return_val_if_fail(MAP_IS_CONTROLLER(self), FALSE);
+
+    return _show_zoomlevel;
 }
 
