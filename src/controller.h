@@ -22,6 +22,8 @@
 #ifndef MAP_CONTROLLER_H
 #define MAP_CONTROLLER_H
 
+#include "types.h"
+
 #include <glib.h>
 #include <glib-object.h>
 #include <gtk/gtk.h>
@@ -72,6 +74,9 @@ void map_controller_activate_menu_point(MapController *self, gint x, gint y);
 
 void map_controller_set_gps_enabled(MapController *self, gboolean enabled);
 gboolean map_controller_get_gps_enabled(MapController *self);
+
+void map_controller_set_center_mode(MapController *self, CenterMode mode);
+void map_controller_disable_auto_center(MapController *self);
 
 G_END_DECLS
 #endif /* MAP_CONTROLLER_H */

@@ -31,6 +31,8 @@
 #include "menu.h"
 #include "screen.h"
 
+#include <hildon/hildon-banner.h>
+
 struct _MapControllerPrivate
 {
     MapScreen *screen;
@@ -195,5 +197,25 @@ gboolean
 map_controller_get_gps_enabled(MapController *self)
 {
     return _enable_gps;
+}
+
+void
+map_controller_set_center_mode(MapController *self, CenterMode mode)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    _center_mode = mode;
+    if (mode > 0)
+        map_refresh_mark(TRUE);
+}
+
+void
+map_controller_disable_auto_center(MapController *self)
+{
+    if (_center_mode > 0)
+    {
+        map_controller_set_center_mode(self, -_center_mode);
+        MACRO_BANNER_SHOW_INFO(_window, _("Auto-Center Off"));
+    }
 }
 

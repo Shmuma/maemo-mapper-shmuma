@@ -1004,6 +1004,7 @@ panto_station(GtkWidget *widget, AprsStationSelectInfo *aprs_station_selected)
         	}
         	else
         	{	
+                    MapController *controller = map_controller_get_instance();
 	    		gdouble d_lat = convert_lat_l2d(p_station->coord_lat);
 	    		gdouble d_lon = convert_lon_l2d(p_station->coord_lon);
 	    		Point unit;
@@ -1011,9 +1012,7 @@ panto_station(GtkWidget *widget, AprsStationSelectInfo *aprs_station_selected)
 	        	
 	            latlon2unit(d_lat, d_lon, unit.unitx, unit.unity);
 	
-	            if(_center_mode > 0)
-	                gtk_check_menu_item_set_active(
-	                        GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item), TRUE);
+                    map_controller_disable_auto_center(controller);
 	
 	            map_center_unit(unit);
 

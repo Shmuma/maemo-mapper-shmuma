@@ -198,10 +198,11 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
         case CUSTOM_ACTION_PAN_RIGHT:
             if(!_key_pan_is_down)
             {
+                MapController *controller = map_controller_get_instance();
+
                 _key_pan_is_down = TRUE;
-                if(_center_mode > 0)
-                    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                                _menu_view_ac_none_item), FALSE);
+                map_controller_disable_auto_center(controller);
+
                 if(_key_pan_timeout_sid)
                 {
                     g_source_remove(_key_pan_timeout_sid);
@@ -562,6 +563,8 @@ map_cb_button_press(GtkWidget *widget, GdkEventButton *event)
 gboolean
 map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
 {
+    MapController *controller = map_controller_get_instance();
+
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     if(!_mouse_is_down)
@@ -633,10 +636,7 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
             clkpt.unity = mvpt_unity + new_offset_unity;
         }
 
-        if(_center_mode > 0)
-            gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item), TRUE);
-
+        map_controller_disable_auto_center(controller);
         map_center_unit(clkpt);
     }
     else
@@ -689,9 +689,7 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
         }
         if(!selected_point)
         {
-            if(_center_mode > 0)
-                gtk_check_menu_item_set_active(
-                        GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item), TRUE);
+            map_controller_disable_auto_center(controller);
             map_center_unit_full(clkpt, _next_zoom,
                     _center_mode > 0 && _center_rotate
                     ? _gps.heading : _next_map_rotate_angle);

@@ -1537,11 +1537,11 @@ void
 map_pan(gint delta_unitx, gint delta_unity)
 {
     Point new_center;
+    MapController *controller = map_controller_get_instance();
+
     printf("%s(%d, %d)\n", __PRETTY_FUNCTION__, delta_unitx, delta_unity);
 
-    if(_center_mode > 0)
-        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                    _menu_view_ac_none_item), TRUE);
+    map_controller_disable_auto_center(controller);
     new_center.unitx = _center.unitx + delta_unitx;
     new_center.unity = _center.unity + delta_unity;
     map_center_unit_full(new_center, _next_zoom,

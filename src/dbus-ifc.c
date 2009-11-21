@@ -71,9 +71,8 @@ dbus_ifc_set_view_position_idle(SetViewPositionArgs *args)
 
     if(!_mouse_is_down)
     {
-        if(_center_mode > 0)
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                        _menu_view_ac_none_item), TRUE);
+        MapController *controller = map_controller_get_instance();
+        map_controller_disable_auto_center(controller);
 
         latlon2unit(args->new_lat, args->new_lon, center.unitx, center.unity);
 

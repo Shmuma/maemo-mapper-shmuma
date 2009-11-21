@@ -899,6 +899,7 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
         gchar *error_check;
         gdouble lat, lon;
         Point sel_unit;
+        MapController *controller = map_controller_get_instance();
 
         text = gtk_entry_get_text(GTK_ENTRY(txt_lat));
         lat = strdmstod(text, &error_check);
@@ -915,9 +916,7 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
         }
 
         latlon2unit(lat, lon, sel_unit.unitx, sel_unit.unity);
-        if(_center_mode > 0)
-            gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item), TRUE);
+        map_controller_disable_auto_center(controller);
         map_center_unit(sel_unit);
         break;
     }
@@ -973,12 +972,11 @@ menu_cb_view_goto_address(GtkMenuItem *item)
                 gtk_entry_get_text(GTK_ENTRY(txt_addr)));
         if(origin.unity)
         {
+            MapController *controller = map_controller_get_instance();
+
             MACRO_BANNER_SHOW_INFO(_window, _("Address Located"));
 
-            if(_center_mode > 0)
-                gtk_check_menu_item_set_active(
-                        GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item), TRUE);
-
+            map_controller_disable_auto_center(controller);
             map_center_unit(origin);
 
             /* Success! Get out of the while loop. */
@@ -993,12 +991,11 @@ menu_cb_view_goto_address(GtkMenuItem *item)
 static gboolean
 menu_cb_view_goto_gps(GtkMenuItem *item)
 {
+    MapController *controller = map_controller_get_instance();
+
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    if(_center_mode > 0)
-        gtk_check_menu_item_set_active(
-                GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item), TRUE);
-
+    map_controller_disable_auto_center(controller);
     map_center_unit(_pos);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -1009,16 +1006,15 @@ gboolean
 menu_cb_view_goto_nextway(GtkMenuItem *item)
 {
     WayPoint *next_way;
+    MapController *controller = map_controller_get_instance();
+
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     next_way = path_get_next_way();
 
     if(next_way && next_way->point->unity)
     {
-        if(_center_mode > 0)
-            gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item), TRUE);
-
+        map_controller_disable_auto_center(controller);
         map_center_unit(*next_way->point);
     }
     else
@@ -1045,6 +1041,7 @@ menu_cb_view_goto_nearpoi(GtkMenuItem *item)
         {
             /* Auto-Center is enabled - use the GPS position. */
             Point unit;
+            MapController *controller = map_controller_get_instance();
             latlon2unit(poi.lat, poi.lon, unit.unitx, unit.unity);
             banner = g_strdup_printf("%s (%s)", poi.label, poi.clabel);
             MACRO_BANNER_SHOW_INFO(_window, banner);
@@ -1053,10 +1050,7 @@ menu_cb_view_goto_nearpoi(GtkMenuItem *item)
             g_free(poi.desc);
             g_free(poi.clabel);
 
-            if(_center_mode > 0)
-                gtk_check_menu_item_set_active(
-                        GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item), TRUE);
-
+            map_controller_disable_auto_center(controller);
             map_center_unit(unit);
         }
         else

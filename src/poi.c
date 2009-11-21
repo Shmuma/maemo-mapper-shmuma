@@ -2071,6 +2071,7 @@ poi_list_goto(GtkWidget *widget, PoiListInfo *pli)
     /* Iterate through the data store and import as desired. */
     if(gtk_tree_selection_get_selected(selection, NULL, &iter))
     {
+        MapController *controller = map_controller_get_instance();
         gdouble lat, lon;
         Point unit;
 
@@ -2081,10 +2082,7 @@ poi_list_goto(GtkWidget *widget, PoiListInfo *pli)
 
         latlon2unit(lat, lon, unit.unitx, unit.unity);
 
-        if(_center_mode > 0)
-            gtk_check_menu_item_set_active(
-                    GTK_CHECK_MENU_ITEM(_menu_view_ac_none_item), TRUE);
-
+        map_controller_disable_auto_center(controller);
         map_center_unit(unit);
     }
 
