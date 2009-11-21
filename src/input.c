@@ -179,9 +179,11 @@ get_custom_key_from_keyval(gint keyval)
 gboolean
 window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
 {
+    MapController *controller;
     CustomKey custom_key;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+    controller = map_controller_get_instance();
     custom_key = get_custom_key_from_keyval(event->keyval);
     if(custom_key == -1)
         return FALSE; /* Not our event. */
@@ -268,8 +270,8 @@ window_cb_key_press(GtkWidget* widget, GdkEventKey *event)
         }
 
         case CUSTOM_ACTION_TOGGLE_AUTOROTATE:
-            gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                        _menu_view_rotate_auto_item), !_center_rotate);
+            map_controller_set_auto_rotate(controller,
+                !map_controller_get_auto_rotate(controller));
             break;
 
         case CUSTOM_ACTION_TOGGLE_AUTOCENTER:

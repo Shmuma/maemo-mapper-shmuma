@@ -1513,10 +1513,10 @@ map_center_unit(Point new_center)
 void
 map_rotate(gint rotate_angle)
 {
-    if(_center_mode > 0 && gtk_check_menu_item_get_active(
-                GTK_CHECK_MENU_ITEM(_menu_view_rotate_auto_item)))
-        gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(
-                    _menu_view_rotate_auto_item), FALSE);
+    MapController *controller = map_controller_get_instance();
+
+    if(_center_mode > 0)
+        map_controller_set_auto_rotate(controller, FALSE);
 
     map_center_unit_full(map_calc_new_center(_next_zoom), _next_zoom,
         (_next_map_rotate_angle + rotate_angle) % 360);

@@ -219,3 +219,29 @@ map_controller_disable_auto_center(MapController *self)
     }
 }
 
+void
+map_controller_set_auto_rotate(MapController *self, gboolean enable)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    if (enable == _center_rotate) return;
+
+    if (enable)
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("Auto-Rotate Enabled"));
+    }
+    else
+    {
+        MACRO_BANNER_SHOW_INFO(_window, _("Auto-Rotate Disabled"));
+    }
+
+    _center_rotate = enable;
+}
+
+gboolean
+map_controller_get_auto_rotate(MapController *self)
+{
+    g_return_val_if_fail(MAP_IS_CONTROLLER(self), FALSE);
+    return _center_rotate;
+}
+

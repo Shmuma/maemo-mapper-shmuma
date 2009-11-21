@@ -78,5 +78,8 @@ gboolean map_controller_get_gps_enabled(MapController *self);
 void map_controller_set_center_mode(MapController *self, CenterMode mode);
 void map_controller_disable_auto_center(MapController *self);
 
+void map_controller_set_auto_rotate(MapController *self, gboolean enable);
+gboolean map_controller_get_auto_rotate(MapController *self);
+
 G_END_DECLS
 #endif /* MAP_CONTROLLER_H */
