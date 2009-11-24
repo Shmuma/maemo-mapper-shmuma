@@ -59,6 +59,8 @@
 #include "settings.h"
 #include "util.h"
 
+#include <hildon/hildon-check-button.h>
+#include <hildon/hildon-pannable-area.h>
 #include <hildon/hildon-picker-button.h>
 
 /****************************************************************************
@@ -1072,131 +1074,6 @@ menu_cb_view_goto_nearpoi(GtkMenuItem *item)
  ****************************************************************************/
 
 /****************************************************************************
- * BELOW: VIEW/SHOW MENU ****************************************************
- ****************************************************************************/
-
-static gboolean
-menu_cb_view_show_tracks(GtkMenuItem *item)
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    _show_paths ^= TRACKS_MASK;
-    if(gtk_check_menu_item_get_active(
-                GTK_CHECK_MENU_ITEM(_menu_view_show_tracks_item)))
-    {
-        _show_paths |= TRACKS_MASK;
-        map_render_paths();
-        MACRO_QUEUE_DRAW_AREA();
-        MACRO_BANNER_SHOW_INFO(_window, _("Tracks are now shown"));
-    }
-    else
-    {
-        _show_paths &= ~TRACKS_MASK;
-        map_force_redraw();
-        MACRO_BANNER_SHOW_INFO(_window, _("Tracks are now hidden"));
-    }
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-menu_cb_view_show_zoomlevel(GtkMenuItem *item)
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    _show_zoomlevel = gtk_check_menu_item_get_active(
-                GTK_CHECK_MENU_ITEM(_menu_view_show_zoomlevel_item));
-    map_screen_show_zoom_box(MAP_SCREEN(_w_map), _show_zoomlevel);
-    map_force_redraw();
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-menu_cb_view_show_scale(GtkMenuItem *item)
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    _show_scale = gtk_check_menu_item_get_active(
-                GTK_CHECK_MENU_ITEM(_menu_view_show_scale_item));
-    map_screen_show_scale(MAP_SCREEN(_w_map), _show_scale);
-    map_force_redraw();
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-menu_cb_view_show_comprose(GtkMenuItem *item)
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    _show_comprose = gtk_check_menu_item_get_active(
-                GTK_CHECK_MENU_ITEM(_menu_view_show_comprose_item));
-    map_screen_show_compass(MAP_SCREEN(_w_map), _show_comprose);
-    map_force_redraw();
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-menu_cb_view_show_routes(GtkMenuItem *item)
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(gtk_check_menu_item_get_active(
-                GTK_CHECK_MENU_ITEM(_menu_view_show_routes_item)))
-    {
-        _show_paths |= ROUTES_MASK;
-        map_render_paths();
-        MACRO_QUEUE_DRAW_AREA();
-        MACRO_BANNER_SHOW_INFO(_window, _("Routes are now shown"));
-    }
-    else
-    {
-        _show_paths &= ~ROUTES_MASK;
-        map_force_redraw();
-        MACRO_BANNER_SHOW_INFO(_window, _("Routes are now hidden"));
-    }
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-menu_cb_view_show_velvec(GtkMenuItem *item)
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    _show_velvec = gtk_check_menu_item_get_active(
-            GTK_CHECK_MENU_ITEM(_menu_view_show_velvec_item));
-    map_move_mark();
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-static gboolean
-menu_cb_view_show_poi(GtkMenuItem *item)
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    _show_poi = gtk_check_menu_item_get_active(
-            GTK_CHECK_MENU_ITEM(_menu_view_show_poi_item));
-    map_force_redraw();
-
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;
-}
-
-/****************************************************************************
- * ABOVE: VIEW/SHOW MENU ****************************************************
- ****************************************************************************/
-
-/****************************************************************************
  * BELOW: VIEW/AUTO-CENTER MENU *********************************************
  ****************************************************************************/
 
@@ -1815,41 +1692,8 @@ menu_init()
     /* The "View"/"Show" submenu. */
     gtk_menu_append(submenu, menu_item
             = gtk_menu_item_new_with_label(_("Show")));
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
-            submenu2 = gtk_menu_new());
-    gtk_menu_append(submenu2, _menu_view_show_zoomlevel_item
-            = gtk_check_menu_item_new_with_label(_("Zoom Level")));
-    gtk_check_menu_item_set_active(
-            GTK_CHECK_MENU_ITEM(_menu_view_show_zoomlevel_item),
-            _show_zoomlevel);
-    gtk_menu_append(submenu2, _menu_view_show_scale_item
-            = gtk_check_menu_item_new_with_label(_("Scale")));
-    gtk_check_menu_item_set_active(
-            GTK_CHECK_MENU_ITEM(_menu_view_show_scale_item),
-            _show_scale);
-    gtk_menu_append(submenu2, _menu_view_show_comprose_item
-            = gtk_check_menu_item_new_with_label(_("Compass Rose")));
-    gtk_check_menu_item_set_active(
-            GTK_CHECK_MENU_ITEM(_menu_view_show_comprose_item),
-            _show_comprose);
-    gtk_menu_append(submenu2, _menu_view_show_routes_item
-            = gtk_check_menu_item_new_with_label(_("Route")));
-    gtk_check_menu_item_set_active(
-            GTK_CHECK_MENU_ITEM(_menu_view_show_routes_item),
-            _show_paths & ROUTES_MASK);
-    gtk_menu_append(submenu2, _menu_view_show_tracks_item
-            = gtk_check_menu_item_new_with_label(_("Track")));
-    gtk_check_menu_item_set_active(
-            GTK_CHECK_MENU_ITEM(_menu_view_show_tracks_item),
-            _show_paths & TRACKS_MASK);
-    gtk_menu_append(submenu2, _menu_view_show_velvec_item
-            = gtk_check_menu_item_new_with_label(_("Velocity Vector")));
-    gtk_check_menu_item_set_active(
-            GTK_CHECK_MENU_ITEM(_menu_view_show_velvec_item), _show_velvec);
-    gtk_menu_append(submenu2, _menu_view_show_poi_item
-            = gtk_check_menu_item_new_with_label(_("POI")));
-    gtk_check_menu_item_set_active(
-            GTK_CHECK_MENU_ITEM(_menu_view_show_poi_item), _show_poi);
+    g_signal_connect(menu_item, "activate",
+                      G_CALLBACK(map_menu_show), NULL);
 
     /* The "View"/"Auto-Center" submenu. */
     gtk_menu_append(submenu, menu_item
@@ -2056,21 +1900,6 @@ menu_init()
                       G_CALLBACK(menu_cb_view_goto_nextway), NULL);
     g_signal_connect(G_OBJECT(_menu_view_goto_nearpoi_item), "activate",
                       G_CALLBACK(menu_cb_view_goto_nearpoi), NULL);
-
-    g_signal_connect(G_OBJECT(_menu_view_show_tracks_item), "toggled",
-                      G_CALLBACK(menu_cb_view_show_tracks), NULL);
-    g_signal_connect(G_OBJECT(_menu_view_show_zoomlevel_item), "toggled",
-                      G_CALLBACK(menu_cb_view_show_zoomlevel), NULL);
-    g_signal_connect(G_OBJECT(_menu_view_show_scale_item), "toggled",
-                      G_CALLBACK(menu_cb_view_show_scale), NULL);
-    g_signal_connect(G_OBJECT(_menu_view_show_comprose_item), "toggled",
-                      G_CALLBACK(menu_cb_view_show_comprose), NULL);
-    g_signal_connect(G_OBJECT(_menu_view_show_routes_item), "toggled",
-                      G_CALLBACK(menu_cb_view_show_routes), NULL);
-    g_signal_connect(G_OBJECT(_menu_view_show_velvec_item), "toggled",
-                      G_CALLBACK(menu_cb_view_show_velvec), NULL);
-    g_signal_connect(G_OBJECT(_menu_view_show_poi_item), "toggled",
-                      G_CALLBACK(menu_cb_view_show_poi), NULL);
 
     g_signal_connect(G_OBJECT(_menu_view_ac_latlon_item), "toggled",
                       G_CALLBACK(menu_cb_view_ac_latlon), NULL);
@@ -2350,6 +2179,92 @@ map_menu_view()
 
         if (_center_mode > 0)
             map_refresh_mark(TRUE);
+    }
+    gtk_widget_destroy(dialog);
+}
+
+void
+map_menu_show()
+{
+    GtkWidget *dialog;
+    GtkWidget *zoom, *scale, *compass, *routes, *tracks, *velocity, *poi;
+    MapController *controller;
+    MapDialog *dlg;
+
+    controller = map_controller_get_instance();
+    dialog = map_dialog_new(_("Show"),
+                            map_controller_get_main_window(controller),
+                            TRUE);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT);
+    dlg = (MapDialog *)dialog;
+
+    zoom = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_button_set_label(GTK_BUTTON(zoom), _("Zoom Level"));
+    hildon_check_button_set_active(HILDON_CHECK_BUTTON(zoom),
+                                   map_controller_get_show_zoom(controller));
+    map_dialog_add_widget(dlg, zoom);
+
+    scale = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_button_set_label(GTK_BUTTON(scale), _("Scale"));
+    hildon_check_button_set_active(HILDON_CHECK_BUTTON(scale),
+                                   map_controller_get_show_scale(controller));
+    map_dialog_add_widget(dlg, scale);
+
+    compass = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_button_set_label(GTK_BUTTON(compass), _("Compass Rose"));
+    hildon_check_button_set_active(HILDON_CHECK_BUTTON(compass),
+                                   map_controller_get_show_compass(controller));
+    map_dialog_add_widget(dlg, compass);
+
+    routes = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_button_set_label(GTK_BUTTON(routes), _("Route"));
+    hildon_check_button_set_active(HILDON_CHECK_BUTTON(routes),
+                                   map_controller_get_show_routes(controller));
+    map_dialog_add_widget(dlg, routes);
+
+    tracks = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_button_set_label(GTK_BUTTON(tracks), _("Track"));
+    hildon_check_button_set_active(HILDON_CHECK_BUTTON(tracks),
+                                   map_controller_get_show_tracks(controller));
+    map_dialog_add_widget(dlg, tracks);
+
+    velocity = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_button_set_label(GTK_BUTTON(velocity), _("Velocity Vector"));
+    hildon_check_button_set_active(HILDON_CHECK_BUTTON(velocity),
+        map_controller_get_show_velocity(controller));
+    map_dialog_add_widget(dlg, velocity);
+
+    poi = hildon_check_button_new(HILDON_SIZE_FINGER_HEIGHT);
+    gtk_button_set_label(GTK_BUTTON(poi), _("POI"));
+    hildon_check_button_set_active(HILDON_CHECK_BUTTON(poi),
+                                   map_controller_get_show_poi(controller));
+    map_dialog_add_widget(dlg, poi);
+
+    gtk_widget_show_all(dialog);
+
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+        map_controller_set_show_zoom(controller,
+            hildon_check_button_get_active(HILDON_CHECK_BUTTON(zoom)));
+
+        map_controller_set_show_scale(controller,
+            hildon_check_button_get_active(HILDON_CHECK_BUTTON(scale)));
+
+        map_controller_set_show_compass(controller,
+            hildon_check_button_get_active(HILDON_CHECK_BUTTON(compass)));
+
+        map_controller_set_show_routes(controller,
+            hildon_check_button_get_active(HILDON_CHECK_BUTTON(routes)));
+
+        map_controller_set_show_tracks(controller,
+            hildon_check_button_get_active(HILDON_CHECK_BUTTON(tracks)));
+
+        map_controller_set_show_velocity(controller,
+            hildon_check_button_get_active(HILDON_CHECK_BUTTON(velocity)));
+
+        map_controller_set_show_poi(controller,
+            hildon_check_button_get_active(HILDON_CHECK_BUTTON(poi)));
     }
     gtk_widget_destroy(dialog);
 }

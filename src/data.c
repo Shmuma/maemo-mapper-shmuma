@@ -330,14 +330,6 @@ GtkWidget *_menu_view_pan_east_item = NULL;
 
 GtkWidget *_menu_view_fullscreen_item = NULL;
 
-GtkWidget *_menu_view_show_zoomlevel_item = NULL;
-GtkWidget *_menu_view_show_scale_item = NULL;
-GtkWidget *_menu_view_show_comprose_item = NULL;
-GtkWidget *_menu_view_show_routes_item = NULL;
-GtkWidget *_menu_view_show_tracks_item = NULL;
-GtkWidget *_menu_view_show_velvec_item = NULL;
-GtkWidget *_menu_view_show_poi_item = NULL;
-
 GtkWidget *_menu_view_ac_latlon_item = NULL;
 GtkWidget *_menu_view_ac_lead_item = NULL;
 GtkWidget *_menu_view_ac_none_item = NULL;

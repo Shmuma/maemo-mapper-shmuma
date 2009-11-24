@@ -36,5 +36,6 @@ void map_menu_route(void);
 void map_menu_track(void);
 void map_menu_go_to(void);
 void map_menu_view(void);
+void map_menu_show(void);
 
 #endif /* ifndef MAEMO_MAPPER_MENU_H */

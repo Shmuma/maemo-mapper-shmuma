@@ -266,14 +266,6 @@ extern GtkWidget *_menu_view_pan_east_item;
 
 extern GtkWidget *_menu_view_fullscreen_item;
 
-extern GtkWidget *_menu_view_show_zoomlevel_item;
-extern GtkWidget *_menu_view_show_scale_item;
-extern GtkWidget *_menu_view_show_comprose_item;
-extern GtkWidget *_menu_view_show_routes_item;
-extern GtkWidget *_menu_view_show_tracks_item;
-extern GtkWidget *_menu_view_show_velvec_item;
-extern GtkWidget *_menu_view_show_poi_item;
-
 extern GtkWidget *_menu_view_ac_latlon_item;
 extern GtkWidget *_menu_view_ac_lead_item;
 extern GtkWidget *_menu_view_ac_none_item;
