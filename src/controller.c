@@ -323,6 +323,8 @@ map_controller_set_show_routes(MapController *self, gboolean show)
         map_force_redraw();
         MACRO_BANNER_SHOW_INFO(_window, _("Routes are now hidden"));
     }
+
+    map_screen_redraw_overlays(self->priv->screen);
 }
 
 gboolean
@@ -356,6 +358,8 @@ map_controller_set_show_tracks(MapController *self, gboolean show)
         map_force_redraw();
         MACRO_BANNER_SHOW_INFO(_window, _("Tracks are now hidden"));
     }
+
+    map_screen_redraw_overlays(self->priv->screen);
 }
 
 gboolean

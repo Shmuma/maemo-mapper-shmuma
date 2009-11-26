@@ -1127,4 +1127,10 @@ map_screen_get_tap_area_from_units(MapScreen *self, gint ux, gint uy,
     area->x2 = ux + radius;
 }
 
+void
+map_screen_redraw_overlays(MapScreen *self)
+{
+    g_return_if_fail(MAP_IS_SCREEN(self));
+    overlay_redraw_idle(self);
+}
 

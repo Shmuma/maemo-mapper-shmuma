@@ -75,5 +75,7 @@ void map_screen_show_poi(MapScreen *self, gint x, gint y, GdkPixbuf *pixbuf);
 void map_screen_get_tap_area_from_units(MapScreen *self, gint ux, gint uy,
                                         MapArea *area);
 
+void map_screen_redraw_overlays(MapScreen *self);
+
 G_END_DECLS
 #endif /* MAP_SCREEN_H */
