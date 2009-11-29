@@ -631,7 +631,7 @@ map_cb_button_release(GtkWidget *widget, GdkEventButton *event)
         }
 
         map_controller_disable_auto_center(controller);
-        map_center_unit(clkpt);
+        map_controller_set_center(controller, clkpt, -1);
     }
     else
     {

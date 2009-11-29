@@ -2083,7 +2083,7 @@ poi_list_goto(GtkWidget *widget, PoiListInfo *pli)
         latlon2unit(lat, lon, unit.unitx, unit.unity);
 
         map_controller_disable_auto_center(controller);
-        map_center_unit(unit);
+        map_controller_set_center(controller, unit, -1);
     }
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);

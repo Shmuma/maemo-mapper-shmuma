@@ -1413,43 +1413,12 @@ map_force_redraw()
 Point
 map_calc_new_center(gint zoom)
 {
+    MapController *controller;
     Point new_center;
-    printf("%s()\n", __PRETTY_FUNCTION__);
 
-    switch(_center_mode)
-    {
-        case CENTER_LEAD:
-        {
-            gfloat tmp = deg2rad(_gps.heading);
-            gfloat screen_pixels = _view_width_pixels
-                + (((gint)_view_height_pixels
-                            - (gint)_view_width_pixels)
-                        * fabsf(cosf(deg2rad(
-                                ROTATE_DIR_ENUM_DEGREES[_rotate_dir] -
-                                (_center_rotate ? 0
-                             : (_next_map_rotate_angle
-                                 - (gint)(_gps.heading)))))));
-            gfloat lead_pixels = 0.0025f
-                * pixel2zunit((gint)screen_pixels, zoom)
-                * _lead_ratio
-                * VELVEC_SIZE_FACTOR
-                * (_lead_is_fixed ? 7 : sqrtf(_gps.speed));
-
-            new_center.unitx = _pos.unitx + (gint)(lead_pixels * sinf(tmp));
-            new_center.unity = _pos.unity - (gint)(lead_pixels * cosf(tmp));
-            break;
-        }
-        case CENTER_LATLON:
-            new_center.unitx = _pos.unitx;
-            new_center.unity = _pos.unity;
-            break;
-        default:
-            new_center.unitx = _next_center.unitx;
-            new_center.unity = _next_center.unity;
-    }
-
-    vprintf("%s(): return (%d, %d)\n", __PRETTY_FUNCTION__,
-            new_center.unitx, new_center.unity);
+    /* TODO: remove this function */
+    controller = map_controller_get_instance();
+    map_controller_calc_best_center(controller, &new_center);
     return new_center;
 }
 
@@ -1466,11 +1435,6 @@ map_center_unit_full(Point new_center,
 
     if(!_mouse_is_down)
     {
-        map_screen_set_center(MAP_SCREEN(_w_map),
-                              new_center.unitx, new_center.unity,
-                              zoom);
-        map_screen_set_rotation(MAP_SCREEN(_w_map), rotate_angle);
-
         /* Assure that _center.unitx/y are bounded. */
         BOUND(new_center.unitx, 0, WORLD_SIZE_UNITS);
         BOUND(new_center.unity, 0, WORLD_SIZE_UNITS);
@@ -1503,31 +1467,11 @@ map_center_unit_full(Point new_center,
 }
 
 void
-map_center_unit(Point new_center)
-{
-    map_center_unit_full(new_center, _next_zoom,
-        _center_mode > 0 && _center_rotate
-            ? _gps.heading : _next_map_rotate_angle);
-}
-
-void
 map_rotate(gint rotate_angle)
 {
     MapController *controller = map_controller_get_instance();
 
-    if(_center_mode > 0)
-        map_controller_set_auto_rotate(controller, FALSE);
-
-    map_center_unit_full(map_calc_new_center(_next_zoom), _next_zoom,
-        (_next_map_rotate_angle + rotate_angle) % 360);
-}
-
-void
-map_center_zoom(gint zoom)
-{
-    map_center_unit_full(map_calc_new_center(zoom), zoom,
-        _center_mode > 0 && _center_rotate
-            ? _gps.heading : _next_map_rotate_angle);
+    map_controller_rotate(controller, rotate_angle);
 }
 
 /**
@@ -1585,11 +1529,14 @@ map_move_mark()
 void
 map_refresh_mark(gboolean force_redraw)
 {
+    MapController *controller;
+    gint new_center_devx, new_center_devy;
+    Point new_center;
+
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    gint new_center_devx, new_center_devy;
-
-    Point new_center = map_calc_new_center(_next_zoom);
+    controller = map_controller_get_instance();
+    map_controller_calc_best_center(controller, &new_center);
 
     unit2buf(new_center.unitx, new_center.unity,
             new_center_devx, new_center_devy);
@@ -1604,7 +1551,7 @@ map_refresh_mark(gboolean force_redraw)
                   > (4*(10-_rotate_sens))))))
     {
         map_move_mark();
-        map_center_unit(new_center);
+        map_controller_set_center(controller, new_center, -1);
     }
     else
     {
@@ -1741,14 +1688,18 @@ map_download_refresh_idle(MapUpdateTask *mut)
 void
 map_set_zoom(gint new_zoom)
 {
+    MapController *controller;
+
     printf("%s(%d)\n", __PRETTY_FUNCTION__, _zoom);
 
     /* This if condition also checks for new_zoom >= 0. */
     if((unsigned)new_zoom > MAX_ZOOM)
         return;
 
-    map_center_zoom(new_zoom / _curr_repo->view_zoom_steps
-                     * _curr_repo->view_zoom_steps);
+    controller = map_controller_get_instance();
+    map_controller_set_zoom(controller,
+                            new_zoom / _curr_repo->view_zoom_steps
+                            * _curr_repo->view_zoom_steps);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -2186,8 +2137,13 @@ map_cb_configure(GtkWidget *widget, GdkEventConfigure *event)
 {
     gint old_view_width_pixels, old_view_height_pixels;
     GdkPixbuf *old_map_pixbuf;
+    MapController *controller;
+    Point new_center;
+
     printf("%s(%d, %d)\n", __PRETTY_FUNCTION__,
             _map_widget->allocation.width, _map_widget->allocation.height);
+
+    controller = map_controller_get_instance();
 
     if(_map_widget->allocation.width == 1
             && _map_widget->allocation.height == 1)
@@ -2255,10 +2211,8 @@ map_cb_configure(GtkWidget *widget, GdkEventConfigure *event)
             _view_width_pixels, _view_height_pixels);
 
     /* If Auto-Center is set to Lead, then recalc center. */
-    if(_center_mode == CENTER_LEAD)
-        map_center_unit(map_calc_new_center(_next_zoom));
-    else
-        map_center_unit(_next_center);
+    map_controller_calc_best_center(controller, &new_center);
+    map_controller_set_center(controller, new_center, -1);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;

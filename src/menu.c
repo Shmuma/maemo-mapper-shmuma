@@ -922,7 +922,7 @@ menu_cb_view_goto_latlon(GtkMenuItem *item)
 
         latlon2unit(lat, lon, sel_unit.unitx, sel_unit.unity);
         map_controller_disable_auto_center(controller);
-        map_center_unit(sel_unit);
+        map_controller_set_center(controller, sel_unit, -1);
         break;
     }
     gtk_widget_hide(dialog);
@@ -982,7 +982,7 @@ menu_cb_view_goto_address(GtkMenuItem *item)
             MACRO_BANNER_SHOW_INFO(_window, _("Address Located"));
 
             map_controller_disable_auto_center(controller);
-            map_center_unit(origin);
+            map_controller_set_center(controller, origin, -1);
 
             /* Success! Get out of the while loop. */
             break;
@@ -1001,7 +1001,7 @@ menu_cb_view_goto_gps(GtkMenuItem *item)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     map_controller_disable_auto_center(controller);
-    map_center_unit(_pos);
+    map_controller_set_center(controller, _pos, -1);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1020,7 +1020,7 @@ menu_cb_view_goto_nextway(GtkMenuItem *item)
     if(next_way && next_way->point->unity)
     {
         map_controller_disable_auto_center(controller);
-        map_center_unit(*next_way->point);
+        map_controller_set_center(controller, *next_way->point, -1);
     }
     else
     {
@@ -1056,7 +1056,7 @@ menu_cb_view_goto_nearpoi(GtkMenuItem *item)
             g_free(poi.clabel);
 
             map_controller_disable_auto_center(controller);
-            map_center_unit(unit);
+            map_controller_set_center(controller, unit, -1);
         }
         else
         {

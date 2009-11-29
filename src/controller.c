@@ -33,10 +33,16 @@
 #include "screen.h"
 
 #include <hildon/hildon-banner.h>
+#include <math.h>
+
+#define VELVEC_SIZE_FACTOR (4)
 
 struct _MapControllerPrivate
 {
     MapScreen *screen;
+    Point center;
+    gint rotation_angle;
+    gint zoom;
 
     guint is_disposed : 1;
 };
@@ -72,10 +78,14 @@ map_controller_init(MapController *controller)
     g_assert(instance == NULL);
     instance = controller;
 
+    /* TODO: load the settings from inside here */
+
     priv->screen = g_object_new(MAP_TYPE_SCREEN, NULL);
     map_screen_show_compass(priv->screen, _show_comprose);
     map_screen_show_scale(priv->screen, _show_scale);
     map_screen_show_zoom_box(priv->screen, _show_zoomlevel);
+
+    map_controller_set_center(controller, _next_center, _next_zoom);
 }
 
 static void
@@ -446,5 +456,112 @@ map_controller_get_show_zoom(MapController *self)
     g_return_val_if_fail(MAP_IS_CONTROLLER(self), FALSE);
 
     return _show_zoomlevel;
+}
+
+void
+map_controller_set_center(MapController *self, Point center, gint zoom)
+{
+    MapControllerPrivate *priv;
+
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    priv = self->priv;
+
+    if (zoom < 0)
+        zoom = priv->zoom;
+    else
+        priv->zoom = zoom;
+    priv->center = center;
+
+    map_screen_set_center(priv->screen,
+                          priv->center.unitx, priv->center.unity, zoom);
+    if (_map_widget)
+    {
+        map_center_unit_full(priv->center, zoom,
+                             _center_mode > 0 && _center_rotate
+                             ? _gps.heading : priv->rotation_angle);
+    }
+}
+
+void
+map_controller_set_rotation(MapController *self, gint angle)
+{
+    MapControllerPrivate *priv;
+
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    priv = self->priv;
+
+    if (_center_mode > 0)
+        map_controller_set_auto_rotate(self, FALSE);
+
+    angle = angle % 360;
+    priv->rotation_angle = angle;
+    map_screen_set_rotation(priv->screen, angle);
+    if (_map_widget)
+    {
+        map_center_unit_full(priv->center, priv->zoom, angle);
+    }
+}
+
+void
+map_controller_rotate(MapController *self, gint angle)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    map_controller_rotate(self, self->priv->rotation_angle + angle);
+}
+
+void
+map_controller_set_zoom(MapController *self, gint zoom)
+{
+    MapControllerPrivate *priv;
+    Point center;
+
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    priv = self->priv;
+
+    if (zoom == priv->zoom) return;
+
+    priv->zoom = zoom;
+    map_controller_calc_best_center(self, &center);
+    map_controller_set_center(self, center, zoom);
+}
+
+void
+map_controller_calc_best_center(MapController *self, Point *new_center)
+{
+    MapControllerPrivate *priv;
+
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    priv = self->priv;
+
+    switch (_center_mode)
+    {
+    case CENTER_LEAD:
+        {
+            gfloat tmp = deg2rad(_gps.heading);
+            gfloat screen_pixels = _view_width_pixels
+                + (((gint)_view_height_pixels
+                            - (gint)_view_width_pixels)
+                        * fabsf(cosf(deg2rad(
+                                ROTATE_DIR_ENUM_DEGREES[_rotate_dir] -
+                                (_center_rotate ? 0
+                             : (_next_map_rotate_angle
+                                 - (gint)(_gps.heading)))))));
+            gfloat lead_pixels = 0.0025f
+                * pixel2zunit((gint)screen_pixels, priv->zoom)
+                * _lead_ratio
+                * VELVEC_SIZE_FACTOR
+                * (_lead_is_fixed ? 7 : sqrtf(_gps.speed));
+
+            new_center->unitx = _pos.unitx + (gint)(lead_pixels * sinf(tmp));
+            new_center->unity = _pos.unity - (gint)(lead_pixels * cosf(tmp));
+            break;
+        }
+    case CENTER_LATLON:
+        *new_center = _pos;
+        break;
+    default:
+        *new_center = priv->center;
+    }
 }
 
