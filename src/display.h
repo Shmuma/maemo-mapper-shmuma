@@ -24,6 +24,8 @@
 #ifndef MAEMO_MAPPER_DISPLAY_H
 #define MAEMO_MAPPER_DISPLAY_H
 
+#include "maps.h"
+
 typedef struct {
     gdouble glat, glon;
     GtkWidget *fmt_combo;
@@ -58,7 +60,6 @@ void map_center_unit_full(Point new_center, gint zoom, gint rotate_angle);
 void map_rotate(gint rotate_angle);
 Point map_calc_new_center(gint zoom);
 
-gboolean map_download_refresh_idle(MapUpdateTask *mut);
 void map_set_zoom(gint new_zoom);
 
 gboolean thread_render_map(MapRenderTask *mrt);
@@ -71,6 +72,9 @@ gboolean latlon_dialog(gdouble lat, gdouble lon);
 gboolean display_open_file(GtkWindow *parent, gchar **bytes_out,
         GnomeVFSHandle **handle_out, gint *size_out, gchar **dir, gchar **file,
         GtkFileChooserAction chooser_action);
+
+void map_download_refresh_idle(MapTileSpec *tile, GdkPixbuf *pixbuf,
+                               const GError *error, gpointer user_data);
 
 void display_init(void);
 

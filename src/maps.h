@@ -43,9 +43,9 @@ gboolean mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex,
         gint tiley, gint update_type, gint batch_id, gint priority,
         ThreadLatch *refresh_latch);
 
-guint mut_exists_hashfunc(const MapUpdateTask *a);
-gboolean mut_exists_equalfunc(const MapUpdateTask *a, const MapUpdateTask *b);
-gint mut_priority_comparefunc(const MapUpdateTask *a, const MapUpdateTask *b);
+guint mut_exists_hashfunc(gconstpointer);
+gboolean mut_exists_equalfunc(gconstpointer a, gconstpointer b);
+gint mut_priority_comparefunc(gconstpointer a, gconstpointer b);
 gboolean thread_proc_mut(void);
 
 gboolean repoman_dialog(void);
@@ -60,5 +60,19 @@ void maps_toggle_visible_layers ();
 
 /* returns amount of seconds since tile downloaded */
 gint get_tile_age (GdkPixbuf* pixbuf);
+
+typedef struct {
+    RepoData *repo;
+    gint tilex;
+    gint tiley;
+    gint8 zoom;
+} MapTileSpec;
+
+typedef void (*MapUpdateCb)(MapTileSpec *tile,
+                            GdkPixbuf *pixbuf, const GError *error,
+                            gpointer user_data);
+
+void map_download_tile(MapTileSpec *tile, gint priority,
+                       MapUpdateCb callback, gpointer user_data);
 
 #endif /* ifndef MAEMO_MAPPER_MAPS_H */

@@ -61,6 +61,26 @@
 #include "settings.h"
 #include "util.h"
 
+typedef struct
+{
+    MapUpdateCb callback;
+    gpointer user_data;
+} MapUpdateCbData;
+
+typedef struct
+{
+    MapTileSpec tile;
+    gint priority;
+    gint8 update_type;
+    gint8 layer_level;
+    guint downloading : 1;
+    /* list of MapUpdateCbData */
+    GSList *callbacks;
+
+    /* Output values */
+    GdkPixbuf *pixbuf;
+    GError *error;
+} MapUpdateTask;
 
 typedef struct _RepoManInfo RepoManInfo;
 struct _RepoManInfo {
@@ -1180,7 +1200,7 @@ map_construct_url(RepoData *repo, gint zoom, gint tilex, gint tiley)
 static gboolean
 mapdb_initiate_update_banner_idle()
 {
-    if(!_download_banner && _num_downloads != _curr_download)
+    if (!_download_banner)
     {
         _download_banner = hildon_banner_show_progress(
                 _window, NULL, _("Processing Maps"));
@@ -1190,6 +1210,88 @@ mapdb_initiate_update_banner_idle()
             gtk_widget_hide(_download_banner);
     }
     return FALSE;
+}
+
+static void
+map_update_tile_int(MapTileSpec *tile, gint priority, MapUpdateType update_type,
+                    MapUpdateCb callback, gpointer user_data)
+{
+    MapUpdateTask *mut;
+    MapUpdateTask *old_mut;
+    MapUpdateCbData *cb_data = NULL;
+
+    g_debug("%s(%s, %d, %d, %d, %d)", G_STRFUNC,
+            tile->repo->name, tile->zoom, tile->tilex, tile->tiley, update_type);
+
+    mut = g_slice_new0(MapUpdateTask);
+    if (!mut)
+    {
+        /* Could not allocate memory. */
+        g_error("Out of memory in allocation of update task");
+        return;
+    }
+    memcpy(&mut->tile, tile, sizeof(MapTileSpec));
+    mut->layer_level = tile->repo->layer_level;
+    mut->priority = priority;
+    mut->update_type = update_type;
+
+    if (callback)
+    {
+        cb_data = g_slice_new(MapUpdateCbData);
+        cb_data->callback = callback;
+        cb_data->user_data = user_data;
+    }
+
+    g_mutex_lock(_mut_priority_mutex);
+    old_mut = g_hash_table_lookup(_mut_exists_table, mut);
+    if (old_mut)
+    {
+        g_debug("Task already queued, adding listener");
+
+        if (cb_data)
+            old_mut->callbacks = g_slist_prepend(old_mut->callbacks, cb_data);
+
+        /* Check if the priority of the new task is higher */
+        if (old_mut->priority > mut->priority && !old_mut->downloading)
+        {
+            g_debug("re-insert, old priority = %d", old_mut->priority);
+            /* It is, so remove the task from the tree, update its priority and
+             * re-insert it with the new one */
+            g_tree_remove(_mut_priority_tree, old_mut);
+            old_mut->priority = mut->priority;
+            g_tree_insert(_mut_priority_tree, old_mut, old_mut);
+        }
+
+        /* free the newly allocated task */
+        g_slice_free(MapUpdateTask, mut);
+        g_mutex_unlock(_mut_priority_mutex);
+        return;
+    }
+
+    if (cb_data)
+        mut->callbacks = g_slist_prepend(mut->callbacks, cb_data);
+
+    g_hash_table_insert(_mut_exists_table, mut, mut);
+    g_tree_insert(_mut_priority_tree, mut, mut);
+
+    g_mutex_unlock(_mut_priority_mutex);
+
+    /* Increment download count and (possibly) display banner. */
+    if (g_hash_table_size(_mut_exists_table) >= 20 && !_download_banner)
+        g_idle_add((GSourceFunc)mapdb_initiate_update_banner_idle, NULL);
+
+    /* This doesn't need to be thread-safe.  Extras in the pool don't
+     * really make a difference. */
+    if (g_thread_pool_get_num_threads(_mut_thread_pool)
+        < g_thread_pool_get_max_threads(_mut_thread_pool))
+        g_thread_pool_push(_mut_thread_pool, (gpointer)1, NULL);
+}
+
+void
+map_download_tile(MapTileSpec *tile, gint priority,
+                  MapUpdateCb callback, gpointer user_data)
+{
+    map_update_tile_int(tile, priority, MAP_UPDATE_AUTO, callback, user_data);
 }
 
 /**
@@ -1202,82 +1304,15 @@ mapdb_initiate_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
         gint update_type, gint batch_id, gint priority,
         ThreadLatch *refresh_latch)
 {
-    MapUpdateTask *mut;
-    MapUpdateTask *old_mut;
-    gboolean is_replacing = FALSE;
-    vprintf("%s(%s, %d, %d, %d, %d)\n", __PRETTY_FUNCTION__,
-            repo->name, zoom, tilex, tiley, update_type);
+    MapTileSpec tile;
 
-    mut = g_slice_new(MapUpdateTask);
-    if(!mut)
-    {
-        /* Could not allocate memory. */
-        g_printerr("Out of memory in allocation of update task #%d\n",
-                _num_downloads + 1);
-        return FALSE;
-    }
-    mut->zoom = zoom;
-    mut->tilex = tilex;
-    mut->tiley = tiley;
-    mut->update_type = update_type;
-    mut->layer_level = repo->layer_level;
-
-    /* Lock the mutex if this is an auto-update. */
-    if(update_type == MAP_UPDATE_AUTO)
-        g_mutex_lock(_mut_priority_mutex);
-    if(NULL != (old_mut = g_hash_table_lookup(_mut_exists_table, mut)))
-    {
-        /* Check if new mut is in a newer batch that the old mut.
-         * We use vfs_result to indicate a MUT that is already in the process
-         * of being downloaded. */
-        if(old_mut->batch_id < batch_id && old_mut->vfs_result < 0)
-        {
-            /* It is, so remove the old one so we can re-add this one. */
-            g_hash_table_remove(_mut_exists_table, old_mut);
-            g_tree_remove(_mut_priority_tree, old_mut);
-            g_slice_free(MapUpdateTask, old_mut);
-            is_replacing = TRUE;
-        }
-        else
-        {
-            /* It's not, so just ignore it. */
-            if(update_type == MAP_UPDATE_AUTO)
-                g_mutex_unlock(_mut_priority_mutex);
-            g_slice_free(MapUpdateTask, mut);
-            vprintf("%s(): return FALSE (1)\n", __PRETTY_FUNCTION__);
-            return FALSE;
-        }
-    }
-
-    g_hash_table_insert(_mut_exists_table, mut, mut);
-
-    mut->repo = repo;
-    mut->refresh_latch = refresh_latch;
-    mut->priority = priority;
-    mut->batch_id = batch_id;
-    mut->pixbuf = NULL;
-    mut->vfs_result = -1;
-
-    g_tree_insert(_mut_priority_tree, mut, mut);
-
-    /* Unlock the mutex if this is an auto-update. */
-    if(update_type == MAP_UPDATE_AUTO)
-        g_mutex_unlock(_mut_priority_mutex);
-
-    if(!is_replacing)
-    {
-        /* Increment download count and (possibly) display banner. */
-        if(++_num_downloads == 20 && !_download_banner)
-            g_idle_add((GSourceFunc)mapdb_initiate_update_banner_idle, NULL);
-
-        /* This doesn't need to be thread-safe.  Extras in the pool don't
-         * really make a difference. */
-        if(g_thread_pool_get_num_threads(_mut_thread_pool)
-                < g_thread_pool_get_max_threads(_mut_thread_pool))
-            g_thread_pool_push(_mut_thread_pool, (gpointer)1, NULL);
-    }
-
-    vprintf("%s(): return FALSE (2)\n", __PRETTY_FUNCTION__);
+    tile.repo = repo;
+    tile.zoom = zoom;
+    tile.tilex = tilex;
+    tile.tiley = tiley;
+    map_update_tile_int(&tile, priority, update_type,
+                        map_download_refresh_idle,
+                        GINT_TO_POINTER(update_type));
     return FALSE;
 }
 
@@ -1295,6 +1330,106 @@ map_handle_error(gchar *error)
     return FALSE;
 }
 
+static gboolean
+map_update_task_completed(MapUpdateTask *mut)
+{
+    MapTileSpec *tile = &mut->tile;
+
+    g_debug("%s(%s, %d, %d, %d)", G_STRFUNC,
+            tile->repo->name, tile->zoom, tile->tilex, tile->tiley);
+
+    g_mutex_lock(_mut_priority_mutex);
+    g_hash_table_remove(_mut_exists_table, mut);
+
+    /* notify all listeners */
+    mut->callbacks = g_slist_reverse(mut->callbacks);
+    while (mut->callbacks != NULL)
+    {
+        MapUpdateCbData *cb_data = mut->callbacks->data;
+
+        (cb_data->callback)(tile, mut->pixbuf, mut->error, cb_data->user_data);
+
+        g_slice_free(MapUpdateCbData, cb_data);
+        mut->callbacks = g_slist_delete_link(mut->callbacks, mut->callbacks);
+    }
+    g_mutex_unlock(_mut_priority_mutex);
+
+    if (g_hash_table_size(_mut_exists_table) == 0)
+    {
+        g_thread_pool_stop_unused_threads();
+
+        if (_curr_repo->gdbm_db && !_curr_repo->is_sqlite)
+            gdbm_sync(_curr_repo->gdbm_db);
+
+        if (_download_banner)
+        {
+            gtk_widget_destroy(_download_banner);
+            _download_banner = NULL;
+        }
+    }
+
+    /* clean up the task memory */
+    if (mut->pixbuf)
+        g_object_unref(mut->pixbuf);
+    if (mut->error)
+        g_error_free(mut->error);
+    g_slice_free(MapUpdateTask, mut);
+
+    /* don't call again */
+    return FALSE;
+}
+
+static void
+download_tile(MapTileSpec *tile, gchar **bytes, gint *size,
+              GdkPixbuf **pixbuf, GError **error)
+{
+    gchar *src_url;
+    GnomeVFSResult vfs_result;
+    GdkPixbufLoader *loader = NULL;
+
+    g_debug("%s (%s, %d, %d, %d)", G_STRFUNC,
+            tile->repo->name, tile->zoom, tile->tilex, tile->tiley);
+
+    /* First, construct the URL from which we will get the data. */
+    src_url = map_construct_url(tile->repo, tile->zoom,
+                                tile->tilex, tile->tiley);
+
+    /* Now, attempt to read the entire contents of the URL. */
+    vfs_result = gnome_vfs_read_entire_file(src_url, size, bytes);
+    g_free(src_url);
+
+    if (vfs_result != GNOME_VFS_OK || *bytes == NULL)
+    {
+        /* it might not be very proper, but let's use GFile error codes */
+        g_set_error(error, g_file_error_quark(), G_FILE_ERROR_FAULT,
+                    "%s", gnome_vfs_result_to_string(vfs_result));
+        goto l_error;
+    }
+
+    /* Attempt to parse the bytes into a pixbuf. */
+    loader = gdk_pixbuf_loader_new();
+    gdk_pixbuf_loader_write(loader, (guchar *)(*bytes), *size, NULL);
+    gdk_pixbuf_loader_close(loader, error);
+    if (*error) goto l_error;
+
+    *pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+    if (!*pixbuf)
+    {
+        g_set_error(error, g_file_error_quark(), G_FILE_ERROR_INVAL,
+                    "Creation of pixbuf failed");
+        goto l_error;
+    }
+    g_object_ref(*pixbuf);
+    g_object_unref(loader);
+    return;
+
+l_error:
+    if (loader)
+        g_object_unref(loader);
+    g_free(*bytes);
+    *bytes = NULL;
+}
+
 gboolean
 thread_proc_mut()
 {
@@ -1306,199 +1441,142 @@ thread_proc_mut()
     while(conic_ensure_connected())
     {
         gint retries;
-        gboolean refresh_sent = FALSE, layer_tile;
+        gboolean notification_sent = FALSE, layer_tile;
         MapUpdateTask *mut = NULL;
+        MapTileSpec *tile;
 
         /* Get the next MUT from the mut tree. */
         g_mutex_lock(_mut_priority_mutex);
         g_tree_foreach(_mut_priority_tree, (GTraverseFunc)get_next_mut, &mut);
-        if(!mut)
+        if (!mut)
         {
             /* No more MUTs to process.  Return. */
             g_mutex_unlock(_mut_priority_mutex);
             return FALSE;
         }
+
+        tile = &mut->tile;
         /* Mark this MUT as "in-progress". */
-        mut->vfs_result = GNOME_VFS_NUM_ERRORS;
+        mut->downloading = TRUE;
         g_tree_remove(_mut_priority_tree, mut);
         g_mutex_unlock(_mut_priority_mutex);
 
-        printf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
-                mut->repo->name, mut->zoom, mut->tilex, mut->tiley);
+        g_debug("%s %p (%s, %d, %d, %d)", G_STRFUNC, mut,
+                tile->repo->name, tile->zoom, tile->tilex, tile->tiley);
 
-        layer_tile = mut->repo != _curr_repo && repo_is_layer (_curr_repo, mut->repo);
+        layer_tile = tile->repo != _curr_repo &&
+            repo_is_layer(_curr_repo, tile->repo);
 
-        if (mut->repo != _curr_repo && !layer_tile)
+        mut->pixbuf = NULL;
+        mut->error = NULL;
+
+        if (tile->repo != _curr_repo && !layer_tile)
         {
             /* Do nothing, except report that there is no error. */
-            mut->vfs_result = GNOME_VFS_OK;
         }
-        else if(mut->update_type == MAP_UPDATE_DELETE)
+        else if (mut->update_type == MAP_UPDATE_DELETE)
         {
             /* Easy - just delete the entry from the database.  We don't care
              * about failures (sorry). */
-            if(MAPDB_EXISTS(mut->repo))
-                mapdb_delete(mut->repo, mut->zoom, mut->tilex, mut->tiley);
-
-            /* Report that there is no error. */
-            mut->vfs_result = GNOME_VFS_OK;
+            if (MAPDB_EXISTS(tile->repo))
+                mapdb_delete(tile->repo, tile->zoom, tile->tilex, tile->tiley);
         }
-        else for(retries = mut->repo->layer_level
-                ? 1 : INITIAL_DOWNLOAD_RETRIES; retries > 0; --retries)
+        else
         {
-            gchar *src_url;
-            gchar *bytes;
-            gint size;
-            GdkPixbufLoader *loader;
-            RepoData *repo;
-            gint zoom, tilex, tiley;
-            GError *error = NULL;
+            gboolean download_needed = TRUE;
 
             /* First check for existence. */
-            if(mut->update_type == MAP_UPDATE_ADD)
+            if (mut->update_type == MAP_UPDATE_ADD)
             {
                 /* We don't want to overwrite, so check for existence. */
                 /* Map already exists, and we're not going to overwrite. */
-                if(mapdb_exists(mut->repo, mut->zoom,
-                            mut->tilex,mut->tiley))
+                if (mapdb_exists(tile->repo, tile->zoom, tile->tilex, tile->tiley))
                 {
-                    /* Report that there is no error. */
-                    mut->vfs_result = GNOME_VFS_OK;
-                    break;
+                    download_needed = FALSE;
                 }
             }
 
-            /* First, construct the URL from which we will get the data. */
-            src_url = map_construct_url(mut->repo, mut->zoom,
-                    mut->tilex, mut->tiley);
-
-            /* Now, attempt to read the entire contents of the URL. */
-            mut->vfs_result = gnome_vfs_read_entire_file(
-                    src_url, &size, &bytes);
-            g_free(src_url);
-            if(mut->vfs_result != GNOME_VFS_OK || !bytes)
+            if (download_needed)
             {
-                /* Try again. */
-                printf("Error reading URL: %s\n",
-                        gnome_vfs_result_to_string(mut->vfs_result));
+                RepoData *repo;
+                gint zoom, tilex, tiley;
+                gchar *bytes = NULL;
+                gint size;
+
+                for (retries = tile->repo->layer_level
+                     ? 1 : INITIAL_DOWNLOAD_RETRIES; retries > 0; --retries)
+                {
+                    g_clear_error(&mut->error);
+                    download_tile(tile, &bytes, &size,
+                                  &mut->pixbuf, &mut->error);
+                    if (mut->pixbuf) break;
+
+                    g_debug("Download failed, retrying");
+                }
+
+                /* Copy database-relevant mut data before we release it. */
+                repo = tile->repo;
+                zoom = tile->zoom;
+                tilex = tile->tilex;
+                tiley = tile->tiley;
+
+                g_debug("%s(%s, %d, %d, %d): %s", G_STRFUNC,
+                        tile->repo->name, tile->zoom, tile->tilex, tile->tiley,
+                        mut->pixbuf ? "Success" : "Failed");
+                g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                                (GSourceFunc)map_update_task_completed, mut,
+                                NULL);
+                notification_sent = TRUE;
+
+                /* DO NOT USE mut FROM THIS POINT ON. */
+
+                /* Also attempt to add to the database. */
+                if (bytes && MAPDB_EXISTS(repo) &&
+                    !mapdb_update(repo, zoom, tilex, tiley, bytes, size)) {
+                    g_idle_add((GSourceFunc)map_handle_error,
+                               _("Error saving map to disk - disk full?"));
+                }
+
+                /* Success! */
                 g_free(bytes);
-                continue;
             }
-            /* usleep(100000); DEBUG */
-
-            /* Attempt to parse the bytes into a pixbuf. */
-            loader = gdk_pixbuf_loader_new();
-            gdk_pixbuf_loader_write(loader, (guchar *)bytes, size, NULL);
-            gdk_pixbuf_loader_close(loader, &error);
-            if(error || (NULL == (mut->pixbuf = g_object_ref(
-                        gdk_pixbuf_loader_get_pixbuf(loader)))))
-            {
-                mut->vfs_result = GNOME_VFS_NUM_ERRORS;
-                if(mut->pixbuf)
-                    g_object_unref(mut->pixbuf);
-                mut->pixbuf = NULL;
-                g_free(bytes);
-                g_object_unref(loader);
-                printf("Error parsing pixbuf: %s\n",
-                        error ? error->message : "?");
-                continue;
-            }
-            g_object_unref(loader);
-
-            /* Copy database-relevant mut data before we release it. */
-            repo = mut->repo;
-            zoom = mut->zoom;
-            tilex = mut->tilex;
-            tiley = mut->tiley;
-
-            /* Pass the mut to the GTK thread for redrawing, but only if a
-             * redraw isn't already in the pipeline. */
-            if(mut->refresh_latch)
-            {
-                /* Wait until the latch is open. */
-                g_mutex_lock(mut->refresh_latch->mutex);
-                while(!mut->refresh_latch->is_open)
-                {
-                    g_cond_wait(mut->refresh_latch->cond,
-                            mut->refresh_latch->mutex);
-                }
-                /* Latch is open.  Decrement the number of waiters and
-                 * check if we're the last waiter to run. */
-                if(mut->refresh_latch->is_done_adding_tasks)
-                {
-                    if(++mut->refresh_latch->num_done
-                                == mut->refresh_latch->num_tasks)
-                    {
-                        /* Last waiter.  Free the latch resources. */
-                        g_mutex_unlock(mut->refresh_latch->mutex);
-                        g_cond_free(mut->refresh_latch->cond);
-                        g_mutex_free(mut->refresh_latch->mutex);
-                        g_slice_free(ThreadLatch, mut->refresh_latch);
-                        mut->refresh_latch = NULL;
-                    }
-                    else
-                    {
-                        /* Not the last waiter. Signal the next waiter.*/
-                        g_cond_signal(mut->refresh_latch->cond);
-                        g_mutex_unlock(mut->refresh_latch->mutex);
-                    }
-                }
-                else
-                    g_mutex_unlock(mut->refresh_latch->mutex);
-            }
-
-            g_idle_add_full(G_PRIORITY_HIGH_IDLE,
-                    (GSourceFunc)map_download_refresh_idle, mut, NULL);
-            refresh_sent = TRUE;
-
-            /* DO NOT USE mut FROM THIS POINT ON. */
-
-            /* Also attempt to add to the database. */
-            if(MAPDB_EXISTS(repo) && !mapdb_update(repo, zoom,
-                    tilex, tiley, bytes, size)) {
-                g_idle_add((GSourceFunc)map_handle_error,
-                        _("Error saving map to disk - disk full?"));
-            }
-
-            /* Success! */
-            g_free(bytes);
-            break;
         }
 
-        if(!refresh_sent)
+        if (!notification_sent)
             g_idle_add_full(G_PRIORITY_HIGH_IDLE,
-                    (GSourceFunc)map_download_refresh_idle, mut, NULL);
+                            (GSourceFunc)map_update_task_completed, mut, NULL);
     }
 
-    vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
     return FALSE;
 }
 
 guint
-mut_exists_hashfunc(const MapUpdateTask *a)
+mut_exists_hashfunc(gconstpointer a)
 {
-    gint sum = a->zoom + a->tilex + a->tiley + a->update_type + a->layer_level;
-    return g_int_hash(&sum);
+    const MapUpdateTask *t = a;
+    const MapTileSpec *r = &t->tile;
+    return r->zoom + r->tilex + r->tiley + t->update_type + t->layer_level;
 }
 
 gboolean
-mut_exists_equalfunc(const MapUpdateTask *a, const MapUpdateTask *b)
+mut_exists_equalfunc(gconstpointer a, gconstpointer b)
 {
-    return (a->tilex == b->tilex
-            && a->tiley == b->tiley
-            && a->zoom == b->zoom
-            && a->update_type == b->update_type
-            && a->layer_level == b->layer_level);
+    const MapUpdateTask *t1 = a;
+    const MapUpdateTask *t2 = b;
+    return (t1->tile.tilex == t2->tile.tilex
+            && t1->tile.tiley == t2->tile.tiley
+            && t1->tile.zoom == t2->tile.zoom
+            && t1->update_type == t2->update_type
+            && t1->layer_level == t2->layer_level);
 }
 
 gint
-mut_priority_comparefunc(const MapUpdateTask *a, const MapUpdateTask *b)
+mut_priority_comparefunc(gconstpointer _a, gconstpointer _b)
 {
+    const MapUpdateTask *a = _a;
+    const MapUpdateTask *b = _b;
     /* The update_type enum is sorted in order of ascending priority. */
     gint diff = (b->update_type - a->update_type);
-    if(diff)
-        return diff;
-    diff = (b->batch_id - a->batch_id); /* More recent ones first. */
     if(diff)
         return diff;
     diff = (a->priority - b->priority); /* Lower priority numbers first. */
@@ -1509,13 +1587,13 @@ mut_priority_comparefunc(const MapUpdateTask *a, const MapUpdateTask *b)
         return diff;
 
     /* At this point, we don't care, so just pick arbitrarily. */
-    diff = (a->tilex - b->tilex);
+    diff = (a->tile.tilex - b->tile.tilex);
     if(diff)
         return diff;
-    diff = (a->tiley - b->tiley);
+    diff = (a->tile.tiley - b->tile.tiley);
     if(diff)
         return diff;
-    return (a->zoom - b->zoom);
+    return (a->tile.zoom - b->tile.zoom);
 }
 
 static gboolean

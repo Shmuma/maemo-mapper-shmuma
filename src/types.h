@@ -443,24 +443,6 @@ struct _ThreadLatch
     GCond *cond;
 };
 
-/** Data used during the asynchronous progress update phase of automatic map
- * downloading. */
-typedef struct _MapUpdateTask MapUpdateTask;
-struct _MapUpdateTask
-{
-    gint priority;
-    gint tilex;
-    gint tiley;
-    ThreadLatch *refresh_latch;
-    GdkPixbuf *pixbuf;
-    RepoData *repo;
-    gint8 update_type;
-    gint8 zoom;
-    gint8 vfs_result;
-    gint8 batch_id;
-    gint8 layer_level;
-};
-
 /** Data used during the asynchronous automatic route downloading operation. */
 typedef struct _AutoRouteDownloadData AutoRouteDownloadData;
 struct _AutoRouteDownloadData {

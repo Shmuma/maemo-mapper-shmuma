@@ -551,8 +551,8 @@ maemo_mapper_init(gint argc, gchar **argv)
     _map_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 1, 1);
 
     _mut_exists_table = g_hash_table_new(
-            (GHashFunc)mut_exists_hashfunc, (GEqualFunc)mut_exists_equalfunc);
-    _mut_priority_tree = g_tree_new((GCompareFunc)mut_priority_comparefunc);
+            mut_exists_hashfunc, mut_exists_equalfunc);
+    _mut_priority_tree = g_tree_new(mut_priority_comparefunc);
 
     _mut_thread_pool = g_thread_pool_new(
             (GFunc)thread_proc_mut, NULL, NUM_DOWNLOAD_THREADS, FALSE, NULL);

@@ -49,7 +49,6 @@
 #include "display.h"
 #include "gdk-pixbuf-rotate.h"
 #include "gps.h"
-#include "maps.h"
 #include "path.h"
 #include "poi.h"
 #include "screen.h"
@@ -1566,27 +1565,31 @@ map_refresh_mark(gboolean force_redraw)
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
-gboolean
-map_download_refresh_idle(MapUpdateTask *mut)
+void
+map_download_refresh_idle(MapTileSpec *tile, GdkPixbuf *pixbuf,
+                          const GError *error, gpointer user_data)
 {
-    vprintf("%s(%p, %d, %d, %d)\n", __PRETTY_FUNCTION__, mut,
-            mut->zoom, mut->tilex, mut->tiley);
+    MapUpdateType update_type;
 
-    /* Test if download succeeded (only if retries != 0). */
-    if(mut->pixbuf)
+    g_debug("%s(%p, %d, %d, %d)", G_STRFUNC, tile,
+            tile->zoom, tile->tilex, tile->tiley);
+
+    update_type = GPOINTER_TO_INT(user_data);
+
+    if (pixbuf)
     {
-        gint zoff = mut->zoom - _zoom;
+        gint zoff = tile->zoom - _zoom;
         /* Update the UI to reflect the updated map database. */
         /* Only refresh at same or "lower" (more detailed) zoom level. */
-        if(mut->update_type == MAP_UPDATE_AUTO && (unsigned)zoff <= 4)
+        if (update_type == MAP_UPDATE_AUTO && (unsigned)zoff <= 4)
         {
             gfloat destx, desty;
             gint boundx, boundy, width, height;
 
             pixel2buf(
-                    tile2pixel(mut->tilex << zoff)
+                    tile2pixel(tile->tilex << zoff)
                         + ((TILE_SIZE_PIXELS << zoff) >> 1),
-                    tile2pixel(mut->tiley << zoff)
+                    tile2pixel(tile->tiley << zoff)
                         + ((TILE_SIZE_PIXELS << zoff) >> 1),
                     destx, desty);
 
@@ -1599,7 +1602,7 @@ map_download_refresh_idle(MapUpdateTask *mut)
                         destx - unit2pixel(_map_correction_unitx),
                         desty - unit2pixel(_map_correction_unity),
                         _map_rotate_matrix,
-                        mut->pixbuf,
+                        pixbuf,
                         TILE_SIZE_PIXELS / 2,
                         TILE_SIZE_PIXELS / 2,
                         TILE_SIZE_PIXELS,
@@ -1627,29 +1630,19 @@ map_download_refresh_idle(MapUpdateTask *mut)
                     _map_widget, boundx, boundy, width, height);
             }
         }
-        g_object_unref(mut->pixbuf);
     }
-    else if(mut->vfs_result != GNOME_VFS_OK)
+    else if (error != NULL)
     {
         _dl_errors++;
     }
 
     if(++_curr_download == _num_downloads)
     {
-        if(_download_banner)
-        {
-            gtk_widget_destroy(_download_banner);
-            _download_banner = NULL;
-        }
         _num_downloads = _curr_download = 0;
-        g_thread_pool_stop_unused_threads();
-
-        if(_curr_repo->gdbm_db && !_curr_repo->is_sqlite)
-            gdbm_sync(_curr_repo->gdbm_db);
 
         if(_dl_errors)
         {
-            if (mut->repo->layer_level == 0) {
+            if (tile->repo->layer_level == 0) {
                 gchar buffer[BUFFER_SIZE];
                 snprintf(buffer, sizeof(buffer), "%d %s", _dl_errors,
                          _("maps failed to download."));
@@ -1658,7 +1651,7 @@ map_download_refresh_idle(MapUpdateTask *mut)
             _dl_errors = 0;
         }
 
-        if(mut->update_type != MAP_UPDATE_AUTO || _refresh_map_after_download)
+        if (update_type != MAP_UPDATE_AUTO || _refresh_map_after_download)
         {
             /* Update the map. */
             map_refresh_mark(TRUE);
@@ -1670,14 +1663,7 @@ map_download_refresh_idle(MapUpdateTask *mut)
                 _curr_download / (double)_num_downloads);
     }
 
-    g_mutex_lock(_mut_priority_mutex);
-    g_hash_table_remove(_mut_exists_table, mut);
-    g_mutex_unlock(_mut_priority_mutex);
-
-    g_slice_free(MapUpdateTask, mut);
-
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-    return FALSE;
+    g_debug("%s(): return", G_STRFUNC);
 }
 
 /**
