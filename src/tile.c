@@ -23,10 +23,12 @@
 #endif
 #include "tile.h"
 
+#include "controller.h"
 #include "defines.h"
 #include "maps.h"
 
 #include <clutter-gtk/clutter-gtk.h>
+#include <stdlib.h>
 
 struct _MapTilePrivate
 {
@@ -36,6 +38,28 @@ struct _MapTilePrivate
 G_DEFINE_TYPE(MapTile, map_tile, CLUTTER_TYPE_TEXTURE);
 
 #define MAP_TILE_PRIV(tile) (MAP_TILE(tile)->priv)
+
+static void
+download_tile_cb(MapTileSpec *ts, GdkPixbuf *pixbuf, const GError *error,
+                 gpointer user_data)
+{
+    MapTile *tile, **p_tile;
+
+    g_debug("%s", G_STRFUNC);
+    p_tile = user_data;
+    tile = *p_tile;
+    g_slice_free(MapTile *, p_tile);
+    if (!tile)
+    {
+        g_debug("Object destroyed");
+        return;
+    }
+
+    g_object_remove_weak_pointer(G_OBJECT(tile), user_data);
+    if (pixbuf)
+        gtk_clutter_texture_set_from_pixbuf(CLUTTER_TEXTURE(tile),
+                                            pixbuf, NULL);
+}
 
 static void
 map_tile_dispose(GObject *object)
@@ -119,7 +143,31 @@ map_tile_load(RepoData *repo, gint zoom, gint x, gint y)
 
     if (zoff != 0)
     {
-        /* TODO: start download process */
+        MapController *controller;
+        MapTileSpec ts;
+        ClutterActor **p_tile;
+        gint priority;
+        Point center;
+
+        ts.repo = repo;
+        ts.tilex = x;
+        ts.tiley = y;
+        ts.zoom = zoom;
+
+        /* The priority is lower (that is, higher number) when we walk away
+         * from the center of the map */
+        controller = map_controller_get_instance();
+        map_controller_get_center(controller, &center);
+        priority =
+            abs(x - unit2ztile(center.unitx, zoom)) +
+            abs(y - unit2ztile(center.unity, zoom));
+
+        /* weak pointer trick to prevent crashes if the callback is invoked
+         * after the tile is destroyed. */
+        p_tile = g_slice_new(ClutterActor *);
+        *p_tile = tile;
+        g_object_add_weak_pointer(G_OBJECT(tile), (gpointer)p_tile);
+        map_download_tile(&ts, priority, download_tile_cb, p_tile);
     }
     clutter_actor_show(tile);
     return tile;
