@@ -306,7 +306,8 @@ cmenu_cb_loc_apply_correction(GtkMenuItem *item)
         MACRO_BANNER_SHOW_INFO(_window, _("Map correction removed."));
     }
 
-    printf("Map correction now set to: %d, %d\n");
+    g_debug("Map correction now set to: %d, %d",
+            _map_correction_unitx, _map_correction_unity);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
