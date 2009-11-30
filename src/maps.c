@@ -320,13 +320,19 @@ static void map_cache_entry_make_pixbuf(MapCacheEntry *_entry){
         gdk_pixbuf_loader_close(loader, &error);
         if(!error)
         {
-            _entry->pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
-            _entry->size = _entry->data_sz+
-             gdk_pixbuf_get_rowstride(_entry->pixbuf)*
-             gdk_pixbuf_get_height(_entry->pixbuf);
-            g_object_unref(loader);
-            return;
+            _entry->pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+            if (_entry->pixbuf)
+            {
+                g_object_ref(_entry->pixbuf);
+                _entry->size = _entry->data_sz+
+                    gdk_pixbuf_get_rowstride(_entry->pixbuf)*
+                    gdk_pixbuf_get_height(_entry->pixbuf);
+                g_object_unref(loader);
+                return;
+            }
         }
+        else
+            g_error_free(error);
         g_object_unref(loader);
         g_slice_free1(_entry->data_sz, _entry->data);
         _entry->data = NULL;
