@@ -106,6 +106,7 @@ void map_controller_set_show_zoom(MapController *self, gboolean show);
 gboolean map_controller_get_show_zoom(MapController *self);
 
 void map_controller_set_center(MapController *self, Point center, gint zoom);
+void map_controller_get_center(MapController *self, Point *center);
 void map_controller_set_rotation(MapController *self, gint angle);
 void map_controller_rotate(MapController *self, gint angle);
 void map_controller_set_zoom(MapController *self, gint zoom);

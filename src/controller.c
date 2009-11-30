@@ -483,6 +483,18 @@ map_controller_set_center(MapController *self, Point center, gint zoom)
 }
 
 void
+map_controller_get_center(MapController *self, Point *center)
+{
+    MapControllerPrivate *priv;
+
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+    priv = self->priv;
+
+    g_return_if_fail(center != NULL);
+    *center = priv->center;
+}
+
+void
 map_controller_set_rotation(MapController *self, gint angle)
 {
     MapControllerPrivate *priv;
