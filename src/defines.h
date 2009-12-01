@@ -286,12 +286,16 @@
    ((guint64)((((gint64)(b).unitx)-(a).unitx)*(((gint64)(b).unitx)-(a).unitx))\
   + (guint64)((((gint64)(b).unity)-(a).unity)*(((gint64)(b).unity)-(a).unity)))
 
+#if OLD_MAP
 #define MACRO_QUEUE_DRAW_AREA() \
     gtk_widget_queue_draw_area( \
             _map_widget, \
             0, 0, \
             _view_width_pixels, \
             _view_height_pixels)
+#else
+#define MACRO_QUEUE_DRAW_AREA()
+#endif
 
 /* Render all on-map metadata an annotations, including POI and paths. */
 #ifdef INCLUDE_APRS

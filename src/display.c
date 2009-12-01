@@ -69,8 +69,11 @@ static GtkWidget *_sdi_use = NULL;
 static GtkWidget *_sdi_fix = NULL;
 static GtkWidget *_sdi_fqu = NULL;
 static GtkWidget *_sdi_msp = NULL;
+#if OLD_MAP
 static gint _redraw_count = 0;
+#endif
 
+#if OLD_MAP
 static gint _mark_bufx1 = -1;
 static gint _mark_bufx2 = -1;
 static gint _mark_bufy1 = -1;
@@ -81,6 +84,7 @@ static gint _mark_width = -1;
 static gint _mark_height = -1;
 static GdkRectangle _scale_rect = { 0, 0, 0, 0};
 static GdkRectangle _zoom_rect = { 0, 0, 0, 0};
+#endif
 static gint _dl_errors = 0;
 
 static volatile gint _pending_replaces = 0;
@@ -108,6 +112,7 @@ PangoLayout *_aprs_label_layout = NULL;
 
 #define SCALE_WIDTH (100)
 
+#if OLD_MAP
 static gboolean
 speed_excess(void)
 {
@@ -121,6 +126,7 @@ speed_excess(void)
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
+#endif
 
 #ifdef INCLUDE_APRS
 //// START OF APRS CODE
@@ -319,6 +325,7 @@ void plot_aprs_station(AprsDataRow *p_station, gboolean single )
 static void
 speed_limit(void)
 {
+#if OLD_MAP
     GdkGC *gc;
     gfloat cur_speed;
     gchar *buffer;
@@ -386,6 +393,7 @@ speed_limit(void)
     g_free(buffer);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+#endif
 }
 
 gboolean
@@ -1104,6 +1112,7 @@ gps_details(void)
 }
 
 
+#if OLD_MAP
 /**
  * Render a single track line to _map_pixmap.  If either point on the line
  * is a break (defined as unity == 0), a circle is drawn at the other point.
@@ -1280,6 +1289,7 @@ update_gcs()
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
+#endif
 
 /**
  * Call gtk_window_present() on Maemo Mapper.  This also checks the
@@ -1354,6 +1364,7 @@ window_present()
     return FALSE;
 }
 
+#if OLD_MAP
 /**
  * "Set" the mark, which translates the current GPS position into on-screen
  * units in preparation for drawing the mark with map_draw_mark().
@@ -1380,9 +1391,9 @@ map_set_mark()
     _mark_width = abs(_mark_bufx1 - _mark_bufx2) + (4 * _draw_width);
     _mark_height = abs(_mark_bufy1 - _mark_bufy2) + (4 * _draw_width);
 
-    map_screen_update_mark(MAP_SCREEN(_w_map));
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
+#endif
 
 
 /**
@@ -1392,6 +1403,7 @@ map_set_mark()
 void
 map_force_redraw()
 {
+#if OLD_MAP
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     gdk_draw_pixbuf(
@@ -1407,6 +1419,7 @@ map_force_redraw()
     MACRO_QUEUE_DRAW_AREA();
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+#endif
 }
 
 Point
@@ -1428,6 +1441,7 @@ void
 map_center_unit_full(Point new_center,
         gint zoom, gint rotate_angle)
 {
+#if OLD_MAP
     MapRenderTask *mrt;
     printf("%s(%d, %d)\n", __PRETTY_FUNCTION__,
             new_center.unitx, new_center.unity);
@@ -1463,6 +1477,7 @@ map_center_unit_full(Point new_center,
     }
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+#endif
 }
 
 void
@@ -1503,6 +1518,7 @@ map_pan(gint delta_unitx, gint delta_unity)
 void
 map_move_mark()
 {
+#if OLD_MAP
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     /* Just queue the old and new draw areas. */
@@ -1519,6 +1535,8 @@ map_move_mark()
             _mark_height);
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+#endif
+    map_screen_update_mark(MAP_SCREEN(_w_map));
 }
 
 /**
@@ -1578,6 +1596,7 @@ map_download_refresh_idle(MapTileSpec *tile, GdkPixbuf *pixbuf,
 
     if (pixbuf)
     {
+#if OLD_MAP
         gint zoff = tile->zoom - _zoom;
         /* Update the UI to reflect the updated map database. */
         /* Only refresh at same or "lower" (more detailed) zoom level. */
@@ -1630,6 +1649,7 @@ map_download_refresh_idle(MapTileSpec *tile, GdkPixbuf *pixbuf,
                     _map_widget, boundx, boundy, width, height);
             }
         }
+#endif
     }
     else if (error != NULL)
     {
@@ -1690,6 +1710,7 @@ map_set_zoom(gint new_zoom)
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
+#if OLD_MAP
 static gboolean
 map_replace_pixbuf_idle(MapRenderTask *mrt)
 {
@@ -2203,6 +2224,7 @@ map_cb_configure(GtkWidget *widget, GdkEventConfigure *event)
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
+#endif
 
 gboolean
 sat_panel_expose(GtkWidget *widget, GdkEventExpose *event)
@@ -2382,6 +2404,7 @@ heading_panel_expose(GtkWidget *widget, GdkEventExpose *event)
     return TRUE;
 }
 
+#if OLD_MAP
 gboolean
 map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
 {
@@ -2582,6 +2605,7 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
+#endif
 
 static void
 latlon_cb_copy_clicked(GtkWidget *widget, LatlonDialog *lld) {
@@ -2858,6 +2882,7 @@ display_init()
     GdkColor color;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+#if OLD_MAP
     /* Cache some pango and GCs for drawing. */
     pango_context = gtk_widget_get_pango_context(_map_widget);
     _scale_layout = pango_layout_new(pango_context);
@@ -2917,9 +2942,10 @@ display_init()
     pango_layout_set_font_description(_speed_limit_layout,
             pango_font);
     pango_layout_set_alignment(_speed_limit_layout, PANGO_ALIGN_CENTER);
+#endif
 
     /* draw_sat_info() */
-    _sat_info_gc1 = gdk_gc_new(_map_widget->window);
+    _sat_info_gc1 = gdk_gc_new(_window->window);
     color.red = 0;
     color.green = 0;
     color.blue = 0;
@@ -2927,9 +2953,9 @@ display_init()
     color.red = 0;
     color.green = 0;
     color.blue = 0xffff;
-    _sat_info_gc2 = gdk_gc_new(_map_widget->window);
+    _sat_info_gc2 = gdk_gc_new(_window->window);
     gdk_gc_set_rgb_fg_color(_sat_info_gc2, &color);
-    pango_context = gtk_widget_get_pango_context(_map_widget);
+    pango_context = gtk_widget_get_pango_context(_window);
     _sat_info_layout = pango_layout_new(pango_context);
     pango_font = pango_font_description_new();
     pango_font_description_set_family(pango_font,"Sans Serif");
@@ -2938,7 +2964,7 @@ display_init()
     pango_layout_set_alignment(_sat_info_layout, PANGO_ALIGN_CENTER);
 
     /* sat_panel_expose() */
-    pango_context = gtk_widget_get_pango_context(_map_widget);
+    pango_context = gtk_widget_get_pango_context(_window);
     _sat_panel_layout = pango_layout_new(pango_context);
     pango_font = pango_font_description_new();
     pango_font_description_set_family(pango_font,"Sans Serif");
@@ -2946,13 +2972,13 @@ display_init()
     pango_layout_set_font_description (_sat_panel_layout, pango_font);
 
     /* heading_panel_expose() */
-    pango_context = gtk_widget_get_pango_context(_map_widget);
+    pango_context = gtk_widget_get_pango_context(_window);
     _heading_panel_layout = pango_layout_new(pango_context);
     _heading_panel_fontdesc =  pango_font_description_new();
     pango_font_description_set_family(_heading_panel_fontdesc, "Sans Serif");
 
     /* draw_sat_details() */
-    pango_context = gtk_widget_get_pango_context(_map_widget);
+    pango_context = gtk_widget_get_pango_context(_window);
     _sat_details_layout = pango_layout_new(pango_context);
     pango_font = pango_font_description_new();
     pango_font_description_set_family(pango_font,"Sans Serif");
@@ -2962,7 +2988,7 @@ display_init()
     pango_layout_set_alignment(_sat_details_layout, PANGO_ALIGN_CENTER);
 
     /* sat_details_panel_expose() */
-    pango_context = gtk_widget_get_pango_context(_map_widget);
+    pango_context = gtk_widget_get_pango_context(_window);
     _sat_details_expose_layout = pango_layout_new(pango_context);
     pango_font = pango_font_description_new();
     pango_font_description_set_family(
@@ -2999,11 +3025,13 @@ display_init()
         }
     }
 
+#if OLD_MAP
     g_signal_connect(G_OBJECT(_map_widget), "configure_event",
             G_CALLBACK(map_cb_configure), NULL);
 
     g_signal_connect(G_OBJECT(_map_widget), "expose_event",
             G_CALLBACK(map_cb_expose), NULL);
+#endif
     g_signal_connect(G_OBJECT(_sat_panel), "expose_event",
             G_CALLBACK(sat_panel_expose), NULL);
     g_signal_connect(G_OBJECT(_heading_panel), "expose_event",

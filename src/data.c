@@ -81,14 +81,16 @@ osso_context_t *_osso = NULL;
 MapController *_controller = NULL;
 
 /** The widget that provides the visual display of the map. */
-GtkWidget *_map_widget = NULL;
 GtkWidget *_w_map = NULL;
+#if OLD_MAP
+GtkWidget *_map_widget = NULL;
 
 /** The backing pixmap of _map_widget. */
 GdkPixmap *_map_pixmap = NULL;
 
 /** The backing pixmap of _map_widget. */
 GdkPixbuf *_map_pixbuf = NULL;
+#endif
 
 /** The context menu for the map. */
 GtkMenu *_map_cmenu = NULL;

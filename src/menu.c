@@ -341,8 +341,10 @@ menu_cb_track_insert_mark(GtkMenuItem *item)
             continue;
         }
 
+#if OLD_MAP
         map_render_paths();
         MACRO_QUEUE_DRAW_AREA();
+#endif
         break;
     }
     gtk_widget_hide(dialog);

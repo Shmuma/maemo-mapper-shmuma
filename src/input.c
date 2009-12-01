@@ -708,6 +708,7 @@ input_init()
     g_signal_connect(G_OBJECT(_window), "key_release_event",
             G_CALLBACK(window_cb_key_release), NULL);
 
+#if OLD_MAP
     g_signal_connect(G_OBJECT(_map_widget), "motion_notify_event",
             G_CALLBACK(map_cb_motion_notify), NULL);
 
@@ -723,6 +724,7 @@ input_init()
             | GDK_POINTER_MOTION_HINT_MASK
             | GDK_BUTTON_PRESS_MASK
             | GDK_BUTTON_RELEASE_MASK);
+#endif
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }

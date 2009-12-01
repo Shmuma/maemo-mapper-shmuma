@@ -1098,7 +1098,9 @@ settings_dialog_colors(GtkWindow *parent)
 
 #endif
         
+#if OLD_MAP
         update_gcs();
+#endif
         break;
     }
 
@@ -1807,7 +1809,9 @@ gboolean settings_dialog()
 
     if (settings_dialog_get_save(dialog))
     {
+#if OLD_MAP
         update_gcs();
+#endif
 
         settings_save();
 

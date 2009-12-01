@@ -507,9 +507,11 @@ maemo_mapper_init(gint argc, gchar **argv)
     gtk_widget_set_size_request (_heading_panel, -1, 100);
     gtk_box_pack_start(GTK_BOX(vbox), _heading_panel, TRUE, TRUE, 0);
 
+#if OLD_MAP
     _map_widget = gtk_drawing_area_new();
 
     gtk_box_pack_start(GTK_BOX(hbox), _map_widget, TRUE, TRUE, 0);
+#endif
 
     _controller = g_object_new(MAP_TYPE_CONTROLLER, NULL);
     _w_map = map_controller_get_screen_widget(_controller);
@@ -518,6 +520,7 @@ maemo_mapper_init(gint argc, gchar **argv)
     gtk_widget_show_all(hbox);
     gps_show_info(); /* hides info, if necessary. */
 
+#if OLD_MAP
     gtk_widget_realize(_map_widget);
 
     /* Tweak the foreground and background colors a little bit... */
@@ -549,6 +552,7 @@ maemo_mapper_init(gint argc, gchar **argv)
     /* -1: use bit depth of widget->window. */
 
     _map_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 1, 1);
+#endif
 
     _mut_exists_table = g_hash_table_new(
             mut_exists_hashfunc, mut_exists_equalfunc);
@@ -556,8 +560,10 @@ maemo_mapper_init(gint argc, gchar **argv)
 
     _mut_thread_pool = g_thread_pool_new(
             (GFunc)thread_proc_mut, NULL, NUM_DOWNLOAD_THREADS, FALSE, NULL);
+#if OLD_MAP
     _mrt_thread_pool = g_thread_pool_new(
             (GFunc)thread_render_map, NULL, 1, FALSE, NULL);
+#endif
 
     /* Connect signals. */
     g_signal_connect(G_OBJECT(_window), "destroy",
@@ -567,9 +573,12 @@ maemo_mapper_init(gint argc, gchar **argv)
 
     latlon2unit(_gps.lat, _gps.lon, _pos.unitx, _pos.unity);
 
+#if OLD_MAP
     /* Initialize our line styles. */
     update_gcs();
+#endif
 
+    gtk_widget_realize(_window);
     menu_init();
     cmenu_init();
     path_init();

@@ -323,8 +323,10 @@ map_controller_set_show_routes(MapController *self, gboolean show)
     if (show)
     {
         _show_paths |= ROUTES_MASK;
+#if OLD_MAP
         map_render_paths();
         MACRO_QUEUE_DRAW_AREA();
+#endif
         MACRO_BANNER_SHOW_INFO(_window, _("Routes are now shown"));
     }
     else
@@ -358,8 +360,10 @@ map_controller_set_show_tracks(MapController *self, gboolean show)
     if (show)
     {
         _show_paths |= TRACKS_MASK;
+#if OLD_MAP
         map_render_paths();
         MACRO_QUEUE_DRAW_AREA();
+#endif
         MACRO_BANNER_SHOW_INFO(_window, _("Tracks are now shown"));
     }
     else
@@ -474,12 +478,14 @@ map_controller_set_center(MapController *self, Point center, gint zoom)
 
     map_screen_set_center(priv->screen,
                           priv->center.unitx, priv->center.unity, zoom);
+#if OLD_MAP
     if (_map_widget)
     {
         map_center_unit_full(priv->center, zoom,
                              _center_mode > 0 && _center_rotate
                              ? _gps.heading : priv->rotation_angle);
     }
+#endif
 }
 
 void
@@ -508,10 +514,12 @@ map_controller_set_rotation(MapController *self, gint angle)
     angle = angle % 360;
     priv->rotation_angle = angle;
     map_screen_set_rotation(priv->screen, angle);
+#if OLD_MAP
     if (_map_widget)
     {
         map_center_unit_full(priv->center, priv->zoom, angle);
     }
+#endif
 }
 
 void

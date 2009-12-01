@@ -3295,6 +3295,7 @@ map_render_poi()
                 pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
             }
             map_screen_show_poi(MAP_SCREEN(_w_map), unitx, unity, pixbuf);
+#if OLD_MAP
             if(error)
             {
                 /* No icon for POI or for category or default POI icon file.
@@ -3320,6 +3321,7 @@ map_render_poi()
                         GDK_RGB_DITHER_NONE, 0, 0);
                 g_object_unref(pixbuf);
             }
+#endif
 
             g_free(poi_label);
             g_free(cat_label);

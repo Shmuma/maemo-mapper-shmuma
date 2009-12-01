@@ -718,8 +718,10 @@ path_reset_route()
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     route_find_nearest_point();
+#if OLD_MAP
     MACRO_MAP_RENDER_DATA();
     MACRO_QUEUE_DRAW_AREA();
+#endif
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
 }
@@ -776,14 +778,17 @@ track_add(time_t time, gboolean newly_fixed)
                                 : route_update_nears(TRUE)))
         {
             /* Nearest waypoint has changed - re-render paths. */
+#if OLD_MAP
             map_render_paths();
             MACRO_QUEUE_DRAW_AREA();
+#endif
         }
 
         if(_enable_tracking)
         {
             if(_show_paths & TRACKS_MASK)
             {
+#if OLD_MAP
                 /* Instead of calling map_render_paths(), we'll draw the new
                  * line ourselves and call gtk_widget_queue_draw_area(). */
                 gint tx1, ty1, tx2, ty2;
@@ -802,6 +807,7 @@ track_add(time_t time, gboolean newly_fixed)
                             abs(tx1 - tx2) + (2 * _draw_width),
                             abs(ty1 - ty2) + (2 * _draw_width));
                 }
+#endif
             }
 
             MACRO_PATH_INCREMENT_TAIL(_track);
@@ -1033,6 +1039,7 @@ track_insert_break(gboolean temporary)
 
         /** Instead of calling map_render_paths(), we'll just add the waypoint
          * ourselves. */
+#if OLD_MAP
         /* Make sure this circle will be visible. */
         if((x1 < _view_width_pixels) && (y1 < _view_height_pixels))
             gdk_draw_arc(_map_pixmap, _gc[COLORABLE_TRACK_BREAK],
@@ -1043,6 +1050,7 @@ track_insert_break(gboolean temporary)
                     2 * _draw_width,
                     0, /* start at 0 degrees. */
                     360 * 64);
+#endif
     }
 
     /* Update the track database. */
@@ -1581,8 +1589,10 @@ route_add_way_dialog(gint unitx, gint unity)
         }
 
         route_find_nearest_point();
+#if OLD_MAP
         map_render_paths();
         MACRO_QUEUE_DRAW_AREA();
+#endif
         break;
     }
     gtk_widget_hide(dialog);
