@@ -35,6 +35,7 @@ icon_scalable_DATA = icons/scalable/maemo-mapper.png icons/scalable/maemo-mapper
 	icons/scalable/maemo-mapper-rotate.png \
 	icons/scalable/maemo-mapper-route.png \
 	icons/scalable/maemo-mapper-settings.png \
+	icons/scalable/maemo-mapper-view.png \
 	icons/scalable/maemo-mapper-zoom-in.png \
 	icons/scalable/maemo-mapper-zoom-out.png
 icon_svg = \
