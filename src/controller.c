@@ -44,6 +44,7 @@ struct _MapControllerPrivate
     gint rotation_angle;
     gint zoom;
 
+    guint source_map_center;
     guint is_disposed : 1;
 };
 
@@ -52,6 +53,25 @@ G_DEFINE_TYPE(MapController, map_controller, G_TYPE_OBJECT);
 #define MAP_CONTROLLER_PRIV(controller) (MAP_CONTROLLER(controller)->priv)
 
 static MapController *instance = NULL;
+
+static gboolean
+set_center_real(MapController *self)
+{
+    MapControllerPrivate *priv = self->priv;
+
+    map_screen_set_center(priv->screen,
+                          priv->center.unitx, priv->center.unity, priv->zoom);
+#if OLD_MAP
+    if (_map_widget)
+    {
+        map_center_unit_full(priv->center, priv->zoom,
+                             _center_mode > 0 && _center_rotate
+                             ? _gps.heading : priv->rotation_angle);
+    }
+#endif
+    priv->source_map_center = 0;
+    return FALSE;
+}
 
 static void
 map_controller_dispose(GObject *object)
@@ -62,6 +82,12 @@ map_controller_dispose(GObject *object)
         return;
 
     priv->is_disposed = TRUE;
+
+    if (priv->source_map_center != 0)
+    {
+        g_source_remove(priv->source_map_center);
+        priv->source_map_center = 0;
+    }
 
     G_OBJECT_CLASS(map_controller_parent_class)->dispose(object);
 }
@@ -476,16 +502,9 @@ map_controller_set_center(MapController *self, Point center, gint zoom)
         priv->zoom = zoom;
     priv->center = center;
 
-    map_screen_set_center(priv->screen,
-                          priv->center.unitx, priv->center.unity, zoom);
-#if OLD_MAP
-    if (_map_widget)
-    {
-        map_center_unit_full(priv->center, zoom,
-                             _center_mode > 0 && _center_rotate
-                             ? _gps.heading : priv->rotation_angle);
-    }
-#endif
+    if (priv->source_map_center == 0)
+        priv->source_map_center =
+            g_idle_add((GSourceFunc)set_center_real, self);
 }
 
 void
