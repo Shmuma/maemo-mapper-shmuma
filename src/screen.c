@@ -198,19 +198,17 @@ on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
             clutter_actor_show(priv->osm);
         else if (priv->is_dragging)
         {
-            GtkAllocation *allocation = &(GTK_WIDGET(screen)->allocation);
+            MapController *controller;
+            Point p;
 
             map_screen_pixel_to_screen_units(priv,
                                              be->x - priv->btn_press_screen_x,
                                              be->y - priv->btn_press_screen_y,
                                              &dx, &dy);
-            clutter_actor_set_position(priv->map,
-                                       allocation->width / 2,
-                                       allocation->height / 2);
-            map_screen_set_center(screen,
-                                  priv->map_center_ux - dx,
-                                  priv->map_center_uy - dy,
-                                  -1);
+            p.unitx = priv->map_center_ux - dx;
+            p.unity = priv->map_center_uy - dy;
+            controller = map_controller_get_instance();
+            map_controller_set_center(controller, p, -1);
             handled = TRUE;
         }
 
@@ -823,6 +821,11 @@ map_screen_set_center(MapScreen *screen, gint x, gint y, gint zoom)
     g_return_if_fail(MAP_IS_SCREEN(screen));
     priv = screen->priv;
 
+    allocation = &(GTK_WIDGET(screen)->allocation);
+    clutter_actor_set_position(priv->map,
+                               allocation->width / 2,
+                               allocation->height / 2);
+
     new_zoom = (zoom > 0) ? zoom : priv->zoom;
 
     /* Destroying all the existing tiles.
@@ -835,7 +838,6 @@ map_screen_set_center(MapScreen *screen, gint x, gint y, gint zoom)
     else
         cache_amount = 1; /* No cache. */
 
-    allocation = &(GTK_WIDGET(screen)->allocation);
     diag_halflength_units =
         pixel2zunit(TILE_HALFDIAG_PIXELS +
                     MAX(allocation->width, allocation->height) / 2,
