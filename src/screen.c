@@ -416,7 +416,7 @@ overlay_redraw_idle(MapScreen *screen)
 {
     MapScreenPrivate *priv = screen->priv;
 
-    if (priv->source_overlay_redraw == 0)
+    if (priv->source_overlay_redraw == 0 && GTK_WIDGET_REALIZED(screen))
     {
         priv->source_overlay_redraw =
             g_idle_add((GSourceFunc)overlay_redraw_real, screen);
