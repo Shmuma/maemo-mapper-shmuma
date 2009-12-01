@@ -1,3 +1,10 @@
+maemo-mapper (3.0+alpha0) unstable; urgency=low
+
+  * Alpha release for maemo5. It's mostly not working, but I need to release
+    it as a preview for the Barcelona "UX meets code".
+
+ -- Alberto Mardegan <mardy@users.sourceforge.net>  Tue,  1 Dec 2009 19:05:36 +0200
+
 maemo-mapper (2.6.2) unstable; urgency=low
 
   * Fixed some configuration bugs in APRS.
