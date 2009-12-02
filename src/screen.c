@@ -432,6 +432,11 @@ load_tiles_into_map(MapScreen *screen, RepoData *repo, gint zoom,
     gint tx, ty;
 
     tile_group = CLUTTER_CONTAINER(screen->priv->tile_group);
+
+    /* hide all the existing tiles */
+    clutter_container_foreach(tile_group,
+                              (ClutterCallback)clutter_actor_hide, NULL);
+
     clutter_actor_set_position(screen->priv->tile_group,
                                tx1 * TILE_SIZE_PIXELS,
                                ty1 * TILE_SIZE_PIXELS);
@@ -440,11 +445,19 @@ load_tiles_into_map(MapScreen *screen, RepoData *repo, gint zoom,
     {
         for (ty = ty1; ty <= ty2; ty++)
         {
-            tile = map_tile_load(repo, zoom, tx, ty);
+            tile = map_tile_cached(repo, zoom, tx, ty);
+            if (!tile)
+            {
+                gboolean new_tile;
+                tile = map_tile_load(repo, zoom, tx, ty, &new_tile);
+                if (new_tile)
+                    clutter_container_add_actor(tile_group, tile);
+            }
+
             clutter_actor_set_position(tile,
                                        (tx - tx1) * TILE_SIZE_PIXELS,
                                        (ty - ty1) * TILE_SIZE_PIXELS);
-            clutter_container_add_actor(tile_group, tile);
+            clutter_actor_show(tile);
         }
     }
 }
@@ -828,10 +841,6 @@ map_screen_set_center(MapScreen *screen, gint x, gint y, gint zoom)
 
     new_zoom = (zoom > 0) ? zoom : priv->zoom;
 
-    /* Destroying all the existing tiles.
-     * TODO: implement some caching, reuse tiles when possible. */
-    clutter_group_remove_all(CLUTTER_GROUP(priv->tile_group));
-
     /* Calculate cache amount */
     if(repo->type != REPOTYPE_NONE && MAPDB_EXISTS(repo))
         cache_amount = _auto_download_precache;
@@ -857,8 +866,6 @@ map_screen_set_center(MapScreen *screen, gint x, gint y, gint zoom)
                             new_zoom);
     stop_tiley = MIN(stop_tiley + (cache_amount - 1),
                      unit2ztile(WORLD_SIZE_UNITS, new_zoom));
-
-    /* TODO check what tiles are already on the map */
 
     /* create the tiles */
     load_tiles_into_map(screen, repo, new_zoom,

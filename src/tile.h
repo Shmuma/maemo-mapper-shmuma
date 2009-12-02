@@ -26,6 +26,7 @@
 #include <glib-object.h>
 #include <clutter/clutter.h>
 #include "types.h"
+#include "maps.h"
  
 G_BEGIN_DECLS
 
@@ -45,9 +46,7 @@ struct _MapTile
 {
     ClutterTexture parent;
 
-    gint zoom;
-    gint x;
-    gint y;
+    MapTileSpec ts;
 
     MapTilePrivate *priv;
 };
@@ -59,7 +58,9 @@ struct _MapTileClass
 
 GType map_tile_get_type (void);
 
-ClutterActor *map_tile_load(RepoData *repo, gint zoom, gint x, gint y);
+ClutterActor *map_tile_load(RepoData *repo, gint zoom, gint x, gint y,
+                            gboolean *new_tile);
+ClutterActor *map_tile_cached(RepoData *repo, gint zoom, gint x, gint y);
 
 G_END_DECLS
 #endif /* MAP_TILE_H */

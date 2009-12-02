@@ -25,7 +25,6 @@
 
 #include "controller.h"
 #include "defines.h"
-#include "maps.h"
 
 #include <clutter-gtk/clutter-gtk.h>
 #include <stdlib.h>
@@ -38,6 +37,19 @@ struct _MapTilePrivate
 G_DEFINE_TYPE(MapTile, map_tile, CLUTTER_TYPE_TEXTURE);
 
 #define MAP_TILE_PRIV(tile) (MAP_TILE(tile)->priv)
+
+#define MAX_CACHE_SIZE  90
+static GList *tile_cache = NULL;
+static GList *tile_cache_last = NULL;
+static gint tile_cache_size = 0;
+
+static gboolean
+compare_tile_spec(MapTile *tile, MapTileSpec *ts)
+{
+    return (tile->ts.zoom == ts->zoom &&
+            tile->ts.tilex == ts->tilex &&
+            tile->ts.tiley == ts->tiley) ? 0 : 1;
+}
 
 static void
 download_tile_cb(MapTileSpec *ts, GdkPixbuf *pixbuf, const GError *error,
@@ -56,6 +68,15 @@ download_tile_cb(MapTileSpec *ts, GdkPixbuf *pixbuf, const GError *error,
     }
 
     g_object_remove_weak_pointer(G_OBJECT(tile), user_data);
+
+    /* Are we still interested in this pixbuf? */
+    if (ts->zoom != tile->ts.zoom ||
+        ts->tilex != tile->ts.tilex ||
+        ts->tiley != tile->ts.tiley)
+    {
+        return;
+    }
+
     if (pixbuf)
         gtk_clutter_texture_set_from_pixbuf(CLUTTER_TEXTURE(tile),
                                             pixbuf, NULL);
@@ -93,6 +114,40 @@ map_tile_class_init(MapTileClass * klass)
     object_class->dispose = map_tile_dispose;
 }
 
+MapTile *
+map_tile_get_instance(gboolean *new_tile)
+{
+    MapTile *tile;
+    GList *list = NULL;
+
+    if (tile_cache_size >= MAX_CACHE_SIZE)
+    {
+        /* get the least-recently used tile from the cache and reuse it */
+        g_return_val_if_fail(tile_cache_last != NULL, NULL);
+
+        list = tile_cache_last;
+        tile = MAP_TILE(list->data);
+
+        /* move the tile to the beginning of the cache */
+        tile_cache_last = list->prev;
+        tile_cache = g_list_remove_link(tile_cache, list);
+        tile_cache = g_list_concat(list, tile_cache);
+        *new_tile = FALSE;
+    }
+    else
+    {
+        /* We can create a new tile object */
+        tile = g_object_new (MAP_TYPE_TILE, NULL);
+        tile_cache = g_list_prepend(tile_cache, tile);
+        if (tile_cache_size == 0)
+            tile_cache_last = tile_cache;
+
+        tile_cache_size++;
+        *new_tile = TRUE;
+    }
+    return tile;
+}
+
 /**
  * map_tile_load:
  * @zoom: the zoom level.
@@ -102,13 +157,18 @@ map_tile_class_init(MapTileClass * klass)
  * Returns: a #ClutterActor representing the tile.
  */
 ClutterActor *
-map_tile_load(RepoData *repo, gint zoom, gint x, gint y)
+map_tile_load(RepoData *repo, gint zoom, gint x, gint y, gboolean *new_tile)
 {
-    ClutterActor *tile;
+    MapTile *tile;
     GdkPixbuf *pixbuf, *area;
     gint zoff;
 
-    tile = g_object_new (MAP_TYPE_TILE, NULL);
+    tile = map_tile_get_instance(new_tile);
+
+    tile->ts.repo = repo;
+    tile->ts.zoom = zoom;
+    tile->ts.tilex = x;
+    tile->ts.tiley = y;
 
     /* TODO: handle layers */
     for (zoff = 0; zoff + zoom <= MAX_ZOOM && zoff < 4; zoff++)
@@ -144,15 +204,9 @@ map_tile_load(RepoData *repo, gint zoom, gint x, gint y)
     if (zoff != 0)
     {
         MapController *controller;
-        MapTileSpec ts;
-        ClutterActor **p_tile;
+        MapTile **p_tile;
         gint priority;
         Point center;
-
-        ts.repo = repo;
-        ts.tilex = x;
-        ts.tiley = y;
-        ts.zoom = zoom;
 
         /* The priority is lower (that is, higher number) when we walk away
          * from the center of the map */
@@ -164,12 +218,43 @@ map_tile_load(RepoData *repo, gint zoom, gint x, gint y)
 
         /* weak pointer trick to prevent crashes if the callback is invoked
          * after the tile is destroyed. */
-        p_tile = g_slice_new(ClutterActor *);
+        p_tile = g_slice_new(MapTile *);
         *p_tile = tile;
         g_object_add_weak_pointer(G_OBJECT(tile), (gpointer)p_tile);
-        map_download_tile(&ts, priority, download_tile_cb, p_tile);
+        map_download_tile(&tile->ts, priority, download_tile_cb, p_tile);
     }
-    clutter_actor_show(tile);
-    return tile;
+    return CLUTTER_ACTOR(tile);
 }
 
+ClutterActor *
+map_tile_cached(RepoData *repo, gint zoom, gint x, gint y)
+{
+    MapTileSpec ts;
+    GList *list;
+    ClutterActor *tile = NULL;
+
+    ts.repo = repo;
+    ts.tilex = x;
+    ts.tiley = y;
+    ts.zoom = zoom;
+
+    /* first, check whether the tile is in the cache */
+    list = g_list_find_custom(tile_cache, &ts,
+                              (GCompareFunc)compare_tile_spec);
+    if (list)
+    {
+        tile = CLUTTER_ACTOR(list->data);
+
+        /* if found, move it to the beginning of the list */
+        if (list != tile_cache)
+        {
+            if (list == tile_cache_last)
+                tile_cache_last = list->prev;
+
+            tile_cache = g_list_remove_link(tile_cache, list);
+            tile_cache = g_list_concat(list, tile_cache);
+        }
+    }
+
+    return tile;
+}
