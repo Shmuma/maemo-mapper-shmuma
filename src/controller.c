@@ -150,14 +150,14 @@ void
 map_controller_zoom_in(MapController *self)
 {
     g_return_if_fail(MAP_IS_CONTROLLER(self));
-    map_screen_zoom_in(self->priv->screen);
+    map_controller_set_zoom(self, self->priv->zoom - 1);
 }
 
 void
 map_controller_zoom_out(MapController *self)
 {
     g_return_if_fail(MAP_IS_CONTROLLER(self));
-    map_screen_zoom_out(self->priv->screen);
+    map_controller_set_zoom(self, self->priv->zoom + 1);
 }
 
 void

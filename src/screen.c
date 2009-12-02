@@ -208,6 +208,7 @@ on_pointer_event(ClutterActor *actor, ClutterEvent *event, MapScreen *screen)
             p.unitx = priv->map_center_ux - dx;
             p.unity = priv->map_center_uy - dy;
             controller = map_controller_get_instance();
+            map_controller_disable_auto_center(controller);
             map_controller_set_center(controller, p, -1);
             handled = TRUE;
         }
