@@ -211,26 +211,25 @@ static MapCache _map_cache;
 
 const gchar* layer_timestamp_key = "tEXt::mm_ts";
 
-static const gchar *
-build_tile_path(RepoData *repo, gint zoom, gint tilex, gint tiley)
+static void
+build_tile_path(gchar *buffer, gsize size,
+                RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
-    static gchar buffer[200];
-    g_snprintf(buffer, sizeof(buffer),
+    g_snprintf(buffer, size,
                "/home/user/MyDocs/.maps/%s/%d/%d/",
                repo->name, zoom, tilex);
-    return buffer;
 }
 
-static const gchar *
-build_tile_filename(RepoData *repo, gint zoom, gint tilex, gint tiley)
+static void
+build_tile_filename(gchar *buffer, gsize size,
+                    RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
-    static gchar buffer[200];
-    g_snprintf(buffer, sizeof(buffer),
+    g_snprintf(buffer, size,
                "/home/user/MyDocs/.maps/%s/%d/%d/%d.png",
                repo->name, zoom, tilex, tiley);
-    return buffer;
 }
 
+#if MAPS_IN_DB
 static guint
 mapdb_get_data(RepoData *repo, gint zoom, gint tilex, gint tiley, gchar **data)
 {
@@ -451,7 +450,6 @@ map_cache_evict(size_t _size)
     }
 }
 
-#if MAPS_IN_DB
 static GdkPixbuf *
 map_cache_get(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
@@ -668,12 +666,12 @@ map_cache_clean (void)
 gboolean
 mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
-    const gchar *filename;
+    gchar filename[200];
     gboolean exists;
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
 
-    filename = build_tile_filename(repo, zoom, tilex, tiley);
+    build_tile_filename(filename, sizeof(filename), repo, zoom, tilex, tiley);
     exists = g_file_test(filename, G_FILE_TEST_EXISTS);
 
     g_debug("%s(): return %d", __PRETTY_FUNCTION__, exists);
@@ -683,15 +681,16 @@ mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
 GdkPixbuf*
 mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
-    const gchar *filename;
+    gchar filename[200];
     GdkPixbuf *pixbuf;
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
 
-    filename = build_tile_filename(repo, zoom, tilex, tiley);
+    build_tile_filename(filename, sizeof(filename), repo, zoom, tilex, tiley);
     pixbuf = gdk_pixbuf_new_from_file(filename, NULL);
 
-    g_debug("%s(): return %p", __PRETTY_FUNCTION__, pixbuf);
+    g_debug("%s(%s, %d, %d, %d): return %p", __PRETTY_FUNCTION__,
+           repo->name, zoom, tilex, tiley, pixbuf);
     return pixbuf;
 }
 
@@ -700,12 +699,13 @@ mapdb_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
         void *bytes, gint size)
 {
     gint success = TRUE;
-    const gchar *filename;
+    gchar filename[200], path[200];
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
 
-    g_mkdir_with_parents(build_tile_path(repo, zoom, tilex, tiley), 0666);
-    filename = build_tile_filename(repo, zoom, tilex, tiley);
+    build_tile_path(path, sizeof(path), repo, zoom, tilex, tiley);
+    g_mkdir_with_parents(path, 0666);
+    build_tile_filename(filename, sizeof(filename), repo, zoom, tilex, tiley);
     success = g_file_set_contents(filename, bytes, size, NULL);
 
     g_debug("%s(): return %d", __PRETTY_FUNCTION__, success);
@@ -715,12 +715,12 @@ mapdb_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
 static gboolean
 mapdb_delete(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
+    gchar filename[200];
     gint success = FALSE;
-    const gchar *filename;
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
 
-    filename = build_tile_filename(repo, zoom, tilex, tiley);
+    build_tile_filename(filename, sizeof(filename), repo, zoom, tilex, tiley);
     g_remove(filename);
 
     vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, success);
@@ -1334,7 +1334,7 @@ thread_proc_mut()
                 /* DO NOT USE mut FROM THIS POINT ON. */
 
                 /* Also attempt to add to the database. */
-                if (bytes && MAPDB_EXISTS(repo) &&
+                if (bytes &&
                     !mapdb_update(repo, zoom, tilex, tiley, bytes, size)) {
                     g_idle_add((GSourceFunc)map_handle_error,
                                _("Error saving map to disk - disk full?"));
