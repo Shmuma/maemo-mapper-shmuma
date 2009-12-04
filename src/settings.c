@@ -354,6 +354,7 @@ settings_save()
 {
     gchar *settings_dir;
     GConfClient *gconf_client;
+    MapController *controller = map_controller_get_instance();
     gchar buffer[16];
     printf("%s()\n", __PRETTY_FUNCTION__);
 
@@ -523,6 +524,8 @@ settings_save()
     /* Save last center point. */
     {
         gdouble center_lat, center_lon;
+
+        map_controller_get_center(controller, &_center);
         unit2latlon(_center.unitx, _center.unity, center_lat, center_lon);
 
         /* Save last center latitude. */
