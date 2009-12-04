@@ -560,6 +560,7 @@ map_controller_set_zoom(MapController *self, gint zoom)
 
     if (zoom == priv->zoom) return;
 
+    g_debug("%s %d", G_STRFUNC, zoom);
     priv->zoom = zoom;
     map_controller_calc_best_center(self, &center);
     map_controller_set_center(self, center, zoom);

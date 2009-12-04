@@ -211,6 +211,25 @@ static MapCache _map_cache;
 
 const gchar* layer_timestamp_key = "tEXt::mm_ts";
 
+static const gchar *
+build_tile_path(RepoData *repo, gint zoom, gint tilex, gint tiley)
+{
+    static gchar buffer[200];
+    g_snprintf(buffer, sizeof(buffer),
+               "/home/user/MyDocs/.maps/%s/%d/%d/",
+               repo->name, zoom, tilex);
+    return buffer;
+}
+
+static const gchar *
+build_tile_filename(RepoData *repo, gint zoom, gint tilex, gint tiley)
+{
+    static gchar buffer[200];
+    g_snprintf(buffer, sizeof(buffer),
+               "/home/user/MyDocs/.maps/%s/%d/%d/%d.png",
+               repo->name, zoom, tilex, tiley);
+    return buffer;
+}
 
 static guint
 mapdb_get_data(RepoData *repo, gint zoom, gint tilex, gint tiley, gchar **data)
@@ -432,6 +451,7 @@ map_cache_evict(size_t _size)
     }
 }
 
+#if MAPS_IN_DB
 static GdkPixbuf *
 map_cache_get(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
@@ -632,88 +652,46 @@ map_cache_clean_layer(RepoData *layer)
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
+#else
+size_t
+map_cache_resize(size_t cache_size)
+{
+    return cache_size;
+}
+
+void
+map_cache_clean (void)
+{
+}
+#endif
 
 gboolean
 mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
+    const gchar *filename;
     gboolean exists;
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
 
-    g_mutex_lock(_mapdb_mutex);
+    filename = build_tile_filename(repo, zoom, tilex, tiley);
+    exists = g_file_test(filename, G_FILE_TEST_EXISTS);
 
-    if(!MAPDB_EXISTS(repo))
-    {
-        /* There is no cache.  Return FALSE. */
-        g_mutex_unlock(_mapdb_mutex);
-        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-        return FALSE;
-    }
-
-    /* Search the cache first. */
-    {
-        MapCacheKey key;
-        MapCacheEntry *entry;
-        key.repo = repo;
-        key.zoom = zoom;
-        key.tilex = tilex;
-        key.tiley = tiley;
-        entry = (MapCacheEntry *)g_hash_table_lookup(_map_cache.entries, &key);
-        if(entry != NULL)
-        {
-            gboolean ret;
-            ret = entry->data != NULL;
-            g_mutex_unlock(_mapdb_mutex);
-            return ret;
-        }
-    }
-
-    if(repo->is_sqlite)
-    {
-        /* Attempt to retrieve map from database. */
-        if(SQLITE_OK == sqlite3_bind_int(repo->stmt_map_exists, 1, zoom)
-        && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_exists, 2, tilex)
-        && SQLITE_OK == sqlite3_bind_int(repo->stmt_map_exists, 3, tiley)
-        && SQLITE_ROW == sqlite3_step(repo->stmt_map_exists)
-        && sqlite3_column_int(repo->stmt_map_exists, 0) > 0)
-        {
-            exists = TRUE;
-        }
-        else
-        {
-            exists = FALSE;
-        }
-        sqlite3_reset(repo->stmt_map_exists);
-    }
-    else
-    {
-        datum d;
-        gint32 key[] = {
-            GINT32_TO_BE(zoom),
-            GINT32_TO_BE(tilex),
-            GINT32_TO_BE(tiley)
-        };
-        d.dptr = (gchar*)&key;
-        d.dsize = sizeof(key);
-        exists = gdbm_exists(repo->gdbm_db, d);
-    }
-
-    g_mutex_unlock(_mapdb_mutex);
-
-    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, exists);
+    g_debug("%s(): return %d", __PRETTY_FUNCTION__, exists);
     return exists;
 }
 
 GdkPixbuf*
 mapdb_get(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
+    const gchar *filename;
     GdkPixbuf *pixbuf;
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
-    g_mutex_lock(_mapdb_mutex);
-    pixbuf = map_cache_get(repo, zoom, tilex, tiley);
-    g_mutex_unlock(_mapdb_mutex);
-    vprintf("%s(): return %p\n", __PRETTY_FUNCTION__, pixbuf);
+
+    filename = build_tile_filename(repo, zoom, tilex, tiley);
+    pixbuf = gdk_pixbuf_new_from_file(filename, NULL);
+
+    g_debug("%s(): return %p", __PRETTY_FUNCTION__, pixbuf);
     return pixbuf;
 }
 
@@ -722,53 +700,15 @@ mapdb_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
         void *bytes, gint size)
 {
     gint success = TRUE;
+    const gchar *filename;
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
 
-    g_mutex_lock(_mapdb_mutex);
-    map_cache_update(repo, zoom, tilex, tiley, bytes, size);
+    g_mkdir_with_parents(build_tile_path(repo, zoom, tilex, tiley), 0666);
+    filename = build_tile_filename(repo, zoom, tilex, tiley);
+    success = g_file_set_contents(filename, bytes, size, NULL);
 
-    if(!MAPDB_EXISTS(repo))
-    {
-        /* There is no cache.  Return FALSE. */
-        g_mutex_unlock(_mapdb_mutex);
-        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-        return FALSE;
-    }
-
-    if (repo->is_sqlite)
-    {
-        /* Attempt to insert/update map in database. */
-        if(SQLITE_OK != sqlite3_bind_blob(repo->stmt_map_update, 1,
-                    bytes, size, NULL)
-        || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_update, 2, zoom)
-        || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_update, 3, tilex)
-        || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_update, 4, tiley)
-        || SQLITE_DONE != sqlite3_step(repo->stmt_map_update))
-        {
-            success = FALSE;
-            fprintf(stderr, "Error in mapdb_update: %s\n",
-                    sqlite3_errmsg(repo->sqlite_db));
-        }
-        sqlite3_reset(repo->stmt_map_update);
-    }
-    else
-    {
-        datum dkey, dcon;
-        gint32 key[] = {
-            GINT32_TO_BE(zoom),
-            GINT32_TO_BE(tilex),
-            GINT32_TO_BE(tiley)
-        };
-        dkey.dptr = (gchar*)&key;
-        dkey.dsize = sizeof(key);
-        dcon.dptr = bytes;
-        dcon.dsize = size;
-        success = !gdbm_store(repo->gdbm_db, dkey, dcon, GDBM_REPLACE);
-    }
-    g_mutex_unlock(_mapdb_mutex);
-
-    vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, success);
+    g_debug("%s(): return %d", __PRETTY_FUNCTION__, success);
     return success;
 }
 
@@ -776,47 +716,12 @@ static gboolean
 mapdb_delete(RepoData *repo, gint zoom, gint tilex, gint tiley)
 {
     gint success = FALSE;
+    const gchar *filename;
     vprintf("%s(%s, %d, %d, %d)\n", __PRETTY_FUNCTION__,
             repo->name, zoom, tilex, tiley);
 
-    g_mutex_lock(_mapdb_mutex);
-    map_cache_remove(repo, zoom, tilex, tiley);
-
-    if(!MAPDB_EXISTS(repo))
-    {
-        /* There is no cache.  Return FALSE. */
-        g_mutex_unlock(_mapdb_mutex);
-        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-        return FALSE;
-    }
-
-    if(repo->is_sqlite)
-    {
-        if(SQLITE_OK != sqlite3_bind_int(repo->stmt_map_delete, 1, zoom)
-        || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_delete, 2, tilex)
-        || SQLITE_OK != sqlite3_bind_int(repo->stmt_map_delete, 3, tiley)
-        || SQLITE_DONE != sqlite3_step(repo->stmt_map_delete))
-        {
-            success = FALSE;
-            printf("Error in stmt_map_delete: %s\n", 
-                        sqlite3_errmsg(repo->sqlite_db));
-        }
-        sqlite3_reset(repo->stmt_map_delete);
-    }
-    else
-    {
-        datum d;
-        gint32 key[] = {
-            GINT32_TO_BE(zoom),
-            GINT32_TO_BE(tilex),
-            GINT32_TO_BE(tiley)
-        };
-        d.dptr = (gchar*)&key;
-        d.dsize = sizeof(key);
-        success = !gdbm_delete(repo->gdbm_db, d);
-    }
-
-    g_mutex_unlock(_mapdb_mutex);
+    filename = build_tile_filename(repo, zoom, tilex, tiley);
+    g_remove(filename);
 
     vprintf("%s(): return %d\n", __PRETTY_FUNCTION__, success);
     return success;
@@ -853,6 +758,7 @@ set_repo_type(RepoData *repo)
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
+#if MAPS_IN_DB
 /* Returns the directory containing the given database filename, or NULL
  * if the database file could not be created. */
 static gboolean
@@ -902,122 +808,13 @@ repo_make_db(RepoData *rd)
            g_file_test(rd->db_filename, G_FILE_TEST_EXISTS));
     return g_file_test(rd->db_filename, G_FILE_TEST_EXISTS);
 }
+#endif
 
 gboolean
 repo_set_curr(RepoData *rd)
 {
-    RepoData* repo_p;
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(rd->db_filename && *rd->db_filename && !repo_make_db(rd))
-    {
-        gchar buffer[BUFFER_SIZE];
-        snprintf(buffer, sizeof(buffer), "%s: %s",
-                _("Unable to create map database for repository"), rd->name);
-        popup_error(_window, buffer);
-        _curr_repo = rd;
-        vprintf("%s(): return FALSE\n", __PRETTY_FUNCTION__);
-        return FALSE;
-    }
-
-    /* Disconnect the previous repository. */
-    for(repo_p = _curr_repo; repo_p; repo_p = repo_p->layers)
-    {
-        if(MAPDB_EXISTS(repo_p))
-        {
-            g_mutex_lock(_mapdb_mutex);
-            if(repo_p->is_sqlite)
-            {
-                sqlite3_close(repo_p->sqlite_db);
-                repo_p->sqlite_db = NULL;
-            }
-            else
-            {
-                gdbm_close(repo_p->gdbm_db);
-                repo_p->gdbm_db = NULL;
-            }
-            g_mutex_unlock(_mapdb_mutex);
-        }
-    }
-
-    /* Set the current repository! */
+    /* Set the current repository */
     _curr_repo = rd;
-
-    /* initialize all databases for all layers */
-    for(repo_p = _curr_repo; repo_p; repo_p = repo_p->layers)
-    {
-        /* Check if the repository or layer has a backing database. (This is a
-         * redundant check in the case of the base, non-layer repository.) */
-        if (repo_p->db_filename && *repo_p->db_filename
-                && repo_make_db (repo_p))
-        {
-            if(repo_p->is_sqlite)
-            {
-                printf("Building SQLite3 database: %s\n",
-                        repo_p->db_filename);
-                if(SQLITE_OK != (sqlite3_open(repo_p->db_filename,
-                                &(repo_p->sqlite_db)))
-                /* Open worked. Now create tables, failing if they already
-                 * exist.*/
-                || (sqlite3_exec(repo_p->sqlite_db,
-                            "create table maps ("
-                            "zoom integer, "
-                            "tilex integer, "
-                            "tiley integer, "
-                            "pixbuf blob, "
-                            "primary key (zoom, tilex, tiley))",
-                            NULL, NULL, NULL), FALSE) /* Comma operator! */
-                    /* Prepare select map statement. */
-                 || SQLITE_OK != sqlite3_prepare(repo_p->sqlite_db,
-                            "select pixbuf from maps "
-                            "where zoom = ? and tilex = ? and tiley = ?",
-                            -1, &repo_p->stmt_map_select, NULL)
-                    /* Prepare exists map statement. */
-                 || SQLITE_OK != sqlite3_prepare(repo_p->sqlite_db,
-                            "select count(*) from maps "
-                            "where zoom = ? and tilex = ? and tiley = ?",
-                            -1, &repo_p->stmt_map_exists, NULL)
-                    /* Prepare insert map statement. */
-                 || SQLITE_OK != sqlite3_prepare(repo_p->sqlite_db,
-                            "insert or replace into maps"
-                            " (pixbuf, zoom, tilex, tiley)"
-                            " values (?, ?, ?, ?)",
-                            -1, &repo_p->stmt_map_update, NULL)
-                    /* Prepare delete map statement. */
-                 || SQLITE_OK != sqlite3_prepare(repo_p->sqlite_db,
-                            "delete from maps "
-                            "where zoom = ? and tilex = ? and tiley = ?",
-                            -1, &repo_p->stmt_map_delete, NULL))
-                {
-                    gchar buffer[BUFFER_SIZE];
-                    snprintf(buffer, sizeof(buffer), "%s: %s\n%s",
-                            _("Failed to open map database for repository"),
-                            sqlite3_errmsg(repo_p->sqlite_db),
-                            _("Downloaded maps will not be cached."));
-                    sqlite3_close(repo_p->sqlite_db);
-                    repo_p->sqlite_db = NULL;
-                    popup_error(_window, buffer);
-                }
-            }
-            else
-            {
-                printf("Building GDBM database: %s\n",
-                        repo_p->db_filename);
-                repo_p->gdbm_db = gdbm_open(repo_p->db_filename,
-                        0, GDBM_WRCREAT | GDBM_FAST, 0644, NULL);
-            }
-        }
-    }
-
-    if(!MAPDB_EXISTS(_curr_repo))
-    {
-        gchar buffer[BUFFER_SIZE];
-        snprintf(buffer, sizeof(buffer), "%s\n%s",
-                _("Failed to open map database for repository"),
-                _("Downloaded maps will not be cached."));
-        popup_error(_window, buffer);
-    }
-    vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
 
@@ -3828,6 +3625,7 @@ void maps_toggle_visible_layers ()
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
+#if MAPS_IN_DB
 /* this routine fired by timer every minute and decrements refetch counter of every active layer of
    current repository. If one of layer is expired, it forces map redraw. Redraw routine checks every
    layer's tile download timestamp and desides performs refetch if needed */
@@ -3879,6 +3677,7 @@ map_layer_refresh_cb (gpointer data)
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
+#endif
 
 RepoData*
 create_default_repo()
@@ -3909,11 +3708,13 @@ maps_init(gint map_cache_size)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+#if MAPS_IN_DB
     map_cache_init(map_cache_size);
 
     /* this timer decrements layers' counters, clears layer databases, and
      * frefresh map if needed */
     g_timeout_add (60 * 1000, map_layer_refresh_cb, NULL);
+#endif
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
@@ -3924,6 +3725,7 @@ maps_destroy()
     GList *curr;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+#if MAPS_IN_DB
     map_cache_destroy();
 
     g_mutex_lock(_mapdb_mutex);
@@ -3978,6 +3780,7 @@ maps_destroy()
     }
 
     g_mutex_unlock(_mapdb_mutex);
+#endif
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
