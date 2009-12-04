@@ -370,4 +370,24 @@
 #define sqlite3_column_str(stmt, col) \
     ((const gchar *)sqlite3_column_text(stmt, col))
 
+#ifdef DEBUG
+
+#ifdef g_mutex_lock
+#undef g_mutex_lock
+#endif
+#define g_mutex_lock(mutex) \
+    G_STMT_START { \
+        struct timespec ts0, ts1; \
+        long ms_diff; \
+        clock_gettime(CLOCK_MONOTONIC, &ts0); \
+        G_THREAD_CF (mutex_lock,     (void)0, (mutex)); \
+        clock_gettime(CLOCK_MONOTONIC, &ts1); \
+        ms_diff = (ts1.tv_sec - ts0.tv_sec) * 1000 + \
+                  (ts1.tv_nsec - ts0.tv_nsec) / 1000000; \
+        if (ms_diff > 300) \
+            g_warning("%s: %ld wait for %s", G_STRLOC, ms_diff, #mutex); \
+    } G_STMT_END
+
+#endif /* DEBUG */
+
 #endif /* ifndef MAEMO_MAPPER_DEFINES */
