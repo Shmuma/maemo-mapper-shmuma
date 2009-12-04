@@ -43,6 +43,14 @@ static GList *tile_cache = NULL;
 static GList *tile_cache_last = NULL;
 static gint tile_cache_size = 0;
 
+static void
+map_tile_clear(MapTile *tile)
+{
+    guchar data[3] = { 0xff, 0xff, 0xff };
+    clutter_texture_set_from_rgb_data(CLUTTER_TEXTURE(tile),
+                                      data, FALSE, 1, 1, 1, 3, 0, NULL);
+}
+
 static gboolean
 compare_tile_spec(MapTile *tile, MapTileSpec *ts)
 {
@@ -222,6 +230,9 @@ map_tile_load(RepoData *repo, gint zoom, gint x, gint y, gboolean *new_tile)
         *p_tile = tile;
         g_object_add_weak_pointer(G_OBJECT(tile), (gpointer)p_tile);
         map_download_tile(&tile->ts, priority, download_tile_cb, p_tile);
+
+        /* if this is not a new tile, it contains dirty data: clean it */
+        map_tile_clear(tile);
     }
     return CLUTTER_ACTOR(tile);
 }
