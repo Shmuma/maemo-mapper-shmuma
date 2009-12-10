@@ -64,20 +64,36 @@ AC_ARG_ENABLE(legacy,
         esac],
         [HAVE_LEGACY=no])
 
-AS_IF([test "x$HAVE_LEGACY" = xyes], 
-        [
-                PKG_CHECK_MODULES(OSSO, libosso >= 1 libossohelp)
-                PKG_CHECK_MODULES(HILDON, hildon-libs >= 0.9.50 hildon-fm)
-                AC_DEFINE(LEGACY, 1, Build for OS2006/OS2007)
-        ],
-        [
-                PKG_CHECK_MODULES(OSSO, libosso >= 1 hildon-help)
-                PKG_CHECK_MODULES(HILDON, hildon-1 hildon-fm-2)
-                AC_CHECK_HEADER(gps.h, , AC_MSG_ERROR(gps.h not found. Please install libgps-dev.))
-                AC_CHECK_LIB(gps, gps_open, , AC_MSG_ERROR(libgps.so not found. Please install libgps.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
-                AC_CHECK_HEADER(gpsbt.h, , AC_MSG_WARN(gpsbt.h not found. Compiling without gpsbt support.))
-                AC_CHECK_LIB(gpsbt, gpsbt_start, , AC_MSG_WARN(libgpsbt.so not found. Compiling without gpsbt support.), -lgps -lgpsmgr -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
-        ])
+AC_ARG_ENABLE(n900, 
+        AS_HELP_STRING([--enable-n900],[Enable building for Fermantle]),
+        [case "${enableval}" in
+                yes) HAVE_N900=yes ;;
+                no)  HAVE_N900=no ;;
+                *) AC_MSG_ERROR(bad value ${enableval} for --enable-n900) ;;
+        esac],
+        [HAVE_LEGACY=no])
+
+
+AS_IF([test "x$HAVE_N900" = xyes],
+            [
+                AC_DEFINE(N900, 1, Build for N900)
+            ],
+            [
+                AS_IF([test "x$HAVE_LEGACY" = xyes],
+                [   
+                    PKG_CHECK_MODULES(OSSO, libosso >= 1 libossohelp)
+                    PKG_CHECK_MODULES(HILDON, hildon-libs >= 0.9.50 hildon-fm)
+                    AC_DEFINE(LEGACY, 1, Build for OS2006/OS2007)
+                ],
+                [
+                    PKG_CHECK_MODULES(OSSO, libosso >= 1)
+                    PKG_CHECK_MODULES(HILDON, hildon-1 hildon-fm-2)
+                    AC_CHECK_HEADER(gps.h, , AC_MSG_ERROR(gps.h not found. Please install libgps-dev.))
+                    AC_CHECK_LIB(gps, gps_open, , AC_MSG_ERROR(libgps.so not found. Please install libgps.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
+                    AC_CHECK_HEADER(gpsbt.h, , AC_MSG_WARN(gpsbt.h not found. Compiling without gpsbt support.))
+                    AC_CHECK_LIB(gpsbt, gpsbt_start, , AC_MSG_WARN(libgpsbt.so not found. Compiling without gpsbt support.), -lgps -lgpsmgr -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
+                ])
+])
 
 AC_SUBST(OSSO_LIBS)
 AC_SUBST(OSSO_CFLAGS)
