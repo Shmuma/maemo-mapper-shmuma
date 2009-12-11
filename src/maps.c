@@ -1233,6 +1233,34 @@ l_error:
     *bytes = NULL;
 }
 
+static void
+map_update_task_remove_all(const GError *error)
+{
+    g_debug("%s", G_STRFUNC);
+
+    while (1)
+    {
+        MapUpdateTask *mut = NULL;
+
+        g_mutex_lock(_mut_priority_mutex);
+        g_tree_foreach(_mut_priority_tree, (GTraverseFunc)get_next_mut, &mut);
+        if (!mut)
+        {
+            g_mutex_unlock(_mut_priority_mutex);
+            break;
+        }
+
+        /* Mark this MUT as "in-progress". */
+        mut->downloading = TRUE;
+        g_tree_remove(_mut_priority_tree, mut);
+        g_mutex_unlock(_mut_priority_mutex);
+
+        mut->pixbuf = NULL;
+        mut->error = g_error_copy(error);
+        g_idle_add((GSourceFunc)map_update_task_completed, mut);
+    }
+}
+
 gboolean
 thread_proc_mut()
 {
@@ -1348,6 +1376,16 @@ thread_proc_mut()
         if (!notification_sent)
             g_idle_add_full(G_PRIORITY_HIGH_IDLE,
                             (GSourceFunc)map_update_task_completed, mut, NULL);
+    }
+
+    if (!_conic_is_connected)
+    {
+        /* borrow error from glib fileutils */
+        GError error = { G_FILE_ERROR, G_FILE_ERROR_FAULT, "Disconnected" };
+
+        /* Abort all tasks */
+        map_update_task_remove_all(&error);
+        return FALSE;
     }
 
     return FALSE;
