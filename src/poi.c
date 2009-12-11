@@ -31,7 +31,9 @@
 #include <math.h>
 
 #ifndef LEGACY
+#ifndef N900
 #    include <hildon/hildon-help.h>
+#endif
 #    include <hildon/hildon-note.h>
 #    include <hildon/hildon-file-chooser-dialog.h>
 #    include <hildon/hildon-number-editor.h>
@@ -926,12 +928,14 @@ category_list_dialog(GtkWidget *parent)
             NULL);
 
     /* Enable the help button. */
+#ifndef N900
 #ifndef LEGACY
     hildon_help_dialog_help_enable(
 #else
     ossohelp_dialog_help_enable(
 #endif
             GTK_DIALOG(dialog), HELP_ID_POICAT, _osso);
+#endif
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
             btn_edit = gtk_button_new_with_label(_("Edit...")));
@@ -2306,12 +2310,14 @@ poi_list_dialog(GtkWidget *parent, gint unitx, gint unity, GList *poi_list)
         g_object_unref(G_OBJECT(store));
 
         /* Enable the help button. */
+#ifndef N900
 #ifndef LEGACY
         hildon_help_dialog_help_enable(
 #else
         ossohelp_dialog_help_enable(
 #endif
                 GTK_DIALOG(pli.dialog), HELP_ID_POILIST, _osso);
+#endif
 
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(pli.dialog)->action_area),
                 btn_goto = gtk_button_new_with_label(_("Go to")));
@@ -2589,12 +2595,14 @@ poi_download_dialog(gint unitx, gint unity)
                 NULL);
 
         /* Enable the help button. */
+#ifndef N900
 #ifndef LEGACY
         hildon_help_dialog_help_enable(
 #else
         ossohelp_dialog_help_enable(
 #endif
                 GTK_DIALOG(dialog), HELP_ID_DOWNPOI, _osso);
+#endif
 
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                 table = gtk_table_new(4, 4, FALSE), TRUE, TRUE, 0);
@@ -2920,12 +2928,14 @@ poi_browse_dialog(gint unitx, gint unity)
                 NULL);
 
         /* Enable the help button. */
+#ifndef N900
 #ifndef LEGACY
         hildon_help_dialog_help_enable(
 #else
         ossohelp_dialog_help_enable(
 #endif
                 GTK_DIALOG(dialog), HELP_ID_BROWSEPOI, _osso);
+#endif
 
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                 table = gtk_table_new(3, 4, FALSE), TRUE, TRUE, 0);

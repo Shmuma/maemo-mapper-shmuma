@@ -36,7 +36,9 @@
 #include <time.h>
 
 #ifndef LEGACY
+#ifndef N900
 #    include <hildon/hildon-help.h>
+#endif
 #    include <hildon/hildon-note.h>
 #    include <hildon/hildon-file-chooser-dialog.h>
 #    include <hildon/hildon-number-editor.h>
@@ -2058,12 +2060,14 @@ repoman_dialog_new(GtkWidget *widget, RepoManInfo *rmi)
                 NULL);
 
         /* Enable the help button. */
+#ifndef N900
 #ifndef LEGACY
         hildon_help_dialog_help_enable(
 #else
         ossohelp_dialog_help_enable(
 #endif
                 GTK_DIALOG(dialog), HELP_ID_NEWREPO, _osso);
+#endif
 
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
                 table = gtk_table_new(2, 2, FALSE),
@@ -2758,12 +2762,14 @@ repoman_dialog()
                 NULL);
 
         /* Enable the help button. */
+#ifndef N900
 #ifndef LEGACY
         hildon_help_dialog_help_enable(
 #else
         ossohelp_dialog_help_enable(
 #endif
                 GTK_DIALOG(dialog), HELP_ID_REPOMAN, _osso);
+#endif
 
         /* Reset button. */
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
@@ -3361,12 +3367,14 @@ mapman_dialog()
                 NULL);
 
         /* Enable the help button. */
+#ifndef N900
 #ifndef LEGACY
         hildon_help_dialog_help_enable(
 #else
         ossohelp_dialog_help_enable(
 #endif
                 GTK_DIALOG(mapman_info.dialog), HELP_ID_MAPMAN, _osso);
+#endif
 
         /* Clear button. */
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),

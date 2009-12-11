@@ -35,7 +35,9 @@
 #include "types.h"
 
 #ifndef LEGACY
+#ifndef N900
 #    include <hildon/hildon-help.h>
+#endif
 #    include <hildon/hildon-note.h>
 #    include <hildon/hildon-file-chooser-dialog.h>
 #    include <hildon/hildon-banner.h>
@@ -1316,10 +1318,13 @@ window_present()
 
             if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
             {
+#ifndef N900
+                /* I Have no idea how to display help in n900. Launch browser? */
 #ifndef LEGACY
                 hildon_help_show(_osso, HELP_ID_INTRO, 0);
 #else
                 ossohelp_show(_osso, HELP_ID_INTRO, 0);
+#endif
 #endif
             }
             gtk_widget_destroy(confirm);

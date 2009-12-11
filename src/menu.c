@@ -31,7 +31,9 @@
 #include <string.h>
 
 #ifndef LEGACY
+#ifndef N900
 #    include <hildon/hildon-help.h>
+#endif
 #    include <hildon/hildon-program.h>
 #    include <hildon/hildon-banner.h>
 #else
@@ -1456,10 +1458,12 @@ menu_cb_help(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+#ifndef N900
 #ifndef LEGACY
     hildon_help_show(_osso, HELP_ID_INTRO, 0);
 #else
     ossohelp_show(_osso, HELP_ID_INTRO, 0);
+#endif
 #endif
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -1471,10 +1475,12 @@ menu_cb_about(GtkMenuItem *item)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+#ifndef N900
 #ifndef LEGACY
     hildon_help_show(_osso, HELP_ID_ABOUT, HILDON_HELP_SHOW_DIALOG);
 #else
     ossohelp_show(_osso, HELP_ID_ABOUT, OSSO_HELP_SHOW_DIALOG);
+#endif
 #endif
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -1928,10 +1934,12 @@ menu_init()
     gtk_menu_append(menu, _menu_settings_item
         = gtk_menu_item_new_with_label(_("Settings...")));
     gtk_menu_append(menu, gtk_separator_menu_item_new());
+#ifndef N900
     gtk_menu_append(menu, _menu_help_item
         = gtk_menu_item_new_with_label(_("Help...")));
     gtk_menu_append(menu, _menu_about_item
         = gtk_menu_item_new_with_label(_("About...")));
+#endif
     gtk_menu_append(menu, _menu_close_item
         = gtk_menu_item_new_with_label(_("Close")));
 
@@ -2093,10 +2101,12 @@ menu_init()
     /* Connect the other menu item signals. */
     g_signal_connect(G_OBJECT(_menu_settings_item), "activate",
                       G_CALLBACK(menu_cb_settings), NULL);
+#ifndef N900
     g_signal_connect(G_OBJECT(_menu_help_item), "activate",
                       G_CALLBACK(menu_cb_help), NULL);
     g_signal_connect(G_OBJECT(_menu_about_item), "activate",
                       G_CALLBACK(menu_cb_about), NULL);
+#endif
     g_signal_connect(G_OBJECT(_menu_close_item), "activate",
                       G_CALLBACK(gtk_main_quit), NULL);
 

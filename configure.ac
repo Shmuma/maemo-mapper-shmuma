@@ -77,6 +77,8 @@ AC_ARG_ENABLE(n900,
 AS_IF([test "x$HAVE_N900" = xyes],
             [
                 AC_DEFINE(N900, 1, Build for N900)
+                PKG_CHECK_MODULES(HILDON, hildon-1 hildon-fm-2)
+                PKG_CHECK_MODULES(OSSO, libosso >= 1)
             ],
             [
                 AS_IF([test "x$HAVE_LEGACY" = xyes],

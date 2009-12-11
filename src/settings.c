@@ -31,12 +31,16 @@
 #include <string.h>
 #include <math.h>
 #include <dbus/dbus-glib.h>
+#ifndef N900
 #include <bt-dbus.h>
+#endif
 #include <gconf/gconf-client.h>
 #include <glib.h>
 
 #ifndef LEGACY
+#ifndef N900
 #    include <hildon/hildon-help.h>
+#endif
 #    include <hildon/hildon-note.h>
 #    include <hildon/hildon-color-button.h>
 #    include <hildon/hildon-file-chooser-dialog.h>
@@ -755,10 +759,12 @@ scan_cb_search_complete(DBusGProxy *sig_proxy, ScanInfo *scan_info)
 {
     printf("%s()\n", __PRETTY_FUNCTION__);
     gtk_widget_destroy(scan_info->banner);
+#ifndef N900
     dbus_g_proxy_disconnect_signal(sig_proxy, BTSEARCH_DEV_FOUND_SIG,
             G_CALLBACK(scan_cb_dev_found), scan_info);
     dbus_g_proxy_disconnect_signal(sig_proxy, BTSEARCH_SEARCH_COMPLETE_SIG,
             G_CALLBACK(scan_cb_search_complete), scan_info);
+#endif
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
@@ -769,6 +775,7 @@ scan_start_search(ScanInfo *scan_info)
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     /* Initialize D-Bus. */
+#ifndef N900
     if(NULL == (scan_info->bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error)))
     {
         g_printerr("Failed to open connection to D-Bus: %s.\n",
@@ -837,6 +844,7 @@ scan_start_search(ScanInfo *scan_info)
             g_printerr("Error: %s\n", error->message);
         return 3;
     }
+#endif
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
     return 0;
@@ -856,6 +864,7 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
     GtkCellRenderer *renderer = NULL;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
+#ifndef N900
     dialog = gtk_dialog_new_with_buttons(_("Select Bluetooth Device"),
             GTK_WINDOW(scan_info->settings_dialog), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -939,6 +948,7 @@ scan_bluetooth(GtkWidget *widget, ScanInfo *scan_info)
         dbus_g_connection_unref(scan_info->bus);
         scan_info->bus = NULL;
     }
+#endif
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1505,12 +1515,14 @@ gboolean settings_dialog()
                 NULL);
 
         /* Enable the help button. */
+#ifndef N900
 #ifndef LEGACY
         hildon_help_dialog_help_enable(
 #else
         ossohelp_dialog_help_enable(
 #endif 
                 GTK_DIALOG(dialog), HELP_ID_SETTINGS, _osso);
+#endif
 
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area),
                btn_buttons = gtk_button_new_with_label(_("Hardware Keys...")));
@@ -3465,12 +3477,14 @@ void aprs_settings_dialog(gboolean *aprs_inet_config_changed, gboolean *aprs_tty
                 NULL);
 
         /* Enable the help button. */
+#ifndef N900
 #ifndef LEGACY
         hildon_help_dialog_help_enable(
 #else
         ossohelp_dialog_help_enable(
 #endif 
                 GTK_DIALOG(dialog), HELP_ID_SETTINGS, _osso);
+#endif
 
         gtk_dialog_add_button(GTK_DIALOG(dialog),
                 GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT);
