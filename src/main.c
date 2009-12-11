@@ -99,9 +99,13 @@ conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
     ConIcConnectionStatus status;
     printf("%s()\n", __PRETTY_FUNCTION__);
 
-    g_mutex_lock(_conic_connection_mutex);
-
+    /* we are only interested in CONNECTED and DISCONNECTED */
     status = con_ic_connection_event_get_status(event);
+    if (status != CON_IC_STATUS_CONNECTED &&
+        status != CON_IC_STATUS_DISCONNECTED)
+        return;
+
+    g_mutex_lock(_conic_connection_mutex);
 
     if((_conic_is_connected = (status == CON_IC_STATUS_CONNECTED)))
     {
