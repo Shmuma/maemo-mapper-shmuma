@@ -113,6 +113,16 @@ conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
         _conic_conn_failed = FALSE;
         if(_download_banner != NULL)
             gtk_widget_show(_download_banner);
+
+        /* if we didn't ask for the connection ourselves, queue a map redraw */
+        if (!_conic_is_connecting)
+        {
+            MapController *controller = map_controller_get_instance();
+            GtkWidget *screen;
+
+            screen = map_controller_get_screen_widget(controller);
+            map_screen_refresh_tiles(MAP_SCREEN(screen));
+        }
     }
     else
     {
