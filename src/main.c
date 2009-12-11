@@ -166,7 +166,7 @@ conic_ensure_connected()
     printf("%s()\n", __PRETTY_FUNCTION__);
 
 #if defined(__arm__) && defined(CONIC)
-    while(_window && !_conic_is_connected)
+    if (_window && !_conic_is_connected)
     {   
         g_mutex_lock(_conic_connection_mutex);
         /* If we're not connected, and if we're not connecting, and if we're
