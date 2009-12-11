@@ -16,6 +16,15 @@ Description: Geographical mapping and driving directions.
  interacting with maps, GPX data (including driving directions), and other
  geo-related information.  It focuses in part on in-car navigation and
  usability.  Home page: http://www.gnuite.com/nokia770/maemo-mapper
+XB-Maemo-Upgrade-Description: The Barcelona Long Weekend release! - Take two
+ NOTE: with this release the database format is changed: while your existing
+ maps will not be lost, they will not be used in the application either, which
+ means they'll have to be downloaded again!
+ .
+ This version is much faster than the previous ones, but still very unstable
+ and mostly unusable.
+ .
+ This version fixes a map tile corruption.
 XB-Maemo-Icon-26:
  iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAF/ElEQVRIS42WyXMbxxXGf92z
  YidgkCAkrrCokCLDRLJLsSwvB1duLl9S5UMcl33Vxf9LDi5Xbr6lUpWDqnxKVeJYthbLUUm2

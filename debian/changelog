@@ -1,3 +1,19 @@
+maemo-mapper (3.0+alpha3) unstable; urgency=low
+
+  * Barcelona Long Weekend release, take two!
+    Fix a tile corruption bug, due to bad handling of multithreading.
+
+ -- Alberto Mardegan <mardy@users.sourceforge.net>  Fri,  4 Dec 2009 19:27:11 +0200
+
+maemo-mapper (3.0+alpha2) unstable; urgency=low
+
+  * Barcelona Long Weekend release!
+    Maps database format changed: don't use a DB for storing map tiles, but
+    just store them in the filesystem.
+    Note: your existing maps DB will not be lost, but not converted either!
+
+ -- Alberto Mardegan <mardy@users.sourceforge.net>  Fri,  4 Dec 2009 18:25:56 +0200
+
 maemo-mapper (3.0+alpha1) unstable; urgency=low
 
   * Implement a tile cache, which makes the application slightly faster.
