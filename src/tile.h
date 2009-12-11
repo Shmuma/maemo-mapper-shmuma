@@ -61,6 +61,7 @@ GType map_tile_get_type (void);
 ClutterActor *map_tile_load(RepoData *repo, gint zoom, gint x, gint y,
                             gboolean *new_tile);
 ClutterActor *map_tile_cached(RepoData *repo, gint zoom, gint x, gint y);
+void map_tile_refresh(MapTile *tile);
 
 G_END_DECLS
 #endif /* MAP_TILE_H */

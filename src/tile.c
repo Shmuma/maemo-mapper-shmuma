@@ -31,6 +31,7 @@
 
 struct _MapTilePrivate
 {
+    guint has_pixbuf : 1;
     guint is_disposed : 1;
 };
 
@@ -86,8 +87,13 @@ download_tile_cb(MapTileSpec *ts, GdkPixbuf *pixbuf, const GError *error,
     }
 
     if (pixbuf)
+    {
         gtk_clutter_texture_set_from_pixbuf(CLUTTER_TEXTURE(tile),
                                             pixbuf, NULL);
+        tile->priv->has_pixbuf = TRUE;
+    }
+    else
+        tile->priv->has_pixbuf = FALSE;
 }
 
 static void
@@ -225,7 +231,6 @@ map_tile_load(RepoData *repo, gint zoom, gint x, gint y, gboolean *new_tile)
                                                   TILE_SIZE_PIXELS,
                                                   GDK_INTERP_NEAREST);
                 g_object_unref (area);
-
             }
             gtk_clutter_texture_set_from_pixbuf(CLUTTER_TEXTURE(tile),
                                                 pixbuf, NULL);
@@ -241,6 +246,9 @@ map_tile_load(RepoData *repo, gint zoom, gint x, gint y, gboolean *new_tile)
         /* if this is not a new tile, it contains dirty data: clean it */
         map_tile_clear(tile);
     }
+
+    tile->priv->has_pixbuf = (zoff == 0);
+
     return CLUTTER_ACTOR(tile);
 }
 
@@ -276,3 +284,13 @@ map_tile_cached(RepoData *repo, gint zoom, gint x, gint y)
 
     return tile;
 }
+
+void
+map_tile_refresh(MapTile *tile)
+{
+    if (tile->priv->has_pixbuf)
+        return;
+
+    map_tile_download(tile);
+}
+
