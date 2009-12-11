@@ -1145,3 +1145,13 @@ map_screen_redraw_overlays(MapScreen *self)
     overlay_redraw_idle(self);
 }
 
+void
+map_screen_refresh_tiles(MapScreen *self)
+{
+    g_return_if_fail(MAP_IS_SCREEN(self));
+
+    /* hide all the existing tiles */
+    clutter_container_foreach(CLUTTER_CONTAINER(self->priv->tile_group),
+                              (ClutterCallback)map_tile_refresh, NULL);
+}
+
