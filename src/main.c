@@ -88,10 +88,6 @@ static GMutex *_conic_connection_mutex = NULL;
 static GCond *_conic_connection_cond = NULL;
 #endif
 
-/* Dynamically-sized in-memory map cache. */
-static size_t _map_cache_size = (32*1024*1024);
-static gboolean _map_cache_enabled = TRUE;
-
 #ifdef CONIC
 static void
 conic_conn_event(ConIcConnection *connection, ConIcConnectionEvent *event)
@@ -220,8 +216,6 @@ maemo_mapper_destroy()
     g_mutex_unlock(_conic_connection_mutex);
 #endif
     g_thread_pool_free(_mut_thread_pool, TRUE, TRUE);
-
-    maps_destroy();
 
     gps_destroy(TRUE);
 
@@ -459,8 +453,6 @@ maemo_mapper_init(gint argc, gchar **argv)
 
     settings_init();
 
-    maps_init(_map_cache_size);
-
     /* Initialize _program. */
     _program = HILDON_PROGRAM(hildon_program_get_instance());
     g_set_application_name("Maemo Mapper");
@@ -682,23 +674,6 @@ osso_cb_hw_state_idle(osso_hw_state_t *state)
     {
         settings_save();
         _must_save_data = TRUE;
-    }
-
-    if(state->memory_low_ind)
-    {
-        // Disable the map cache and set the next max cache size to
-        // slightly less than the current cache size.
-        _map_cache_size = map_cache_resize(0) * 0.8;
-        _map_cache_enabled = FALSE;
-    }
-    else
-    {
-        if(!_map_cache_enabled)
-        {
-            // Restore the map cache.
-            map_cache_resize(_map_cache_size);
-            _map_cache_enabled = TRUE;
-        }
     }
 
     g_free(state);

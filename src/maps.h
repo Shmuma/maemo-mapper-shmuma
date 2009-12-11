@@ -24,12 +24,6 @@
 #ifndef MAEMO_MAPPER_MAPS_H
 #define MAEMO_MAPPER_MAPS_H
 
-size_t map_cache_resize(size_t cache_size);
-void map_cache_clean (void);
-
-void maps_init();
-void maps_destroy();
-
 RepoData *create_default_repo();
 
 gboolean mapdb_exists(RepoData *repo, gint zoom, gint tilex, gint tiley);
