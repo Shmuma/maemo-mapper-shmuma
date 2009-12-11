@@ -91,6 +91,31 @@ download_tile_cb(MapTileSpec *ts, GdkPixbuf *pixbuf, const GError *error,
 }
 
 static void
+map_tile_download(MapTile *tile)
+{
+    MapController *controller;
+    MapTile **p_tile;
+    gint priority, zoom;
+    Point center;
+
+    /* The priority is lower (that is, higher number) when we walk away
+     * from the center of the map */
+    controller = map_controller_get_instance();
+    map_controller_get_center(controller, &center);
+    zoom = tile->ts.zoom;
+    priority =
+        abs(tile->ts.tilex - unit2ztile(center.unitx, zoom)) +
+        abs(tile->ts.tiley - unit2ztile(center.unity, zoom));
+
+    /* weak pointer trick to prevent crashes if the callback is invoked
+     * after the tile is destroyed. */
+    p_tile = g_slice_new(MapTile *);
+    *p_tile = tile;
+    g_object_add_weak_pointer(G_OBJECT(tile), (gpointer)p_tile);
+    map_download_tile(&tile->ts, priority, download_tile_cb, p_tile);
+}
+
+static void
 map_tile_dispose(GObject *object)
 {
     MapTilePrivate *priv = MAP_TILE_PRIV(object);
@@ -211,25 +236,7 @@ map_tile_load(RepoData *repo, gint zoom, gint x, gint y, gboolean *new_tile)
 
     if (zoff != 0)
     {
-        MapController *controller;
-        MapTile **p_tile;
-        gint priority;
-        Point center;
-
-        /* The priority is lower (that is, higher number) when we walk away
-         * from the center of the map */
-        controller = map_controller_get_instance();
-        map_controller_get_center(controller, &center);
-        priority =
-            abs(x - unit2ztile(center.unitx, zoom)) +
-            abs(y - unit2ztile(center.unity, zoom));
-
-        /* weak pointer trick to prevent crashes if the callback is invoked
-         * after the tile is destroyed. */
-        p_tile = g_slice_new(MapTile *);
-        *p_tile = tile;
-        g_object_add_weak_pointer(G_OBJECT(tile), (gpointer)p_tile);
-        map_download_tile(&tile->ts, priority, download_tile_cb, p_tile);
+        map_tile_download(tile);
 
         /* if this is not a new tile, it contains dirty data: clean it */
         map_tile_clear(tile);
