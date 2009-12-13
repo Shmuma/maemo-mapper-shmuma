@@ -7,7 +7,7 @@ Standards-Version: 3.6.0
 
 Package: maemo-mapper-shmuma
 Architecture: armel i386
-Pre-Depends: maemo-select-menu-location
+#Pre-Depends: maemo-select-menu-location
 Depends: ${shlibs:Depends}
 Suggests: flite, proj
 Provides: maemo-mapper
