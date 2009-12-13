@@ -2506,8 +2506,8 @@ settings_init()
     }
 
     /* Get Fullscreen flag. Default is FALSE. */
-    _fullscreen = gconf_client_get_bool(gconf_client,
-            GCONF_KEY_FULLSCREEN, NULL);
+    _fullscreen = FALSE;/* gconf_client_get_bool(gconf_client, */
+/*             GCONF_KEY_FULLSCREEN, NULL); */
 
     /* Get Units.  Default is UNITS_KM. */
     {
