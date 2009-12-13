@@ -1,3 +1,10 @@
+maemo-mapper-shmuma (3.0.0) unstable; urgency=low
+
+  * Fixed inverted display of map controls (compass rose, distance, zoom)
+  * Minor fixes for n900 build.
+
+ -- Max Lapan <max.lapan@gmail.com>  Sun, 13 Dec 2009 09:35:18 +0300
+
 maemo-mapper-shmuma (2.6.2.5) unstable; urgency=low
 
   * Changed URL for Yandex router proxy. Now it uses google app engine.

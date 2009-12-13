@@ -55,7 +55,7 @@ AC_CHECK_LIB(gdbm, gdbm_open, , AC_MSG_ERROR(libgdbm.so not found. Please instal
 AC_CHECK_HEADER(gpsmgr.h, , AC_MSG_WARN(gpsmgr.h not found. Compiling without gpsmgr support.))
 AC_CHECK_LIB(gpsmgr, gpsmgr_start, , AC_MSG_WARN(libgpsmgr.so not found. Compiling without gpsmgr support.), -ldbus-glib-1 -ldbus-1 -lgobject-2.0 -lglib-2.0)
 
-AC_ARG_ENABLE(legacy, 
+AC_ARG_ENABLE(legacy,
         AS_HELP_STRING([--enable-legacy],[Enable building for Chinook]),
         [case "${enableval}" in
                 yes) HAVE_LEGACY=yes ;;
@@ -64,14 +64,17 @@ AC_ARG_ENABLE(legacy,
         esac],
         [HAVE_LEGACY=no])
 
-AC_ARG_ENABLE(n900, 
-        AS_HELP_STRING([--enable-n900],[Enable building for Fermantle]),
-        [case "${enableval}" in
-                yes) HAVE_N900=yes ;;
-                no)  HAVE_N900=no ;;
-                *) AC_MSG_ERROR(bad value ${enableval} for --enable-n900) ;;
-        esac],
-        [HAVE_LEGACY=no])
+
+AS_IF([ test -f /etc/maemo_version ],
+[
+   VER=`cat /etc/maemo_version | cut -d . -f 1`
+   case $VER in
+      5)
+        HAVE_N900=yes ;;
+      *)
+        HAVE_N900=no ;;
+   esac
+],)
 
 
 AS_IF([test "x$HAVE_N900" = xyes],
