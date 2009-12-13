@@ -537,7 +537,7 @@ maemo_mapper_init(gint argc, gchar **argv)
 
         /* Use a black background for _map_widget, since missing tiles are
          * also drawn with a black background. */
-        color.red = 0; color.green = 0; color.blue = 0;
+        color.red = color.green = color.blue = 0;
         gtk_widget_modify_bg(_map_widget,
                 GTK_STATE_NORMAL, &color);
     }

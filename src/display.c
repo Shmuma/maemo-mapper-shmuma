@@ -2504,18 +2504,18 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
     if(_show_zoomlevel) {
         gchar *buffer = g_strdup_printf("%d", _zoom);
         gdk_draw_rectangle(_map_widget->window,
-                _map_widget->style->bg_gc[GTK_STATE_ACTIVE],
+                _map_widget->style->white_gc,
                 TRUE,
                 _zoom_rect.x, _zoom_rect.y,
                 _zoom_rect.width, _zoom_rect.height);
         gdk_draw_rectangle(_map_widget->window,
-                _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
+                _map_widget->style->black_gc,
                 FALSE,
                 _zoom_rect.x, _zoom_rect.y,
                 _zoom_rect.width, _zoom_rect.height);
         pango_layout_set_text(_zoom_layout, buffer, -1);
         gdk_draw_layout(_map_widget->window,
-                _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
+                _map_widget->style->black_gc,
                 _zoom_rect.x + _zoom_rect.width / 2,
                 _zoom_rect.y, _zoom_layout);
     }
@@ -2527,12 +2527,12 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
         if(event->area.width && event->area.height)
         {
             gdk_draw_rectangle(_map_widget->window,
-                    _map_widget->style->bg_gc[GTK_STATE_ACTIVE],
+                    _map_widget->style->white_gc,
                     TRUE,
                     _scale_rect.x, _scale_rect.y,
                     _scale_rect.width, _scale_rect.height);
             gdk_draw_rectangle(_map_widget->window,
-                    _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
+                    _map_widget->style->black_gc,
                     FALSE,
                     _scale_rect.x, _scale_rect.y,
                     _scale_rect.width, _scale_rect.height);
@@ -2566,31 +2566,31 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
 
                 /* Draw the layout itself. */
                 gdk_draw_layout(_map_widget->window,
-                    _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
+                    _map_widget->style->black_gc,
                     _scale_rect.x + (_scale_rect.width - width) / 2,
                     _scale_rect.y, _scale_layout);
 
                 /* Draw little hashes on the ends. */
                 gdk_draw_line(_map_widget->window,
-                    _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
+                    _map_widget->style->black_gc,
                     _scale_rect.x + 4,
                     _scale_rect.y + _scale_rect.height / 2 - 4,
                     _scale_rect.x + 4,
                     _scale_rect.y + _scale_rect.height / 2 + 4);
                 gdk_draw_line(_map_widget->window,
-                    _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
+                    _map_widget->style->black_gc,
                     _scale_rect.x + 4,
                     _scale_rect.y + _scale_rect.height / 2,
                     _scale_rect.x + (_scale_rect.width - width) / 2 - 4,
                     _scale_rect.y + _scale_rect.height / 2);
                 gdk_draw_line(_map_widget->window,
-                    _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
+                    _map_widget->style->black_gc,
                     _scale_rect.x + _scale_rect.width - 4,
                     _scale_rect.y + _scale_rect.height / 2 - 4,
                     _scale_rect.x + _scale_rect.width - 4,
                     _scale_rect.y + _scale_rect.height / 2 + 4);
                 gdk_draw_line(_map_widget->window,
-                    _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
+                    _map_widget->style->black_gc,
                     _scale_rect.x + _scale_rect.width - 4,
                     _scale_rect.y + _scale_rect.height / 2,
                     _scale_rect.x + (_scale_rect.width + width) / 2 + 4,
@@ -2619,16 +2619,16 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
         points[3].x = offsetx + x + 0.5f; points[3].y = offsety + y + 0.5f;
 
         gdk_draw_polygon(_map_widget->window,
-                _map_widget->style->bg_gc[GTK_STATE_ACTIVE],
+                _map_widget->style->white_gc,
                 TRUE, /* FILLED */
                 points, 4);
         gdk_draw_polygon(_map_widget->window,
-                _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
+                _map_widget->style->black_gc,
                 FALSE, /* NOT FILLED */
                 points, 4);
 
         gdk_draw_layout(_map_widget->window,
-                _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
+                _map_widget->style->black_gc,
                 _comprose_rect.x - _comprose_rect.width / 2 + 1,
                 _comprose_rect.y - _comprose_rect.height / 2 - 4,
                 _comprose_layout);
@@ -2639,7 +2639,7 @@ map_cb_expose(GtkWidget *widget, GdkEventExpose *event)
     {
         gdk_draw_pixbuf(
                 _map_widget->window,
-                _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
+                _map_widget->style->black_gc,
                 _redraw_wait_icon,
                 0, 0,
                 _redraw_wait_bounds.x + i
