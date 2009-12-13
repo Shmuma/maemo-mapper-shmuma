@@ -300,7 +300,7 @@ menu_cb_track_insert_mark(GtkMenuItem *item)
     }
 
     unit2latlon(_pos.unitx, _pos.unity, &lat, &lon, _curr_repo->units);
-    
+
     format_lat_lon(lat, lon, tmp1, tmp2);
     //lat_format(lat, tmp1);
     //lon_format(lon, tmp2);
@@ -1264,7 +1264,7 @@ static gboolean menu_cb_aprs_settings(GtkMenuItem *item)
     gboolean aprs_tty_config_changed = FALSE;
 
     aprs_settings_dialog(&aprs_inet_config_changed, &aprs_tty_config_changed);
-    
+
     if(aprs_inet_config_changed)
     {
         gtk_widget_set_sensitive(GTK_WIDGET(_menu_enable_aprs_inet_item), _aprs_enable);
@@ -1272,15 +1272,15 @@ static gboolean menu_cb_aprs_settings(GtkMenuItem *item)
         gtk_widget_set_sensitive(GTK_WIDGET(_menu_list_aprs_stations_item), _aprs_enable);
         gtk_widget_set_sensitive(GTK_WIDGET(_menu_list_aprs_messages_item), _aprs_enable);
 
-    	
-    	aprs_server_disconnect();
-    	
-    	if(_aprs_enable && _aprs_inet_enable)
-    	{
-    		aprs_server_connect();
-    	}
+
+	aprs_server_disconnect();
+
+	if(_aprs_enable && _aprs_inet_enable)
+	{
+		aprs_server_connect();
+	}
     }
-    
+
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
 }
@@ -1298,7 +1298,7 @@ static gboolean menu_cb_enable_tty_aprs(GtkMenuItem *item)
 	    else
 	        aprs_tty_disconnect();
     }
-    
+
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1323,9 +1323,9 @@ menu_cb_enable_inet_aprs(GtkMenuItem *item)
     }
     else
     {
-    	// APRS not enabled
+	// APRS not enabled
     }
-    
+
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1337,16 +1337,16 @@ static gboolean menu_cb_list_aprs_messages(GtkMenuItem *item)
 
     if(_aprs_enable)
     {
-    	list_messages();
+	list_messages();
     }
     else
     {
-    	// APRS not enabled
+	// APRS not enabled
     }
-    
+
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
-    return TRUE;	
+    return TRUE;
 }
 
 static gboolean
@@ -1356,13 +1356,13 @@ menu_cb_list_aprs_stations(GtkMenuItem *item)
 
     if(_aprs_enable)
     {
-    	list_stations();
+	list_stations();
     }
     else
     {
-    	// APRS not enabled
+	// APRS not enabled
     }
-    
+
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -1895,37 +1895,37 @@ menu_init()
             = gtk_menu_item_new_with_label(_("APRS")));
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_item),
             submenu = gtk_menu_new());
-    
+
     gtk_menu_append(submenu, _menu_enable_aprs_inet_item
             = gtk_check_menu_item_new_with_label(_("Connect to APRS Server")));
     gtk_check_menu_item_set_active(
             GTK_CHECK_MENU_ITEM(_menu_enable_aprs_inet_item), _aprs_inet_enable);
     gtk_widget_set_sensitive(GTK_WIDGET(_menu_enable_aprs_inet_item), _aprs_enable);
-    
-    
+
+
     gtk_menu_append(submenu, _menu_enable_aprs_tty_item
                 = gtk_check_menu_item_new_with_label(_("Connect to TNC")));
         gtk_check_menu_item_set_active(
                 GTK_CHECK_MENU_ITEM(_menu_enable_aprs_tty_item), _aprs_tty_enable);
         gtk_widget_set_sensitive(GTK_WIDGET(_menu_enable_aprs_tty_item), _aprs_enable);
-        
-    
+
+
     gtk_menu_append(submenu, _menu_list_aprs_stations_item
                 = gtk_menu_item_new_with_label(_("List Stations...")));
-        
+
     gtk_widget_set_sensitive(GTK_WIDGET(_menu_list_aprs_stations_item), _aprs_enable);
 
 
     gtk_menu_append(submenu, _menu_list_aprs_messages_item
                 = gtk_menu_item_new_with_label(_("List Messages...")));
-        
+
     gtk_widget_set_sensitive(GTK_WIDGET(_menu_list_aprs_messages_item), _aprs_enable);
 
-    
+
     gtk_menu_append(submenu, _menu_aprs_settings_item
                     = gtk_menu_item_new_with_label(_("APRS Settings...")));
-    
-    
+
+
     gtk_menu_append(menu, gtk_separator_menu_item_new());
 
 #endif // INCLUDE_APRS
@@ -2093,11 +2093,11 @@ menu_init()
 
     g_signal_connect(G_OBJECT(_menu_list_aprs_messages_item), "activate",
                               G_CALLBACK(menu_cb_list_aprs_messages), NULL);
-    
+
     g_signal_connect(G_OBJECT(_menu_aprs_settings_item), "activate",
                                   G_CALLBACK(menu_cb_aprs_settings), NULL);
-#endif // INCLUDE_APRS        
-    
+#endif // INCLUDE_APRS
+
     /* Connect the other menu item signals. */
     g_signal_connect(G_OBJECT(_menu_settings_item), "activate",
                       G_CALLBACK(menu_cb_settings), NULL);
@@ -2112,4 +2112,3 @@ menu_init()
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
-

@@ -142,7 +142,7 @@ gint add_aprs_label(gchar *label, gint label_len, gint x, gint y)
     pango_layout_get_pixel_size(_aprs_label_layout, &width, &height);
 
     /* Draw the layout itself. */
-    gdk_draw_layout( _map_pixmap, 
+    gdk_draw_layout( _map_pixmap,
         _gc[COLORABLE_APRS_STATION],
         x,
         y - (gint)((gfloat)height/2.0f),
@@ -151,9 +151,9 @@ gint add_aprs_label(gchar *label, gint label_len, gint x, gint y)
     return width;
 }
 
-gboolean extract_aprs_symbol(const gchar symbol, const char primary, GdkPixbuf **pixbuf, 
-		gint *symbol_size, 
-		gint *symbol_column, 
+gboolean extract_aprs_symbol(const gchar symbol, const char primary, GdkPixbuf **pixbuf,
+		gint *symbol_size,
+		gint *symbol_column,
 		gint *symbol_row)
 {
 //    GdkPixbuf *pixbuf = NULL;
@@ -172,42 +172,42 @@ gboolean extract_aprs_symbol(const gchar symbol, const char primary, GdkPixbuf *
 
     if(primary == '/') snprintf(filename, sizeof(filename), "/usr/share/icons/hicolor/scalable/hildon/allicons.png");
     else               snprintf(filename, sizeof(filename), "/usr/share/icons/hicolor/scalable/hildon/allicon2.png");
-    
+
     *symbol_column = (gint)(symbol_number/symbols_per_column);
     *symbol_row    = symbol_number - ((*symbol_column)*symbols_per_column);
 
 
     *pixbuf = gdk_pixbuf_new_from_file(filename, &error);
-    
+
 
     if(error)
     {
         return FALSE;
     }
 
-    if( (*symbol_size)*(*symbol_column) < 0 || (*symbol_size)*(*symbol_row) < 0 ) 
+    if( (*symbol_size)*(*symbol_column) < 0 || (*symbol_size)*(*symbol_row) < 0 )
     {
         return FALSE;
     }
-    
+
     return TRUE;
 }
 //
 gboolean draw_aprs_symbol(const gchar symbol, const gchar primary, const gint poix, const gint poiy, gint* imageSize)
 {
     GdkPixbuf *pixbuf = NULL;
-    
+
     gint symbol_column = 0;
     gint symbol_row    = 0;
     gint symbol_size = 0;
 
-    if(!extract_aprs_symbol(symbol, primary, &pixbuf, 
-    		&symbol_size, 
-    		&symbol_column, 
-    		&symbol_row))
-    	return FALSE;
-    
-    
+    if(!extract_aprs_symbol(symbol, primary, &pixbuf,
+		&symbol_size,
+		&symbol_column,
+		&symbol_row))
+	return FALSE;
+
+
     /* We found an icon to draw. */
     gdk_draw_pixbuf(
         _map_pixmap,
@@ -221,7 +221,7 @@ gboolean draw_aprs_symbol(const gchar symbol, const gchar primary, const gint po
     g_object_unref(pixbuf);
 
     *imageSize = symbol_size;
-   
+
 
     return TRUE;
 }
@@ -230,34 +230,34 @@ gboolean draw_aprs_symbol(const gchar symbol, const gchar primary, const gint po
 void plot_aprs_station(AprsDataRow *p_station, gboolean single )
 {
 	if(_poi_zoom <= _zoom) return ;
-	
+
     gint image_size = 0;
     gdouble lat1 = 0;
     gdouble lon1 = 0;
     gint poix, poiy;
     gint unitx, unity;
-    
+
     // TODO - if this station has been ploted before, then redraw the map at that position
     /*
     if(p_station->newest_trackpoint != NULL)
     {
-    	AprsTrackRow *pPreviousPoint = p_station->newest_trackpoint;
-    	
-    	lat1 = convert_lat_l2d(pPreviousPoint->trail_lat_pos);
-   	    lon1 = convert_lon_l2d(pPreviousPoint->trail_long_pos);
+	AprsTrackRow *pPreviousPoint = p_station->newest_trackpoint;
+
+	lat1 = convert_lat_l2d(pPreviousPoint->trail_lat_pos);
+	    lon1 = convert_lon_l2d(pPreviousPoint->trail_long_pos);
 
         latlon2unit(lat1, lon1, unitx, unity);
         unit2buf(unitx, unity, poix, poiy);
         fprintf(stderr, "Removing old pos.\n");
-        
+
         poix = poix - 40;
         poiy = poiy - 25;
         if(poix<0) poix = 0;
         if(poiy<0) poiy = 0;
-        
+
         if(poix+100 > _view_width_pixels) poix = _view_width_pixels;
         if(poiy+50 > _view_height_pixels) poiy = _view_height_pixels;
-        	
+
         gdk_draw_pixbuf(
                 _map_pixmap,
                 _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
@@ -266,7 +266,7 @@ void plot_aprs_station(AprsDataRow *p_station, gboolean single )
                 poix, poiy,
                 100, 50,
                 GDK_RGB_DITHER_NONE, 0, 0);
-        
+
         // TODO - this will only redraw the background, not any POI´s or other items
     }
 */
@@ -278,8 +278,8 @@ void plot_aprs_station(AprsDataRow *p_station, gboolean single )
 
     // Ignore this station if it's position is not on the screen
     if(poix < 0 || poix > _view_width_pixels
-    	|| poiy < 0 || poiy > _view_height_pixels)
-    	return ;
+	|| poiy < 0 || poiy > _view_height_pixels)
+	return ;
 
     gchar label[MAX_CALLSIGN+1];
     snprintf(label, sizeof(label), "%s", p_station->call_sign);
@@ -298,20 +298,20 @@ void plot_aprs_station(AprsDataRow *p_station, gboolean single )
     }
 
     gint label_width = 0;
-    
+
     gint _aprs_label_zoom = _poi_zoom - 1;
-    
+
     if(_aprs_label_zoom > _zoom)
     {
-    	label_width = add_aprs_label(label, strlen(label), poix + image_size, poiy);
+	label_width = add_aprs_label(label, strlen(label), poix + image_size, poiy);
     }
 
     if(single)
     {
         gint offset = (gint)((gfloat)image_size/2.0f);
 
-        gtk_widget_queue_draw_area( 
-                _map_widget, 
+        gtk_widget_queue_draw_area(
+                _map_widget,
                 poix - offset,
                 poiy - offset,
                 (2*image_size) + label_width,
@@ -418,7 +418,7 @@ gps_display_details(void)
         gfloat speed = _gps.speed * UNITS_CONVERT[_units];
 
         format_lat_lon(_gps.lat, _gps.lon, litbuf, buffer2);
-        
+
         /* latitude */
         //lat_format(_gps.lat, litbuf);
         gtk_label_set_label(GTK_LABEL(_sdi_lat), litbuf);
@@ -427,7 +427,7 @@ gps_display_details(void)
         //lon_format(_gps.lon, litbuf);
         //gtk_label_set_label(GTK_LABEL(_sdi_lon), litbuf);
         if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
-        	gtk_label_set_label(GTK_LABEL(_sdi_lon), buffer2);
+	gtk_label_set_label(GTK_LABEL(_sdi_lon), buffer2);
 
         /* speed */
         switch(_units)
@@ -561,7 +561,7 @@ gps_display_data(void)
         gfloat speed = _gps.speed * UNITS_CONVERT[_units];
 
         format_lat_lon(_gps.lat, _gps.lon, litbuf, buffer2);
-        
+
         /* latitude */
         //lat_format(_gps.lat, litbuf);
         gtk_label_set_label(GTK_LABEL(_text_lat), litbuf);
@@ -569,7 +569,7 @@ gps_display_data(void)
         /* longitude */
         //lon_format(_gps.lon, litbuf);
         if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
-        	gtk_label_set_label(GTK_LABEL(_text_lon), buffer2);	
+	gtk_label_set_label(GTK_LABEL(_text_lon), buffer2);
 
         /* speed */
         switch(_units)
@@ -1278,7 +1278,7 @@ update_gcs()
         gdk_gc_set_line_attributes(_gc[i],
                 _draw_width, GDK_LINE_SOLID, GDK_CAP_ROUND, GDK_JOIN_ROUND);
     }
-    
+
     /* Update the _map_widget's gc's. */
     gdk_gc_set_line_attributes(
             _map_widget->style->fg_gc[GTK_STATE_ACTIVE],
@@ -2679,30 +2679,30 @@ latlon_cb_fmt_changed(GtkWidget *widget, LatlonDialog *lld) {
     gchar buffer2[LL_FMT_LEN];
 
     _degformat = fmt;
-    
+
     format_lat_lon(lld->glat, lld->glon, buffer, buffer2);
-    
+
     //lat_format(lld->glat, buffer);
     gtk_label_set_label(GTK_LABEL(lld->lat), buffer);
     //lon_format(lld->glon, buffer);
-    
+
     if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
-    	gtk_label_set_label(GTK_LABEL(lld->lon), buffer2);
+	gtk_label_set_label(GTK_LABEL(lld->lon), buffer2);
     else
-    	gtk_label_set_label(GTK_LABEL(lld->lon), g_strdup(""));
-    
-    
+	gtk_label_set_label(GTK_LABEL(lld->lon), g_strdup(""));
+
+
     // And set the titles
-    gtk_label_set_label(GTK_LABEL(lld->lat_title), 
-    		DEG_FORMAT_ENUM_TEXT[_degformat].short_field_1 );
-    
+    gtk_label_set_label(GTK_LABEL(lld->lat_title),
+		DEG_FORMAT_ENUM_TEXT[_degformat].short_field_1 );
+
     if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
-    	gtk_label_set_label(GTK_LABEL(lld->lon_title), 
-        		DEG_FORMAT_ENUM_TEXT[_degformat].short_field_2 );
+	gtk_label_set_label(GTK_LABEL(lld->lon_title),
+		DEG_FORMAT_ENUM_TEXT[_degformat].short_field_2 );
     else
-    	gtk_label_set_label(GTK_LABEL(lld->lon_title), g_strdup(""));
-    
-    
+	gtk_label_set_label(GTK_LABEL(lld->lon_title), g_strdup(""));
+
+
     _degformat = old;
   }
 }
@@ -2722,16 +2722,16 @@ latlon_dialog(gdouble lat, gdouble lon)
     GtkWidget *btn_copy = NULL;
     gint prev_degformat = _degformat;
     gint fallback_deg_format = _degformat;
-    
+
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     // Check that the current coord system supports the select position
     if(!coord_system_check_lat_lon (lat, lon, &fallback_deg_format))
     {
-    	_degformat = fallback_deg_format;
+	_degformat = fallback_deg_format;
     }
-     
-    
+
+
     dialog = gtk_dialog_new_with_buttons(_("Show Position"),
             GTK_WINDOW(_window), GTK_DIALOG_MODAL,
             GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
@@ -2742,7 +2742,7 @@ latlon_dialog(gdouble lat, gdouble lon)
             table = gtk_table_new(5, 2, FALSE), TRUE, TRUE, 0);
 
     gtk_table_attach(GTK_TABLE(table),
-    		lbl_lat_title = gtk_label_new(/*_("Lat")*/ DEG_FORMAT_ENUM_TEXT[_degformat].short_field_1 ),
+		lbl_lat_title = gtk_label_new(/*_("Lat")*/ DEG_FORMAT_ENUM_TEXT[_degformat].short_field_1 ),
             0, 1, 0, 1, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(lbl_lat_title), 1.f, 0.5f);
     gtk_table_attach(GTK_TABLE(table),
@@ -2750,18 +2750,18 @@ latlon_dialog(gdouble lat, gdouble lon)
             1, 2, 0, 1, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(txt_lat), 1.f, 0.5f);
 
-    
+
     gtk_table_attach(GTK_TABLE(table),
             lbl_lon_title = gtk_label_new(/*_("Lon")*/ DEG_FORMAT_ENUM_TEXT[_degformat].short_field_2 ),
             0, 1, 1, 2, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(lbl_lon_title), 1.f, 0.5f);
-    
+
     gtk_table_attach(GTK_TABLE(table),
             txt_lon = gtk_label_new(""),
             1, 2, 1, 2, GTK_FILL, 0, 2, 4);
     gtk_misc_set_alignment(GTK_MISC(txt_lon), 1.f, 0.5f);
 
-    
+
     gtk_table_attach(GTK_TABLE(table),
             label = gtk_label_new(_("Format")),
             0, 1, 2, 3, GTK_FILL, 0, 2, 4);
@@ -2781,14 +2781,14 @@ latlon_dialog(gdouble lat, gdouble lon)
       gchar buffer2[LL_FMT_LEN];
 
       format_lat_lon(lat, lon, buffer, buffer2);
-      
+
       //lat_format(lat, buffer);
       gtk_label_set_label(GTK_LABEL(txt_lat), buffer);
       //lat_format(lon, buffer);
       if(DEG_FORMAT_ENUM_TEXT[_degformat].field_2_in_use)
-    	  gtk_label_set_label(GTK_LABEL(txt_lon), buffer2);
+	  gtk_label_set_label(GTK_LABEL(txt_lon), buffer2);
       else
-    	  gtk_label_set_label(GTK_LABEL(txt_lon), g_strdup(""));
+	  gtk_label_set_label(GTK_LABEL(txt_lon), g_strdup(""));
     }
 
     /* Fill in formats */
@@ -2812,7 +2812,7 @@ latlon_dialog(gdouble lat, gdouble lon)
 
     lld.lat_title = lbl_lat_title;
     lld.lon_title = lbl_lon_title;
-    
+
     /* Connect Signals */
     g_signal_connect(G_OBJECT(cmb_format), "changed",
                     G_CALLBACK(latlon_cb_fmt_changed), &lld);
@@ -2822,9 +2822,9 @@ latlon_dialog(gdouble lat, gdouble lon)
     gtk_widget_show_all(dialog);
 
     gtk_dialog_run(GTK_DIALOG(dialog));
-    
+
     _degformat = prev_degformat; // Put back incase it had to be auto changed
-    
+
     gtk_widget_hide(dialog);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
@@ -2939,7 +2939,7 @@ display_init()
     pango_font = pango_font_description_new();
     pango_font_description_set_size(pango_font, 12 * PANGO_SCALE);
     pango_layout_set_font_description(_scale_layout, pango_font);
-    
+
 #ifdef INCLUDE_APRS
     /* APRS Labels */
     pango_context = gtk_widget_get_pango_context(_map_widget);
