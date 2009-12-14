@@ -667,12 +667,14 @@ route_download_and_setup(GtkWidget *parent, const gchar *source_url,
     /* Else, if GPS is enabled, replace the route, otherwise append it. */
     else if(gpx_path_parse(&_route, bytes, size, replace_policy))
     {
+        MapController *controller = map_controller_get_instance();
+
         path_save_route_to_db();
 
         /* Find the nearest route point, if we're connected. */
         route_find_nearest_point();
 
-        map_force_redraw();
+        map_controller_refresh_paths(controller);
 
         MACRO_BANNER_SHOW_INFO(_window, _("Route Downloaded"));
         g_free(bytes);
@@ -975,10 +977,11 @@ track_clear()
                             _("Really clear the track?"));
 
     if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm))) {
+        MapController *controller = map_controller_get_instance();
         MACRO_PATH_FREE(_track);
         MACRO_PATH_INIT(_track);
         path_save_track_to_db();
-        map_force_redraw();
+        map_controller_refresh_paths(controller);
     }
 
     gtk_widget_destroy(confirm);

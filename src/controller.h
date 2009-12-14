@@ -112,5 +112,7 @@ void map_controller_rotate(MapController *self, gint angle);
 void map_controller_set_zoom(MapController *self, gint zoom);
 void map_controller_calc_best_center(MapController *self, Point *new_center);
 
+void map_controller_refresh_paths(MapController *controller);
+
 G_END_DECLS
 #endif /* MAP_CONTROLLER_H */

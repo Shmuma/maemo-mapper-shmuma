@@ -78,6 +78,8 @@ menu_cb_route_open(GtkMenuItem *item)
         if(gpx_path_parse(&_route, buffer, size,
                     _autoroute_data.enabled ? 0 : 1))
         {
+            MapController *controller = map_controller_get_instance();
+
             path_save_route_to_db();
 
             cancel_autoroute();
@@ -85,7 +87,7 @@ menu_cb_route_open(GtkMenuItem *item)
             /* Find the nearest route point, if we're connected. */
             route_find_nearest_point();
 
-            map_force_redraw();
+            map_controller_refresh_paths(controller);
             MACRO_BANNER_SHOW_INFO(_window, _("Route Opened"));
         }
         else
@@ -164,6 +166,7 @@ menu_cb_route_reset(GtkMenuItem *item)
 static gboolean
 menu_cb_route_clear(GtkMenuItem *item)
 {
+    MapController *controller = map_controller_get_instance();
     printf("%s()\n", __PRETTY_FUNCTION__);
 
     cancel_autoroute();
@@ -171,7 +174,7 @@ menu_cb_route_clear(GtkMenuItem *item)
     MACRO_PATH_INIT(_route);
     path_save_route_to_db();
     route_find_nearest_point();
-    map_force_redraw();
+    map_controller_refresh_paths(controller);
 
     vprintf("%s(): return TRUE\n", __PRETTY_FUNCTION__);
     return TRUE;
@@ -197,7 +200,8 @@ menu_cb_track_open(GtkMenuItem *item)
     {
         if(gpx_path_parse(&_track, buffer, size, -1))
         {
-            map_force_redraw();
+            MapController *controller = map_controller_get_instance();
+            map_controller_refresh_paths(controller);
             MACRO_BANNER_SHOW_INFO(_window, _("Track Opened"));
         }
         else

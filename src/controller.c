@@ -325,7 +325,6 @@ map_controller_set_show_compass(MapController *self, gboolean show)
 
     _show_comprose = show;
     map_screen_show_compass(self->priv->screen, _show_comprose);
-    map_force_redraw();
 }
 
 gboolean
@@ -358,7 +357,6 @@ map_controller_set_show_routes(MapController *self, gboolean show)
     else
     {
         _show_paths &= ~ROUTES_MASK;
-        map_force_redraw();
         MACRO_BANNER_SHOW_INFO(_window, _("Routes are now hidden"));
     }
 
@@ -386,16 +384,11 @@ map_controller_set_show_tracks(MapController *self, gboolean show)
     if (show)
     {
         _show_paths |= TRACKS_MASK;
-#if OLD_MAP
-        map_render_paths();
-        MACRO_QUEUE_DRAW_AREA();
-#endif
         MACRO_BANNER_SHOW_INFO(_window, _("Tracks are now shown"));
     }
     else
     {
         _show_paths &= ~TRACKS_MASK;
-        map_force_redraw();
         MACRO_BANNER_SHOW_INFO(_window, _("Tracks are now hidden"));
     }
 
@@ -419,7 +412,6 @@ map_controller_set_show_scale(MapController *self, gboolean show)
 
     _show_scale = show;
     map_screen_show_scale(self->priv->screen, _show_scale);
-    map_force_redraw();
 }
 
 gboolean
@@ -438,7 +430,7 @@ map_controller_set_show_poi(MapController *self, gboolean show)
     if (_show_poi == show) return;
 
     _show_poi = show;
-    map_force_redraw();
+    /* TODO */
 }
 
 gboolean
@@ -477,7 +469,6 @@ map_controller_set_show_zoom(MapController *self, gboolean show)
 
     _show_zoomlevel = show;
     map_screen_show_zoom_box(MAP_SCREEN(_w_map), _show_zoomlevel);
-    map_force_redraw();
 }
 
 gboolean
@@ -605,3 +596,10 @@ map_controller_calc_best_center(MapController *self, Point *new_center)
     }
 }
 
+void
+map_controller_refresh_paths(MapController *self)
+{
+    g_return_if_fail(MAP_IS_CONTROLLER(self));
+
+    map_screen_redraw_overlays(self->priv->screen);
+}

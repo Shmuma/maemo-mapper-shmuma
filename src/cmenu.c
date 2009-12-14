@@ -159,12 +159,14 @@ cmenu_distance_to(gint unitx, gint unity)
 static void
 cmenu_add_route(gint unitx, gint unity)
 {
+    MapController *controller = map_controller_get_instance();
+
     printf("%s()\n", __PRETTY_FUNCTION__);
     MACRO_PATH_INCREMENT_TAIL(_route);
     _route.tail->unitx = _cmenu_unitx;
     _route.tail->unity = _cmenu_unity;
     route_find_nearest_point();
-    map_force_redraw();
+    map_controller_refresh_paths(controller);
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
 
@@ -431,6 +433,7 @@ cmenu_way_delete(WayPoint *way)
 
     if(GTK_RESPONSE_OK == gtk_dialog_run(GTK_DIALOG(confirm)))
     {
+        MapController *controller = map_controller_get_instance();
         Point *pdel_min, *pdel_max, *pdel_start, *pdel_end;
         gint num_del;
 
@@ -477,7 +480,7 @@ cmenu_way_delete(WayPoint *way)
         _route.wtail--;
 
         route_find_nearest_point();
-        map_force_redraw();
+        map_controller_refresh_paths(controller);
     }
     gtk_widget_destroy(confirm);
 }
