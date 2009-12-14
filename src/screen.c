@@ -1155,3 +1155,45 @@ map_screen_refresh_tiles(MapScreen *self)
                               (ClutterCallback)map_tile_refresh, NULL);
 }
 
+void
+map_screen_track_append(MapScreen *self, Point p)
+{
+    MapScreenPrivate *priv;
+    gint x, y;
+    cairo_t *cr;
+
+    g_return_if_fail(MAP_IS_SCREEN(self));
+    priv = self->priv;
+
+    /* if no track is to be shown, do nothing */
+    if (!(_show_paths & TRACKS_MASK))
+        return;
+
+    /* if a redraw is queued, do nothing */
+    if (priv->source_overlay_redraw != 0)
+        return;
+
+    cr = clutter_cairo_texture_create(CLUTTER_CAIRO_TEXTURE(priv->overlay));
+    g_assert(cr != NULL);
+
+    set_source_color(cr, &_color[COLORABLE_TRACK]);
+    cairo_set_line_width(cr, _draw_width);
+    cairo_set_line_join(cr, CAIRO_LINE_JOIN_BEVEL);
+    if (_track.tail->unity)
+    {
+        point_to_pixels(priv, _track.tail, &x, &y);
+        cairo_move_to(cr, x, y);
+        point_to_pixels(priv, &p, &x, &y);
+        cairo_line_to(cr, x, y);
+    }
+    else
+    {
+        point_to_pixels(priv, &p, &x, &y);
+        draw_break(cr, &_color[COLORABLE_TRACK_BREAK], x, y);
+    }
+
+    cairo_stroke(cr);
+
+    cairo_destroy(cr);
+}
+

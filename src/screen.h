@@ -78,5 +78,7 @@ void map_screen_get_tap_area_from_units(MapScreen *self, gint ux, gint uy,
 void map_screen_redraw_overlays(MapScreen *self);
 void map_screen_refresh_tiles(MapScreen *self);
 
+void map_screen_track_append(MapScreen *self, Point p);
+
 G_END_DECLS
 #endif /* MAP_SCREEN_H */

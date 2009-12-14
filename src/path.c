@@ -51,6 +51,7 @@
 #include "path.h"
 #include "poi.h"
 #include "util.h"
+#include "screen.h"
 
 typedef struct {
     GtkWindow *dialog;
@@ -738,6 +739,7 @@ path_reset_route()
 gboolean
 track_add(time_t time, gboolean newly_fixed)
 {
+    MapController *controller = map_controller_get_instance();
     gboolean show_directions = TRUE;
     gint announce_thres_unsquared;
     gboolean ret = FALSE;
@@ -780,6 +782,9 @@ track_add(time_t time, gboolean newly_fixed)
 
         if(_enable_tracking)
         {
+            GtkWidget *screen = map_controller_get_screen_widget(controller);
+
+            map_screen_track_append(MAP_SCREEN(screen), _pos);
             MACRO_PATH_INCREMENT_TAIL(_track);
             *_track.tail = _pos;
         }
