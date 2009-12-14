@@ -3295,34 +3295,6 @@ map_render_poi()
                 pixbuf = gdk_pixbuf_new_from_file(buffer, &error);
             }
             map_screen_show_poi(MAP_SCREEN(_w_map), unitx, unity, pixbuf);
-#if OLD_MAP
-            if(error)
-            {
-                /* No icon for POI or for category or default POI icon file.
-                   Draw default purple square. */
-                error = NULL;
-                gdk_draw_rectangle(_map_pixmap, _gc[COLORABLE_POI], TRUE,
-                        poix - (gint)(1.5f * _draw_width),
-                        poiy - (gint)(1.5f * _draw_width),
-                        3 * _draw_width,
-                        3 * _draw_width);
-            }
-            else
-            {
-                /* We found an icon to draw. */
-                gdk_draw_pixbuf(
-                        _map_pixmap,
-                        _gc[COLORABLE_POI],
-                        pixbuf,
-                        0, 0,
-                        poix - gdk_pixbuf_get_width(pixbuf) / 2,
-                        poiy - gdk_pixbuf_get_height(pixbuf) / 2,
-                        -1,-1,
-                        GDK_RGB_DITHER_NONE, 0, 0);
-                g_object_unref(pixbuf);
-            }
-#endif
-
             g_free(poi_label);
             g_free(cat_label);
         }
@@ -3345,42 +3317,4 @@ poi_destroy()
 
     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
 }
-
-#ifdef INCLUDE_APRS
-extern AprsDataRow *n_first;               // pointer to first element in name sorted station list
-
-
-/////////////////////
-
-/**
- * Render all the APRS data.
- */
-void
-map_render_aprs()
-{
-    printf("%s()\n", __PRETTY_FUNCTION__);
-
-    if(_poi_zoom > _zoom)
-    {
-
-        AprsDataRow *p_station = n_first;
-
-        while ( (p_station) != NULL) 
-        {
-            if( p_station->coord_lat != 0.0f 
-                || p_station->coord_lon != 0.0f  ) 
-            {
-            		plot_aprs_station( p_station, FALSE);
-            } // If valid data
-
-            (p_station) = (p_station)->n_next;  // Next element in list
-        } // End of while loop
-
-
-    } // check for zoom level
-
-    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
-}
-
-#endif // INCLUDE_APRS
 

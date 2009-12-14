@@ -31,8 +31,4 @@ void settings_save(void);
 
 gboolean settings_dialog(void);
 
-#ifdef INCLUDE_APRS
-void aprs_settings_dialog(gboolean *aprs_inet_config_changed, gboolean *aprs_tty_config_changed);
-#endif // INCLUDE_APRS
-
 #endif /* ifndef MAEMO_MAPPER_SETTINGS_H */

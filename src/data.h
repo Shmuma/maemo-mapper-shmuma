@@ -58,17 +58,6 @@ extern osso_context_t *_osso;
 /** The controller object of the application. */
 extern MapController *_controller;
 
-#if OLD_MAP
-/** The widget that provides the visual display of the map. */
-extern GtkWidget *_map_widget;
-
-/** The backing pixmap of _map_widget. */
-extern GdkPixmap *_map_pixmap;
-
-/** The backing pixmap of _map_widget. */
-extern GdkPixbuf *_map_pixbuf;
-#endif
-
 /** The widget that provides the visual display of the map. */
 extern GtkWidget *_w_map;
 
@@ -341,48 +330,6 @@ extern GtkWidget *_cmenu_poi_goto_nearpoi_item;
 /*****************************
  * ABOVE: CONTEXT MENU ITEMS *
  *****************************/
-
-#ifdef INCLUDE_APRS
-
-extern gboolean _aprs_enable;
-extern gboolean _aprs_inet_enable;
-extern gboolean _aprs_tty_enable;
-extern gchar *  _aprs_server;
-extern gchar *  _aprs_tty_port;
-extern guint     _aprs_server_port;
-extern gint     _aprs_std_pos_hist;
-extern gint     _aprs_max_stations;
-extern gchar *  _aprs_inet_server_validation;
-extern gchar *  _aprs_beacon_comment;
-extern gboolean _aprs_transmit_compressed_posit;
-extern gint     _aprs_inet_beacon_interval;
-extern gint     _aprs_tty_beacon_interval;
-extern gchar *  _aprs_inet_beacon_comment;
-extern gchar    _aprs_beacon_group;
-extern gchar    _aprs_beacon_symbol;
-
-extern gboolean _aprs_enable_inet_tx;
-extern gboolean _aprs_enable_tty_tx;
-extern gchar *  _aprs_mycall;
-extern gchar *  _aprs_beacon_comment;
-
-extern gboolean _aprs_show_new_station_alert;
-extern time_t   _aprs_sec_remove;
-extern GtkWidget *_menu_enable_aprs_inet_item;
-extern GtkWidget *_menu_enable_aprs_tty_item;
-extern GtkWidget *_menu_list_aprs_stations_item;
-extern GtkWidget *_menu_list_aprs_messages_item;
-extern GtkWidget *_menu_aprs_settings_item;
-extern ConnState _aprs_inet_state;
-extern ConnState _aprs_tty_state;
-extern gchar *  _aprs_tnc_bt_mac;
-extern TTncConnection _aprs_tnc_method;
-extern gint     _aprs_server_auto_filter_km;
-extern gboolean _aprs_server_auto_filter_on;
-//extern GtkWidget *_aprs_connect_banner;
-extern gchar *  _aprs_unproto_path;
-
-#endif // INCLUDE_APRS
 
 #endif /* ifndef MAEMO_MAPPER_DATA_H */
 

@@ -90,9 +90,6 @@
 #define ARRAY_CHUNK_SIZE (1024)
 
 #define BUFFER_SIZE (2048)
-#define APRS_BUFFER_SIZE (4096)
-#define APRS_MAX_COMMENT  80
-#define APRS_CONVERSE_MODE "k"
 
 #define GPSD_PORT_DEFAULT (2947)
 
@@ -286,35 +283,7 @@
    ((guint64)((((gint64)(b).unitx)-(a).unitx)*(((gint64)(b).unitx)-(a).unitx))\
   + (guint64)((((gint64)(b).unity)-(a).unity)*(((gint64)(b).unity)-(a).unity)))
 
-#if OLD_MAP
-#define MACRO_QUEUE_DRAW_AREA() \
-    gtk_widget_queue_draw_area( \
-            _map_widget, \
-            0, 0, \
-            _view_width_pixels, \
-            _view_height_pixels)
-#else
 #define MACRO_QUEUE_DRAW_AREA()
-#endif
-
-/* Render all on-map metadata an annotations, including POI and paths. */
-#ifdef INCLUDE_APRS
-#define MACRO_MAP_RENDER_DATA() { \
-    if(_show_poi) \
-        map_render_poi(); \
-    if(_show_paths > 0) \
-        map_render_paths(); \
-    if(_aprs_enable) \
-    	map_render_aprs(); \
-}
-#else
-#define MACRO_MAP_RENDER_DATA() { \
-    if(_show_poi) \
-        map_render_poi(); \
-    if(_show_paths > 0) \
-        map_render_paths(); \
-}
-#endif //INCLUDE_APRS
 
 #define UNBLANK_SCREEN(MOVING, APPROACHING_WAYPOINT) { \
     /* Check if we need to unblank the screen. */ \

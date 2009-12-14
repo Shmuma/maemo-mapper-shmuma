@@ -78,8 +78,4 @@ void map_download_refresh_idle(MapTileSpec *tile, GdkPixbuf *pixbuf,
 
 void display_init(void);
 
-#ifdef INCLUDE_APRS
-void plot_aprs_station(AprsDataRow *p_station, gboolean single );
-#endif // INCLUDE_APRS
-
 #endif /* ifndef MAEMO_MAPPER_DISPLAY_H */

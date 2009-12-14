@@ -61,7 +61,6 @@
 #include "dbus-ifc.h"
 #include "display.h"
 #include "gps.h"
-#include "aprs.h"
 #include "gpx.h"
 #include "input.h"
 #include "main.h"
@@ -513,12 +512,6 @@ maemo_mapper_init(gint argc, gchar **argv)
     gtk_widget_set_size_request (_heading_panel, -1, 100);
     gtk_box_pack_start(GTK_BOX(vbox), _heading_panel, TRUE, TRUE, 0);
 
-#if OLD_MAP
-    _map_widget = gtk_drawing_area_new();
-
-    gtk_box_pack_start(GTK_BOX(hbox), _map_widget, TRUE, TRUE, 0);
-#endif
-
     _controller = g_object_new(MAP_TYPE_CONTROLLER, NULL);
     _w_map = map_controller_get_screen_widget(_controller);
     gtk_box_pack_start(GTK_BOX(hbox), _w_map, TRUE, TRUE, 0);
@@ -526,50 +519,12 @@ maemo_mapper_init(gint argc, gchar **argv)
     gtk_widget_show_all(hbox);
     gps_show_info(); /* hides info, if necessary. */
 
-#if OLD_MAP
-    gtk_widget_realize(_map_widget);
-
-    /* Tweak the foreground and background colors a little bit... */
-    {
-        GdkColor color;
-        GdkGCValues values;
-        GdkColormap *colormap = gtk_widget_get_colormap(_map_widget);
-
-        gdk_gc_get_values(
-                _map_widget->style->fg_gc[GTK_STATE_NORMAL],
-                &values);
-        gdk_colormap_query_color(colormap, values.foreground.pixel, &color);
-        gtk_widget_modify_fg(_map_widget, GTK_STATE_ACTIVE, &color);
-
-        gdk_gc_get_values(
-                _map_widget->style->bg_gc[GTK_STATE_NORMAL],
-                &values);
-        gdk_colormap_query_color(colormap, values.foreground.pixel, &color);
-        gtk_widget_modify_bg(_map_widget, GTK_STATE_ACTIVE, &color);
-
-        /* Use a black background for _map_widget, since missing tiles are
-         * also drawn with a black background. */
-        color.red = 0; color.green = 0; color.blue = 0;
-        gtk_widget_modify_bg(_map_widget,
-                GTK_STATE_NORMAL, &color);
-    }
-
-    _map_pixmap = gdk_pixmap_new(_map_widget->window, 1, 1, -1);
-    /* -1: use bit depth of widget->window. */
-
-    _map_pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 1, 1);
-#endif
-
     _mut_exists_table = g_hash_table_new(
             mut_exists_hashfunc, mut_exists_equalfunc);
     _mut_priority_tree = g_tree_new(mut_priority_comparefunc);
 
     _mut_thread_pool = g_thread_pool_new(
             (GFunc)thread_proc_mut, NULL, NUM_DOWNLOAD_THREADS, FALSE, NULL);
-#if OLD_MAP
-    _mrt_thread_pool = g_thread_pool_new(
-            (GFunc)thread_render_map, NULL, 1, FALSE, NULL);
-#endif
 
     /* Connect signals. */
     g_signal_connect(G_OBJECT(_window), "destroy",
@@ -578,11 +533,6 @@ maemo_mapper_init(gint argc, gchar **argv)
     memset(&_autoroute_data, 0, sizeof(_autoroute_data));
 
     latlon2unit(_gps.lat, _gps.lon, _pos.unitx, _pos.unity);
-
-#if OLD_MAP
-    /* Initialize our line styles. */
-    update_gcs();
-#endif
 
     gtk_widget_realize(_window);
     menu_init();
@@ -593,10 +543,6 @@ maemo_mapper_init(gint argc, gchar **argv)
     poi_db_connect();
     display_init();
     dbus_ifc_init();
-    
-#ifdef INCLUDE_APRS
-    aprs_init();
-#endif //INCLUDE_APRS
     
     /* If present, attempt to load the file specified on the command line. */
     if(argc > 1)

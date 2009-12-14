@@ -45,14 +45,7 @@ maemo_mapper_SOURCES = \
 	settings.c \
 	screen.c \
 	tile.c \
-	util.c \
-	aprs_decode.c \
-	aprs.c \
-	hashtable.c \
-	hashtable_itr.c \
-	aprs_display.c \
-	aprs_message.c \
-	aprs_kiss.c
+	util.c
 
 # bin_SCRIPTS = maemo-mapper.sh
 run: all
