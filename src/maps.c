@@ -268,7 +268,7 @@ mapdb_update(RepoData *repo, gint zoom, gint tilex, gint tiley,
             repo->name, zoom, tilex, tiley);
 
     build_tile_path(path, sizeof(path), repo, zoom, tilex, tiley);
-    g_mkdir_with_parents(path, 0666);
+    g_mkdir_with_parents(path, 0766);
     build_tile_filename(filename, sizeof(filename), repo, zoom, tilex, tiley);
     success = g_file_set_contents(filename, bytes, size, NULL);
 
